@@ -56,7 +56,6 @@ create index patient_index on patient_reduced (patient_num );
 drop table if exists visit_reduced;
 drop index if exists visit_index;
 create table visit_reduced as select patient_num, encounter_num, inout_cd from visit_dimension where inout_cd is not null;
-delete from visit_reduced where encounter_num in (select encounter_num from (select encounter_num, count(patient_num) as n from visit_reduced group by encounter_num) counter where n <> 1); 
 create index visit_index on visit_reduced (encounter_num, patient_num);                                                                                                                       
 
 /* find encounter_num and patient_num and icd_code with asthma like diagnosis */
