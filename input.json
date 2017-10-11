@@ -1,0 +1,33 @@
+{
+  "date_of_birth" : "1999-1-1 0:0:0",
+  "race" : "9",
+  "sex" : "0",
+  "model_type" : "rpart",
+  "visits": [
+    {
+          "time":"2010-1-1 0:0:0",
+          "lat" : 0,
+          "lon" : 0,
+       "visit_type": "INPATIENT",
+       "icd_code" : ["a", "b"],
+       "exposure": [{
+         "value" : 1,
+         "units" : "",
+          "exposure_type" : "pm25"
+        }
+       ]
+     },     {
+          "time":"2010-1-2 0:0:0",
+          "lat" : 0,
+          "lon" : 0,
+       "visit_type": "INPATIENT",
+       "icd_code" : ["a", "b"],
+       "exposure": [{
+         "value" : 1,
+         "units" : "",
+          "exposure_type" : "pm25"
+        }
+       ]
+     }
+  ]
+}
