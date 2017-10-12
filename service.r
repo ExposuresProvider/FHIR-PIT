@@ -33,7 +33,7 @@ m <- readRDS("model.RData")
 colname <- readRDS("colnames.RData")
 
 json <- fromJSON(file = "input.json")
-birth_date <- formatTime(json$date_of_birth)
+birth_date <- formatDate(json$date_of_birth)
 sex_cd <- json$sex
 race_cd <- json$race
 all_visits <- json$visits
