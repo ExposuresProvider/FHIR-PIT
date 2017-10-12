@@ -21,6 +21,23 @@ begin
 end;
 $$ language plpgsql;
 
+create or replace function DESpm(pm25 numeric) returns numeric as $$
+declare
+begin
+  if pm25 < 4.0 then
+      return 1;
+  elsif pm25 < 7.07 then
+      return 2;
+  elsif pm25 < 8.98 then
+      return 3;
+  elsif pm25 < 11.37 then
+      return 4;
+  else
+      return 5;
+  end if;
+end;
+$$ language plpgsql;
+
 create type pair_text as (fst text, snd text);
 
 create or replace function observation_table(table_name text, column_name_pairs pair_text[], pat text, dist boolean) returns void as $$
@@ -73,17 +90,17 @@ create table asthma_patient as select distinct patient_num from asthma;
 create index asthma_patient_index on asthma_patient (patient_num);                                                                                                           
 
 /* filter observation_fact */
-drop table if exists observation_reduced;
-drop index if exists observation_index;
-create table observation_reduced as select start_date, encounter_num, patient_num from observation_fact inner join asthma_encounter using (encounter_num, patient_num);
-create index observation_index on observation_reduced (encounter_num, patient_num);                                                                                
+drop table if exists observation_asthma_reduced;
+drop index if exists observation_asthma_index;
+create table observation_asthma_reduced as select start_date, encounter_num, patient_num from observation_fact inner join asthma_encounter using (encounter_num, patient_num);
+create index observation_asthma_index on observation_asthma_reduced (encounter_num, patient_num);                                                                                
 
-drop table if exists start_date;
-drop index if exists start_date_index;
-drop index if exists start_date_index2;
-create table start_date as select min(start_date :: timestamp) as start_date, encounter_num, patient_num from observation_reduced group by encounter_num, patient_num;
-create index start_date_index on start_date (encounter_num, patient_num);                                                                                                           
-create index start_date_index2 on start_date (start_date asc);
+drop table if exists start_date_asthma;
+drop index if exists start_date_asthma_index;
+drop index if exists start_date_asthma_index2;
+create table start_date_asthma as select min(start_date :: timestamp) as start_date, encounter_num, patient_num from observation_asthma_reduced group by encounter_num, patient_num;
+create index start_date_asthma_index on start_date_asthma (encounter_num, patient_num);                                                                                                           
+create index start_date_asthma_index2 on start_date_asthma (start_date asc);
 
 /* should assign lat, long based on encounter_num, but the data does it using patient_num */
 -- drop table if exists lat;
@@ -102,71 +119,101 @@ create index start_date_index2 on start_date (start_date asc);
 -- with b as (select patient_num from long group by patient_num having count(long) <> 1)
 -- delete from long a where exists (select from b where a.patient_num = b.patient_num);
 
-drop table if exists ed_visits0;
-create table ed_visits0 as select * from start_date inner join visit_reduced using (encounter_num, patient_num);  
+drop table if exists ed_visits_asthma0;
+create table ed_visits_asthma0 as select * from start_date_asthma inner join visit_reduced using (encounter_num, patient_num);  
 
-drop table if exists ed_visits1;
-drop index if exists ed_visits_index1;
-create table ed_visits1 as select * from ed_visits0 where inout_cd in ('INPATIENT', 'EMERGENCY');
-create index ed_visits1_index on ed_visits1 (encounter_num, patient_num);      
-create index ed_visits1_index2 on ed_visits1 (patient_num);      
+drop table if exists ed_visits_asthma1;
+drop index if exists ed_visits_asthma1_index;
+drop index if exists ed_visits_asthma1_index2;
+create table ed_visits_asthma1 as select * from ed_visits_asthma0 where inout_cd in ('INPATIENT', 'EMERGENCY');
+create index ed_visits_asthma1_index on ed_visits_asthma1 (encounter_num, patient_num);      
+create index ed_visits_asthma1_index2 on ed_visits_asthma1 (patient_num);      
 
-drop table if exists ed_visits;
-drop index if exists ed_visits_index;
-create table ed_visits as select encounter_num, patient_num, start_date, inout_cd, (select count(distinct encounter_num) from ed_visits1 b where b.patient_num = a.patient_num and b.start_date :: timestamp <@ tsrange (a.start_date :: timestamp - interval '1 year', a.start_date :: timestamp, '[)')) as pre_ed, (select count(distinct encounter_num) from ed_visits1 b where b.patient_num = a.patient_num and b.start_date :: timestamp <@ tsrange (a.start_date :: timestamp, a.start_date :: timestamp + interval '1 year', '(]')) as post_ed from ed_visits0 a;
-create index ed_visits_index on ed_visits (encounter_num, patient_num);                
+drop table if exists ed_visits_asthma;
+drop index if exists ed_visits_asthma_index;
+create table ed_visits_asthma as select encounter_num, patient_num, start_date, inout_cd, (select count(distinct encounter_num) from ed_visits_asthma1 b where b.patient_num = a.patient_num and b.start_date :: timestamp <@ tsrange (a.start_date :: timestamp - interval '1 year', a.start_date :: timestamp, '[)')) as pre_ed, (select count(distinct encounter_num) from ed_visits_asthma1 b where b.patient_num = a.patient_num and b.start_date :: timestamp <@ tsrange (a.start_date :: timestamp, a.start_date :: timestamp + interval '1 year', '(]')) as post_ed from ed_visits_asthma0 a;
+create index ed_visits_asthma_index on ed_visits_asthma (encounter_num, patient_num);                
 
 drop table if exists cmaq_4336094;
 drop index if exists cmaq_4336094_index;
 create table cmaq_4336094 as select date, pm25_total_ugm3 from cmaq where id = 4336094;
 create index cmaq_4336094_index on cmaq_4336094 (date asc);
 
-do $$ begin
+/* do $$ begin
   for i in 1..7 loop
     perform pm25_table(i);
   end loop;
-end $$;
+end $$; */
 
-drop table if exists visits;
-drop index if exists visits_index;
-create table visits as select encounter_num, patient_num from cmaq_4336094 a, start_date b where a.date = b.start_date;
-create index visits_index on cmaq_available(encounter_num, patient_num);
+drop table if exists visits_asthma_cmaq;
+drop index if exists visits_asthma_cmaq_index;
+create table visits_asthma_cmaq as select encounter_num, patient_num from cmaq_4336094 a, start_date_asthma b where a.date = b.start_date;
+create index visits_asthma_cmaq_index on visits_asthma_cmaq(encounter_num, patient_num);
 
 drop table if exists icd;
 drop index if exists icd_index;
-create table icd as select distinct encounter_num, patient_num, concept_cd as icd_code from asthma inner join visits using (encounter_num, patient_num);
+create table icd as select distinct encounter_num, patient_num, concept_cd as icd_code from asthma inner join visits_asthma_cmaq using (encounter_num, patient_num);
 create index icd_index on icd ( encounter_num, patient_num);                                                                                                                                   
 
-do $$ begin
+drop table if exists cmaq_daily;
+create table cmaq_daily as
+    select distinct date_trunc('day', date) as date from cmaq_4336094;
+
+drop table if exists cmaq_daily_max;
+drop index if exists cmaq_daily_max_index;
+create table cmaq_daily_max as 
+    select a.date as date, (
+            select max(pm25_total_ugm3) 
+            from cmaq_4336094 b 
+            where date_trunc('day', b.date) = a.date
+        ) as pm25_daily_max 
+    from cmaq_daily a;
+create index cmaq_daily_max_index on cmaq_daily_max (date asc);
+
+drop table if exists cmaq_daily_DESpm;
+drop index if exists cmaq_daily_DESpm_index;
+create table cmaq_daily_DESPm as 
+    select date, DESpm(pm25_daily_max) as DESpm
+    from cmaq_daily_max;
+create index cmaq_daily_DESpm_index on cmaq_daily_DESpm (date asc);
+
+drop table if exists cmaq_7da_DESpm;
+drop index if exists cmaq_7da_DESpm_index;
+create table cmaq_7da_DESpm as 
+  select a.date as start_date, (
+      select avg(DESpm) 
+      from cmaq_daily_DESpm b 
+      where b.date :: timestamp <@ tsrange (a.date :: timestamp - interval '7 day', a.date :: timestamp, '(]')) as DESpm_7da
+  from cmaq_daily a;
+create index cmaq_7da_DESpm_index on cmaq_7da_DESpm (start_date asc);
+
+/* do $$ begin
   perform observation_table('loinc', array[('concept_cd', 'loinc_concept'), ('nval_num', 'loinc_nval'), ('units_cd', 'loinc_units'), ('start_date', 'loinc_start_date')] :: pair_text[], 'LOINC:%', true);
 end $$; 
 
 do $$ begin
   perform observation_table('mdctn', array[('concept_cd', 'mdctn_concept'), ('modifier_cd', 'mdctn_modifier'), ('nval_num', 'mdctn_nval'), ('tval_char', 'mdctn_tval'), ('units_cd', 'mdctn_units'), ('start_date', 'mdctn_start_date'), ('end_date', 'mdctn_end_date')] :: pair_text[], 'MDCTN:%', true);
-end $$; 
+end $$; */
 
 drop table if exists features;
-create table features as select *, extract(day from start_date - birth_date) as age from ed_visits inner join patient_reduced using (patient_num) inner join cmaq_4336094_7da using (start_date) inner join cmaq_4336094_1da using (start_date) inner join cmaq_4336094_2da using (start_date) inner join cmaq_4336094_3da using (start_date) inner join cmaq_4336094_4da using (start_date) inner join cmaq_4336094_5da using (start_date) inner join cmaq_4336094_6da using (start_date);
+create table features as select *, extract(day from start_date - birth_date) as age from ed_visits_asthma inner join patient_reduced using (patient_num) inner join cmaq_7da_DESpm using (start_date);
 
 copy features to '/tmp/endotype3.csv' delimiter ',' csv header;
-copy loinc to '/tmp/loinc3.csv' delimiter ',' csv header;
-copy mdctn to '/tmp/mdctn3.csv' delimiter ',' csv header;
+/* copy loinc to '/tmp/loinc3.csv' delimiter ',' csv header;
+copy mdctn to '/tmp/mdctn3.csv' delimiter ',' csv header; */
 copy icd to '/tmp/icd3.csv' delimiter ',' csv header;
 
 
 /* clean up */
-drop function fliter_icd(text);
+/* drop function fliter_icd(text);
 drop function pm25_table(integer);
 drop table visit_reduced;
 drop table observation_reduced;
 drop table ed_visits0;
 drop table ed_visits1;
 drop table ed_visits;
--- drop table lat;
--- drop table long;
 drop table icd;
 drop table start_date;
-drop table cmaq_available;
 drop table patient_reduced;
 drop table asthma;
 drop table asthma_encounter;
@@ -178,4 +225,4 @@ do $$ begin
   for i in 1..7 loop
     execute format('drop table cmaq_4336094_%sda', i);
   end loop;
-end $$;
+end $$; */
