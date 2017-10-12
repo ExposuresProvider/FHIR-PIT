@@ -172,7 +172,7 @@ create index cmaq_daily_max_index on cmaq_daily_max (date asc);
 
 drop table if exists cmaq_daily_DESpm;
 drop index if exists cmaq_daily_DESpm_index;
-create table cmaq_daily_DESPm as 
+create table cmaq_daily_DESpm as 
     select date, DESpm(pm25_daily_max) as DESpm
     from cmaq_daily_max;
 create index cmaq_daily_DESpm_index on cmaq_daily_DESpm (date asc);
