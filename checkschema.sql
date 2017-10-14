@@ -54,13 +54,13 @@ create or replace function check_table_not_exists(table_name text) returns void 
 $$ language plpgsql;
 
 do $$ begin
-  select check_table_exists('cmaq\_7da\_DES', array['col','row','date','DESpm','DESo']);
-  select check_table_exists('observation\_fact', array['patient\_num','encounter\_num','concept\_cd','nval_num','start\_date']);
-  select check_table_exists('patient\_dimension', array['patient\_num', 'birth\_date', 'sex\_cd', 'race\_cd']);
-  select check_table_exists('visit\_dimension', array['patient\_num', 'encounter\_num', 'inout\_cd']);
-  select check_table_not_exists('%reduced%');
-  select check_table_not_exists('%asthma%');
-  select check_table_not_exists('features');
+  perform check_table_exists('cmaq\_7da\_DES', array['col','row','date','DESpm\_7da','DESo\_7da']);
+  perform check_table_exists('observation\_fact', array['patient\_num','encounter\_num','concept\_cd','nval_num','start\_date']);
+  perform check_table_exists('patient\_dimension', array['patient\_num', 'birth\_date', 'sex\_cd', 'race\_cd']);
+  perform check_table_exists('visit\_dimension', array['patient\_num', 'encounter\_num', 'inout\_cd']);
+  perform check_table_not_exists('%reduced%');
+  perform check_table_not_exists('%asthma%');
+  perform check_table_not_exists('features');
 end $$;
 
 

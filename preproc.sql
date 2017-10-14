@@ -211,7 +211,7 @@ end $$; */
 drop table if exists icd_asthma;
 drop index if exists icd_asthma_index;
 create table icd_asthma as select distinct encounter_num, patient_num, concept_cd as icd_code from asthma inner join rowcol_asthma using (encounter_num, patient_num) where filter_icd(concept_cd);
-create index icd_asthma_index on icd ( encounter_num, patient_num);                                                                                                                                   
+create index icd_asthma_index on icd_asthma ( encounter_num, patient_num);                                                                                                                                   
 
 /* do $$ begin
   perform observation_table('loinc', array[('concept_cd', 'loinc_concept'), ('nval_num', 'loinc_nval'), ('units_cd', 'loinc_units'), ('start_date', 'loinc_start_date')] :: pair_text[], 'LOINC:%', true);

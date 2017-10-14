@@ -6,7 +6,6 @@ library(dplyr)
 library(partykit)
 source(file="utils.r")
 
-df.pat <- fread("/tmp/endotype3.csv")
 df.icd <- fread("/tmp/icd3.csv")
 # df.loinc <- fread("/tmp/loinc3.csv")
 # df.mdctn <- fread("/tmp/mdctn3.csv")
@@ -14,9 +13,11 @@ df.icd <- fread("/tmp/icd3.csv")
 # df.loinc.wide <- reshape(df.loinc, idvar = "encounter_num", timevar = "loinc_concept", direction = "wide")
 # df.mdctn.wide <- reshape(df.loinc, idvar = "encounter_num", timevar = c("mdctn_cd", "mdctn_modifier"), direction = "wide")
 df.icd$icd <- TRUE
-df.icd.wide <- reshape(df.icd, idvar = c("encounter_num", "patient_num"), timevar = "icd_code", direction = "wide")
+df.icd.wide <- cast(df.icd, encounter_num + patient_num ~ icd_code, fill = FALSE)
+icd.colnames <- df.icd.colnames[substr(df.colnames,1,3) == "ICD"]
+df.icd.wide[icd.colnames] <- lapply(df.icd.wide[icd.colnames], as.factor)
 
-df.pat.2 <- df.pat[,c("encounter_num", "patient_num", "inout_cd", "pre_ed", "post_ed", "sex_cd", "race_cd", "despm_7da", "age")]
+df.pat.2 <- df.pat[,c("encounter_num", "patient_num", "inout_cd", "pre_ed", "post_ed", "sex_cd", "race_cd", "despm_7da", "deso_7da", "age")]
 df.pat.2$age <- binAge(df.pat.2$age)
 df.pat.2$race_cd <- as.factor(df.pat.2$race_cd)
 df.pat.2$pre_ed <- binEdVisits(df.pat.2$pre_ed)
@@ -29,10 +30,9 @@ df <- merge(df.pat.2, df.icd.wide, by = c("encounter_num", "patient_num"))
 
 df.colnames <- colnames(df)
 #loinc.colnames <- paste0("`", df.colnames[substr(df.colnames,0,17) == "loinc_nval.LOINC:" | substr(df.colnames,0,4) == "icd."], "`")
-icd.colnames <- df.colnames[substr(df.colnames,0,4) == "icd."]
 icd.colnames.quoted <- paste0("`", icd.colnames, "`")
 loinc.form <- paste(icd.colnames.quoted, collapse = " + ")
-formstr <- paste("post_ed ~ inout_cd + pre_ed + sex_cd + race_cd + age + despm_7da", 
+formstr <- paste("post_ed ~ inout_cd + pre_ed + sex_cd + race_cd + age + despm_7da + deso_7da", 
               loinc.form, sep = " + ")
 form <- as.formula(formstr)
 #df.scaled <- df %>% mutate_if(is.numeric, scale)
@@ -40,7 +40,7 @@ form <- as.formula(formstr)
 #m <- rpart(form, data = df.scaled, 
 #           control=rpart.control(cp=0.003))
 m <- rpart(form, data = df, 
-           control=rpart.control(cp=0.003))
+           control=rpart.control(cp=0.0025))
 print(m)
 rpart.plot(m)
 #printcp(m)

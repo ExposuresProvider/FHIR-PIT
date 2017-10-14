@@ -1,0 +1,23 @@
+{
+    "model_type": "M0",
+    "race": "1",
+    "sex": "M",
+    "date_of_birth": "2017-10-04",
+    "visits": [
+        {
+            "icd_codes": [
+                "ICD9:V12",
+                "ICD9:E002"
+            ],
+            "visit_type": "INPATIENT",
+            "time": "2017-10-12 21:12:29.451000+00:00",
+            "lat": 20.0,
+            "lon": 20.0,
+            "exposure": [{
+                "units": "ugm3",
+                "exposure_type": "pm25",
+                "value": "33.3"
+            }]
+        }
+    ]
+}
