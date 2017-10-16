@@ -6,6 +6,7 @@ library(dplyr)
 library(partykit)
 source(file="utils.r")
 
+df.pat <- fread("/tmp/endotype3.csv")
 df.icd <- fread("/tmp/icd3.csv")
 # df.loinc <- fread("/tmp/loinc3.csv")
 # df.mdctn <- fread("/tmp/mdctn3.csv")
