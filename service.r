@@ -20,8 +20,6 @@ str <- tryCatch({
     output <- args[2]
   }
   
-  df.pat <- fread("/tmp/endotype3.csv")
-  
   # https://stackoverflow.com/questions/29618490/get-decision-tree-rule-path-pattern-for-every-row-of-predicted-dataset-for-rpart
   pathpred <- function(object, ...)
   {
