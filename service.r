@@ -65,7 +65,7 @@ str <- tryCatch({
     newdata.icd <- as.data.frame(lapply(as.list(colname), FUN = function(icd_code2) {icd_code2 %in% icd_codes}))
     colnames(newdata.icd) <- colname
     newdata <- cbind(newdata.base, newdata.icd)
-    # print(newdata)
+    print(newdata)
     pp <- pathpred(m, newdata = newdata)
     resp <- data.table(endotype_id = paste0("E", toString(as.integer(pp$response) - 1)), endotype_description = pp$response, endotype_evidence = pp$rule, start_time=start_date)
   }
