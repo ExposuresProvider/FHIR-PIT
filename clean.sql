@@ -5,6 +5,7 @@ drop function latlon2rowcol(numeric, numeric, integer);
 drop type coors;
 drop table visit_reduced;
 drop table patient_reduced;
+drop table observation_asthma_reduced;
 drop table ed_visits_asthma0;
 drop table ed_visits_asthma1;
 drop table ed_visits_asthma;

@@ -11,6 +11,17 @@ create or replace function table_exists(table_name text) returns boolean as $$
   end
 $$ language plpgsql;
 
+create or replace function function_exists(func_name text, paramtypes text) returns boolean as $$
+  declare
+  begin
+    return EXISTS (
+      SELECT 1
+      FROM   pg_proc
+      WHERE  proname = func_name
+      AND    proargtypes :: text similar to paramtypes);
+  end
+$$ language plpgsql;
+
 create or replace function column_exists(table_npat text, column_npat text) returns boolean as $$
   declare
   begin
@@ -18,6 +29,16 @@ create or replace function column_exists(table_npat text, column_npat text) retu
       SELECT column_name 
       FROM information_schema.columns
       WHERE lower(table_name) similar to lower(table_npat) and lower(column_name) similar to lower(column_npat));
+  end
+$$ language plpgsql;
+
+create or replace function check_function_not_exists(func_name text, paramtypes text) returns void as $$
+  declare
+    col_name text;
+  begin
+    if function_exists(func_name, paramtypes) then
+      RAISE 'This application may overwrite function % which already exists', func_name;
+    end if;
   end
 $$ language plpgsql;
 
@@ -61,6 +82,8 @@ do $$ begin
   perform check_table_not_exists('%reduced%');
   perform check_table_not_exists('%asthma%');
   perform check_table_not_exists('features');
+  perform check_function_not_exists('filter_icd', '25');
+  perform check_function_not_exists('latlon2rowcol', '1700 1700 23');
 end $$;
 
 
