@@ -9,7 +9,7 @@ create extension if not exists postgis;
 create extension if not exists postgis_topology;                                                                                               
 
 /* http://spatialreference.org/ref/sr-org/29/ */
-INSERT into spatial_ref_sys (srid, auth_name, auth_srid, proj4text, srtext) select 929, 'sr-org', 29, '+proj=lcc +lat_1=33 +lat_2=45 +lat_0=40 +lon_0=-97 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs ', 'PROJCS["WGC 84 / WRF Lambert",GEOGCS["WGS 84",DATUM["World Geodetic System 1984",SPHEROID["WGS 84",6378137.0,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0.0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.017453292519943295],AXIS["Geodetic longitude",EAST],AXIS["Geodetic latitude",NORTH],AUTHORITY["EPSG","4326"]],PROJECTION["Lambert_Conformal_Conic_2SP"],PARAMETER["central_meridian",-97.0],PARAMETER["latitude_of_origin",40.0],PARAMETER["standard_parallel_1",33.0],PARAMETER["false_easting",0.0],PARAMETER["false_northing",0.0],PARAMETER["standard_parallel_2",45.0],UNIT["m",1.0],AXIS["Easting",EAST],AXIS["Northing",NORTH]]' where not exists (select srid from spatial_ref_sys where srid = 1);
+INSERT into spatial_ref_sys (srid, auth_name, auth_srid, proj4text, srtext) select 929, 'sr-org', 29, '+proj=lcc +lat_1=33 +lat_2=45 +lat_0=40 +lon_0=-97 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs ', 'PROJCS["WGC 84 / WRF Lambert",GEOGCS["WGS 84",DATUM["World Geodetic System 1984",SPHEROID["WGS 84",6378137.0,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0.0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.017453292519943295],AXIS["Geodetic longitude",EAST],AXIS["Geodetic latitude",NORTH],AUTHORITY["EPSG","4326"]],PROJECTION["Lambert_Conformal_Conic_2SP"],PARAMETER["central_meridian",-97.0],PARAMETER["latitude_of_origin",40.0],PARAMETER["standard_parallel_1",33.0],PARAMETER["false_easting",0.0],PARAMETER["false_northing",0.0],PARAMETER["standard_parallel_2",45.0],UNIT["m",1.0],AXIS["Easting",EAST],AXIS["Northing",NORTH]]' where not exists (select srid from spatial_ref_sys where srid = 929);
 
 create or replace function filter_icd(concept_cd text) returns boolean as $$
   begin
@@ -232,23 +232,21 @@ copy icd_asthma to '/tmp/icd3.csv' delimiter ',' csv header;
 
 /* clean up */
 /* drop function fliter_icd(text);
-drop function pm25_table(integer);
+drop function latlon2rowcol(numeric, numeric, year);
+drop type coors;
 drop table visit_reduced;
 drop table observation_reduced;
-drop table ed_visits0;
-drop table ed_visits1;
-drop table ed_visits;
-drop table icd;
-drop table start_date;
 drop table patient_reduced;
+drop table ed_visits_asthma0;
+drop table ed_visits_asthma1;
+drop table ed_visits_asthma;
+drop table icd_asthma;
+drop table start_date_astham;
 drop table asthma;
 drop table asthma_encounter;
 drop table asthma_patient;
-drop table cmaq_4336094;
-drop table loinc;
-drop table mdctn;
-do $$ begin
-  for i in 1..7 loop
-    execute format('drop table cmaq_4336094_%sda', i);
-  end loop;
-end $$; */
+drop table lat_asthma;
+drop table long_asthma;
+drop table latlong_asthma;
+drop table rowcol_asthma;
+drop table features; */
