@@ -57,8 +57,8 @@ str <- tryCatch({
     start_date <- formatTime(visit$time)
     age <- binAge(as.double(difftime(start_date, birth_date, units="days")))
     inout_cd <- visit$visit_type
-    despm_7da <- get_exposure_by_type("pm25", 2.5, visit$exposure)
-    deso_7da <- get_exposure_by_type("ozone", 2.5, visit$exposure)
+    despm_7da <- get_exposure_by_type("pm25", 2.5, visit$exposures)
+    deso_7da <- get_exposure_by_type("ozone", 2.5, visit$exposures)
     pre_ed <- binEdVisits(length(all_visits[all_visits$visit_type != "OUTPATIENT" && formatTime(all_visits$time) < start_date &&  formatTime(all_visits$time) >= start_date - 365]))
     newdata.base <- data.table(age, sex_cd, race_cd,start_date, inout_cd, despm_7da, pre_ed, deso_7da)
     icd_codes <- visit$icd_codes
