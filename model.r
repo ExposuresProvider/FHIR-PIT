@@ -15,7 +15,7 @@ df.icd <- fread("/tmp/icd3.csv")
 # df.mdctn.wide <- reshape(df.loinc, idvar = "encounter_num", timevar = c("mdctn_cd", "mdctn_modifier"), direction = "wide")
 df.icd$icd <- TRUE
 df.icd.wide <- cast(df.icd, encounter_num + patient_num ~ icd_code, fill = FALSE)
-icd.colnames <- df.icd.colnames[substr(df.colnames,1,3) == "ICD"]
+icd.colnames <- df.colnames[substr(df.colnames,1,3) == "ICD"]
 df.icd.wide[icd.colnames] <- lapply(df.icd.wide[icd.colnames], as.factor)
 
 df.pat.2 <- df.pat[,c("encounter_num", "patient_num", "inout_cd", "pre_ed", "post_ed", "sex_cd", "race_cd", "despm_7da", "deso_7da", "age")]
