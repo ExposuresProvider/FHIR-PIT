@@ -15,9 +15,9 @@ df.icd <- fread("/tmp/icd3.csv")
 # df.mdctn.wide <- reshape(df.loinc, idvar = "encounter_num", timevar = c("mdctn_cd", "mdctn_modifier"), direction = "wide")
 df.icd$icd <- TRUE
 df.icd.wide <- cast(df.icd, encounter_num + patient_num ~ icd_code, fill = FALSE)
-df.icd.colnames <- colnames(df.icd)
-icd.colnames <- df.icd.colnames[substr(df.icd.colnames,1,3) == "ICD"]
-df.icd.wide[icd.colnames] <- lapply(df.icd.wide[icd.colnames], as.factor)
+df.icd.wide.colnames <- colnames(df.icd.wide)
+icd.wide.colnames <- df.icd.wide.colnames[substr(df.icd.wide.colnames,1,3) == "ICD"]
+df.icd.wide[icd.wide.colnames] <- lapply(df.icd.wide[icd.wide.colnames], as.factor)
 
 df.pat.2 <- df.pat[,c("encounter_num", "patient_num", "inout_cd", "pre_ed", "post_ed", "sex_cd", "race_cd", "despm_7da", "deso_7da", "age")]
 df.pat.2$age <- binAge(df.pat.2$age)
@@ -30,12 +30,11 @@ df.pat.2$inout_cd <- as.factor(df.pat.2$inout_cd)
 #df <- merge(merge(df.pat.2, df.icd.wide, by = "encounter_num"), df.loinc.wide, by = "encounter_num")
 df <- merge(df.pat.2, df.icd.wide, by = c("encounter_num", "patient_num"))
 
-df.colnames <- colnames(df)
 #loinc.colnames <- paste0("`", df.colnames[substr(df.colnames,0,17) == "loinc_nval.LOINC:" | substr(df.colnames,0,4) == "icd."], "`")
-icd.colnames.quoted <- paste0("`", icd.colnames, "`")
-loinc.form <- paste(icd.colnames.quoted, collapse = " + ")
+icd.wide.colnames.quoted <- paste0("`", icd.wide.colnames, "`")
+icd.form <- paste(icd.wide.colnames.quoted, collapse = " + ")
 formstr <- paste("post_ed ~ inout_cd + pre_ed + sex_cd + race_cd + age + despm_7da + deso_7da", 
-              loinc.form, sep = " + ")
+              icd.form, sep = " + ")
 form <- as.formula(formstr)
 #df.scaled <- df %>% mutate_if(is.numeric, scale)
 
@@ -47,5 +46,5 @@ print(m)
 rpart.plot(m)
 #printcp(m)
 saveRDS(as.party(m), file="model.RData")
-saveRDS(icd.colnames, file="colnames.RData")
+saveRDS(icd.wide.colnames, file="colnames.RData")
 
