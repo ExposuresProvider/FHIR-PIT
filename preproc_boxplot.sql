@@ -89,7 +89,7 @@ select 'RANDOM' :: text as visit_type, DESpm_7da, DESo_7da from cmaq_7da_DES tab
 end $$;
 
 drop table if exists boxplot;
-create table boxplot as (select * from cmaq_7da_DES_any_18_out union select * from cmaq_7da_DES_asthma_18_ed union select * from cmaq_7da_DES_random);
+create table boxplot as (select * from cmaq_7da_DES_any_18_out union all select * from cmaq_7da_DES_asthma_18_ed union all select * from cmaq_7da_DES_random);
 
 copy boxplot to '/tmp/boxplot.csv' delimiter ',' csv header;
 
