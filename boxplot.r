@@ -2,7 +2,7 @@ library(data.table)
 
 args <- commandArgs(trailingOnly=TRUE)
 if(length(args) == 0) {
-  ymax <- 50
+  ymax <- 80
   ymin <- 0
 } else {
   ymin <- as.numeric(args[[1]])
