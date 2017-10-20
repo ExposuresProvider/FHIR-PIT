@@ -1,9 +1,9 @@
 library(data.table)
 
-df <- fread("/tmp/boxplot.csv")
-
-boxplot(despm_7da~visit_type,data=df, xlab="visit_type", ylab="despm_7da")
-
-dev.copy(png, "boxplot.png", width=800, height = 600)
-dev.off()
+for(i in 0:6) {
+  df <- fread(paste0("/tmp/boxplot_",i,".csv"))
+  png(paste0("/tmp/boxplot_", i, ".png"), width=800, height = 600)
+  boxplot(despm~visit_type,data=df, xlab="visit_type", ylab="despm", main=paste0("d=", i))
+  dev.off()
+}
 
