@@ -50,12 +50,19 @@ create table cmaq_daily as
     group by date, col, row;
 create index cmaq_daily_index on cmaq_daily (col, row, date);
 
+drop table if exists cmaq_daily_max;
+drop index if exists cmaq_daily_max_index;
+create table cmaq_daily_max as 
+    select a.col, a.row, a.date, max(pmij) as maxpm, max(o3) as maxo
+    from cmaq_daily a inner join cmaq_exposures_data b on b.col = a.col and b.row = a.row and date_trunc('day', b.utc_date_time) = a.date 
+    group by a.col, a.row, a.date;
+create index cmaq_daily_max_index on cmaq_daily_max (col, row, date);
+
 drop table if exists cmaq_daily_DES;
 drop index if exists cmaq_daily_DES_index;
 create table cmaq_daily_DES as 
-    select a.col, a.row, a.date, DESpm(max(pmij) :: numeric) as DESpm, DESo(max(o3) :: numeric) as DESo
-    from cmaq_daily a inner join cmaq_exposures_data b on b.col = a.col and b.row = a.row and date_trunc('day', b.utc_date_time) = a.date 
-    group by a.col, a.row, a.date;
+    select a.col, a.row, a.date, DESpm(maxpm) as DESpm, DESo(maxo) as DESo
+    from cmaq_daily_max;
 create index cmaq_daily_DES_index on cmaq_daily_DES (col, row, date);
 
 drop table if exists cmaq_7da_DES;
