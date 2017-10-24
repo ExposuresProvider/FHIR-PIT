@@ -13,7 +13,7 @@ INSERT into spatial_ref_sys (srid, auth_name, auth_srid, proj4text, srtext) sele
 
 create or replace function filter_icd(concept_cd text) returns boolean as $$
   begin
-    return concept_cd similar to '(ICD9:493|ICD9:464|ICD9:496|ICD9:786|ICD9:481|ICD9:482|ICD9:483|ICD9:484|ICD9:485|ICD9:486|ICD10:345|ICD10:J05|ICD10:J44|ICD10:J66|ICD10:R05|ICD10:J12|ICD10:J13|ICD10:J14|ICD10:J15|ICD10:J16|ICD10:J17|ICD10:J18)%';
+    return concept_cd similar to '(ICD9:493|ICD9:464|ICD9:496|ICD9:786|ICD9:481|ICD9:482|ICD9:483|ICD9:484|ICD9:485|ICD9:486|ICD10:J45|ICD10:J05|ICD10:J44|ICD10:J66|ICD10:R05|ICD10:J12|ICD10:J13|ICD10:J14|ICD10:J15|ICD10:J16|ICD10:J17|ICD10:J18)%';
   end;
 $$ language plpgsql;
 
