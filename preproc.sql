@@ -89,7 +89,7 @@ begin
     return (row_no, col_no);
 end $$ language plpgsql;
 
-/* create or replace type pair_text as (fst text, snd text);
+create type pair_text as (fst text, snd text);
 
 create or replace function observation_table(table_name text, column_name_pairs pair_text[], pat text, dist boolean) returns void as $$
 declare
@@ -108,12 +108,12 @@ begin
   foreach column_name_pair in array column_name_pairs loop
     sql := sql || format(', %I as %I', column_name_pair.fst, column_name_pair.snd);
   end loop;
-  sql := sql || format(' from observation_fact inner join visits using (encounter_num, patient_num) where concept_cd similar to %L', pat);
+  sql := sql || format(' from observation_fact where concept_cd similar to %L', pat);
   raise notice 'sql=%', sql;
   execute sql;
   execute format('create index %I on %I (encounter_num, patient_num)', index_name, table_name);
 end;
-$$ language plpgsql; */
+$$ language plpgsql;
 
 
 drop table if exists patient_reduced;
@@ -213,20 +213,22 @@ drop index if exists icd_asthma_index;
 create table icd_asthma as select distinct encounter_num, patient_num, concept_cd as icd_code from asthma inner join rowcol_asthma using (encounter_num, patient_num) where filter_icd(concept_cd);
 create index icd_asthma_index on icd_asthma ( encounter_num, patient_num);                                                                                                                                   
 
-/* do $$ begin
-  perform observation_table('loinc', array[('concept_cd', 'loinc_concept'), ('nval_num', 'loinc_nval'), ('units_cd', 'loinc_units'), ('start_date', 'loinc_start_date')] :: pair_text[], 'LOINC:%', true);
+do $$ begin
+  perform observation_table('loinc', array[('concept_cd', 'loinc_concept'), ('valtype_cd', 'loinc_valtype'), ('nval_num', 'loinc_nval'), 
+         ('tval_char', 'loinc_tval'), ('units_cd', 'loinc_units'), ('start_date', 'loinc_start_date'), ('end_date', 'loinc_end_date')] :: pair_text[], 'LOINC:%', true);
 end $$; 
 
 do $$ begin
-  perform observation_table('mdctn', array[('concept_cd', 'mdctn_concept'), ('modifier_cd', 'mdctn_modifier'), ('nval_num', 'mdctn_nval'), ('tval_char', 'mdctn_tval'), ('units_cd', 'mdctn_units'), ('start_date', 'mdctn_start_date'), ('end_date', 'mdctn_end_date')] :: pair_text[], 'MDCTN:%', true);
-end $$; */
+  perform observation_table('mdctn', array[('concept_cd', 'mdctn_concept'), ('modifier_cd', 'mdctn_modifier'), ('valtype_cd', 'mdctn_valtype'), ('valueflag_cd', 'mdctn_valueflag'), ('nval_num', 'mdctn_nval'), 
+         ('tval_char', 'mdctn_tval'), ('units_cd', 'mdctn_units'), ('start_date', 'mdctn_start_date'), ('end_date', 'mdctn_end_date')] :: pair_text[], 'MDCTN:%', true);
+end $$;
 
 drop table if exists features;
 create table features as select *, extract(day from start_date - birth_date) as age from ed_visits_asthma inner join patient_reduced using (patient_num) inner join rowcol_asthma using (encounter_num, patient_num) inner join cmaq_7da_DES using (col, row, date);
 
 copy features to '/tmp/endotype3.csv' delimiter ',' csv header;
-/* copy loinc to '/tmp/loinc3.csv' delimiter ',' csv header;
-copy mdctn to '/tmp/mdctn3.csv' delimiter ',' csv header; */
+copy loinc to '/tmp/loinc3.csv' delimiter ',' csv header;
+copy mdctn to '/tmp/mdctn3.csv' delimiter ',' csv header;
 copy icd_asthma to '/tmp/icd3.csv' delimiter ',' csv header;
 
 
