@@ -214,13 +214,33 @@ create table icd_asthma as select distinct encounter_num, patient_num, concept_c
 create index icd_asthma_index on icd_asthma ( encounter_num, patient_num);                                                                                                                                   
 
 do $$ begin
-  perform observation_table('loinc', array[('concept_cd', 'loinc_concept'), ('valtype_cd', 'loinc_valtype'), ('nval_num', 'loinc_nval'), 
-         ('tval_char', 'loinc_tval'), ('units_cd', 'loinc_units'), ('start_date', 'loinc_start_date'), ('end_date', 'loinc_end_date')] :: pair_text[], 'LOINC:%', true);
+  perform observation_table('loinc', array[('concept_cd', 'concept'), ('valtype_cd', 'valtype'), ('nval_num', 'nval'), 
+         ("instance_num", "instance_num"), ('tval_char', 'tval'), ('units_cd', 'units'), ('start_date', 'start_date'), 
+         ('end_date', 'end_date')] :: pair_text[], 'LOINC:%', true);
 end $$; 
 
 do $$ begin
-  perform observation_table('mdctn', array[('concept_cd', 'mdctn_concept'), ('modifier_cd', 'mdctn_modifier'), ('valtype_cd', 'mdctn_valtype'), ('valueflag_cd', 'mdctn_valueflag'), ('nval_num', 'mdctn_nval'), 
-         ('tval_char', 'mdctn_tval'), ('units_cd', 'mdctn_units'), ('start_date', 'mdctn_start_date'), ('end_date', 'mdctn_end_date')] :: pair_text[], 'MDCTN:%', true);
+  perform observation_table('mdctn', array[('concept_cd', 'concept'), ('modifier_cd', 'modifier'), ('valtype_cd', 'valtype'), ("instance_num", "instance_num"),
+         ('valueflag_cd', 'valueflag'), ('nval_num', 'nval'), ('tval_char', 'tval'), ('units_cd', 'units'), 
+         ('start_date', 'start_date'), ('end_date', 'end_date')] :: pair_text[], 'MDCTN:%', true);
+end $$;
+
+do $$ begin
+  perform observation_table('vital', array[('concept_cd', 'concept'), ('modifier_cd', 'modifier'), ('valtype_cd', 'valtype'), 
+         ("instance_num", "instance_num"), ('valueflag_cd', 'valueflag'), ('nval_num', 'nval'), ('tval_char', 'tval'), 
+         ('units_cd', 'units'), ('start_date', 'start_date'), ('end_date', 'end_date')] :: pair_text[], 'VITAL:%', true);
+end $$;
+
+do $$ begin
+  perform observation_table('cpt', array[('concept_cd', 'oncept'), ('modifier_cd', 'modifier'), ('valtype_cd', 'valtype'), 
+         ('valueflag_cd', 'valueflag'), ('nval_num', 'nval'), ('tval_char', 'tval'), ('units_cd', 'units'), 
+         ('start_date', 'start_date'), ('end_date', 'end_date')] :: pair_text[], 'CPT:%', true);
+end $$;
+
+do $$ begin
+  perform observation_table('soc_hist', array[('concept_cd', 'concept'), ('modifier_cd', 'modifier'), ('valtype_cd', 'valtype'), 
+         ('valueflag_cd', 'valueflag'), ('nval_num', 'nval'), ('tval_char', 'val'), ('units_cd', 'units'), 
+         ('start_date', 'start_date'), ('end_date', 'end_date')] :: pair_text[], 'SOC_HIST:%', true);
 end $$;
 
 drop table if exists features;
@@ -229,6 +249,9 @@ create table features as select *, extract(day from start_date - birth_date) as 
 copy features to '/tmp/endotype3.csv' delimiter ',' csv header;
 copy loinc to '/tmp/loinc3.csv' delimiter ',' csv header;
 copy mdctn to '/tmp/mdctn3.csv' delimiter ',' csv header;
+copy vital to '/tmp/vital3.csv' delimiter ',' csv header;
+copy cpt to '/tmp/cpt3.csv' delimiter ',' csv header;
+copy soc_hist to '/tmp/soc_hist3.csv' delimiter ',' csv header;
 copy icd_asthma to '/tmp/icd3.csv' delimiter ',' csv header;
 
 

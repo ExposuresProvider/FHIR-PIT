@@ -58,6 +58,14 @@ create table cmaq_daily_max as
     group by a.col, a.row, a.date;
 create index cmaq_daily_max_index on cmaq_daily_max (col, row, date);
 
+drop table if exists cmaq_daily_average;
+drop index if exists cmaq_daily_average_index;
+create table cmaq_daily_average as 
+    select a.col, a.row, a.date, average(pmij) as averagepm, average(o3) as averageo
+    from cmaq_daily a inner join cmaq_exposures_data b on b.col = a.col and b.row = a.row and date_trunc('day', b.utc_date_time) = a.date 
+    group by a.col, a.row, a.date;
+create index cmaq_daily_average_index on cmaq_daily_average (col, row, date);
+
 drop table if exists cmaq_daily_DES;
 drop index if exists cmaq_daily_DES_index;
 create table cmaq_daily_DES as 
