@@ -8,7 +8,10 @@ begin
   elsif pm25 < 8.98 then
       return 3;
   elsif pm25 < 11.37 then
-      return 4;
+      return 4;set max_worker_processes = 24;
+set max_parallel_workers_per_gather = 24;
+set max_parallel_workers = 24;
+
   else
       return 5;
   end if;
@@ -31,12 +34,6 @@ begin
   end if;
 end;
 $$ language plpgsql;
-
-/* change these to fit your memory size */
-set enable_seqscan = off;
--- set shared_buffers = "25GB";
-set effective_cache_size = "50GB";
-set work_mem = "25GB";
 
 drop index if exists cmaq_exposures_index;
 create index cmaq_exposures_index on cmaq_exposures_data (col, row, date_trunc('day', utc_date_time));
