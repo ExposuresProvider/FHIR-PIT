@@ -165,7 +165,7 @@ select longtowide('mdctn', ARRAY['encounter_num','patient_num'], ARRAY['integer'
                   ARRAY['mdctn_valtype','mdctn_instance_num','mdctn_nval','mdctn_tval','mdctn_units','mdctn_start_date','mdctn_end_date','mdctn_modifier','mdctn_valueflag'], 'mdctn_wide');
 
 
-create table features_wide as select * from features inner join icd_asthma_norm_wide using (patient_num, encounter_num) inner join loinc using (patient_num, encounter_num) inner join mdctn using (patient_num, encounter_num);
+create table features_wide as select * from features inner join icd_asthma_norm_wide using (patient_num, encounter_num) inner join loinc_wide using (patient_num, encounter_num) inner join mdctn_wide using (patient_num, encounter_num);
 		  
 copy features_wide to '/tmp/endotype3.csv' delimiter ',' csv header;
 -- copy loinc_wide to '/tmp/loinc3.csv' delimiter ',' csv header;
