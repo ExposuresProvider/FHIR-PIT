@@ -8,6 +8,7 @@ create or replace function filter_icd(concept_cd text) returns boolean as $$
   end;
 $$ language plpgsql;
 
+drop type if exists pair_text;
 create type pair_text as (fst text, snd text);
 
 create or replace function observation_table(table_name text, column_name_pairs pair_text[], pat text, dist boolean) returns void as $$
@@ -34,6 +35,10 @@ begin
 end;
 $$ language plpgsql;
 
+drop index if exists observation_fact_index;
+drop index if exists observation_fact_index2;
+create index observation_fact_index on observation_fact (patient_num);
+create index observation_fact_index2 on observation_fact (encounter_num, patient_num);
 
 drop table if exists patient_reduced;
 drop index if exists patient_index;
@@ -42,25 +47,34 @@ create index patient_index on patient_reduced (patient_num );
 
 drop table if exists visit_reduced;
 drop index if exists visit_index;
-create table visit_reduced as select patient_num, encounter_num, inout_cd from visit_dimension where inout_cd is not null;
+create table visit_reduced as select patient_num, encounter_num, inout_cd, start_date, end_date from visit_dimension where inout_cd is not null;
 create index visit_index on visit_reduced (encounter_num, patient_num);                                                                                                                       
 
 /* find encounter_num and patient_num and icd_code with asthma like diagnosis */
 drop table if exists asthma;
-create table asthma as select concept_cd, encounter_num, patient_num from observation_fact where filter_icd(concept_cd);
+create table asthma as select distinct concept_cd, encounter_num, patient_num, start_date, end_date from observation_fact where filter_icd(concept_cd);
 
-drop table if exists asthma_encounter;
+/* drop table if exists asthma_encounter;
 drop index if exists asthma_encounter_index;
 create table asthma_encounter as select distinct encounter_num, patient_num from asthma;
-create index asthma_encounter_index on asthma_encounter (encounter_num, patient_num);                                                                                                           
+create index asthma_encounter_index on asthma_encounter (encounter_num, patient_num); */                                                                                                        
 
 drop table if exists asthma_patient;
 drop index if exists asthma_patient_index;
 create table asthma_patient as select distinct patient_num from asthma;
-create index asthma_patient_index on asthma_patient (patient_num);                                                                                                           
+create index asthma_patient_index on asthma_patient (patient_num);                                                                                                             
+
+/* drop table if exists start_end_date_asthma;
+drop index if exists start_end_date_asthma_index;
+drop index if exists start_end_date_asthma_index2;
+drop index if exists start_end_date_asthma_index3;
+create table start_end_date_asthma as select start_date, end_date, encounter_num, patient_num from visit_reduced inner join asthma_patient using (patient_num) group by encounter_num, patient_num;
+create index start_end_date_asthma_index on start_end_date_asthma (encounter_num, patient_num);                                                                                                           
+create index start_end_date_asthma_index2 on start_end_date_asthma (start_date asc);
+create index start_end_date_asthma_index3 on start_end_date_asthma (end_date asc); */
 
 /* filter observation_fact */
-drop table if exists observation_asthma_reduced;
+/*drop table if exists observation_asthma_reduced;
 drop index if exists observation_asthma_index;
 create table observation_asthma_reduced as select start_date, encounter_num, patient_num from observation_fact inner join asthma_encounter using (encounter_num, patient_num);
 create index observation_asthma_index on observation_asthma_reduced (encounter_num, patient_num);                                                                                
@@ -70,7 +84,7 @@ drop index if exists start_date_asthma_index;
 drop index if exists start_date_asthma_index2;
 create table start_date_asthma as select min(start_date :: timestamp) as start_date, encounter_num, patient_num from observation_asthma_reduced group by encounter_num, patient_num;
 create index start_date_asthma_index on start_date_asthma (encounter_num, patient_num);                                                                                                           
-create index start_date_asthma_index2 on start_date_asthma (start_date asc);
+create index start_date_asthma_index2 on start_date_asthma (start_date asc); */
 
 /* should assign lat, long based on encounter_num, but the data does it using patient_num */
 drop table if exists lat_asthma;
@@ -95,7 +109,7 @@ create table latlong_asthma as select * from lat_asthma inner join long_asthma u
 create index latlong_asthma_index on latlong_asthma ( patient_num);       
 
 drop table if exists ed_visits_asthma0;
-create table ed_visits_asthma0 as select * from start_date_asthma inner join visit_reduced using (encounter_num, patient_num);  
+create table ed_visits_asthma0 as select asthma.start_date astham_start_date, visit_reduced.start_date start_date, inout_cd, patient_num, encounter_num from asthma inner join visit_reduced using (encounter_num, patient_num);  
 
 drop table if exists ed_visits_asthma1;
 drop index if exists ed_visits_asthma1_index;
@@ -106,13 +120,12 @@ create index ed_visits_asthma1_index2 on ed_visits_asthma1 (patient_num);
 
 drop table if exists ed_visits_asthma;
 drop index if exists ed_visits_asthma_index;
-create table ed_visits_asthma as select encounter_num, patient_num, start_date, inout_cd, (select count(distinct encounter_num) from ed_visits_asthma1 b where b.patient_num = a.patient_num and b.start_date :: timestamp <@ tsrange (a.start_date :: timestamp - interval '1 year', a.start_date :: timestamp, '[)')) as pre_ed, (select count(distinct encounter_num) from ed_visits_asthma1 b where b.patient_num = a.patient_num and b.start_date :: timestamp <@ tsrange (a.start_date :: timestamp, a.start_date :: timestamp + interval '1 year', '(]')) as post_ed from ed_visits_asthma0 a;
+create table ed_visits_asthma as
+  select encounter_num, patient_num, start_date, inout_cd,
+    (select count(distinct encounter_num) from ed_visits_asthma1 b where b.patient_num = a.patient_num and b.start_date :: timestamp <@ tsrange (a.start_date :: timestamp - interval '1 year', a.start_date :: timestamp, '[)')) as pre_ed,
+    (select count(distinct encounter_num) from ed_visits_asthma1 b where b.patient_num = a.patient_num and b.start_date :: timestamp <@ tsrange (a.start_date :: timestamp, a.start_date :: timestamp + interval '1 year', '(]')) as post_ed
+  from ed_visits_asthma0 a;
 create index ed_visits_asthma_index on ed_visits_asthma (encounter_num, patient_num);                
-
-drop table if exists icd_asthma;
-drop index if exists icd_asthma_index;
-create table icd_asthma as select distinct encounter_num, patient_num, concept_cd as icd_code from asthma inner join latlong_asthma using (patient_num) where filter_icd(concept_cd);
-create index icd_asthma_index on icd_asthma ( encounter_num, patient_num);                                                                                                                                   
 
 do $$ begin
   perform observation_table('loinc', array[('concept_cd', 'concept'), ('valtype_cd', 'valtype'), ('nval_num', 'nval'), 
@@ -151,10 +164,13 @@ create table features as select *, extract(day from start_date - birth_date) as 
 
 -- long to wide
 
-drop table if exists icd_asthma_norm;
-create table icd_asthma_norm as select *, True norm from icd_asthma;
+drop table if exists icd_asthma;
+create table icd_asthma as select encounter_num, patient_num, start_date, end_date, concept_cd as icd_code, True norm from asthma;
 
-select longtowide('icd_asthma_norm', ARRAY['encounter_num','patient_num'], ARRAY['integer','integer'], 'icd_code', ARRAY['norm'], ARRAY['boolean'], ARRAY['icd_code'], 'icd_asthma_norm_wide');
+select longtowide('icd_asthma', ARRAY['encounter_num','patient_num'], ARRAY['integer','integer'], 'icd_code',
+                  ARRAY['norm','start_date','end_date'],
+		  ARRAY['boolean','timestamp','timestamp'],
+		  ARRAY['icd_code','icd_code_start_date','icd_code_end_data'], 'icd_asthma_wide');
 select longtowide('loinc', ARRAY['encounter_num','patient_num'], ARRAY['integer','integer'], 'concept',
                   ARRAY['valtype','instance_num','nval','tval','units','start_date','end_date'],
 		  ARRAY['varchar(50)', 'integer', 'numeric', 'varchar(255)', 'varchar(50)', 'timestamp', 'timestamp'],
@@ -165,7 +181,7 @@ select longtowide('mdctn', ARRAY['encounter_num','patient_num'], ARRAY['integer'
                   ARRAY['mdctn_valtype','mdctn_instance_num','mdctn_nval','mdctn_tval','mdctn_units','mdctn_start_date','mdctn_end_date','mdctn_modifier','mdctn_valueflag'], 'mdctn_wide');
 
 
-create table features_wide as select * from features full outer join icd_asthma_norm_wide using (patient_num, encounter_num) full outer join loinc_wide using (patient_num, encounter_num) full outer join mdctn_wide using (patient_num, encounter_num);
+create table features_wide as select * from features full outer join icd_asthma_wide using (patient_num, encounter_num) full outer join loinc_wide using (patient_num, encounter_num) full outer join mdctn_wide using (patient_num, encounter_num);
 		  
 copy features_wide to '/tmp/endotype3.csv' delimiter ',' csv header;
 -- copy loinc_wide to '/tmp/loinc3.csv' delimiter ',' csv header;
