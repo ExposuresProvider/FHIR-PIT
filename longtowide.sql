@@ -46,6 +46,7 @@ declare
   endi integer;
   suffix text;
   colnamescurr text[];
+  san text;
 begin
   colnames := getcolnames(table_name_long, colnamecol);
   keyargs := array_to_string(array(select format('%I', key) from unnest(keys) as keys(key)),',');
@@ -94,11 +95,13 @@ begin
 --      raise notice 'sql: %', sql;
       execute sql;
     end loop;
+    execute format('select sparse_array_name(ARRAY[] :: %s[])', col_value_col_types[i]) into san;
     perform executesql(format('drop table if exists %I', table_name_wide_value));
-    sql := format('create table %I as select %s, %s %I from %I%s',
+    sql := format('create table %I as select %s, (%s :: %s) %I from %I%s',
                 table_name_wide_value,
 		keyargs,
 		array_to_string(array(select format('%I', cni) from unnest(col_name_wide_valueis) as col_name_wide_valueis(cni)),' || '),
+		san,
 		col_name_wide_value,
 		table_name_wide_valueis[1],
 		array_to_string(array(select format(' inner join %I using (%s)', tni, keyargs) from unnest(table_name_wide_valueis[2:array_upper(table_name_wide_valueis,1)]) as table_name_wide_valueis(tni)),''));

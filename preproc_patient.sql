@@ -160,7 +160,7 @@ end $$;
 */
 
 drop table if exists features;
-create table features as select *, extract(day from start_date - birth_date) as age from ed_visits_asthma inner join patient_reduced using (patient_num) inner join latlong_asthma using (patient_num);
+create table features as select */* , extract(day from start_date - birth_date) as age*/ from patient_reduced inner join latlong_asthma using (patient_num);
 
 -- long to wide
 
@@ -181,9 +181,16 @@ select longtowide('mdctn', ARRAY['encounter_num','patient_num'], ARRAY['integer'
                   ARRAY['mdctn_valtype','mdctn_instance_num','mdctn_nval','mdctn_tval','mdctn_units','mdctn_start_date','mdctn_end_date','mdctn_modifier','mdctn_valueflag'], 'mdctn_wide');
 
 
-create table features_wide as select * from features full outer join icd_asthma_wide using (patient_num, encounter_num) full outer join loinc_wide using (patient_num, encounter_num) full outer join mdctn_wide using (patient_num, encounter_num);
+drop table if exists features_wide;
+create table features_wide as
+  select *
+  from ed_visits_asthma
+    full outer join icd_asthma_wide using (patient_num, encounter_num)
+    full outer join loinc_wide using (patient_num, encounter_num)
+    full outer join mdctn_wide using (patient_num, encounter_num)
+    inner join features using (patient_num);
 		  
-copy features_wide to '/tmp/endotype3.csv' delimiter ',' csv header;
+copy features_wide to '/tmp/endotype3.csv' delimiter ',' null '' csv header;
 -- copy loinc_wide to '/tmp/loinc3.csv' delimiter ',' csv header;
 -- copy mdctn_wide to '/tmp/mdctn3.csv' delimiter ',' csv header;
 -- copy vital_wide to '/tmp/vital3.csv' delimiter ',' csv header;
@@ -195,6 +202,6 @@ copy mdctn_wide_meta to '/tmp/mdctn_meta3.csv' delimiter ',' csv header;
 -- copy vital_wide_meta to '/tmp/vital_meta3.csv' delimiter ',' csv header;
 -- copy cpt_wide_meta to '/tmp/cpt_meta3.csv' delimiter ',' csv header;
 -- copy soc_hist_wide_meta to '/tmp/soc_hist_meta3.csv' delimiter ',' csv header;
-copy icd_asthma_norm_wide_meta to '/tmp/icd_meta3.csv' delimiter ',' csv header;
+copy icd_asthma_wide_meta to '/tmp/icd_meta3.csv' delimiter ',' csv header;
 
 
