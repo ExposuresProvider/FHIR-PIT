@@ -2,7 +2,7 @@
 define(`generate_array_sparse', `
 drop type if exists $2 cascade; 
 
-create type $2 as (indicies integer[], elements $1[]); 
+create type $2 as (indices integer[], elements $1[]); 
 
 create or replace function $2_cast(a $1[]) returns $2 as $$
 declare
