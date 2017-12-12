@@ -97,7 +97,7 @@ begin
     end loop;
     execute format('select sparse_array_name(ARRAY[] :: %s[])', col_value_col_types[i]) into san;
     perform executesql(format('drop table if exists %I', table_name_wide_value));
-    sql := format('create table %I as select %s, (%s :: %s) %I from %I%s',
+    sql := format('create table %I as select %s, ((%s) :: %s) %I from %I%s',
                 table_name_wide_value,
 		keyargs,
 		array_to_string(array(select format('%I', cni) from unnest(col_name_wide_valueis) as col_name_wide_valueis(cni)),' || '),

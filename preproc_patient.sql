@@ -189,19 +189,22 @@ create table features_wide as
     full outer join loinc_wide using (patient_num, encounter_num)
     full outer join mdctn_wide using (patient_num, encounter_num)
     inner join features using (patient_num);
-		  
-copy features_wide to '/tmp/endotype3.csv' delimiter ',' null '' csv header;
+
+create temp table tmp (like features_wide);
+copy tmp to '/tmp/endotype_meta.csv' delimiter ',' csv header;
+drop table tmp;
+copy features_wide to '/tmp/endotype.csv' delimiter ',' null '';
 -- copy loinc_wide to '/tmp/loinc3.csv' delimiter ',' csv header;
 -- copy mdctn_wide to '/tmp/mdctn3.csv' delimiter ',' csv header;
 -- copy vital_wide to '/tmp/vital3.csv' delimiter ',' csv header;
 -- copy cpt_wide to '/tmp/cpt3.csv' delimiter ',' csv header;
 -- copy soc_hist_wide to '/tmp/soc_hist3.csv' delimiter ',' csv header;
 -- copy icd_asthma_norm_wide to '/tmp/icd3.csv' delimiter ',' csv header;
-copy loinc_wide_meta to '/tmp/loinc_meta3.csv' delimiter ',' csv header;
-copy mdctn_wide_meta to '/tmp/mdctn_meta3.csv' delimiter ',' csv header;
+copy loinc_wide_meta to '/tmp/loinc_meta.csv' delimiter ',';
+copy mdctn_wide_meta to '/tmp/mdctn_meta.csv' delimiter ',';
 -- copy vital_wide_meta to '/tmp/vital_meta3.csv' delimiter ',' csv header;
 -- copy cpt_wide_meta to '/tmp/cpt_meta3.csv' delimiter ',' csv header;
 -- copy soc_hist_wide_meta to '/tmp/soc_hist_meta3.csv' delimiter ',' csv header;
-copy icd_asthma_wide_meta to '/tmp/icd_meta3.csv' delimiter ',' csv header;
+copy icd_asthma_wide_meta to '/tmp/icd_meta.csv' delimiter ',';
 
 
