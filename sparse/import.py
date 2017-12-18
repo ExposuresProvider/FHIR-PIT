@@ -38,13 +38,13 @@ class sparsecsvListener(sparsecsvListener):
     def __init__(self, colnames):
         self.colnames = colnames
         self.stack = []
-        self.df = pd.DataFrame(columns=sum(map(wrap, colnames),[]))
+        self.df = pd.DataFrame(columns=sum(map(wrap, colnames),[])) #.to_sparse()
     def enterRow(self, ctx):
         self.colgroup = 0
         self.row = {}
         self.col = 0
     def exitRow(self, ctx):
-        df = pd.DataFrame([self.row])
+        df = pd.DataFrame([self.row]) #.to_sparse()
         self.df = self.df.append(df)
     def enterEntry(self, ctx):
         self.isArray = False
