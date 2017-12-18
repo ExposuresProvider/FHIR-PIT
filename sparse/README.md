@@ -6,7 +6,7 @@ https://github.com/antlr/antlr4/blob/master/doc/python-target.md
 
     antlr4 -Dlanguage=Python2 sparsecsv.g4
 
-This step should generated the following python source file:
+This step should generate the following python source file:
 
 `sparsecsvParser.py`
 
