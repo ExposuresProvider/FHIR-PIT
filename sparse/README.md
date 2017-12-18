@@ -1,29 +1,38 @@
-1. install antlr 4:
+# install antlr 4 #
 
 https://github.com/antlr/antlr4/blob/master/doc/python-target.md
 
-2. generate parser:
+# generate parser #
 
     antlr4 -Dlanguage=Python2 sparsecsv.g4
 
 This step should generated the following python source file:
 
-sparsecsvParser.py
-sparsecsvLexer.py
-sparsecsvListener.py
+`sparsecsvParser.py`
 
-Make sure that they are in the same directory as import.py
+`sparsecsvLexer.py`
 
-3. Copy data and metadata files
+`sparsecsvListener.py`
 
-Current you need
+Make sure that they are in the same directory as `import.py`
 
-endotype-wide.csv
-mdctn_meta.csv
-loinc_meta.csv
-icd_meta.csv
-endotype_meta.csv
+# Copy data and metadata files #
 
-4. load csv
+Currently you need
 
-import the import.py module
+`endotype-wide.csv`
+
+`mdctn_meta.csv`
+
+`loinc_meta.csv`
+
+`icd_meta.csv`
+
+`endotype_meta.csv`
+
+# load csv #
+
+```
+from import_df import load_df
+df = load_df(<filename>)
+```
