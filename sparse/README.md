@@ -14,7 +14,7 @@ This step should generated the following python source file:
 
 `sparsecsvListener.py`
 
-Make sure that they are in the same directory as `import.py`
+Make sure that they are in the same directory as `import_df.py`
 
 # Copy data and metadata files #
 
