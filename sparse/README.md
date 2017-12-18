@@ -1,8 +1,10 @@
-# install antlr 4 #
+# Loading sparse wide format table into Python #
+
+## install antlr 4 ##
 
 https://github.com/antlr/antlr4/blob/master/doc/python-target.md
 
-# generate parser #
+## generate parser ##
 
     antlr4 -Dlanguage=Python2 sparsecsv.g4
 
@@ -16,7 +18,7 @@ This step should generate the following python source file:
 
 Make sure that they are in the same directory as `import_df.py`
 
-# Copy data and metadata files #
+## Copy data and metadata files ##
 
 Currently you need
 
@@ -30,7 +32,7 @@ Currently you need
 
 `endotype_meta.csv`
 
-# load csv #
+## load csv ##
 
 ```
 from import_df import load_df
