@@ -1,17 +1,11 @@
 import numpy as np
 import pandas as pd
-import re
-import sys
 from antlr4 import *
 from sparsecsvLexer import sparsecsvLexer
 from sparsecsvParser import sparsecsvParser
 from sparsecsvListener import sparsecsvListener
 from antlr4.tree.Trees import Trees
 from enum import Enum
-
-def main(argv):
-    df = load_df(argv[1])
-    print(sparse_array);
 
 def load_df(filepath):
     colnames_dict = {
@@ -92,7 +86,7 @@ def import_sparse(colnames, filepath):
     walker = ParseTreeWalker()
     listener = sparsecsvListener(colnames)
     walker.walk(listener, tree)
-    print(listener.df)
+    return listener.df
          
 def import_array(filepath):
     input = FileStream(filepath)
@@ -105,5 +99,3 @@ def import_array(filepath):
     walker.walk(listener, tree)
     return listener.elements
 
-if __name__ == '__main__':
-    main(sys.argv)
