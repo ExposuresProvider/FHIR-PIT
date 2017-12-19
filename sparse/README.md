@@ -1,23 +1,5 @@
 # Loading sparse wide format table into Python #
 
-## install antlr 4 ##
-
-https://github.com/antlr/antlr4/blob/master/doc/python-target.md
-
-## generate parser ##
-
-    antlr4 -Dlanguage=Python2 sparsecsv.g4
-
-This step should generate the following python source file:
-
-`sparsecsvParser.py`
-
-`sparsecsvLexer.py`
-
-`sparsecsvListener.py`
-
-Make sure that they are in the same directory as `import_df.py`
-
 ## Copy data and metadata files ##
 
 Currently you need
