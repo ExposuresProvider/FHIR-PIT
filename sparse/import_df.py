@@ -1,16 +1,17 @@
 import pandas as pd
-def load_df(filepath, callback=None):
-    colnames_dict = {
-        u"icd" : import_array("icd_meta.csv"),
-        u"mdctn" : import_array("mdctn_meta.csv"),
-        u"loinc" : import_array("loinc_meta.csv")
-        }
-    def meta(x):
+
+def load_df(filepath, callback=None, filemeta = "endotype_meta.csv", colmeta = [("icd", "icd_meta.csv"), ("mdctn", "mdctn_meta.csv"),
+("loinc", "loinc_meta.csv")]):
+    colnames_dict = {}
+    for col, meta in colmeta:
+        colnames_dict[col] = import_array(meta)
+
+    def colname(x):
         for key, val in colnames_dict.iteritems():
             if x[:len(key)] == key:
                 return map(lambda y: x + "_" + y, val)
         return x
-    colnames = map(meta, import_array("endotype_meta.csv"))
+    colnames = map(colname, import_array(filemeta))
 
     return import_sparse(colnames, filepath, callback)
 
