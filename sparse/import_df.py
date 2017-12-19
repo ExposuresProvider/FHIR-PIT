@@ -1,12 +1,4 @@
-import numpy as np
 import pandas as pd
-from antlr4 import *
-from sparsecsvLexer import sparsecsvLexer
-from sparsecsvParser import sparsecsvParser
-from sparsecsvListener import sparsecsvListener
-from antlr4.tree.Trees import Trees
-from enum import Enum
-
 def load_df(filepath, callback=None):
     colnames_dict = {
         u"icd" : import_array("icd_meta.csv"),
@@ -189,21 +181,27 @@ def parse_quoted_string(inp):
         s += inp.curr()
         inp.next()
     return s
-    
+
+def wrap(x):
+    if isinstance(x, list):
+        return x
+    else:
+        return [x]
+        
 def import_sparse(colnames, filepath, callback=None):
     if callback == None:
         def cb(r):
             dfr = pd.DataFrame([r]) #.to_sparse()
             cb.df = cb.df.append(dfr)
-            cb.df = pd.DataFrame(columns=sum(map(wrap, colnames),[])) #.to_sparse()
-            callback2 = cb
+        cb.df = pd.DataFrame(columns=sum(map(wrap, colnames),[])) #.to_sparse()
+        callback2 = cb
     else:
         callback2 = callback
         
     with open(filepath) as f:
         line = f.readline()
         while line:
-            callback(parse_row(line, colnames))
+            callback2(parse_row(line, colnames))
             line = f.readline()
     return callback2
          
