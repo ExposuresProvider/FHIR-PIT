@@ -7,7 +7,7 @@ from sparsecsvListener import sparsecsvListener
 from antlr4.tree.Trees import Trees
 from enum import Enum
 
-def load_df(filepath):
+def load_df(filepath, callback=None):
     colnames_dict = {
         u"icd" : import_array("icd_meta.csv"),
         u"mdctn" : import_array("mdctn_meta.csv"),
@@ -20,7 +20,7 @@ def load_df(filepath):
         return x
     colnames = map(meta, import_array("endotype_meta.csv"))
 
-    return import_sparse(colnames, filepath)
+    return import_sparse(colnames, filepath, callback)
 
 def wrap(x):
     if not isinstance(x, list):
@@ -29,17 +29,16 @@ def wrap(x):
         return x
     
 class sparsecsvListener(sparsecsvListener):
-    def __init__(self, colnames):
+    def __init__(self, colnames, callback):
         self.colnames = colnames
         self.stack = []
-        self.df = pd.DataFrame(columns=sum(map(wrap, colnames),[])) #.to_sparse()
+        self.callback = callback
     def enterRow(self, ctx):
         self.colgroup = 0
         self.row = {}
         self.col = 0
     def exitRow(self, ctx):
-        df = pd.DataFrame([self.row]) #.to_sparse()
-        self.df = self.df.append(df)
+        self.callback(self.row)
     def enterEntry(self, ctx):
         self.isArray = False
         self.stack = []
@@ -77,16 +76,29 @@ class arrayListener(sparsecsvListener):
     def enterString(self, ctx):
         self.elements.append(ctx.getText())
 
-def import_sparse(colnames, filepath):
-    input = FileStream(filepath)
-    lexer = sparsecsvLexer(input)
-    stream = CommonTokenStream(lexer)
-    parser = sparsecsvParser(stream)
-    tree = parser.csv()
-    walker = ParseTreeWalker()
-    listener = sparsecsvListener(colnames)
-    walker.walk(listener, tree)
-    return listener.df
+def import_sparse(colnames, filepath, callback=None):
+    if callback == None:
+        def cb(r):
+            dfr = pd.DataFrame([r]) #.to_sparse()
+            cb.df = cb.df.append(dfr)
+            cb.df = pd.DataFrame(columns=sum(map(wrap, colnames),[])) #.to_sparse()
+            callback2 = cb
+    else:
+        callback2 = callback
+        
+    with open(filepath) as f:
+        line = f.readline()
+        while line:
+            input = InputStream(line)
+            lexer = sparsecsvLexer(input)
+            stream = CommonTokenStream(lexer)
+            parser = sparsecsvParser(stream)
+            tree = parser.csv()
+            walker = ParseTreeWalker()
+            listener = sparsecsvListener(colnames, callback2)
+            walker.walk(listener, tree)
+            line = f.readline()
+    return callback2
          
 def import_array(filepath):
     input = FileStream(filepath)

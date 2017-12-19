@@ -23,7 +23,7 @@ indices : QUOTES? LBRACE (string (COMMA string?)* | (COMMA string?)+)? RBRACE QU
 
 elements : QUOTES? LBRACE (string (COMMA string?)* | (COMMA string?)+)? RBRACE QUOTES?;
 
-string : QUOTES? STRING QUOTES?;
+string : QUOTES? STRING QUOTES? | QUOTES;
 
 LBRACE : '{';
 RBRACE : '}';
