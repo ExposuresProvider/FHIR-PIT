@@ -48,4 +48,13 @@ where `r` is an object of the form:
    col_name_n : col_value_n
 }
 ```
+For example, print rows filtered by age <= 10:
 
+```
+    def cb(r):
+        birth_date = datetime.strptime(r['birth_date'], "%Y-%m-%d %H:%M:%S")
+        curr_date = datetime.now()
+        age = curr_date.year - birth_date.year - ((curr_date.month, curr_date.day) < (birth_date.month, birth_date.day))
+        if age <= 10:
+            print(r)
+```
