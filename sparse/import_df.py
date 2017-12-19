@@ -22,60 +22,174 @@ def load_df(filepath, callback=None):
 
     return import_sparse(colnames, filepath, callback)
 
-def wrap(x):
-    if not isinstance(x, list):
-        return [x]
-    else:
-        return x
+class Input:
+    def __init__(self, buf, pos):
+        self.buf = buf
+        self.pos = pos
+    def curr(self):
+        return self.buf[self.pos]
+    def skip(self, s):
+        for j in range(len(s)):
+            if self.curr() != s[j]:
+                raise NameError("error: expected " + s[j] + " found " + self.curr() + " at " + str(self.pos))
+            self.next()
+    def next(self):
+        self.pos += 1
+    def eof(self):
+        return self.pos == len(self.buf)
+    def getPos(self):
+        return self.pos
+            
+def parse_array(line):
+    row = []
+    inp = Input(line, 0)
+    if inp.curr() == "{":
+        inp.next()
+    while True:
+        s = parse_unquoted_string(inp)
+        row.append(s)
+        if inp.eof() or inp.curr() == "}":
+            break;
+        if inp.curr() == "\\":
+            inp.skip("\\,")
+        else:
+            inp.skip(",")
+    if not inp.eof() and inp.curr() == "}":
+        inp.next()
+    if not inp.eof() and inp.curr() == "\n":
+        inp.next()
     
-class sparsecsvListener(sparsecsvListener):
-    def __init__(self, colnames, callback):
-        self.colnames = colnames
-        self.stack = []
-        self.callback = callback
-    def enterRow(self, ctx):
-        self.colgroup = 0
-        self.row = {}
-        self.col = 0
-    def exitRow(self, ctx):
-        self.callback(self.row)
-    def enterEntry(self, ctx):
-        self.isArray = False
-        self.stack = []
-    def exitEntry(self, ctx):
-        if not self.isArray:
-            colname = self.colnames[self.col]
-            self.row[colname] = self.stack[0]
-    def enterCol(self, ctx):
-        self.col += 1
-    def enterElements(self, ctx):
-        self.stack = []
-    def exitElements(self, ctx):
-        self.elements = self.stack
-    def enterIndices(self, ctx):
-        self.stack = []
-    def exitIndices(self, ctx):
-        self.indices = self.stack
-    def enterString(self, ctx):
-        self.stack.append(ctx.getText())
-    def enterSparse_array(self,ctx):
-        self.isArray = True
-    def exitSparse_array(self,ctx):
-        indices = map(int, self.indices)
-        elements = self.elements
-        names = self.colnames[self.col]
-        for inx, name in enumerate(names):
-            if inx in indices:
-                self.row[name] = elements[indices.index(inx)]
-            else:
-                self.row[name] = u""
+    if not inp.eof():
+        raise NameError("error: expected oef found " + inp.curr() + " at " + str(inp.getPos()))
+        
+    return row
 
-class arrayListener(sparsecsvListener):
-    def __init__(self):
-        self.elements = []
-    def enterString(self, ctx):
-        self.elements.append(ctx.getText())
+def parse_row(line, colnames):
+    row = {}
+    i = 0
+    col = 0
+    inp = Input(line, 0)
+    while True:
+        parse_entry(inp, row, colnames[col]);
+        if inp.eof():
+            break;
+        inp.skip(",")
+        col += 1
+    return row
 
+def parse_entry(inp, row, names):
+    if isinstance(names, list):
+        if inp.curr() == "\"":
+            inp.skip("\"")
+            entry = parse_sparse_array(inp)
+            indices = entry['indices']
+            elements = entry['elements']
+            for inx, name in enumerate(names):
+                if inx in indices:
+                    row[name] = elements[indices.index(inx)]
+                else:
+                    row[name] = ""
+            inp.skip("\"")
+    else:
+        string = parse_unquoted_string(inp)
+        row[names] = string
+        
+
+def parse_unquoted_string(inp):
+    s = ""
+    while not (inp.eof() or inp.curr() == ","):
+        s += inp.curr()
+        inp.next()
+    return s
+        
+def parse_sparse_array(inp):
+    inp.skip("(")
+    indices = parse_indices(inp)
+    inp.skip(",")
+    elements = parse_elements(inp)
+    inp.skip(")")
+    return {'indices': indices, 'elements' : elements}
+
+def parse_indices(inp):
+    indices = []
+    if inp.curr() == "\"":
+        inp.skip("\"\"{")
+        while inp.curr() != "}":
+            n = parse_int(inp)
+            indices.append(n)
+            if inp.curr() == ",":
+                inp.next()
+        inp.skip("}\"\"")
+    else:
+        inp.skip("{")
+        while inp.curr() != "}":
+            n = parse_int(inp)
+            indices.append(n)
+            if inp.curr() == ",":
+                inp.next()
+        inp.skip("}")
+
+    return indices
+    
+def parse_elements(inp):
+    elements = []
+    if inp.curr() == "\"":
+        inp.skip("\"\"{")
+        while inp.curr() != "}":
+            n = parse_string4(inp)
+            elements.append(n)
+            if inp.curr() == ",":
+                inp.next()
+        inp.skip("}\"\"")
+    else:
+        inp.skip("{")
+        while inp.curr() != "}":
+            n = parse_string2(inp)
+            elements.append(n)
+            if inp.curr() == ",":
+                inp.next()
+        inp.skip("}")
+    return elements
+
+def parse_int(inp):
+    s = ""
+    while not inp.eof() and inp.curr().isdigit():
+        s += inp.curr()
+        inp.next()
+    return int(s)
+
+def parse_string2(inp):
+    if inp.curr() == "\"":
+        inp.skip("\"\"")
+        s = parse_quoted_string(inp)
+        inp.skip("\"\"")
+    else:
+        s = parse_unquoted_string(inp)
+    return s
+
+def parse_string4(inp):
+    if inp.curr() == "\"":
+        inp.skip("\"\"\"\"")
+        s = parse_quoted_string(inp)
+        inp.skip("\"\"\"\"")
+    else:
+        s = parse_unquoted_string(inp)
+    return s
+            
+def parse_unquoted_string(inp):
+    s = ""
+    while not (inp.eof() or inp.curr() in "(){}\\,\""):
+        s += inp.curr()
+        inp.next()
+    return s
+    
+def parse_quoted_string(inp):
+    s = ""
+    while not (inp.eof() or inp.curr() == "\""):
+        s += inp.curr()
+        inp.next()
+    return s
+    
 def import_sparse(colnames, filepath, callback=None):
     if callback == None:
         def cb(r):
@@ -89,25 +203,13 @@ def import_sparse(colnames, filepath, callback=None):
     with open(filepath) as f:
         line = f.readline()
         while line:
-            input = InputStream(line)
-            lexer = sparsecsvLexer(input)
-            stream = CommonTokenStream(lexer)
-            parser = sparsecsvParser(stream)
-            tree = parser.csv()
-            walker = ParseTreeWalker()
-            listener = sparsecsvListener(colnames, callback2)
-            walker.walk(listener, tree)
+            callback(parse_row(line, colnames))
             line = f.readline()
     return callback2
          
 def import_array(filepath):
-    input = FileStream(filepath)
-    lexer = sparsecsvLexer(input)
-    stream = CommonTokenStream(lexer)
-    parser = sparsecsvParser(stream)
-    tree = parser.array()
-    walker = ParseTreeWalker()
-    listener = arrayListener()
-    walker.walk(listener, tree)
-    return listener.elements
+    with open(filepath) as f:
+        line = f.readline()
+        return parse_array(line)
+
 
