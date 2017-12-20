@@ -80,8 +80,8 @@ def parse_entry(inp, row, names):
             for inx, name in enumerate(names):
                 if inx in indices:
                     row[name] = elements[indices.index(inx)]
-                else:
-                    row[name] = ""
+#                else:
+#                    row[name] = ""
             inp.skip("\"")
     else:
         string = parse_unquoted_string(inp)
