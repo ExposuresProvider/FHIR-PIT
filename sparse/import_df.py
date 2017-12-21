@@ -171,7 +171,7 @@ def parse_string4(inp):
             
 def parse_unquoted_string(inp):
     s = ""
-    while not (inp.eof() or inp.curr() in "(){}\\,\""):
+    while not (inp.eof() or inp.curr() in "{}\\,\""):
         s += inp.curr()
         inp.next()
     return s

@@ -7,14 +7,14 @@ def main(argv):
 #    print(df.df)
 #'''
     def cb(r):
-        birth_date = datetime.strptime(r['birth_date'], "%Y-%m-%d %H:%M:%S")
-        curr_date = datetime.now()
+#        birth_date = datetime.strptime(r['birth_date'], "%Y-%m-%d %H:%M:%S")
+#        curr_date = datetime.now()
     
-        age = curr_date.year - birth_date.year - ((curr_date.month, curr_date.day) < (birth_date.month, birth_date.day))
+#        age = curr_date.year - birth_date.year - ((curr_date.month, curr_date.day) < (birth_date.month, birth_date.day))
     
-        if(age < 100):
-            # print ("row " + str(cb.i))
-            print (r)
+#        if(age < 100):
+        print ("row " + str(cb.i))
+            # print (r)
         cb.i += 1
     cb.i = 0
 

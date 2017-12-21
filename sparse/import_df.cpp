@@ -149,7 +149,7 @@ void parse_entry(Input &inp, callback_row &row, const std::tuple<bool, std::vect
       auto &indices = std::get<0>(entry);
       auto &elements = std::get<1>(entry);
       for (int i = 0; i< indices.size(); i++) {
-	row[names[indices[i]]] = elements[i];
+	row[names[indices[i]-1]] = elements[i];
       }
       inp.skip("\"");
     }
@@ -179,6 +179,8 @@ std::vector<int> parse_indices(Input &inp){
       indices.push_back(n);
       if(inp.curr() == ',') {
 	inp.next();
+      } else {
+	break;
       }
     }
     inp.skip("}\"\"");
@@ -190,6 +192,8 @@ std::vector<int> parse_indices(Input &inp){
       indices.push_back(n);
       if (inp.curr() == ',') {
 	inp.next();
+      } else {
+	break;
       }
     }
     inp.skip("}");
@@ -207,6 +211,8 @@ std::vector<std::string> parse_elements(Input &inp) {
       elements.push_back(n);
       if (inp.curr() == ',') {
 	inp.next();
+      } else {
+	break;
       }
     }
     inp.skip("}\"\"");
@@ -218,6 +224,8 @@ std::vector<std::string> parse_elements(Input &inp) {
       elements.push_back(n);
       if (inp.curr() == ',') {
 	inp.next();
+      } else {
+	break;
       }
     }
     inp.skip("}");
@@ -264,7 +272,7 @@ std::string parse_string4(Input &inp) {
             
 std::string parse_unquoted_string(Input &inp) {
   return parse_while(inp, [](char ch) {
-      return std::string("(){}\\,\"").find(ch) == std::string::npos;
+      return std::string("{}\\,\"").find(ch) == std::string::npos;
     });
 }
 
@@ -281,8 +289,11 @@ void import_sparse(const std::vector<std::tuple<bool, std::vector<std::string>>>
   std::string line;
   while(!f.eof()) {
     std::getline(f, line);
-    if(callback(parse_row(line, colnames)))
+    if(line == "")
+      break;
+    if(callback(parse_row(line, colnames))) {
       return;
+    }
   }
 }
         
