@@ -58,3 +58,12 @@ For example, print rows filtered by age <= 10:
         if age <= 10:
             print(r)
 ```
+
+# Loading into C++
+
+If you want to preprocess the file, this is preferred approach. Modify `import.cpp` to do preprocessing.
+
+```
+g++ -o import -std=c++17 import.cpp import_df.cpp
+```
+
