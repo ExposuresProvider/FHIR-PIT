@@ -67,3 +67,4 @@ If you want to preprocess the file, this is preferred approach. Modify `import.c
 g++ -o import -std=c++17 import.cpp import_df.cpp
 ```
 
+If c++17 is not available you can use `c++11` or `c++14`.
