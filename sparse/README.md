@@ -59,6 +59,12 @@ For example, print rows filtered by age <= 10:
             print(r)
 ```
 
+For composite columns, here are how to use them:
+
+For example, the `loinc_instance_num` of `LOINC:711-2` in the long-format table is `loinc_instance_num_LOINC:711-2` in the wide-format table. So basically, 
+
+```<col>_<code>```
+
 # Loading into C++
 
 If you want to preprocess the file, this is preferred approach. Modify `import.cpp` to do preprocessing.
