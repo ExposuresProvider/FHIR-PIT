@@ -49,6 +49,7 @@ declare
   san text;
 begin
   colnames := getcolnames(table_name_long, colnamecol);
+  raise notice '% columns', array_upper(colnames, 1);
   keyargs := array_to_string(array(select format('%I', key) from unnest(keys) as keys(key)),',');
   table_name_wide_meta := table_name_wide || '_meta';
 
@@ -94,7 +95,11 @@ begin
 		   );
 --      raise notice 'sql: %', sql;
       execute sql;
+      raise notice 'creating index: %, % - %', col_value_cols[i], starti, endi;
+      sql := format('create index %I on %I (%s)', table_name_wide_valuei || '_index', table_name_wide_valuei, keyargs);
+      execute sql;
     end loop;
+    raise notice 'combining tables';
     execute format('select sparse_array_name(ARRAY[] :: %s[])', col_value_col_types[i]) into san;
     perform executesql(format('drop table if exists %I', table_name_wide_value));
     sql := format('create table %I as select %s, ((%s) :: %s) %I from %I%s',
