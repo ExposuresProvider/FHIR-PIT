@@ -59,11 +59,15 @@ For example, print rows filtered by age <= 10:
             print(r)
 ```
 
-For composite columns, here are how to use them:
+Wide-format table contains composite columns generated from the pivoting operation. For composite columns, here are how to use them:
 
-For example, the `loinc_instance_num` of `LOINC:711-2` in the long-format table is `loinc_instance_num_LOINC:711-2` in the wide-format table. So basically, 
+```<table>_<col>_<concept_cd>_<instance_num>```
 
-```<col>_<code>```
+The `table` can is `icd_code`, `loinc`, `mdctn`, or `vital`.
+
+The `col` is `modifier`, `valtype`, `valueflag`, `nval`, `tval`, `units`, `start_date`, or `end_date`. See `endotype_meta.csv`.
+
+For example, the `loinc_valtype` of `concept_cd` `LOINC:711-2`, `instance_num` `1` in the long-format table is `loinc_valtype_LOINC:711-2_1` in the wide-format table.
 
 # Loading into C++
 
