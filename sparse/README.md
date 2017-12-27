@@ -63,6 +63,12 @@ Wide-format table contains composite columns generated from the pivoting operati
 
 ```<table>_<col>_<concept_cd>_<instance_num>```
 
+The only exception is the 
+
+```icd_code_<concept_cd>_<instance_num>```
+
+This is a boolean value `t` or `f`.
+
 For availables `table` and `col` see `endotype_meta.csv`.
 
 For availables `concept_cd` and `instance_num` see `<table>_meta>.csv`.
@@ -73,11 +79,6 @@ The `col` is `modifier`, `valtype`, `valueflag`, `nval`, `tval`, `units`, `start
 
 For example, the `loinc_valtype` of `concept_cd` `LOINC:711-2`, `instance_num` `1` in the long-format table is `loinc_valtype_LOINC:711-2_1` in the wide-format table.
 
-The only exception is the 
-
-```icd_code_<concept_cd>_<instance_num>```
-
-This is a boolean value `t` or `f`.
 
 # Loading into C++
 
