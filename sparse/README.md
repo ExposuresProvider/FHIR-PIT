@@ -16,9 +16,15 @@ Currently you need
 
 ## Schema of generated wide-format table ##
 
+### Simple columns ###
+
 Wide-format table contains simple columns. In general, simple columns have the following format:
 
 ```<col>```
+
+For available `col`, see `endotype_meta.csv`.
+
+### Composite columns ###
 
 And composite columns generated from the pivoting operation. In general, composite columns have the following format:
 
