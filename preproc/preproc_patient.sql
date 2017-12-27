@@ -175,7 +175,7 @@ create table icd_norm as select encounter_num, patient_num, start_date, end_date
 select longtowide('icd_norm', ARRAY['encounter_num','patient_num'], ARRAY['integer','integer'], 'icd_code',
                   ARRAY['norm','start_date','end_date'],
 		  ARRAY['boolean','timestamp','timestamp'],
-		  ARRAY['icd_code','icd_code_start_date','icd_code_end_data'], 'icd_norm_wide');
+		  ARRAY['icd_code','icd_start_date','icd_end_data'], 'icd_norm_wide');
 select longtowide('loinc', ARRAY['encounter_num','patient_num'], ARRAY['integer','integer'], 'concept',
                   ARRAY['valtype','nval','tval','units','start_date','end_date'],
 		  ARRAY['varchar(50)', 'numeric', 'varchar(255)', 'varchar(50)', 'timestamp', 'timestamp'],
@@ -251,7 +251,7 @@ select longtowide('loinc_filter', ARRAY['encounter_num','patient_num'], ARRAY['i
 select longtowide('icd_filter_trunc_norm', ARRAY['encounter_num','patient_num'], ARRAY['integer','integer'], 'icd_code',
                   ARRAY['norm','start_date','end_date'],
 		  ARRAY['boolean','timestamp','timestamp'],
-		  ARRAY['icd_code','icd_code_start_date','icd_code_end_data'], 'icd_filter_trunc_norm_wide');
+		  ARRAY['icd_code','icd_start_date','icd_end_data'], 'icd_filter_trunc_norm_wide');
 
 
 drop table if exists features_filter_trunc_wide;
