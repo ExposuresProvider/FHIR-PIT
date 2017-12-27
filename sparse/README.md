@@ -36,7 +36,7 @@ The `col` is `modifier`, `valtype`, `valueflag`, `nval`, `tval`, `units`, `start
 
 For example, the `loinc_valtype` of `concept_cd` `LOINC:711-2`, `instance_num` `1` in the long-format table is `loinc_valtype_LOINC:711-2_1` in the wide-format table.
 
-## load csv ##
+## Load csv ##
 
 The `load_df` function can be use to load a sparse csv file.
 
