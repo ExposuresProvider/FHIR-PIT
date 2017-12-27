@@ -63,9 +63,13 @@ Wide-format table contains composite columns generated from the pivoting operati
 
 ```<table>_<col>_<concept_cd>_<instance_num>```
 
-The `table` can is `icd_code`, `loinc`, `mdctn`, or `vital`.
+For availables `table` and `col` see `endotype_meta.csv`.
 
-The `col` is `modifier`, `valtype`, `valueflag`, `nval`, `tval`, `units`, `start_date`, or `end_date`. See `endotype_meta.csv`.
+For availables `concept_cd` and `instance_num` see `<table>_meta>.csv`.
+
+The `table` is `icd_code`, `loinc`, `mdctn`, or `vital`.
+
+The `col` is `modifier`, `valtype`, `valueflag`, `nval`, `tval`, `units`, `start_date`, or `end_date`. 
 
 For example, the `loinc_valtype` of `concept_cd` `LOINC:711-2`, `instance_num` `1` in the long-format table is `loinc_valtype_LOINC:711-2_1` in the wide-format table.
 
