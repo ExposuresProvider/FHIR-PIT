@@ -59,7 +59,7 @@ For example, print rows filtered by age <= 10:
             print(r)
 ```
 
-Wide-format table contains composite columns generated from the pivoting operation. For composite columns, here are how to use them:
+Wide-format table contains composite columns generated from the pivoting operation. In general, composite columns have the following format:
 
 ```<table>_<col>_<concept_cd>_<instance_num>```
 
