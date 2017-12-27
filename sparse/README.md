@@ -34,7 +34,7 @@ For available `table` and `col`, see `endotype_meta.csv`.
 
 For available `concept_cd` and `instance_num`, see `<table>_meta>.csv`.
 
-The `table` is `icd_code`, `loinc`, `mdctn`, or `vital`.
+The `table` is `icd`, `loinc`, `mdctn`, or `vital`.
 
 The `col` is `code`, `modifier`, `valtype`, `valueflag`, `nval`, `tval`, `units`, `start_date`, or `end_date`. 
 
