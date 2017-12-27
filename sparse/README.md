@@ -69,9 +69,9 @@ The only exception is the
 
 This is a boolean value `t` or `f`.
 
-For availables `table` and `col` see `endotype_meta.csv`.
+For available `table` and `col`, see `endotype_meta.csv`.
 
-For availables `concept_cd` and `instance_num` see `<table>_meta>.csv`.
+For available `concept_cd` and `instance_num`, see `<table>_meta>.csv`.
 
 The `table` is `icd_code`, `loinc`, `mdctn`, or `vital`.
 
