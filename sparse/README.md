@@ -14,6 +14,27 @@ Currently you need
 
 `endotype_meta.csv`
 
+## schema of generated wide-format table ##
+Wide-format table contains composite columns generated from the pivoting operation. In general, composite columns have the following format:
+
+```<table>_<col>_<concept_cd>_<instance_num>```
+
+The only exception is the 
+
+```icd_code_<concept_cd>_<instance_num>```
+
+This is a boolean value `t` or `f`.
+
+For available `table` and `col`, see `endotype_meta.csv`.
+
+For available `concept_cd` and `instance_num`, see `<table>_meta>.csv`.
+
+The `table` is `icd_code`, `loinc`, `mdctn`, or `vital`.
+
+The `col` is `modifier`, `valtype`, `valueflag`, `nval`, `tval`, `units`, `start_date`, or `end_date`. 
+
+For example, the `loinc_valtype` of `concept_cd` `LOINC:711-2`, `instance_num` `1` in the long-format table is `loinc_valtype_LOINC:711-2_1` in the wide-format table.
+
 ## load csv ##
 
 The `load_df` function can be use to load a sparse csv file.
@@ -59,28 +80,9 @@ For example, print rows filtered by age <= 10:
             print(r)
 ```
 
-Wide-format table contains composite columns generated from the pivoting operation. In general, composite columns have the following format:
-
-```<table>_<col>_<concept_cd>_<instance_num>```
-
-The only exception is the 
-
-```icd_code_<concept_cd>_<instance_num>```
-
-This is a boolean value `t` or `f`.
-
-For available `table` and `col`, see `endotype_meta.csv`.
-
-For available `concept_cd` and `instance_num`, see `<table>_meta>.csv`.
-
-The `table` is `icd_code`, `loinc`, `mdctn`, or `vital`.
-
-The `col` is `modifier`, `valtype`, `valueflag`, `nval`, `tval`, `units`, `start_date`, or `end_date`. 
-
-For example, the `loinc_valtype` of `concept_cd` `LOINC:711-2`, `instance_num` `1` in the long-format table is `loinc_valtype_LOINC:711-2_1` in the wide-format table.
 
 
-# Loading into C++
+## Loading into C++ ##
 
 If you want to preprocess the file, this is preferred approach. Modify `import.cpp` to do preprocessing.
 
