@@ -16,7 +16,11 @@ Currently you need
 
 ## Schema of generated wide-format table ##
 
-Wide-format table contains composite columns generated from the pivoting operation. In general, composite columns have the following format:
+Wide-format table contains simple columns. In general, simple columns have the following format:
+
+```<col>```
+
+And composite columns generated from the pivoting operation. In general, composite columns have the following format:
 
 ```<table>_<col>_<concept_cd>_<instance_num>```
 
