@@ -14,7 +14,8 @@ Currently you need
 
 `endotype_meta.csv`
 
-## schema of generated wide-format table ##
+## Schema of generated wide-format table ##
+
 Wide-format table contains composite columns generated from the pivoting operation. In general, composite columns have the following format:
 
 ```<table>_<col>_<concept_cd>_<instance_num>```
