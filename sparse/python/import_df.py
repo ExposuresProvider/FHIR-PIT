@@ -1,7 +1,7 @@
 import pandas as pd
 
 def load_df(filepath, callback=None, filemeta = "endotype_meta.csv", colmeta = [("icd", "icd_meta.csv"), ("mdctn", "mdctn_meta.csv"),
-("loinc", "loinc_meta.csv")]):
+                                                                                ("loinc", "loinc_meta.csv"),("vital","vital_meta.csv")]):
     colnames_dict = {}
     for col, meta in colmeta:
 #        print("loading colmeta " + meta)
