@@ -3,8 +3,15 @@ from datetime import datetime
 import sys
 
 def main(argv):
-    df = load_df(argv[1])
-    print(df.df)
+    tables = argv[3].split(",")
+    metas = argv[4].split(",")
+    tablemetas = zip(tables, metas)
+    def cb(r):
+        print ("row " + str(cb.i))
+        cb.i += 1
+    cb.i = 0
+    df = load_df(argv[1], cb, filemeta = argv[2], colmeta = tablemetas)
+#    print(df.df)
 '''
     def cb(r):
         birth_date = datetime.strptime(r['birth_date'], "%Y-%m-%d %H:%M:%S")

@@ -4,6 +4,7 @@ def load_df(filepath, callback=None, filemeta = "endotype_meta.csv", colmeta = [
 ("loinc", "loinc_meta.csv")]):
     colnames_dict = {}
     for col, meta in colmeta:
+#        print("loading colmeta " + meta)
         colnames_dict[col] = import_array(meta)
 
     def colname(x):
@@ -11,8 +12,10 @@ def load_df(filepath, callback=None, filemeta = "endotype_meta.csv", colmeta = [
             if x[:len(key)] == key:
                 return map(lambda y: x + "_" + y, val)
         return x
+#    print("loading filemeta " + filemeta)
     colnames = map(colname, import_array(filemeta))
 
+#    print("loading rows")
     return import_sparse(colnames, filepath, callback)
 
 class Input:
@@ -32,21 +35,29 @@ class Input:
         return self.pos == len(self.buf)
     def getPos(self):
         return self.pos
-            
+
+def skip_array_sep(inp):
+    if inp.curr() == "\\":
+        inp.skip("\\,")
+        return True
+    elif inp.curr() == ",":
+        inp.skip(",")
+        return True
+    else:
+        return False
+
 def parse_array(line):
     row = []
     inp = Input(line, 0)
     if inp.curr() == "{":
         inp.next()
-    while True:
-        s = parse_unquoted_string(inp)
+    array_sep = True
+    while array_sep:
+        s = parse_string(inp)
         row.append(s)
         if inp.eof() or inp.curr() == "}":
-            break;
-        if inp.curr() == "\\":
-            inp.skip("\\,")
-        else:
-            inp.skip(",")
+            break
+        array_sep = skip_array_sep(inp)
     if not inp.eof() and inp.curr() == "}":
         inp.next()
     if not inp.eof() and inp.curr() == "\n":
@@ -58,15 +69,17 @@ def parse_array(line):
     return row
 
 def parse_row(line, colnames):
+#    print ("row")
     row = {}
     i = 0
     col = 0
     inp = Input(line, 0)
-    while True:
+    array_sep = True
+    while array_sep:
         parse_entry(inp, row, colnames[col]);
         if inp.eof():
             break;
-        inp.skip(",")
+        array_sep = skip_array_sep(inp)
         col += 1
     return row
 
@@ -80,11 +93,23 @@ def parse_entry(inp, row, names):
             for inx, name in enumerate(names):
                 if inx in indices:
                     row[name] = elements[indices.index(inx)]
-#                else:
-#                    row[name] = ""
+
             inp.skip("\"")
+        elif inp.curr() == "(":
+            entry = parse_sparse_array(inp)
+            indices = entry['indices']
+            elements = entry['elements']
+            for inx, name in enumerate(names):
+                if inx in indices:
+                    row[name] = elements[indices.index(inx)]
+
+        else:
+            entry = None
+            
+        # print("list entry: " + str(entry))
     else:
         string = parse_unquoted_string(inp)
+        # print("simple entry: " + string + "[" + names + "]")
         row[names] = string
         
 
@@ -98,7 +123,7 @@ def parse_unquoted_string(inp):
 def parse_sparse_array(inp):
     inp.skip("(")
     indices = parse_indices(inp)
-    inp.skip(",")
+    skip_array_sep(inp)
     elements = parse_elements(inp)
     inp.skip(")")
     return {'indices': indices, 'elements' : elements}
@@ -106,20 +131,18 @@ def parse_sparse_array(inp):
 def parse_indices(inp):
     indices = []
     if inp.curr() == "\"":
-        inp.skip("\"\"{")
+        inp.skip("\"{")
         while inp.curr() != "}":
             n = parse_int(inp)
             indices.append(n)
-            if inp.curr() == ",":
-                inp.next()
-        inp.skip("}\"\"")
+            skip_array_sep(inp)
+        inp.skip("}\"")
     else:
         inp.skip("{")
         while inp.curr() != "}":
             n = parse_int(inp)
             indices.append(n)
-            if inp.curr() == ",":
-                inp.next()
+            skip_array_sep(inp)
         inp.skip("}")
 
     return indices
@@ -127,20 +150,18 @@ def parse_indices(inp):
 def parse_elements(inp):
     elements = []
     if inp.curr() == "\"":
-        inp.skip("\"\"{")
-        while inp.curr() != "}":
-            n = parse_string4(inp)
-            elements.append(n)
-            if inp.curr() == ",":
-                inp.next()
-        inp.skip("}\"\"")
-    else:
-        inp.skip("{")
+        inp.skip("\"{")
         while inp.curr() != "}":
             n = parse_string2(inp)
             elements.append(n)
-            if inp.curr() == ",":
-                inp.next()
+            skip_array_sep(inp)
+        inp.skip("}\"")
+    else:
+        inp.skip("{")
+        while inp.curr() != "}":
+            n = parse_string(inp)
+            elements.append(n)
+            skip_array_sep(inp)
         inp.skip("}")
     return elements
 
@@ -150,6 +171,15 @@ def parse_int(inp):
         s += inp.curr()
         inp.next()
     return int(s)
+
+def parse_string(inp):
+    if inp.curr() == "\"":
+        inp.skip("\"")
+        s = parse_quoted_string(inp)
+        inp.skip("\"")
+    else:
+        s = parse_unquoted_string(inp)
+    return s
 
 def parse_string2(inp):
     if inp.curr() == "\"":
@@ -171,7 +201,7 @@ def parse_string4(inp):
             
 def parse_unquoted_string(inp):
     s = ""
-    while not (inp.eof() or inp.curr() in "{}\\,\""):
+    while not (inp.eof() or inp.curr() in "{}\\,\"\n"):
         s += inp.curr()
         inp.next()
     return s
