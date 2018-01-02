@@ -55,7 +55,7 @@ df = load_df(<filename>)
 ### Load it row by row ###
 ```
 from import_df import load_df
-load_df(<filename>, <callback>)
+load_df(<filename>, <callback>, <filemeta>, <colmeta>)
 ```
 
 The `<callback>` function has the following format:
@@ -85,7 +85,8 @@ For example, print rows filtered by age <= 10:
             print(r)
 ```
 
-
+The `<filemeta>` is a string of path to the metadata file. For example, `"endotype_meta.csv"`.
+The `<colmeta>` is a list of pairs of table name and path to the metadata file for that table. For example, `[("icd", "icd_meta.csv"), ("mdctn", "mdctn_meta.csv"), ("loinc", "loinc_meta.csv"),("vital","vital_meta.csv")]`.
 
 ## Loading into C++ ##
 
