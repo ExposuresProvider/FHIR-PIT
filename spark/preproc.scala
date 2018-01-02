@@ -10,33 +10,41 @@ import org.apache.spark.sql.Row
 import org.apache.spark.sql.types._
 
 class Pivot(keycol : String, keyvals : Seq[String], cols : Seq[String]) extends UserDefinedAggregateFunction {
+
+  def wideCols : Seq[String] = for {x <- keyvals; y <- cols} yield x + "_" + y
+
   // This is the input fields for your aggregate function.
   override def inputSchema: org.apache.spark.sql.types.StructType =
     StructType(
-      StructField(keycol, StringType) :: cols.map(x=>StructField(x, StringType))
+      StructField(keycol, StringType) :: cols.map(x=>StructField(x, StringType)))
 
   // This is the internal fields you keep for computing your aggregate.
-  override def bufferSchema: StructType = StructType(for {x <- keyvals; y <- cols} yield StructField(x + "_" + y, StringType))
+  override def bufferSchema: StructType = StructType(StructField("indices", ArrayType(IntType, false)) :: StructField("elements", ArrayType(ArrayType(StringType, true), false)) :: Nil)
 
   // This is the output type of your aggregatation function.
-  override def dataType: DataType = DoubleType
+  override def dataType: DataType = bufferSchema
 
   override def deterministic: Boolean = true
 
   // This is the initial value for your buffer schema.
   override def initialize(buffer: MutableAggregationBuffer): Unit = {
-    buffer(0) = 0L
-    buffer(1) = 1.0
+    buffer(0) = new List[Int]()
+    buffer(1) = new List[Seq[String]]()
   }
 
   // This is how to update your buffer schema given an input.
   override def update(buffer: MutableAggregationBuffer, input: Row): Unit = {
-    buffer(0) = buffer.getAs[Long](0) + 1
-    buffer(1) = buffer.getAs[Double](1) * input.getAs[Double](0)
+    val keyval = input.getString(0)
+    val keyindex = keyvals.indexOf(keyval)
+    val cols = input.toSeq().drop(1).map(x=>(String)x)
+    buffer.getAs[List[Int]](0).add(keyindex)
+    buffer.getAs[List[Seq[String]]](1).add(cols)
   }
 
   // This is how to merge two objects with the bufferSchema type.
   override def merge(buffer1: MutableAggregationBuffer, buffer2: Row): Unit = {
+    buffer.getAs[List[Int]](0).add(keyindex)
+    buffer.getAs[List[Seq[String]]](1).add(cols)
     buffer1(0) = buffer1.getAs[Long](0) + buffer2.getAs[Long](0)
     buffer1(1) = buffer1.getAs[Double](1) * buffer2.getAs[Double](1)
   }
