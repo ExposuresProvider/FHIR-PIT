@@ -12,6 +12,8 @@ Currently you need
 
 `icd_meta.csv`
 
+`vital_meta.csv`
+
 `endotype_meta.csv`
 
 ## Schema of generated wide-format table ##
@@ -48,7 +50,7 @@ The `load_df` function can be use to load a sparse csv file.
 
 ```
 from import_df import load_df
-df = load_df(<filename>)
+df = load_df(<filename>, filemeta = <filemeta>, colmeta = <colmeta>)
 # the df.df will be the dataframe
 ```
 
