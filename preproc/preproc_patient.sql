@@ -201,21 +201,13 @@ create table features_wide as
     inner join features using (patient_num);
 
 create temp table tmp (like features_wide);
-copy tmp to '/tmp/endotype_meta.csv' delimiter ',' csv header;
+copy tmp to '/tmp/endotype_meta.csv' delimiter '!' csv header;
 drop table tmp;
-copy features_wide to '/tmp/endotype.csv' delimiter ',' null '';
--- copy loinc_wide to '/tmp/loinc3.csv' delimiter ',' csv header;
--- copy mdctn_wide to '/tmp/mdctn3.csv' delimiter ',' csv header;
--- copy vital_wide to '/tmp/vital3.csv' delimiter ',' csv header;
--- copy cpt_wide to '/tmp/cpt3.csv' delimiter ',' csv header;
--- copy soc_hist_wide to '/tmp/soc_hist3.csv' delimiter ',' csv header;
--- copy icd_asthma_norm_wide to '/tmp/icd3.csv' delimiter ',' csv header;
-copy loinc_wide_meta to '/tmp/loinc_meta.csv' delimiter ',';
-copy mdctn_wide_meta to '/tmp/mdctn_meta.csv' delimiter ',';
-copy vital_wide_meta to '/tmp/vital_meta.csv' delimiter ',';
--- copy cpt_wide_meta to '/tmp/cpt_meta3.csv' delimiter ',' csv header;
--- copy soc_hist_wide_meta to '/tmp/soc_hist_meta3.csv' delimiter ',' csv header;
-copy icd_norm_wide_meta to '/tmp/icd_meta.csv' delimiter ',';
+copy features_wide to '/tmp/endotype.csv' delimiter '!' null '';
+copy loinc_wide_meta to '/tmp/loinc_meta.csv' delimiter '!';
+copy mdctn_wide_meta to '/tmp/mdctn_meta.csv' delimiter '!';
+copy vital_wide_meta to '/tmp/vital_meta.csv' delimiter '!';
+copy icd_norm_wide_meta to '/tmp/icd_meta.csv' delimiter '!';
 
 create or replace function filter_icd(concept_cd text) returns boolean as $$
   begin
@@ -265,10 +257,12 @@ create table features_filter_trunc_wide as
     inner join features using (patient_num);
 
 create temp table tmp (like features_filter_trunc_wide);
-copy tmp to '/tmp/endotype_filter_trunc_meta.csv' delimiter ',' csv header;
+copy tmp to '/tmp/endotype_filter_trunc_meta.csv' delimiter '!' csv header;
 drop table tmp;
-copy features_filter_trunc_wide to '/tmp/endotype_filter_trunc.csv' delimiter ',' null '';
-copy loinc_filter_wide_meta to '/tmp/loinc_filter_meta.csv' delimiter ',';
-copy icd_filter_trunc_norm_wide_meta to '/tmp/icd_filter_trunc_meta.csv' delimiter ',';
+copy features_filter_trunc_wide to '/tmp/endotype_filter_trunc.csv' delimiter '!' null '';
+copy loinc_filter_wide_meta to '/tmp/loinc_filter_trunc_meta.csv' delimiter '!';
+copy mdctn_wide_meta to '/tmp/mdctn_filter_trunc_meta.csv' delimiter '!';
+copy vital_wide_meta to '/tmp/vital_filter_trunc_meta.csv' delimiter '!';
+copy icd_filter_trunc_norm_wide_meta to '/tmp/icd_filter_trunc_meta.csv' delimiter '!';
 
 

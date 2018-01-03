@@ -11,13 +11,15 @@
 
 std::vector<std::string> import_array(const std::string &filepath);
 
+std::vector<std::string> import_headers(const std::string &filepath);
+
 typedef std::map<std::string, std::string> callback_row;
 
 void load_df(
 	     const std::string &filepath,
 	     const std::function<bool(const callback_row&)> callback,
 	     const std::string &filemeta, //  = "endotype_meta.csv"
-	     const std::vector<std::tuple<std::string, std::string>> &colmeta // [("icd", "icd_meta.csv"), ("mdctn", "mdctn_meta.csv"), ("loinc", "loinc_meta.csv")]
+	     const std::vector<std::tuple<std::string, std::string>> &colmeta // [("icd", "icd_meta.csv"), ("mdctn", "mdctn_meta.csv"), ("loinc", "loinc_meta.csv"), ("vital", "vital_meta.csv")]
 	     );
 
 class Input {
@@ -39,7 +41,13 @@ private:
   int pos;
 };
   
+bool skip_array_sep(Input &inp);
+
+bool skip_entry_sep(Input &inp);
+
 std::vector<std::string> parse_array(const std::string &line);
+
+std::vector<std::string> parse_headers(const std::string &line);
 
 callback_row parse_row(const std::string &line, const std::vector<std::tuple<bool, std::vector<std::string>>> &colnames);
 
@@ -56,6 +64,8 @@ std::vector<std::string> parse_elements(Input &inp);
 std::string parse_while(Input &inp, std::function<bool(char)> cb);
 
 int parse_int(Input &inp);
+
+std::string parse_string(Input &inp);
 
 std::string parse_string2(Input &inp);
 

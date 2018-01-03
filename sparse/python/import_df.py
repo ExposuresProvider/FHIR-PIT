@@ -1,10 +1,12 @@
 import pandas as pd
 
+entry_sep = "!"
+
 def load_df(filepath, callback=None, filemeta = "endotype_meta.csv", colmeta = [("icd", "icd_meta.csv"), ("mdctn", "mdctn_meta.csv"),
                                                                                 ("loinc", "loinc_meta.csv"),("vital","vital_meta.csv")]):
     colnames_dict = {}
     for col, meta in colmeta:
-#        print("loading colmeta " + meta)
+        print("loading colmeta " + meta)
         colnames_dict[col] = import_array(meta)
 
     def colname(x):
@@ -12,10 +14,10 @@ def load_df(filepath, callback=None, filemeta = "endotype_meta.csv", colmeta = [
             if x[:len(key)] == key:
                 return map(lambda y: x + "_" + y, val)
         return x
-#    print("loading filemeta " + filemeta)
-    colnames = map(colname, import_array(filemeta))
+    print("loading filemeta " + filemeta)
+    colnames = map(colname, import_headers(filemeta))
 
-#    print("loading rows")
+    print("loading rows")
     return import_sparse(colnames, filepath, callback)
 
 class Input:
@@ -37,11 +39,15 @@ class Input:
         return self.pos
 
 def skip_array_sep(inp):
-    if inp.curr() == "\\":
-        inp.skip("\\,")
-        return True
-    elif inp.curr() == ",":
+    if inp.curr() == ",":
         inp.skip(",")
+        return True
+    else:
+        return False
+
+def skip_entry_sep(inp):
+    if inp.curr() == entry_sep:
+        inp.skip(entry_sep)
         return True
     else:
         return False
@@ -68,6 +74,24 @@ def parse_array(line):
         
     return row
 
+def parse_headers(line):
+    row = []
+    inp = Input(line, 0)
+    array_sep = True
+    while array_sep:
+        s = parse_string(inp)
+        row.append(s)
+        if inp.eof():
+            break
+        array_sep = skip_entry_sep(inp)
+    if not inp.eof() and inp.curr() == "\n":
+        inp.next()
+    
+    if not inp.eof():
+        raise NameError("error: expected oef found " + inp.curr() + " at " + str(inp.getPos()))
+        
+    return row
+
 def parse_row(line, colnames):
 #    print ("row")
     row = {}
@@ -79,7 +103,7 @@ def parse_row(line, colnames):
         parse_entry(inp, row, colnames[col]);
         if inp.eof():
             break;
-        array_sep = skip_array_sep(inp)
+        array_sep = skip_entry_sep(inp)
         col += 1
     return row
 
@@ -90,18 +114,16 @@ def parse_entry(inp, row, names):
             entry = parse_sparse_array(inp)
             indices = entry['indices']
             elements = entry['elements']
-            for inx, name in enumerate(names):
-                if inx in indices:
-                    row[name] = elements[indices.index(inx)]
+            for inx, index in enumerate(indices):
+                row[names[index]] = elements[inx]
 
             inp.skip("\"")
         elif inp.curr() == "(":
             entry = parse_sparse_array(inp)
             indices = entry['indices']
             elements = entry['elements']
-            for inx, name in enumerate(names):
-                if inx in indices:
-                    row[name] = elements[indices.index(inx)]
+            for inx, index in enumerate(indices):
+                row[names[index-1]] = elements[inx]
 
         else:
             entry = None
@@ -184,7 +206,11 @@ def parse_string(inp):
 def parse_string2(inp):
     if inp.curr() == "\"":
         inp.skip("\"\"")
+        if inp.curr() == "\\":
+            inp.skip("\\\\\\\\\"\"")
         s = parse_quoted_string(inp)
+        if inp.curr() == "\\":
+            inp.skip("\\\\\\\\\"\"")
         inp.skip("\"\"")
     else:
         s = parse_unquoted_string(inp)
@@ -201,14 +227,14 @@ def parse_string4(inp):
             
 def parse_unquoted_string(inp):
     s = ""
-    while not (inp.eof() or inp.curr() in "{}\\,\"\n"):
+    while not (inp.eof() or inp.curr() in "{}\\" + entry_sep + ",\"\n"):
         s += inp.curr()
         inp.next()
     return s
     
 def parse_quoted_string(inp):
     s = ""
-    while not (inp.eof() or inp.curr() == "\""):
+    while not (inp.eof() or inp.curr() == "\"" or inp.curr() == "\\"):
         s += inp.curr()
         inp.next()
     return s
@@ -240,5 +266,10 @@ def import_array(filepath):
     with open(filepath) as f:
         line = f.readline()
         return parse_array(line)
+
+def import_headers(filepath):
+    with open(filepath) as f:
+        line = f.readline()
+        return parse_headers(line)
 
 

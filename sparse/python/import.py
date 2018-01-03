@@ -3,9 +3,9 @@ from datetime import datetime
 import sys
 
 def main(argv):
-    tables = argv[3].split(",")
-    metas = argv[4].split(",")
-    tablemetas = zip(tables, metas)
+    tablemetas = []
+    for i in range(3, len(argv), 2):
+	tablemetas.append((argv[i], argv[i+1]))
     def cb(r):
         print ("row " + str(cb.i))
         cb.i += 1
