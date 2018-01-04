@@ -24,7 +24,7 @@ select longtowide('mdctn_name', ARRAY['encounter_num','patient_num'], ARRAY['int
 		  ARRAY['mdctn_valtype','mdctn_nval','mdctn_tval','mdctn_units','mdctn_start_date','mdctn_end_date','mdctn_modifier','mdctn_valueflag'], 'mdctn_name_wide');
 						      
 drop table if exists features_mdctn_name_wide;
-create table features_wide as
+create table features_mdctn_name_wide as
   select *
   from visit_reduced
   full outer join icd_norm_wide using (patient_num, encounter_num)

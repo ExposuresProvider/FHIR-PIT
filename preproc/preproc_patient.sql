@@ -127,8 +127,8 @@ create table ed_visits_asthma as
 create index ed_visits_asthma_index on ed_visits_asthma (encounter_num, patient_num); */               
 
 do $$ begin
-  perform observation_table('loinc', array[('concept_cd', 'concept'), ('valtype_cd', 'valtype'), ('nval_num', 'nval'), 
-         ('tval_char', 'tval'), ('units_cd', 'units'), ('start_date', 'start_date'), 
+  perform observation_table('loinc', array[('concept_cd', 'concept'), ('modifier_cd', 'modifier'), ('valtype_cd', 'valtype'), ('nval_num', 'nval'), 
+         ('valueflag_cd', 'valueflag'), ('tval_char', 'tval'), ('units_cd', 'units'), ('start_date', 'start_date'), 
          ('end_date', 'end_date')] :: pair_text[], 'LOINC:%', true);
 end $$; 
 
@@ -177,9 +177,9 @@ select longtowide('icd_norm', ARRAY['encounter_num','patient_num'], ARRAY['integ
 		  ARRAY['boolean','timestamp','timestamp'],
 		  ARRAY['icd_code','icd_start_date','icd_end_data'], 'icd_norm_wide');
 select longtowide('loinc', ARRAY['encounter_num','patient_num'], ARRAY['integer','integer'], 'concept',
-                  ARRAY['valtype','nval','tval','units','start_date','end_date'],
-		  ARRAY['varchar(50)', 'numeric', 'varchar(255)', 'varchar(50)', 'timestamp', 'timestamp'],
-		  ARRAY['loinc_valtype','loinc_nval','loinc_tval','loinc_units','loinc_start_date','loinc_end_date'], 'loinc_wide');
+                  ARRAY['valtype','nval','tval','units','start_date','end_date','modifier','valueflag'],
+                  ARRAY['varchar(50)', 'numeric', 'varchar(255)','varchar(50)', 'timestamp', 'timestamp','varchar(100)','varchar(50)'],
+		  ARRAY['loinc_valtype','loinc_nval','loinc_tval','loinc_units','loinc_start_date','loinc_end_date','loinc_modifier','loinc_valueflag'], 'loinc_wide');
 select longtowide('mdctn', ARRAY['encounter_num','patient_num'], ARRAY['integer','integer'], 'concept',
                   ARRAY['valtype','nval','tval','units','start_date','end_date','modifier','valueflag'],
                   ARRAY['varchar(50)', 'numeric', 'varchar(255)','varchar(50)', 'timestamp', 'timestamp','varchar(100)','varchar(50)'],
@@ -239,11 +239,11 @@ create table loinc_filter as select * from loinc where filter_loinc(concept);
 select longtowide('loinc_filter', ARRAY['encounter_num','patient_num'], ARRAY['integer','integer'], 'concept',
                   ARRAY['valtype','nval','tval','units','start_date','end_date'],
 		  ARRAY['varchar(50)', 'numeric', 'varchar(255)', 'varchar(50)', 'timestamp', 'timestamp'],
-		  ARRAY['loinc_valtype','loinc_nval','loinc_tval','loinc_units','loinc_start_date','loinc_end_date'], 'loinc_filter_wide');
+		  ARRAY['loinc_valtype','loinc_nval','loinc_tval','loinc_units','loinc_start_date','loinc_end_date','loinc_modifier','loinc_valueflag'], 'loinc_filter_wide');
 select longtowide('icd_filter_trunc_norm', ARRAY['encounter_num','patient_num'], ARRAY['integer','integer'], 'icd_code',
                   ARRAY['norm','start_date','end_date'],
 		  ARRAY['boolean','timestamp','timestamp'],
-		  ARRAY['icd_code','icd_start_date','icd_end_data'], 'icd_filter_trunc_norm_wide');
+		  ARRAY['icd_code','icd_start_date','icd_end_date'], 'icd_filter_trunc_norm_wide');
 
 
 drop table if exists features_filter_trunc_wide;
