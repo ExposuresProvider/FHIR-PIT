@@ -47,6 +47,7 @@ declare
   suffix text;
   colnamescurr text[];
   san text;
+  rowcount integer;
 begin
   colnames := getcolnames(table_name_long, colnamecol);
   raise notice '% columns', array_upper(colnames, 1);
@@ -81,7 +82,7 @@ begin
       valueargscolname := col_value_col_suffixes[i] || suffix; -- array_to_string(array(select format('%s', colname || col_value_col_suffixes[i]) from unnest(colnames) as colnames(colname)),',');
       valueargs := array_to_string(array(select format('%I', colname || suffix) from unnest(colnamescurr) as colnames(colname)),',');
       perform executesql(format('drop table if exists %I', table_name_wide_valuei)); 
-      sql := format('create table %I as select %s, ARRAY[%s] %I from (select * from crosstab(''select ARRAY[%s], %I, %I from %I'',''select * from unnest(ARRAY[%s])'') as tmp(tmpkey integer[], %s)) a',
+      sql := format('create table %I as select %s, ARRAY[%s] %I from (select * from crosstab(''select ARRAY[%s] as ord, %I, %I from %I order by ord'',''select * from unnest(ARRAY[%s])'') as tmp(tmpkey %s[], %s)) a',
                    table_name_wide_valuei,
 		   array_to_string(array(select format('tmpkey[%s] %I', n, keys[n]) from generate_series(1, array_upper(keys,1)) as ns(n)),','),
 		   valueargs,
@@ -91,12 +92,14 @@ begin
 		   col_value_cols[i],
                    table_name_long,
 		   array_to_string(array(select format('''%L''', colname) from unnest(colnamescurr) as colnames(colname)),','),
+		   keytypes[1], -- assuming all keys have same type for now
 		   array_to_string(array(select format('%I %s', colname || suffix, col_value_col_types[i]) from unnest(colnamescurr) as colnames(colname)),',')
 		   );
 --      raise notice 'sql: %', sql;
       execute sql;
       raise notice 'creating index: %, % - %', col_value_cols[i], starti, endi;
       sql := format('create index %I on %I (%s)', table_name_wide_valuei || '_index', table_name_wide_valuei, keyargs);
+--      raise notice 'sql: %', sql;
       execute sql;
     end loop;
     raise notice 'combining tables';
@@ -110,11 +113,20 @@ begin
 		col_name_wide_value,
 		table_name_wide_valueis[1],
 		array_to_string(array(select format(' inner join %I using (%s)', tni, keyargs) from unnest(table_name_wide_valueis[2:array_upper(table_name_wide_valueis,1)]) as table_name_wide_valueis(tni)),''));
+--    raise notice 'sql: %', sql;
+    execute sql;
+
+    raise notice 'creating index: %', col_value_cols[i];
+    sql := format('create index %I on %I (%s)', table_name_wide_value || '_index', table_name_wide_value, keyargs);
+--    raise notice 'sql: %', sql;
     execute sql;
 
     for i in 1 .. array_upper(table_name_wide_valueis,1) loop
       perform executesql(format('drop table %I', table_name_wide_valueis[i]));
     end loop;
+    
+    execute format('select count(*) from %I', table_name_wide_value) into rowcount;
+    raise notice '% rows', rowcount;
   end loop;
 
   perform executesql(format('drop table if exists %I', table_name_wide));
@@ -122,6 +134,7 @@ begin
                 table_name_wide,
 		table_name_wide_values[1],
 		array_to_string(array(select format(' inner join %I using (%s)', tn, keyargs) from unnest(table_name_wide_values[2:array_upper(table_name_wide_values,1)]) as table_name_wide_values(tn)),''));
+--  raise notice 'sql: %', sql;
   execute sql;
 
   for i in 1 .. array_upper(table_name_wide_values,1) loop
