@@ -7,7 +7,7 @@ create type pair_text as (fst text, snd text);
 
 drop table if exists observation_fact_reduced;
 create table observation_fact_reduced as
-  select patient_num, encounter_num, concept_cd || '_' || (instance_num :: text) as concept_cd, modifier_cd, valtype_cd, valueflag_cd, nval_num, tval_char, units_cd, start_date, end_date from observation_fact;
+  select patient_num, encounter_num, concept_cd, modifier_cd, instance_num, valtype_cd, valueflag_cd, nval_num, tval_char, units_cd, start_date, end_date from observation_fact;
 
 drop index if exists observation_fact_index;
 drop index if exists observation_fact_index2;
@@ -29,7 +29,7 @@ begin
   end if;
   sql := sql || ' encounter_num, patient_num';
   foreach column_name_pair in array column_name_pairs loop
-    sql := sql || format(', %I as %I', column_name_pair.fst, column_name_pair.snd);
+    sql := sql || format(', %s as %I', column_name_pair.fst, column_name_pair.snd);
   end loop;
   sql := sql || format(' from observation_fact_reduced where concept_cd similar to %L', pat);
   raise notice 'sql=%', sql;
@@ -88,7 +88,7 @@ create index start_date_asthma_index2 on start_date_asthma (start_date asc); */
 /* should assign lat, long based on encounter_num, but the data does it using patient_num */
 drop table if exists lat;
 drop index if exists lat_index;
-create table lat as select patient_num, nval_num as lat from observation_fact_reduced /* inner join asthma_patient using (patient_num) */ where concept_cd like 'GEO:LAT\_%';
+create table lat as select patient_num, nval_num as lat from observation_fact_reduced /* inner join asthma_patient using (patient_num) */ where concept_cd like 'GEO:LAT';
 create index lat_index on lat ( patient_num);                                                                                                                                   
 /* delete patient_num with 0 or >2 lats */
 with b as (select patient_num from lat group by patient_num having count(lat) <> 1)
@@ -96,7 +96,7 @@ delete from lat a where exists (select from b where a.patient_num = b.patient_nu
 
 drop table if exists long;
 drop index if exists long_index;
-create table long as select patient_num, nval_num as long from observation_fact_reduced /* inner join asthma_patient using (patient_num) */ where concept_cd like 'GEO:LONG\_%';
+create table long as select patient_num, nval_num as long from observation_fact_reduced /* inner join asthma_patient using (patient_num) */ where concept_cd like 'GEO:LONG';
 create index long_index on long ( patient_num);                                                                                                                                   
 /* delete patient_num with 0 or >2 longs */
 with b as (select patient_num from long group by patient_num having count(long) <> 1)
@@ -127,32 +127,32 @@ create table ed_visits_asthma as
 create index ed_visits_asthma_index on ed_visits_asthma (encounter_num, patient_num); */               
 
 do $$ begin
-  perform observation_table('loinc', array[('concept_cd', 'concept'), ('modifier_cd', 'modifier'), ('valtype_cd', 'valtype'), ('nval_num', 'nval'), 
+  perform observation_table('loinc', array[('(concept_cd || ''_'' || (instance_num :: text))', 'concept'), ('valtype_cd', 'valtype'), ('nval_num', 'nval'), 
          ('valueflag_cd', 'valueflag'), ('tval_char', 'tval'), ('units_cd', 'units'), ('start_date', 'start_date'), 
          ('end_date', 'end_date')] :: pair_text[], 'LOINC:%', true);
 end $$; 
 
 do $$ begin
-  perform observation_table('mdctn', array[('concept_cd', 'concept'), ('modifier_cd', 'modifier'), ('valtype_cd', 'valtype'),
+  perform observation_table('mdctn', array[('(concept_cd || ''_'' || modifier_cd || ''_'' || (instance_num :: text))', 'concept'), ('valtype_cd', 'valtype'),
          ('valueflag_cd', 'valueflag'), ('nval_num', 'nval'), ('tval_char', 'tval'), ('units_cd', 'units'), 
          ('start_date', 'start_date'), ('end_date', 'end_date')] :: pair_text[], 'MDCTN:%', true);
 end $$;
 
 do $$ begin
-  perform observation_table('vital', array[('concept_cd', 'concept'), ('modifier_cd', 'modifier'), ('valtype_cd', 'valtype'), 
+  perform observation_table('vital', array[('(concept_cd || ''_'' || (instance_num :: text))', 'concept'), ('valtype_cd', 'valtype'), 
          ('valueflag_cd', 'valueflag'), ('nval_num', 'nval'), ('tval_char', 'tval'), 
          ('units_cd', 'units'), ('start_date', 'start_date'), ('end_date', 'end_date')] :: pair_text[], 'VITAL:%', true);
 end $$;
 
 /*
 do $$ begin
-  perform observation_table('cpt', array[('concept_cd', 'concept'), ('modifier_cd', 'modifier'), ('valtype_cd', 'valtype'), 
+  perform observation_table('cpt', array[('concept_cd', 'concept'), ('valtype_cd', 'valtype'), 
          ('valueflag_cd', 'valueflag'), ('nval_num', 'nval'), ('tval_char', 'tval'), ('units_cd', 'units'), 
          ('start_date', 'start_date'), ('end_date', 'end_date')] :: pair_text[], 'CPT:%', true);
 end $$;
 
 do $$ begin
-  perform observation_table('soc_hist', array[('concept_cd', 'concept'), ('modifier_cd', 'modifier'), ('valtype_cd', 'valtype'), 
+  perform observation_table('soc_hist', array[('concept_cd', 'concept'), ('valtype_cd', 'valtype'), 
          ('valueflag_cd', 'valueflag'), ('nval_num', 'nval'), ('tval_char', 'val'), ('units_cd', 'units'), 
          ('start_date', 'start_date'), ('end_date', 'end_date')] :: pair_text[], 'SOC_HIST:%', true);
 end $$;
@@ -177,17 +177,17 @@ select longtowide('icd_norm', ARRAY['encounter_num','patient_num'], ARRAY['integ
 		  ARRAY['boolean','timestamp','timestamp'],
 		  ARRAY['icd_code','icd_start_date','icd_end_data'], 'icd_norm_wide');
 select longtowide('loinc', ARRAY['encounter_num','patient_num'], ARRAY['integer','integer'], 'concept',
-                  ARRAY['valtype','nval','tval','units','start_date','end_date','modifier','valueflag'],
-                  ARRAY['varchar(50)', 'numeric', 'varchar(255)','varchar(50)', 'timestamp', 'timestamp','varchar(100)','varchar(50)'],
-		  ARRAY['loinc_valtype','loinc_nval','loinc_tval','loinc_units','loinc_start_date','loinc_end_date','loinc_modifier','loinc_valueflag'], 'loinc_wide');
+                  ARRAY['valtype','nval','tval','units','start_date','end_date','valueflag'],
+                  ARRAY['varchar(50)', 'numeric', 'varchar(255)','varchar(50)', 'timestamp', 'timestamp','varchar(50)'],
+		  ARRAY['loinc_valtype','loinc_nval','loinc_tval','loinc_units','loinc_start_date','loinc_end_date','loinc_valueflag'], 'loinc_wide');
 select longtowide('mdctn', ARRAY['encounter_num','patient_num'], ARRAY['integer','integer'], 'concept',
-                  ARRAY['valtype','nval','tval','units','start_date','end_date','modifier','valueflag'],
-                  ARRAY['varchar(50)', 'numeric', 'varchar(255)','varchar(50)', 'timestamp', 'timestamp','varchar(100)','varchar(50)'],
-                  ARRAY['mdctn_valtype','mdctn_nval','mdctn_tval','mdctn_units','mdctn_start_date','mdctn_end_date','mdctn_modifier','mdctn_valueflag'], 'mdctn_wide');
+                  ARRAY['valtype','nval','tval','units','start_date','end_date','valueflag'],
+                  ARRAY['varchar(50)', 'numeric', 'varchar(255)','varchar(50)', 'timestamp', 'timestamp','varchar(50)'],
+                  ARRAY['mdctn_valtype','mdctn_nval','mdctn_tval','mdctn_units','mdctn_start_date','mdctn_end_date','mdctn_valueflag'], 'mdctn_wide');
 select longtowide('vital', ARRAY['encounter_num','patient_num'], ARRAY['integer','integer'], 'concept',
-                  ARRAY['valtype','nval','tval','units','start_date','end_date','modifier','valueflag'],
-                  ARRAY['varchar(50)', 'numeric', 'varchar(255)','varchar(50)', 'timestamp', 'timestamp','varchar(100)','varchar(50)'],
-                  ARRAY['vital_valtype','vital_nval','vital_tval','vital_units','vital_start_date','vital_end_date','vital_modifier','vital_valueflag'], 'vital_wide');
+                  ARRAY['valtype','nval','tval','units','start_date','end_date','valueflag'],
+                  ARRAY['varchar(50)', 'numeric', 'varchar(255)','varchar(50)', 'timestamp', 'timestamp','varchar(50)'],
+                  ARRAY['vital_valtype','vital_nval','vital_tval','vital_units','vital_start_date','vital_end_date','vital_valueflag'], 'vital_wide');
 
 
 drop table if exists features_wide;
@@ -209,9 +209,35 @@ copy mdctn_wide_meta to '/tmp/mdctn_meta.csv' delimiter '!';
 copy vital_wide_meta to '/tmp/vital_meta.csv' delimiter '!';
 copy icd_norm_wide_meta to '/tmp/icd_meta.csv' delimiter '!';
 
+
+drop index if exists mdctn_code_to_mdctn_name_index;
+create index mdctn_code_to_mdctn_name_index on mdctn_code_to_mdctn_name(concept_cd);
+
+drop table if exists mdctn_rxnorm;
+create table mdctn_rxnorm as
+  select patient_num,
+         encounter_num,
+         (rxnorm || '_' || modifier_cd || '_' || instance_num) as concept,
+         valtype_cd as valtype,
+         valueflag_cd as valueflag,
+         nval_num as nval,
+         tval_char as tval,
+         units_cd as units,
+         start_date,
+         end_date
+         from observation_fact inner join mdctn_code_to_mdctn_name using (concept_cd) inner join mdctn_name_to_rxnorm using (mdctn_name);
+											      
+drop table if exists mdctn_gene_norm;
+create table mdctn_gene_norm as
+  select patient_num,
+         encounter_num,
+         gene as concept,
+	 true as norm
+         from observation_fact inner join mdctn_code_to_mdctn_name using (concept_cd) inner join mdctn_name_to_gene using (mdctn_name);
+
 create or replace function filter_icd(concept_cd text) returns boolean as $$
   begin
-    return concept_cd similar to '(ICD9:493.%|ICD10:J45.%|ICD9:464.%|ICD10:J05.%|ICD9:496.%|ICD10:J44.%|ICD10:J66.%|ICD9:786.%|ICD10:R05.%|ICD9:481.%|ICD9:482.%|ICD9:483.%|ICD9:484.%|ICD9:485.%|ICD9:486.%|ICD10:J12.%|ICD10:J13.%|ICD10:J14.%|ICD10:J15.%|ICD10:J16.%|ICD10:J17.%|ICD10:J18.%|ICD9:278.00|ICD10:E66.%)\_%' and concept_cd not like 'ICD10:E66.3\_%';
+    return concept_cd similar to '(ICD9:493.%|ICD10:J45.%|ICD9:464.%|ICD10:J05.%|ICD9:496.%|ICD10:J44.%|ICD10:J66.%|ICD9:786.%|ICD10:R05.%|ICD9:481.%|ICD9:482.%|ICD9:483.%|ICD9:484.%|ICD9:485.%|ICD9:486.%|ICD10:J12.%|ICD10:J13.%|ICD10:J14.%|ICD10:J15.%|ICD10:J16.%|ICD10:J17.%|ICD10:J18.%|ICD9:278.00|ICD10:E66.%)' and concept_cd not like 'ICD10:E66.3';
   end;
 $$ language plpgsql;
 
@@ -237,13 +263,25 @@ create table loinc_filter as select * from loinc where filter_loinc(concept);
 
 -- long to wide
 select longtowide('loinc_filter', ARRAY['encounter_num','patient_num'], ARRAY['integer','integer'], 'concept',
-                  ARRAY['valtype','nval','tval','units','start_date','end_date'],
-		  ARRAY['varchar(50)', 'numeric', 'varchar(255)', 'varchar(50)', 'timestamp', 'timestamp'],
-		  ARRAY['loinc_valtype','loinc_nval','loinc_tval','loinc_units','loinc_start_date','loinc_end_date','loinc_modifier','loinc_valueflag'], 'loinc_filter_wide');
+                  ARRAY['valtype','nval','tval','units','start_date','end_date','valueflag'],
+		  ARRAY['varchar(50)', 'numeric', 'varchar(255)', 'varchar(50)', 'timestamp', 'timestamp','varchar(50)'],
+		  ARRAY['loinc_valtype','loinc_nval','loinc_tval','loinc_units','loinc_start_date','loinc_end_date','loinc_valueflag'], 'loinc_filter_wide');
 select longtowide('icd_filter_trunc_norm', ARRAY['encounter_num','patient_num'], ARRAY['integer','integer'], 'icd_code',
                   ARRAY['norm','start_date','end_date'],
 		  ARRAY['boolean','timestamp','timestamp'],
 		  ARRAY['icd_code','icd_start_date','icd_end_date'], 'icd_filter_trunc_norm_wide');
+select longtowide('mdctn_rxnorm', ARRAY['encounter_num','patient_num'], ARRAY['integer','integer'], 'concept',
+                  ARRAY['valtype','nval','tval','units','start_date','end_date','valueflag'],
+                  ARRAY['varchar(50)', 'numeric', 'varchar(255)','varchar(50)', 'timestamp', 'timestamp','varchar(50)'],
+                  ARRAY['mdctn_valtype','mdctn_nval','mdctn_tval','mdctn_units','mdctn_start_date','mdctn_end_date','mdctn_valueflag'], 'mdctn_rxnorm_norm_wide');
+select longtowide('mdctn_gene_norm', ARRAY['encounter_num','patient_num'], ARRAY['integer','integer'], 'concept',
+                  ARRAY['norm'],
+                  ARRAY['boolean'],
+                  ARRAY['gene'], 'mdctn_gene_norm_wide');
+select longtowide('vital', ARRAY['encounter_num','patient_num'], ARRAY['integer','integer'], 'concept',
+                  ARRAY['valtype','nval','tval','units','start_date','end_date','valueflag'],
+                  ARRAY['varchar(50)', 'numeric', 'varchar(255)','varchar(50)', 'timestamp', 'timestamp','varchar(50)'],
+                  ARRAY['vital_valtype','vital_nval','vital_tval','vital_units','vital_start_date','vital_end_date','vital_valueflag'], 'vital_wide');
 
 
 drop table if exists features_filter_trunc_wide;
@@ -252,7 +290,8 @@ create table features_filter_trunc_wide as
   from visit_reduced
     full outer join icd_filter_trunc_norm_wide using (patient_num, encounter_num)
     full outer join loinc_filter_wide using (patient_num, encounter_num)
-    full outer join mdctn_wide using (patient_num, encounter_num)
+    full outer join mdctn_rxnorm_norm_wide using (patient_num, encounter_num)
+    full outer join mdctn_gene_norm_wide using (patient_num, encounter_num)
     full outer join vital_wide using (patient_num, encounter_num)
     inner join features using (patient_num);
 
@@ -261,8 +300,12 @@ copy tmp to '/tmp/endotype_filter_trunc_meta.csv' delimiter '!' csv header;
 drop table tmp;
 copy features_filter_trunc_wide to '/tmp/endotype_filter_trunc.csv' delimiter '!' null '';
 copy loinc_filter_wide_meta to '/tmp/loinc_filter_trunc_meta.csv' delimiter '!';
-copy mdctn_wide_meta to '/tmp/mdctn_filter_trunc_meta.csv' delimiter '!';
+copy mdctn_rxnorm_norm_wide_meta to '/tmp/mdctn_rxnorm_filter_trunc_meta.csv' delimiter '!';
+copy mdctn_gene_norm_wide_meta to '/tmp/mdctn_gene_filter_trunc_meta.csv' delimiter '!';
 copy vital_wide_meta to '/tmp/vital_filter_trunc_meta.csv' delimiter '!';
 copy icd_filter_trunc_norm_wide_meta to '/tmp/icd_filter_trunc_meta.csv' delimiter '!';
+
+
+
 
 
