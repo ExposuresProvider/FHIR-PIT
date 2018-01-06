@@ -168,7 +168,7 @@ create table features as select */* , extract(day from start_date - birth_date) 
 
 drop table if exists icd_norm;
 create table icd_norm as select encounter_num, patient_num, start_date, end_date, icd_code, True norm from icd;
-
+/*
 -- long to wide
 
 
@@ -208,7 +208,7 @@ copy loinc_wide_meta to '/tmp/loinc_meta.csv' delimiter '!';
 copy mdctn_wide_meta to '/tmp/mdctn_meta.csv' delimiter '!';
 copy vital_wide_meta to '/tmp/vital_meta.csv' delimiter '!';
 copy icd_norm_wide_meta to '/tmp/icd_meta.csv' delimiter '!';
-
+*/
 
 drop index if exists mdctn_code_to_mdctn_name_index;
 create index mdctn_code_to_mdctn_name_index on mdctn_code_to_mdctn_name(concept_cd);
