@@ -130,7 +130,7 @@ def parse_entry(inp, row, names):
             
         # print("list entry: " + str(entry))
     else:
-        string = parse_unquoted_string(inp)
+        string = parse_string(inp)
         # print("simple entry: " + string + "[" + names + "]")
         row[names] = string
         

@@ -222,7 +222,7 @@ void parse_entry(Input &inp, callback_row &row, const std::tuple<bool, std::vect
     }
   }
   else {
-    auto string = parse_unquoted_string(inp);
+    auto string = parse_string(inp);
     row[names[0]] = string;
   }
 }
