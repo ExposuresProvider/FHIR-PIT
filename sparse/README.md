@@ -6,7 +6,9 @@ Currently you need
 
 `endotype-wide.csv`
 
-`mdctn_meta.csv`
+`mdctn_rxnorm_meta.csv`
+
+`mdctn_gene_meta.csv`
 
 `loinc_meta.csv`
 
