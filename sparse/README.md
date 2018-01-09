@@ -100,7 +100,7 @@ For example, print rows filtered by age <= 10:
 ```
 
 The `<filemeta>` is a string of path to the metadata file. For example, `"endotype_meta.csv"`.
-The `<colmeta>` is a list of pairs of table name and path to the metadata file for that table. For example, `[("icd", "icd_meta.csv"), ("rxnorm", "mdctn_rxnorm_meta.csv"), ("loinc", "loinc_meta.csv"),("vital","vital_meta.csv"), ("gene", "mdctn_gene_meta.csv")]`.
+The `<colmeta>` is a list of pairs of table name and path to the metadata file for that table. For example, `[("icd", "icd_meta.csv"), ("mdctn", "mdctn_rxnorm_meta.csv"), ("loinc", "loinc_meta.csv"),("vital","vital_meta.csv"), ("gene", "mdctn_gene_meta.csv")]`.
 
 ## Loading into C++ ##
 
