@@ -162,7 +162,7 @@ int main(int argc, char** argv) {
   for(int i = 2; i< 2 + x; i++) {
     granularities.push_back(atoi(argv[i]));
   }
-  const int n = x + 3;
+  const int n = x + 2;
   std::cout << argv[n] << std::endl;
   const std::string filenamebase(argv[n]);
   std::string filename(argv[n+1]);
