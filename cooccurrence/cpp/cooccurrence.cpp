@@ -166,19 +166,19 @@ void calculate_cooccurrences(const std::string &filename, const std::string &fil
 }
 
 int main(int argc, char** argv) {
-  const int x = atoi(argv[1]);
+  const int x = atoi(argv[1]); // number of granularities
   std::vector<int> granularities;
   for(int i = 2; i< 2 + x; i++) {
-    granularities.push_back(atoi(argv[i]));
+    granularities.push_back(atoi(argv[i])); // bin size
   }
   const int n = x + 2;
-  std::cout << argv[n] << std::endl;
-  const std::string filenamebase(argv[n]);
-  std::string filename(argv[n+1]);
-  std::string filemeta(argv[n+2]);
+  std::cout << filenamebase << std::endl;
+  const std::string filenamebase(argv[n]); // file name base
+  std::string filename(argv[n+1]); // input file name
+  std::string filemeta(argv[n+2]); // file meta name
   std::vector<std::tuple<std::string,std::string>> tablemetas;
   for(int i = n+3;i<argc;i+=2) {
-    tablemetas.push_back(std::make_tuple(argv[i], argv[i+1]));
+    tablemetas.push_back(std::make_tuple(argv[i], argv[i+1])); // col meta name
   }
 
   for(const auto i : granularities) {
