@@ -23,7 +23,14 @@ std::tuple<std::string, std::set<std::tuple<std::string, std::string>>> extract_
       
       const auto key3 = (pos2 == std::string::npos || !(std::all_of(std::begin(key2)+pos2+1, std::end(key2), [](char x){return std::isdigit(x);})))?key2:key2.substr(0, pos2);
       
-      const auto key4 = (key.substr(0,5) == "mdctn")?"rxnorm:" + key3.substr(0, key3.find_first_of('_')):key3;
+      auto key4 =
+	(key.substr(0,5) == "mdctn")?
+	(std::all_of(std::begin(key3), std::end(key3), [](char x){return std::isdigit(x);})?"rxnorm:":"") + key3.substr(0, key3.find('_')):
+	(key.substr(0,3) == "icd")?
+	key3.substr(0,key3.find('.')):
+	key3;
+
+      std::replace(std::begin(key4), std::end(key4), ' ', '_');
       
       retval.insert(std::make_tuple(key4, element.second));
     }
@@ -101,20 +108,22 @@ void calculate_cooccurrences(const std::string &filename, const std::string &fil
     std::map<std::string, int> singletoncpat;
     
     for(const auto &key_bin : key_bin) {
-      const auto& keys = std::get<1>(key_bin);
-      for(const auto &key : keys) {
-
+      const auto& keys0 = std::get<1>(key_bin);
+      const auto& keys = std::vector<std::string>(std::begin(keys0), std::end(keys0));
+      for(int i = 0; i < keys.size(); i++) {
+	const auto &key = keys[i];
 	singletonc[key] ++;
 
 	singletoncpat[key] = 1;
-	for(const auto &key2 : keys){
-	  if(key != key2) {
-	    const auto keypb = std::make_tuple(key, key2);
-	
-	    cooc[keypb] ++;
+	for(int j = i + 1; j < keys.size(); j++){
+	  const auto &key2 = keys[j];
+	  
+	  const auto keypb = std::make_tuple(key, key2);
+	  
+	  cooc[keypb] ++;
 	    
-	    coocpat[keypb] = 1;
-	  }
+	  coocpat[keypb] = 1;
+	  
 	}
       }
     }
