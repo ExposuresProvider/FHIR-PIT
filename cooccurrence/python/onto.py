@@ -18,13 +18,14 @@ beta = float(sys.argv[2])
 singleton = sys.argv[3]
 cooc = sys.argv[4]
 output = sys.argv[5]
-upload = sys.argv[6] == "true"
+nnm = sys.argv[6]
+upload = sys.argv[7] == "true"
 
 singleton_df = pd.read_csv(singleton,sep=" ",header=None)
 cooc_df = pd.read_csv(cooc,sep=" ", header = None)
 frequency_dict = singleton_df.set_index(0).to_dict()[1]
 
-print(frequency_dict)
+# print(frequency_dict)
 
 # print(singleton_df)
 # print(cooc_df)
@@ -40,13 +41,19 @@ def normalize(x):
     
 cooc_df = cooc_df.apply(normalize, axis=1)
 
-print(cooc_df)
+# print(cooc_df)
 
-print(isinstance(cooc_df, pd.DataFrame))
+namemap_df = pd.read_csv(nnm, sep="|",header=None).set_index(0)
+namemap_df.columns = ["Label"]
 
-ont = Ontology.run_clixo(cooc_df, alpha, beta)
+# print(namemap_df)
 
-print(ont.to_table(output, clixo_format=True))
+
+ont = Ontology.run_clixo(cooc_df, alpha, beta, verbose=False,)
+
+ont.update_node_attr(namemap_df)
+    
+# print(ont.to_table(output, clixo_format=True))
 # nwx = ont.to_networkx()
 # nx.write_graphml(nwx, 'clixotable.graphml')
 
@@ -60,4 +67,4 @@ if upload:
                                           ndex_user='scratch',
                                           layout='bubble-collect',
                                           visibility='PUBLIC') 
-    print ndex_url
+    print ndex_url[ndex_url.rfind("/")+1:]
