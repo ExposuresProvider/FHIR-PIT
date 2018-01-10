@@ -237,7 +237,7 @@ create table mdctn_gene_norm as
 
 create or replace function filter_icd(concept_cd text) returns boolean as $$
   begin
-    return concept_cd similar to '(ICD9:493.%|ICD10:J45.%|ICD9:464.%|ICD10:J05.%|ICD9:496.%|ICD10:J44.%|ICD10:J66.%|ICD9:786.%|ICD10:R05.%|ICD9:481.%|ICD9:482.%|ICD9:483.%|ICD9:484.%|ICD9:485.%|ICD9:486.%|ICD10:J12.%|ICD10:J13.%|ICD10:J14.%|ICD10:J15.%|ICD10:J16.%|ICD10:J17.%|ICD10:J18.%|ICD9:278.00|ICD10:E66.%)' and concept_cd not like 'ICD10:E66.3';
+    return concept_cd similar to '(ICD9:799.02|ICD10:R09.02|ICD9:780.60|ICD10:R50.9|ICD9:493.%|ICD10:J45.%|ICD9:464.%|ICD10:J05.%|ICD9:496.%|ICD10:J44.%|ICD10:J66.%|ICD9:786.%|ICD10:R05.%|ICD9:481.%|ICD9:482.%|ICD9:483.%|ICD9:484.%|ICD9:485.%|ICD9:486.%|ICD10:J12.%|ICD10:J13.%|ICD10:J14.%|ICD10:J15.%|ICD10:J16.%|ICD10:J17.%|ICD10:J18.%|ICD9:278.00|ICD10:E66.%)' and concept_cd not like 'ICD10:E66.3';
   end;
 $$ language plpgsql;
 
