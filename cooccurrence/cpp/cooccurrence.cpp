@@ -9,8 +9,53 @@
 #include <cstdlib>
 #include <fstream>
 
-std::tuple<std::string, std::set<std::tuple<std::string, std::string>>> extract_keys(const std::map<std::string, std::string> & input_map) {
+long strtdays(const std::string&start_date) {
+  struct tm tm;
+  strptime(start_date.c_str(), "%Y-%m-%d %H:%M:%S", &tm);
+  const long seconds = mktime(&tm);
+  const long days = seconds / (60*60*24);
+  return days;
+}
+
+std::tuple<std::string, std::set<std::tuple<std::string, std::string>>> extract_keys(const std::map<std::string, std::string> & input_map, const std::vector<std::tuple<std::string, std::string, std::string>> &criteria) {
   std::set<std::tuple<std::string, std::string>> retval;
+  std::tuple<std::string, std::set<std::tuple<std::string, std::string>>> null_return = std::make_tuple("", std::set<std::tuple<std::string, std::string>>());
+  for(const auto&c : criteria) {
+    const auto &key = std::get<0>(c);
+    const auto &op = std::get<1>(c);
+    const auto &value = std::get<2>(c);
+    
+    if(key == "age") {
+      const auto days  = strtdays(input_map.at("birth_date"));
+      const int age = days/365;
+      const int age2 = atoi(value.c_str());
+      if (op == ">") {
+	if( age <= age2) {
+	  return null_return;
+	}
+      } else if(op == "<=") {
+	if( age > age2) {
+	  return null_return;
+	}
+      } else if(op == "==") {
+	if( age != age2) {
+	  return null_return;
+	}
+      } else if (op == "<") {
+	if( age >= age2) {
+	  return null_return;
+	}
+      } else if(op == ">=") {
+	if( age < age2) {
+	  return null_return;
+	}
+      } else if(op == "!=") {
+	if( age == age2) {
+	  return null_return;
+	}
+      }
+    }
+  }
   
   for (auto const& element : input_map) {
 
@@ -25,7 +70,7 @@ std::tuple<std::string, std::set<std::tuple<std::string, std::string>>> extract_
       
       auto key4 =
 	(key.substr(0,5) == "mdctn")?
-	(std::all_of(std::begin(key3), std::end(key3), [](char x){return std::isdigit(x);})?"rxnorm:":"") + key3.substr(0, key3.find('_')):
+	(std::all_of(std::begin(key3), std::end(key3), [](char x){return std::isdigit(x) || x == '_';})?"rxnorm:":"") + key3.substr(0, key3.find('_')):
 	(key.substr(0,3) == "icd")?
 	key3.substr(0,key3.find('.')):
 	key3;
@@ -39,11 +84,9 @@ std::tuple<std::string, std::set<std::tuple<std::string, std::string>>> extract_
   return std::make_tuple(patient_num, retval);
 }
 
+
 int bin(int w, const std::string&start_date) {
-  struct tm tm;
-  strptime(start_date.c_str(), "%Y-%m-%d %H:%M:%S", &tm);
-  const long seconds = mktime(&tm);
-  const long days = seconds / (60*60*24);
+  const long days = strtdays(start_date);
   const long r = rand() % w; 
   return (days + r)/w;
 }
@@ -60,7 +103,7 @@ std::map<K,V>& operator+=(std::map<K,V> &a, const std::map<K,V> &b) {
   return a;
 }
 
-void calculate_cooccurrences(const std::string &filename, const std::string &filemeta, const std::vector<std::tuple<std::string, std::string>> &tablemetas, int w, const std::string &filenamebase) {
+void calculate_cooccurrences(const std::vector<std::tuple<std::string, std::string, std::string>> &criteria, const std::string &filename, const std::string &filemeta, const std::vector<std::tuple<std::string, std::string>> &tablemetas, int w, const std::string &filenamebase) {
 
   const std::string singletonfilename(filenamebase + "_singleton" + std::to_string(w) + "perbin");
   const std::string cooccurrencefilename(filenamebase + "_cooccurrence" + std::to_string(w) + "perbin");
@@ -73,9 +116,12 @@ void calculate_cooccurrences(const std::string &filename, const std::string &fil
   
   load_df(
 	  filename,
-	  [&i, &binmap, &w](const callback_row &row_) {
-	    const auto patient_num_keys_start_date = extract_keys(row_);
+	  [&i, &binmap, &w, &criteria](const callback_row &row_) {
+	    const auto patient_num_keys_start_date = extract_keys(row_, criteria);
 	    const auto &patient_num = std::get<0>(patient_num_keys_start_date);
+	    if(patient_num == "") {
+	      return false;
+	    }
 	    const auto &keys_start_date = std::get<1>(patient_num_keys_start_date);
 
 	    i++;
@@ -166,13 +212,22 @@ void calculate_cooccurrences(const std::string &filename, const std::string &fil
 }
 
 int main(int argc, char** argv) {
-  const int x = atoi(argv[1]); // number of granularities
+  const int x0 = atoi(argv[1]); // number of criteria
+  std::vector<std::tuple<std::string, std::string, std::string>> criteria;
+  for(int i =2; i< 2 + x0 * 3; i+=3) {
+    criteria.push_back(std::make_tuple(argv[i], argv[i+1], argv[i+2]));
+  }
+  const int n0 = 2 + x0 * 3;
+  
+  const int x = atoi(argv[n0]); // number of granularities
+
   std::vector<int> granularities;
-  for(int i = 2; i< 2 + x; i++) {
+  
+  for(int i = n0+1; i< n0 + 1 + x; i++) {
     granularities.push_back(atoi(argv[i])); // bin size
   }
-  const int n = x + 2;
-  std::cout << filenamebase << std::endl;
+  const int n = n0 + 1 + x;
+  std::cout << argv[n] << std::endl;
   const std::string filenamebase(argv[n]); // file name base
   std::string filename(argv[n+1]); // input file name
   std::string filemeta(argv[n+2]); // file meta name
@@ -182,7 +237,7 @@ int main(int argc, char** argv) {
   }
 
   for(const auto i : granularities) {
-    calculate_cooccurrences(filename, filemeta, tablemetas, i, filenamebase);
+    calculate_cooccurrences(criteria, filename, filemeta, tablemetas, i, filenamebase);
   }
   return 0;
 }
