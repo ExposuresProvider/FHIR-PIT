@@ -17,7 +17,7 @@ int bin(int w, const std::string&start_date) {
   return (days + r)/w;
 }
 
-void calculate_cooccurrences(const std::vector<std::tuple<std::string, std::string, std::string>> &criteria, const std::string &filename, const std::string &filemeta, const std::vector<std::tuple<std::string, std::string>> &tablemetas, int w, const std::string &filenamebase) {
+void calculate_cooccurrences(const std::vector<std::tuple<std::string, std::string, std::string>> &criteria, int min, const std::string &filename, const std::string &filemeta, const std::vector<std::tuple<std::string, std::string>> &tablemetas, int w, const std::string &filenamebase) {
 
   const std::string singletonfilename(filenamebase + "_singleton" + std::to_string(w) + "perbin");
   const std::string cooccurrencefilename(filenamebase + "_cooccurrence" + std::to_string(w) + "perbin");
@@ -95,7 +95,7 @@ void calculate_cooccurrences(const std::vector<std::tuple<std::string, std::stri
   sf.open(singletonfilename);
   for(const auto &keysc : singletonc) {
     const auto& key = std::get<0>(keysc);
-    sf << key << " " << std::to_string(std::get<1>(keysc)) << std::endl;
+    sf << key << " " << std::to_string(std::max(min, std::get<1>(keysc))) << std::endl;
   }
   sf.close();
   
@@ -103,7 +103,7 @@ void calculate_cooccurrences(const std::vector<std::tuple<std::string, std::stri
   cf.open(cooccurrencefilename);
   for(const auto &keyoc : cooc) {
     const auto& key = std::get<0>(keyoc);
-    cf << std::get<0>(key) << " " << std::get<1>(key) << " " << std::to_string(std::get<1>(keyoc)) << std::endl;
+    cf << std::get<0>(key) << " " << std::get<1>(key) << " " << std::to_string(std::max(min, std::get<1>(keyoc))) << std::endl;
   }
   cf.close();
 
@@ -111,7 +111,7 @@ void calculate_cooccurrences(const std::vector<std::tuple<std::string, std::stri
   sfpp.open(singletonperpatfilename);
   for(const auto &keysc : singletoncperpat) {
     const auto& key = std::get<0>(keysc);
-    sfpp << key << " " << std::to_string(std::get<1>(keysc)) << std::endl;
+    sfpp << key << " " << std::to_string(std::max(min, std::get<1>(keysc))) << std::endl;
   }
   sfpp.close();
   
@@ -119,7 +119,7 @@ void calculate_cooccurrences(const std::vector<std::tuple<std::string, std::stri
   cfpp.open(cooccurrenceperpatfilename);
   for(const auto &keyoc : coocperpat) {
     const auto& key = std::get<0>(keyoc);
-    cfpp << std::get<0>(key) << " " << std::get<1>(key) << " " << std::to_string(std::get<1>(keyoc)) << std::endl;
+    cfpp << std::get<0>(key) << " " << std::get<1>(key) << " " << std::to_string(std::max(min, std::get<1>(keyoc))) << std::endl;
   }
   cfpp.close();
   
@@ -140,18 +140,20 @@ int main(int argc, char** argv) {
   for(int i = n0+1; i< n0 + 1 + x; i++) {
     granularities.push_back(atoi(argv[i])); // bin size
   }
-  const int n = n0 + 1 + x;
+
+  int n = n0 + 1 + x;
+  const int min = atoi(argv[n++]); // min count
   std::cout << argv[n] << std::endl;
-  const std::string filenamebase(argv[n]); // file name base
-  std::string filename(argv[n+1]); // input file name
-  std::string filemeta(argv[n+2]); // file meta name
+  const std::string filenamebase(argv[n++]); // file name base
+  std::string filename(argv[n++]); // input file name
+  std::string filemeta(argv[n++]); // file meta name
   std::vector<std::tuple<std::string,std::string>> tablemetas;
-  for(int i = n+3;i<argc;i+=2) {
+  for(int i = n;i<argc;i+=2) {
     tablemetas.push_back(std::make_tuple(argv[i], argv[i+1])); // col meta name
   }
 
   for(const auto i : granularities) {
-    calculate_cooccurrences(criteria, filename, filemeta, tablemetas, i, filenamebase);
+    calculate_cooccurrences(criteria, min, filename, filemeta, tablemetas, i, filenamebase);
   }
   return 0;
 }
