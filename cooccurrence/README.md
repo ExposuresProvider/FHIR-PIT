@@ -56,5 +56,5 @@ g++ -std=c++0x -I../../sparse/cpp/ ../../sparse/cpp/import_df.cpp aggregate.cpp 
 
 For example,
 ```
-./aggregator 0 inout_cd_filters rxnorm_gene_map 3 2014 2015 2016 aggregation endotype_filter_trunc.csv endotype_filter_trunc_meta.csv icd icd_filter_trunc_meta.csv loinc loinc_filter_trunc_meta.csv mdctn mdctn_rxnorm_filter_trunc_meta.csv gene mdctn_gene_filter_trunc_meta.csv vital vital_filter_trunc_meta.csv
+./aggregator 0 inoutcdfilters medgenemap 3 2014 2015 2016 aggregation endotype_filter_trunc.csv endotype_filter_trunc_meta.csv icd icd_filter_trunc_meta.csv loinc loinc_filter_trunc_meta.csv mdctn mdctn_rxnorm_filter_trunc_meta.csv gene mdctn_gene_filter_trunc_meta.csv vital vital_filter_trunc_meta.csv
 ```
