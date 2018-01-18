@@ -1,5 +1,6 @@
-= aggregator =
-== compile ==
+## aggregator ##
+
+### compile ###
 
 ```
 cd cpp
@@ -13,7 +14,7 @@ g++:
 g++ -std=c++0x -I../../sparse/cpp/ ../../sparse/cpp/import_df.cpp aggregate.cpp utils.cpp feature.cpp -o aggregator
 ```
 
-== usage ==
+### usage ###
 ```
 ./aggregator <number of criteria> <criteria> <inout_cd_filters> <rxnorm_gene_map> <number of years> <years> <output> <input> <filemeta> <colmeta>
 ```
