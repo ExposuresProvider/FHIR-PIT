@@ -12,9 +12,9 @@ usage:
 
  * `<number of criteria>` number of criteria
  * `<criteria>` currently support three argment format `<prop> <op> <val>` where 
-`<prop>` is `age`
-`<op>` is `<`, `>`, `==`, `!=`, `<=`, or `>=` and 
-`<val>` is an integer
+   - `<prop>` is `age`
+   - `<op>` is `<`, `>`, `==`, `!=`, `<=`, or `>=` and 
+   - `<val>` is an integer
  * `<inout_cd_filter>` is a filename. The file contains the keys that indicates that we should count inout_cd.
  * `<rxnorm_gene_map>` is a filename. The file contains rxnorm to gene map, one per line, separator ` `.
  * `<number of years>` is the number of years.
