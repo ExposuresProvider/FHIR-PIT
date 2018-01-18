@@ -1,3 +1,24 @@
+## cooccurrence ##
+
+### compile ###
+
+```
+cd cpp
+```
+clang:
+```
+clang++ -std=c++14 -I../../sparse/cpp/ ../../sparse/cpp/import_df.cpp cooccurrence.cpp utils.cpp feature.cpp -o cooccurrence
+```
+g++:
+```
+g++ -std=c++0x -I../../sparse/cpp/ ../../sparse/cpp/import_df.cpp cooccurrence.cpp utils.cpp feature.cpp -o cooccurrence
+```
+
+### usage ###
+```
+./aggregator <number of criteria> <criteria> <number of bins> <bins> <output> <input> <filemeta> <colmeta>
+```
+
 ## aggregator ##
 
 ### compile ###
