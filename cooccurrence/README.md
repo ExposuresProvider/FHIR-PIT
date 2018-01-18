@@ -2,7 +2,14 @@ compile
 
 ```
 cd cpp
+```
+clang:
+```
 clang++ -std=c++14 -I../../sparse/cpp/ ../../sparse/cpp/import_df.cpp aggregate.cpp utils.cpp feature.cpp -o aggregator
+```
+g++:
+```
+g++ -std=c++0x -I../../sparse/cpp/ ../../sparse/cpp/import_df.cpp aggregate.cpp utils.cpp feature.cpp -o aggregator
 ```
 
 usage:
