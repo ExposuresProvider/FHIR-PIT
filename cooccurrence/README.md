@@ -16,7 +16,7 @@ g++ -std=c++0x -I../../sparse/cpp/ ../../sparse/cpp/import_df.cpp cooccurrence.c
 
 ### usage ###
 ```
-./aggregator <number of criteria> <criteria> <number of bins> <bins> <output> <input> <filemeta> <colmeta>
+./cooccurrence <number of criteria> <criteria> <number of bins> <bins> <output> <input> <filemeta> <colmeta>
 ```
 
 ## aggregator ##
