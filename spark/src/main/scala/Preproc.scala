@@ -23,6 +23,7 @@ object Preproc {
     val keyvals = df.select(keycol).distinct.rdd.map(r => r.getString(0)).collect.toSeq
 
 
+    println("processing " + col)
     println(keyvals.length + " columns")
     time {
       val pivot = new Pivot(
@@ -31,9 +32,9 @@ object Preproc {
         cols
       )
 
-      df.groupBy("patient_num", "encounter_num").agg(pivot(
+      df.groupBy("patient_num", "encounter_num").agg(to_json(pivot(
         cols.map(x => df.col(x)) : _*
-      )).as(col)
+      )).as(col))
 
     } 
 
@@ -78,36 +79,39 @@ object Preproc {
 
     val mdctn_wide = longToWide(mdctn, "concept_cd_modifier_cd_instance_num", cols, "mdctn")
 
-    mdctn_wide.createGlobalTempView("mdctn_wide")
-
     // icd
     val icd = spark.sql("select patient_num, encounter_num, concept_cd, start_date, end_date from global_temp.observation_fact where concept_cd like 'ICD%'")
 
     val icd_wide = longToWide(icd, "concept_cd", Seq("start_date", "end_date"), "icd")
-
-    icd_wide.createGlobalTempView("icd_wide")
 
     // loinc
     val loinc = spark.sql("select patient_num, encounter_num, concat(concept_cd, '_', instance_num) concept_cd_instance_num, valueflag_cd, valtype_cd, nval_num, tval_char, units_cd, start_date, end_date from global_temp.observation_fact where concept_cd like 'LOINC:%'")
 
     val loinc_wide = longToWide(loinc, "concept_cd_instance_num", cols, "loinc")
 
-    loinc_wide.createGlobalTempView("loinc_wide")
-
     // vital
     val vital = spark.sql("select patient_num, encounter_num, concat(concept_cd, '_', instance_num) concept_cd_instance_num, valueflag_cd, valtype_cd, nval_num, tval_char, units_cd, start_date, end_date from global_temp.observation_fact where concept_cd like 'VITAL:%'")
 
     val vital_wide = longToWide(vital, "concept_cd_instance_num", cols, "vital")
 
-    vital_wide.createGlobalTempView("vital_wide")
-
     val inout = vddf.select("patient_num", "encounter_num", "inout_cd", "start_date", "end_date")
 
     val pat = pddf.select("patient_num", "race_cd", "sex_cd", "birth_date")
 
-    val lat = ofdf.filter($"concept_cd".like("GEO:LAT")).select("patient_num", "nval_num").groupBy("patient_num").agg(avg("nval_num"))
+    val lat = ofdf.filter($"concept_cd".like("GEO:LAT")).select("patient_num", "nval_num").groupBy("patient_num").agg(avg("nval_num").as("lat"))
 
-    val lon = ofdf.filter($"concept_cd".like("GEO:LONG")).select("patient_num", "nval_num").groupBy("patient_num").agg(avg("nval_num"))
+    val lon = ofdf.filter($"concept_cd".like("GEO:LONG")).select("patient_num", "nval_num").groupBy("patient_num").agg(avg("nval_num").as("lon"))
+
+    val features = pat
+      .join(inout, "patient_num")
+      .join(lat, "patient_num")
+      .join(lon, "patient_num")
+      .join(icd_wide, Seq("patient_num", "encounter_num"))
+      .join(loinc_wide, Seq("patient_num", "encounter_num"))
+      .join(mdctn_wide, Seq("patient_num", "encounter_num"))
+      .join(vital_wide, Seq("patient_num", "encounter_num"))
+
+    features.coalesce(1).write.option("sep", "!").option("header", true).csv("/tmp/features_wide.csv")
 
     spark.stop()
   }
