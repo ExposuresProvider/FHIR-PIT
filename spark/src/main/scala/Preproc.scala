@@ -75,24 +75,30 @@ object Preproc {
     val mdctn = spark.sql("select patient_num, encounter_num, concat(concept_cd, '_', modifier_cd, '_', instance_num) concept_cd_modifier_cd_instance_num, valueflag_cd, valtype_cd, nval_num, tval_char, units_cd, start_date, end_date" +
       " from global_temp.observation_fact where concept_cd like 'MDCTN:%'")
 
-    //mdctn.persist(StorageLevel.MEMORY_AND_DISK);
-
     val mdctn_wide = longToWide(mdctn, "concept_cd_modifier_cd_instance_num", cols, "mdctn")
+
+    mdctn_wide.persist(StorageLevel.MEMORY_AND_DISK);
 
     // icd
     val icd = spark.sql("select patient_num, encounter_num, concept_cd, start_date, end_date from global_temp.observation_fact where concept_cd like 'ICD%'")
 
     val icd_wide = longToWide(icd, "concept_cd", Seq("start_date", "end_date"), "icd")
 
+    icd_wide.persist(StorageLevel.MEMORY_AND_DISK);
+
     // loinc
     val loinc = spark.sql("select patient_num, encounter_num, concat(concept_cd, '_', instance_num) concept_cd_instance_num, valueflag_cd, valtype_cd, nval_num, tval_char, units_cd, start_date, end_date from global_temp.observation_fact where concept_cd like 'LOINC:%'")
 
     val loinc_wide = longToWide(loinc, "concept_cd_instance_num", cols, "loinc")
 
+    loinc_wide.persist(StorageLevel.MEMORY_AND_DISK);
+
     // vital
     val vital = spark.sql("select patient_num, encounter_num, concat(concept_cd, '_', instance_num) concept_cd_instance_num, valueflag_cd, valtype_cd, nval_num, tval_char, units_cd, start_date, end_date from global_temp.observation_fact where concept_cd like 'VITAL:%'")
 
     val vital_wide = longToWide(vital, "concept_cd_instance_num", cols, "vital")
+
+    vital_wide.persist(StorageLevel.MEMORY_AND_DISK);
 
     val inout = vddf.select("patient_num", "encounter_num", "inout_cd", "start_date", "end_date")
 
@@ -106,12 +112,16 @@ object Preproc {
       .join(inout, "patient_num")
       .join(lat, "patient_num")
       .join(lon, "patient_num")
+
+    features0.persist(StorageLevel.MEMORY_AND_DISK);
+
+    val features_wide = features
       .join(icd_wide, Seq("patient_num", "encounter_num"))
       .join(loinc_wide, Seq("patient_num", "encounter_num"))
       .join(mdctn_wide, Seq("patient_num", "encounter_num"))
       .join(vital_wide, Seq("patient_num", "encounter_num"))
 
-    features.coalesce(1).write.option("sep", "!").option("header", true).csv("/tmp/features_wide.csv")
+    features_wide.coalesce(1).write.option("sep", "!").option("header", true).csv("/tmp/features_wide.csv")
 
     spark.stop()
   }
