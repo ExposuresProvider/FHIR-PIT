@@ -42,8 +42,8 @@ object Preproc {
 
   def main(args: Array[String]) {
 
-    // val spark = SparkSession.builder().appName("datatrans preproc").config("spark.sql.pivotMaxValues", 100000).config("spark.executor.memory", "16g").config("spark.driver.memory", "64g").getOrCreate()
-    val spark = SparkSession.builder().appName("datatrans preproc").getOrCreate()
+    val spark = SparkSession.builder().appName("datatrans preproc").config("spark.sql.pivotMaxValues", 100000).config("spark.executor.memory", "16g").config("spark.driver.memory", "64g").getOrCreate()
+    // val spark = SparkSession.builder().appName("datatrans preproc").getOrCreate()
 
     // For implicit conversions like converting RDDs to DataFrames
     import spark.implicits._
@@ -79,12 +79,16 @@ object Preproc {
 
     mdctn_wide.persist(StorageLevel.MEMORY_AND_DISK);
 
+    mdctn_wide.write.option("sep", "!").option("header", true).csv("/tmp/mdctn_wide.csv")
+
     // icd
     val icd = spark.sql("select patient_num, encounter_num, concept_cd, start_date, end_date from global_temp.observation_fact where concept_cd like 'ICD%'")
 
     val icd_wide = longToWide(icd, "concept_cd", Seq("start_date", "end_date"), "icd")
 
     icd_wide.persist(StorageLevel.MEMORY_AND_DISK);
+
+    icd_wide.write.option("sep", "!").option("header", true).csv("/tmp/icd_wide.csv")
 
     // loinc
     val loinc = spark.sql("select patient_num, encounter_num, concat(concept_cd, '_', instance_num) concept_cd_instance_num, valueflag_cd, valtype_cd, nval_num, tval_char, units_cd, start_date, end_date from global_temp.observation_fact where concept_cd like 'LOINC:%'")
@@ -93,12 +97,16 @@ object Preproc {
 
     loinc_wide.persist(StorageLevel.MEMORY_AND_DISK);
 
+    loinc_wide.write.option("sep", "!").option("header", true).csv("/tmp/loinc_wide.csv")
+
     // vital
     val vital = spark.sql("select patient_num, encounter_num, concat(concept_cd, '_', instance_num) concept_cd_instance_num, valueflag_cd, valtype_cd, nval_num, tval_char, units_cd, start_date, end_date from global_temp.observation_fact where concept_cd like 'VITAL:%'")
 
     val vital_wide = longToWide(vital, "concept_cd_instance_num", cols, "vital")
 
     vital_wide.persist(StorageLevel.MEMORY_AND_DISK);
+
+    vital_wide.write.option("sep", "!").option("header", true).csv("/tmp/vital_wide.csv")
 
     val inout = vddf.select("patient_num", "encounter_num", "inout_cd", "start_date", "end_date")
 
@@ -114,6 +122,8 @@ object Preproc {
       .join(lon, "patient_num")
 
     features.persist(StorageLevel.MEMORY_AND_DISK);
+
+    features.write.option("sep", "!").option("header", true).csv("/tmp/features.csv")
 
     val features_wide = features
       .join(icd_wide, Seq("patient_num", "encounter_num"))
