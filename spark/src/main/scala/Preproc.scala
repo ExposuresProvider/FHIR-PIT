@@ -107,7 +107,7 @@ object Preproc {
 
     val lat = ofdf.filter($"concept_cd".like("GEO:LAT")).select("patient_num", "nval_num").groupBy("patient_num").agg(avg("nval_num"))
 
-    val lon = ofdf.filter($"concept_cd".like("GEO:LON")).select("patient_num", "nval_num").groupBy("patient_num").agg(avg("nval_num"))
+    val lon = ofdf.filter($"concept_cd".like("GEO:LONG")).select("patient_num", "nval_num").groupBy("patient_num").agg(avg("nval_num"))
 
     spark.stop()
   }
