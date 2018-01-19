@@ -113,7 +113,7 @@ object Preproc {
       .join(lat, "patient_num")
       .join(lon, "patient_num")
 
-    features0.persist(StorageLevel.MEMORY_AND_DISK);
+    features.persist(StorageLevel.MEMORY_AND_DISK);
 
     val features_wide = features
       .join(icd_wide, Seq("patient_num", "encounter_num"))
