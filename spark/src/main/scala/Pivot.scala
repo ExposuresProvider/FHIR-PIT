@@ -27,8 +27,8 @@ class Pivot(keycol : String, keyvals : Seq[String], cols : Seq[String]) extends 
 
   // This is the initial value for your buffer schema.
   override def initialize(buffer: MutableAggregationBuffer): Unit = {
-    buffer(0) = new Array[Int](0)
-    buffer(1) = new Array[Array[String]](0)
+    buffer(0) = Seq[Int]()
+    buffer(1) = Seq[Seq[String]]()
   }
 
   // This is how to update your buffer schema given an input.
@@ -36,21 +36,21 @@ class Pivot(keycol : String, keyvals : Seq[String], cols : Seq[String]) extends 
     val keyval = input.getString(0)
     val keyindex = keyvals.indexOf(keyval)
     val cols = input.toSeq.drop(1).map(x=>x.asInstanceOf[String])
-    buffer(0) = buffer.getAs[Array[Int]](0) :+ keyindex
-    buffer(1) = buffer.getAs[Array[Array[String]]](1) :+ cols
+    buffer(0) = buffer.getAs[Seq[Int]](0) :+ keyindex
+    buffer(1) = buffer.getAs[Seq[Seq[String]]](1) :+ cols
   }
 
   // This is how to merge two objects with the bufferSchema type.
   override def merge(buffer1: MutableAggregationBuffer, buffer2: Row): Unit = {
-    buffer1(0) = buffer1.getAs[Array[Int]](0) ++ buffer1.getAs[Array[Int]](0)
-    buffer1(1) = buffer1.getAs[Array[Array[String]]](1) ++ buffer2.getAs[Array[Array[String]]](1)
+    buffer1(0) = buffer1.getAs[Seq[Int]](0) ++ buffer1.getAs[Seq[Int]](0)
+    buffer1(1) = buffer1.getAs[Seq[Seq[String]]](1) ++ buffer2.getAs[Seq[Seq[String]]](1)
   }
 
   // This is where you output the final value, given the final value of your bufferSchema.
   override def evaluate(buffer: Row): Any = {
     Row(
-      buffer.getAs[Array[Int]](0),
-      buffer.getAs[Array[Seq[String]]](1)
+      buffer.getAs[Seq[Int]](0),
+      buffer.getAs[Seq[Seq[String]]](1)
     )
   }
 }
