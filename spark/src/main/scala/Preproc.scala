@@ -121,7 +121,7 @@ object Preproc {
       .join(mdctn_wide, Seq("patient_num", "encounter_num"))
       .join(vital_wide, Seq("patient_num", "encounter_num"))
 
-    features_wide.coalesce(1).write.option("sep", "!").option("header", true).csv("/tmp/features_wide.csv")
+    features_wide.write.option("sep", "!").option("header", true).csv("/tmp/features_wide.csv")
 
     spark.stop()
   }
