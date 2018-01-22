@@ -4,25 +4,12 @@ import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.storage.StorageLevel
 import org.apache.spark.sql.functions._
-import java.nio.file.{Files, Paths, Path, SimpleFileVisitor, FileVisitResult}
-import java.nio.file.attribute.BasicFileAttributes
-import java.io.IOException
+
+import org.apache.hadoop.fs.{Path, FileUtil, FileSystem}
+import org.apache.hadoop.conf.Configuration
 
 
 object Preproc {
-
-  def remove(root: Path): Unit = {
-    Files.walkFileTree(root, new SimpleFileVisitor[Path] {
-      override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
-        Files.delete(file)
-        FileVisitResult.CONTINUE
-      }
-      override def postVisitDirectory(dir: Path, exc: IOException): FileVisitResult = {
-        Files.delete(dir)
-        FileVisitResult.CONTINUE
-      }
-    })
-  }
 
   def time[R](block: =>R) : R = {
     val start = System.nanoTime
@@ -33,9 +20,29 @@ object Preproc {
     res
   }
 
-  def writeCSV(wide:DataFrame, dir:String) : Unit = {
-    remove(Paths.get(dir))
-    wide.write.option("sep", "!").option("header", true).csv(dir)
+  def writeCSV(spark:SparkSession, wide:DataFrame, fn:String) : Unit = {
+
+    val hc = spark.sparkContext.hadoopConfiguration
+    val fpath = new Path(fn)
+    val ffs = fpath.getFileSystem(hc)
+    val mn = fn + "_meta"
+    val mpath = new Path(mn)
+    val mfs = mpath.getFileSystem(hc)
+    val dirn = fn + "_temp"
+    val dpath = new Path(dirn)
+    val dfs = dpath.getFileSystem(hc)
+    val mdirn = mn + "_temp"
+    val mdpath = new Path(mdirn)
+    val mdfs = dpath.getFileSystem(hc)
+
+    wide.limit(0).write.option("sep", "!").option("header", true).csv(mdirn)
+    mfs.delete(mpath, true)
+    FileUtil.copyMerge(mdfs, mdpath, mfs, mpath, true, hc, null)
+
+    wide.write.option("sep", "!").option("header", false).csv(dirn)
+    ffs.delete(fpath, true)
+    FileUtil.copyMerge(dfs, dpath, ffs, fpath, true, hc, null)
+
   }
 
   def meta(keyvals:Seq[String], cols:Seq[String]) : Seq[String] = for {x <- keyvals; y <- cols} yield x + "_" + y
@@ -100,7 +107,7 @@ object Preproc {
 
     mdctn_wide.persist(StorageLevel.MEMORY_AND_DISK)
 
-    writeCSV(mdctn_wide, "/tmp/mdctn_wide.csv")
+    writeCSV(spark, mdctn_wide, "/tmp/mdctn_wide.csv")
 
     // icd
     val icd = spark.sql("select patient_num, encounter_num, concept_cd, start_date, end_date from global_temp.observation_fact where concept_cd like 'ICD%'")
@@ -109,7 +116,7 @@ object Preproc {
 
     icd_wide.persist(StorageLevel.MEMORY_AND_DISK)
 
-    writeCSV(icd_wide, "/tmp/icd_wide.csv")
+    writeCSV(spark, icd_wide, "/tmp/icd_wide.csv")
 
     // loinc
     val loinc = spark.sql("select patient_num, encounter_num, concat(concept_cd, '_', instance_num) concept_cd_instance_num, valueflag_cd, valtype_cd, nval_num, tval_char, units_cd, start_date, end_date from global_temp.observation_fact where concept_cd like 'LOINC:%'")
@@ -118,7 +125,7 @@ object Preproc {
 
     loinc_wide.persist(StorageLevel.MEMORY_AND_DISK)
 
-    writeCSV(loinc_wide, "/tmp/loinc_wide.csv")
+    writeCSV(spark, loinc_wide, "/tmp/loinc_wide.csv")
 
     // vital
     val vital = spark.sql("select patient_num, encounter_num, concat(concept_cd, '_', instance_num) concept_cd_instance_num, valueflag_cd, valtype_cd, nval_num, tval_char, units_cd, start_date, end_date from global_temp.observation_fact where concept_cd like 'VITAL:%'")
@@ -127,7 +134,7 @@ object Preproc {
 
     vital_wide.persist(StorageLevel.MEMORY_AND_DISK)
 
-    writeCSV(vital_wide, "/tmp/vital_wide.csv")
+    writeCSV(spark, vital_wide, "/tmp/vital_wide.csv")
 
     val inout = vddf.select("patient_num", "encounter_num", "inout_cd", "start_date", "end_date")
 
@@ -144,7 +151,7 @@ object Preproc {
 
     features.persist(StorageLevel.MEMORY_AND_DISK);
 
-    writeCSV(features, "/tmp/features.csv")
+    writeCSV(spark, features, "/tmp/features.csv")
 
     val features_wide = features
       .join(icd_wide, Seq("patient_num", "encounter_num"))
@@ -152,7 +159,7 @@ object Preproc {
       .join(mdctn_wide, Seq("patient_num", "encounter_num"))
       .join(vital_wide, Seq("patient_num", "encounter_num"))
 
-    writeCSV(features_wide, "/tmp/features_wide.csv")
+    writeCSV(spark, features_wide, "/tmp/features_wide.csv")
 
     spark.stop()
   }
