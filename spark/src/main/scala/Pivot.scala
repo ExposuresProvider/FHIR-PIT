@@ -15,20 +15,27 @@ class Pivot(keycol : String, keyvals : Seq[String], cols : Seq[String]) extends 
       StructField(keycol, StringType) +: cols.map(x=>StructField(x, StringType)))
 
   // This is the internal fields you keep for computing your aggregate.
-  override def bufferSchema: StructType = StructType(Seq(
-    StructField("indices", ArrayType(IntegerType, false)),
-    StructField("elements", ArrayType(ArrayType(StringType, true), false))
-  ))
+  override def bufferSchema: StructType = StructType(
+    Seq(
+      StructField("keyvals", dataType)
+    )
+  )
 
   // This is the output type of your aggregatation function.
-  override def dataType: DataType = bufferSchema
+  override def dataType: DataType = ArrayType(
+    StructType(
+      Seq(
+        StructField("index", IntegerType),
+        StructField("element", ArrayType(StringType, true))
+      )
+    ), false
+  )
 
   override def deterministic: Boolean = true
 
   // This is the initial value for your buffer schema.
   override def initialize(buffer: MutableAggregationBuffer): Unit = {
-    buffer(0) = Seq[Int]()
-    buffer(1) = Seq[Seq[String]]()
+    buffer(0) = Seq[Row]()
   }
 
   // This is how to update your buffer schema given an input.
@@ -36,22 +43,17 @@ class Pivot(keycol : String, keyvals : Seq[String], cols : Seq[String]) extends 
     val keyval = input.getString(0)
     val keyindex = keyvals.indexOf(keyval)
     val cols = input.toSeq.drop(1).map(x=>x.asInstanceOf[String])
-    buffer(0) = buffer.getAs[Seq[Int]](0) :+ keyindex
-    buffer(1) = buffer.getAs[Seq[Seq[String]]](1) :+ cols
+    buffer(0) = buffer.getAs[Seq[Row]](0) :+ Row(keyindex, cols)
   }
 
   // This is how to merge two objects with the bufferSchema type.
   override def merge(buffer1: MutableAggregationBuffer, buffer2: Row): Unit = {
-    buffer1(0) = buffer1.getAs[Seq[Int]](0) ++ buffer1.getAs[Seq[Int]](0)
-    buffer1(1) = buffer1.getAs[Seq[Seq[String]]](1) ++ buffer2.getAs[Seq[Seq[String]]](1)
+    buffer1(0) = buffer1.getAs[Seq[Row]](0) ++ buffer1.getAs[Seq[Row]](0)
   }
 
   // This is where you output the final value, given the final value of your bufferSchema.
   override def evaluate(buffer: Row): Any = {
-    Row(
-      buffer.getAs[Seq[Int]](0),
-      buffer.getAs[Seq[Seq[String]]](1)
-    )
+    buffer.getAs[Seq[Row]](0)
   }
 }
 

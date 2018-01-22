@@ -4,9 +4,25 @@ import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.storage.StorageLevel
 import org.apache.spark.sql.functions._
+import java.nio.file.{Files, Paths, Path, SimpleFileVisitor, FileVisitResult}
+import java.nio.file.attribute.BasicFileAttributes
+import java.io.IOException
 
 
 object Preproc {
+
+  def remove(root: Path): Unit = {
+    Files.walkFileTree(root, new SimpleFileVisitor[Path] {
+      override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
+        Files.delete(file)
+        FileVisitResult.CONTINUE
+      }
+      override def postVisitDirectory(dir: Path, exc: IOException): FileVisitResult = {
+        Files.delete(dir)
+        FileVisitResult.CONTINUE
+      }
+    })
+  }
 
   def time[R](block: =>R) : R = {
     val start = System.nanoTime
@@ -15,6 +31,11 @@ object Preproc {
     val duration = (finish - start) / 1e9d
     println("time " + duration + "s")
     res
+  }
+
+  def writeCSV(wide:DataFrame, dir:String) : Unit = {
+    remove(Paths.get(dir))
+    wide.write.option("sep", "!").option("header", true).csv(dir)
   }
 
   def meta(keyvals:Seq[String], cols:Seq[String]) : Seq[String] = for {x <- keyvals; y <- cols} yield x + "_" + y
@@ -77,36 +98,36 @@ object Preproc {
 
     val mdctn_wide = longToWide(mdctn, "concept_cd_modifier_cd_instance_num", cols, "mdctn")
 
-    mdctn_wide.persist(StorageLevel.MEMORY_AND_DISK);
+    mdctn_wide.persist(StorageLevel.MEMORY_AND_DISK)
 
-    mdctn_wide.write.option("sep", "!").option("header", true).csv("/tmp/mdctn_wide.csv")
+    writeCSV(mdctn_wide, "/tmp/mdctn_wide.csv")
 
     // icd
     val icd = spark.sql("select patient_num, encounter_num, concept_cd, start_date, end_date from global_temp.observation_fact where concept_cd like 'ICD%'")
 
     val icd_wide = longToWide(icd, "concept_cd", Seq("start_date", "end_date"), "icd")
 
-    icd_wide.persist(StorageLevel.MEMORY_AND_DISK);
+    icd_wide.persist(StorageLevel.MEMORY_AND_DISK)
 
-    icd_wide.write.option("sep", "!").option("header", true).csv("/tmp/icd_wide.csv")
+    writeCSV(icd_wide, "/tmp/icd_wide.csv")
 
     // loinc
     val loinc = spark.sql("select patient_num, encounter_num, concat(concept_cd, '_', instance_num) concept_cd_instance_num, valueflag_cd, valtype_cd, nval_num, tval_char, units_cd, start_date, end_date from global_temp.observation_fact where concept_cd like 'LOINC:%'")
 
     val loinc_wide = longToWide(loinc, "concept_cd_instance_num", cols, "loinc")
 
-    loinc_wide.persist(StorageLevel.MEMORY_AND_DISK);
+    loinc_wide.persist(StorageLevel.MEMORY_AND_DISK)
 
-    loinc_wide.write.option("sep", "!").option("header", true).csv("/tmp/loinc_wide.csv")
+    writeCSV(loinc_wide, "/tmp/loinc_wide.csv")
 
     // vital
     val vital = spark.sql("select patient_num, encounter_num, concat(concept_cd, '_', instance_num) concept_cd_instance_num, valueflag_cd, valtype_cd, nval_num, tval_char, units_cd, start_date, end_date from global_temp.observation_fact where concept_cd like 'VITAL:%'")
 
     val vital_wide = longToWide(vital, "concept_cd_instance_num", cols, "vital")
 
-    vital_wide.persist(StorageLevel.MEMORY_AND_DISK);
+    vital_wide.persist(StorageLevel.MEMORY_AND_DISK)
 
-    vital_wide.write.option("sep", "!").option("header", true).csv("/tmp/vital_wide.csv")
+    writeCSV(vital_wide, "/tmp/vital_wide.csv")
 
     val inout = vddf.select("patient_num", "encounter_num", "inout_cd", "start_date", "end_date")
 
@@ -123,7 +144,7 @@ object Preproc {
 
     features.persist(StorageLevel.MEMORY_AND_DISK);
 
-    features.write.option("sep", "!").option("header", true).csv("/tmp/features.csv")
+    writeCSV(features, "/tmp/features.csv")
 
     val features_wide = features
       .join(icd_wide, Seq("patient_num", "encounter_num"))
@@ -131,7 +152,7 @@ object Preproc {
       .join(mdctn_wide, Seq("patient_num", "encounter_num"))
       .join(vital_wide, Seq("patient_num", "encounter_num"))
 
-    features_wide.write.option("sep", "!").option("header", true).csv("/tmp/features_wide.csv")
+    writeCSV(features_wide, "/tmp/features_wide.csv")
 
     spark.stop()
   }
