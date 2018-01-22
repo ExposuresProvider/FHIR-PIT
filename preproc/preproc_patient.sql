@@ -225,7 +225,7 @@ create table mdctn_rxnorm as
          units_cd as units,
          start_date,
          end_date
-         from observation_fact inner join mdctn_code_to_mdctn_name using (concept_cd) inner join mdctn_name_to_rxnorm using (mdctn_name);
+         from observation_fact_reduced inner join mdctn_code_to_mdctn_name using (concept_cd) inner join mdctn_name_to_rxnorm using (mdctn_name);
 											      
 drop table if exists mdctn_gene_norm;
 create table mdctn_gene_norm as
@@ -233,7 +233,7 @@ create table mdctn_gene_norm as
          encounter_num,
          gene as concept,
 	 true as norm
-         from observation_fact inner join mdctn_code_to_mdctn_name using (concept_cd) inner join mdctn_name_to_gene using (mdctn_name);
+         from observation_fact_reduced inner join mdctn_code_to_mdctn_name using (concept_cd) inner join mdctn_name_to_gene using (mdctn_name);
 
 create or replace function filter_icd(concept_cd text) returns boolean as $$
   begin
