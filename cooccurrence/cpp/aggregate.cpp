@@ -33,7 +33,7 @@ void calculate_aggregation(const std::vector<std::tuple<std::string, std::string
 	    }
 
 	    i++;
-	    std::cout << i << std::endl;
+	    //	    std::cout << i << std::endl;
 	    std::set<std::string> keys;
 	    
 	    const auto &codes = features.codes;
@@ -56,7 +56,11 @@ void calculate_aggregation(const std::vector<std::tuple<std::string, std::string
 		  binmap[patient_num][b]["genename_" + gene] = 1;
 		}
 	      }
-	      binmap[patient_num][b][key] = 1;
+	      if(key.substr(0,6) == "LOINC:") {
+		binmap[patient_num][b][key]++;
+	      } else {
+		binmap[patient_num][b][key] = 1;
+	      }
 	      if(race_cd != "") {
 		binmap[patient_num][b]["race_" + race_cd] = 1;
 	      }

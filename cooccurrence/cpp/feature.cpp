@@ -68,6 +68,39 @@ Features extract_keys(const std::map<std::string, std::string> & input_map, cons
 	  return retval;
 	}
       }
+    } else if (key == "rxnorm" && op == "==") {
+      for (auto const& element : input_map) {
+
+	const auto& key = element.first;
+	const auto pos = key.find("start_date");
+	if (key != "start_date" && pos != std::string::npos && element.second != "") {
+	  
+	  const auto key2 = key.substr(pos+11); // truncate left
+	  const auto pos2 = key2.find_last_of('_');
+	  
+	  const auto key3 = (pos2 == std::string::npos || !(std::all_of(std::begin(key2)+pos2+1, std::end(key2), [](char x){return std::isdigit(x);})))?key2:key2.substr(0, pos2);
+	  
+	  auto key4 =
+	    (key.substr(0,5) == "mdctn")?
+	    key3.substr(0, key3.find('_')):
+	    (key.substr(0,3) == "icd")?
+	    key3.substr(0,key3.find('.')):
+	    key3;
+	  
+	  key4 = (std::all_of(std::begin(key4), std::end(key4), [](char x){return std::isdigit(x);})?"rxnorm:":"") + key4;
+	  std::replace(std::begin(key4), std::end(key4), ' ', '_');
+
+	  if (key4 != "rxnorm:" + value) {
+	    if(key.substr(0,5) == "mdctn") {
+	      std::cout << "found " << key4 << " not matched" << std::endl;
+	    }
+	    return retval;
+	  } else {
+	    std::cout << "found " << value << std::endl;
+	  }
+	}
+      }
+      
     }
   }
 
