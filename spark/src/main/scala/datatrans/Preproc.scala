@@ -1,5 +1,4 @@
 package datatrans
-// http://ensime.github.io/editors/emacs/scala-mode/
 
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.DataFrame
