@@ -123,6 +123,7 @@ object PreprocSeries {
       val pdif = args(1)
       val vdif = args(2)
       val ofif = args(3)
+      val output_path = args(4)
 
       println("loading patient_dimension from " + pdif)
       val pddf = spark.read.format("csv").option("header", true).load(pdif)
@@ -189,7 +190,7 @@ object PreprocSeries {
         .join(visit_wide, Seq("patient_num"))
         .select($"patient_num", $"encounter_num", $"sex_cd", $"race_cd", $"birth_date", merge_map($"observation", $"visit"))
 
-      writeCSV(spark, features_wide, "/tmp/features_series_wide",form)
+      writeCSV(spark, features_wide, output_path,form)
 
       spark.stop()
     }
