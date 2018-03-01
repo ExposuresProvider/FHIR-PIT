@@ -183,12 +183,12 @@ object PreprocSeries {
         visit_wide
       }
 
-      val merge_map = udf((a:Map[String,Any], b:Map[String,Any]) => mergeMap(a,b))
+//      val merge_map = udf((a:Map[String,Any], b:Map[String,Any]) => mergeMap(a,b))
 
       val features_wide = features
         .join(observation_wide, Seq("patient_num"))
         .join(visit_wide, Seq("patient_num"))
-        .select($"patient_num", $"encounter_num", $"sex_cd", $"race_cd", $"birth_date", merge_map($"observation", $"visit"))
+//        .select($"patient_num", $"encounter_num", $"sex_cd", $"race_cd", $"birth_date", merge_map($"observation", $"visit"))
 
       writeCSV(spark, features_wide, output_path,form)
 
