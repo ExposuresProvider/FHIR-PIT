@@ -24,12 +24,14 @@ object ChunkPerPat {
     val pddpath = new Path(pdod)
     val dfs = pddpath.getFileSystem(hc)
     for (dir <- dfs.listStatus(pddpath)) {
-      val dpath = dir.getPath
-      val fpath = new Path(dpath + ".csv")
-      val ffs = fpath.getFileSystem(hc)
+      if(dir.isDirectory) {
+        val dpath = dir.getPath
+        val fpath = new Path(dpath + ".csv")
+        val ffs = fpath.getFileSystem(hc)
 
-      println("copy to " + fpath)
-      FileUtil.copyMerge(dfs, dpath, ffs, fpath, true, hc, null)
+        println("copy to " + fpath)
+        FileUtil.copyMerge(dfs, dpath, ffs, fpath, true, hc, null)
+      }
 
     }
 
