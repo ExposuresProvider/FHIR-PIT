@@ -3,34 +3,49 @@ package datatrans
 import java.io.{BufferedWriter, OutputStreamWriter}
 
 import datatrans.Utils._
-import org.apache.commons.lang3.StringEscapeUtils
 import org.apache.hadoop.fs.{FileUtil, Path}
-import org.apache.spark.sql.catalyst.encoders.RowEncoder
-import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types._
-import org.apache.spark.sql.{DataFrame, Row, SparkSession}
-import org.apache.spark.storage.StorageLevel
+import org.apache.spark.sql.SparkSession
+import org.apache.commons.io.IOUtils
+
 
 object ChunkPerPat {
 
-  def writePartitionsCSV(spark : SparkSession, pdif : String, pdod : String) = {
+  def writePartitionsCSV(spark : SparkSession, pdif : String, output_directory : String) = {
     println("loading from " + pdif)
-    val pddf = spark.read.format("csv").option("header", true).load(pdif)
+    val patient_dimension_dataframe = spark.read.format("csv").option("header", true).load(pdif)
 
-    println("writing to " + pdod)
-    pddf.write.partitionBy("patient_num").option("header", false).csv(pdod)
+    val cols = for(col <- patient_dimension_dataframe.columns if col != "patient_num") yield col
+
+    println("writing to " + output_directory)
+    patient_dimension_dataframe.write.partitionBy("patient_num").option("header", false).csv(output_directory)
 
     val hc = spark.sparkContext.hadoopConfiguration
-    val pddpath = new Path(pdod)
-    val dfs = pddpath.getFileSystem(hc)
-    for (dir <- dfs.listStatus(pddpath)) {
-      if(dir.isDirectory) {
-        val dpath = dir.getPath
-        val fpath = new Path(dpath + ".csv")
-        val ffs = fpath.getFileSystem(hc)
+    val output_directory_path = new Path(output_directory)
+    val output_directory_file_system = output_directory_path.getFileSystem(hc)
 
-        println("copy to " + fpath)
-        FileUtil.copyMerge(dfs, dpath, ffs, fpath, true, hc, null)
+    val headers = cols.mkString(",") + "\n"
+
+    for (dir <- output_directory_file_system.listStatus(output_directory_path)) {
+      if(dir.isDirectory) {
+        val dir_path = dir.getPath
+        val no_header_csv_path = new Path(dir_path + ".csv_noheader")
+        val csv_path = new Path(dir_path + ".csv")
+        val output_file_file_system = no_header_csv_path.getFileSystem(hc)
+
+        println("copy to " + no_header_csv_path)
+        FileUtil.copyMerge(output_directory_file_system, dir_path, output_file_file_system, no_header_csv_path, true, hc, null)
+        println("copy to " + csv_path)
+
+        val csv_output_stream = output_file_file_system.create(csv_path)
+        val csv_no_header_input_stream = output_file_file_system.open(no_header_csv_path)
+        val csv_no_header = IOUtils.toString(csv_no_header_input_stream, "UTF-8")
+        csv_no_header_input_stream.close()
+
+        csv_output_stream.writeBytes(headers)
+        csv_output_stream.writeBytes(csv_no_header)
+        csv_output_stream.close()
+        output_file_file_system.delete(no_header_csv_path, false)
+
       }
 
     }

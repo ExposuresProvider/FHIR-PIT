@@ -28,21 +28,28 @@ object PreprocPerPatSeries {
         case "json" => JSON
       }
       val pdif = args(1)
-      val vdif = args(2)
-      val ofif = args(3)
-      val output_path = args(4)
+      val base = args(2)
+      val output_path = args(3)
 
       println("loading patient_dimension from " + pdif)
-      val pddf = spark.read.format("csv").option("header", true).load(pdif)
-      println("loading visit_dimension from " + vdif)
-      val vddf = spark.read.format("csv").option("header", true).load(vdif)
-      println("loading observation_fact from " + ofif)
-      val ofdf = spark.read.format("csv").option("header", true).load(ofif)
+      val pddf0 = spark.read.format("csv").option("header", true).load(pdif)
 
-      val patl = pddf.select("patient_num").map(r => r.getString(0)).collect.toList
+      val patl = pddf0.select("patient_num").map(r => r.getString(0)).collect.toList
 
       for(p <- patl) {
         println("processing pid " + p)
+
+        val pdif = base + "/patient_dimension/patient_num=" + p
+        val vdif = base + "/visit_dimension/patient_num=" + p
+        val ofif = base + "/observation_fact/patient_num=" + p
+
+        println("loading patient_dimension from " + pdif)
+        val pddf = spark.read.format("csv").option("header", true).load(pdif)
+        println("loading visit_dimension from " + vdif)
+        val vddf = spark.read.format("csv").option("header", true).load(vdif)
+        println("loading observation_fact from " + ofif)
+        val ofdf = spark.read.format("csv").option("header", true).load(ofif)
+
         val inout = vddf.filter($"patient_num" === p).select("patient_num", "encounter_num", "inout_cd", "start_date", "end_date")
 
         val pat = pddf.filter($"patient_num" === p).select("patient_num", "race_cd", "sex_cd", "birth_date")
