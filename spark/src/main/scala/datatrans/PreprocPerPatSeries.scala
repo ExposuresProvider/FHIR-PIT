@@ -39,9 +39,9 @@ object PreprocPerPatSeries {
       for(p <- patl) {
         println("processing pid " + p)
 
-        val pdif = base + "/patient_dimension/patient_num=" + p
-        val vdif = base + "/visit_dimension/patient_num=" + p
-        val ofif = base + "/observation_fact/patient_num=" + p
+        val pdif = base + "/patient_dimension/patient_num=" + p + ".csv"
+        val vdif = base + "/visit_dimension/patient_num=" + p + ".csv"
+        val ofif = base + "/observation_fact/patient_num=" + p + ".csv"
 
         println("loading patient_dimension from " + pdif)
         val pddf = spark.read.format("csv").option("header", true).load(pdif)
@@ -50,18 +50,18 @@ object PreprocPerPatSeries {
         println("loading observation_fact from " + ofif)
         val ofdf = spark.read.format("csv").option("header", true).load(ofif)
 
-        val inout = vddf.filter($"patient_num" === p).select("patient_num", "encounter_num", "inout_cd", "start_date", "end_date")
+        val inout = vddf.select("encounter_num", "inout_cd", "start_date", "end_date")
 
-        val pat = pddf.filter($"patient_num" === p).select("patient_num", "race_cd", "sex_cd", "birth_date")
+        val pat = pddf.select("race_cd", "sex_cd", "birth_date")
 
-        val lat = ofdf.filter($"patient_num" === p).filter($"concept_cd".like("GEO:LAT")).select("patient_num", "nval_num").groupBy("patient_num").agg(avg("nval_num").as("lat"))
+        val lat = ofdf.filter($"concept_cd".like("GEO:LAT")).select("nval_num").agg(avg("nval_num").as("lat"))
 
-        val lon = ofdf.filter($"patient_num" === p).filter($"concept_cd".like("GEO:LONG")).select("patient_num", "nval_num").groupBy("patient_num").agg(avg("nval_num").as("lon"))
+        val lon = ofdf.filter($"concept_cd".like("GEO:LONG")).select("nval_num").agg(avg("nval_num").as("lon"))
 
         val features = pat
-          .join(inout, "patient_num")
-          .join(lat, "patient_num")
-          .join(lon, "patient_num")
+          .join(inout)
+          .join(lat)
+          .join(lon)
 
         features.persist(StorageLevel.MEMORY_AND_DISK);
 
@@ -76,9 +76,9 @@ object PreprocPerPatSeries {
             "start_date",
             "end_date"
           )
-          val observation = ofdf.filter($"patient_num" === p).select("patient_num", "encounter_num", "concept_cd", "instance_num", "modifier_cd", "valueflag_cd", "valtype_cd", "nval_num", "tval_char", "units_cd", "start_date", "end_date")
+          val observation = ofdf.select("encounter_num", "concept_cd", "instance_num", "modifier_cd", "valueflag_cd", "valtype_cd", "nval_num", "tval_char", "units_cd", "start_date", "end_date")
 
-          val observation_wide = longToWide(observation, Seq("patient_num"), Seq("encounter_num", "concept_cd", "instance_num", "modifier_cd"), cols, "observation")
+          val observation_wide = aggregate(observation, Seq("encounter_num", "concept_cd", "instance_num", "modifier_cd"), cols, "observation")
 
           observation_wide.persist(StorageLevel.MEMORY_AND_DISK)
 
@@ -92,9 +92,9 @@ object PreprocPerPatSeries {
             "start_date",
             "end_date"
           )
-          val visit = vddf.filter($"patient_num" === p).select("patient_num", "encounter_num", "inout_cd", "start_date", "end_date")
+          val visit = vddf.select("encounter_num", "inout_cd", "start_date", "end_date")
 
-          val visit_wide = longToWide(visit, Seq("patient_num"), Seq("encounter_num"), cols, "visit")
+          val visit_wide = aggregate(visit, Seq("encounter_num"), cols, "visit")
 
           visit_wide.persist(StorageLevel.MEMORY_AND_DISK)
 
@@ -104,8 +104,8 @@ object PreprocPerPatSeries {
         //      val merge_map = udf((a:Map[String,Any], b:Map[String,Any]) => mergeMap(a,b))
 
         val features_wide = features
-          .join(observation_wide, Seq("patient_num"))
-          .join(visit_wide, Seq("patient_num"))
+          .join(observation_wide)
+          .join(visit_wide)
         //        .select($"patient_num", $"encounter_num", $"sex_cd", $"race_cd", $"birth_date", merge_map($"observation", $"visit"))
 
         writeCSV(spark, features_wide, output_path + p,form)
