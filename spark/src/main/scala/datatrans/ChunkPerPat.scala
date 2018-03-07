@@ -41,8 +41,8 @@ object ChunkPerPat {
         val csv_no_header = IOUtils.toString(csv_no_header_input_stream, "UTF-8")
         csv_no_header_input_stream.close()
 
-        csv_output_stream.writeBytes(headers)
-        csv_output_stream.writeBytes(csv_no_header)
+        csv_output_stream.writeUTF(headers)
+        csv_output_stream.writeUTF(csv_no_header)
         csv_output_stream.close()
         output_file_file_system.delete(no_header_csv_path, false)
 
