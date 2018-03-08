@@ -148,5 +148,4 @@ object Utils {
   case object JSON extends Format
   case object CSV extends Format
 
-
 }
