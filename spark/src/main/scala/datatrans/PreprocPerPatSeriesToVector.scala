@@ -13,13 +13,13 @@ import scala.collection.mutable.ListBuffer
 import scopt._
 
 case class Config(
-                 generateHeader : Option[String] = None,
-                 patient_dimension : Option[String] = None,
-                 patient_num_list : Option[Seq[String]] = None,
-                 observation_fact : String = "",
-                 column_name : String = "",
-                 input_directory : Option[String] = None,
-                 output_directory : Option[String] = None
+                   generateHeader : Option[String] = None,
+                   patient_dimension : Option[String] = None,
+                   patient_num_list : Option[Seq[String]] = None,
+                   observation_fact : String = "",
+                   column_name : String = "",
+                   input_directory : Option[String] = None,
+                   output_prefix : Option[String] = None
                  )
 
 object PreprocPerPatSeriesToVector {
@@ -31,10 +31,10 @@ object PreprocPerPatSeriesToVector {
       opt[String]("generate_header").action((x,c) => c.copy(generateHeader = Some(x)))
       opt[String]("patient_dimension").action((x,c) => c.copy(patient_dimension = Some(x)))
       opt[Seq[String]]("patient_num_list").action((x,c) => c.copy(patient_num_list = Some(x)))
-      opt[String]("observation_fact").action((x,c) => c.copy(observation_fact = x))
-      opt[String]("column_name").action((x,c) => c.copy(column_name = x))
+      opt[String]("observation_fact").required().action((x,c) => c.copy(observation_fact = x))
+      opt[String]("column_name").required().action((x,c) => c.copy(column_name = x))
       opt[String]("input_directory").action((x,c) => c.copy(input_directory = Some(x)))
-      opt[String]("output_directory").action((x,c) => c.copy(output_directory = Some(x)))
+      opt[String]("output_directory").action((x,c) => c.copy(output_prefix = Some(x)))
     }
 
     parser.parse(args, Config()) match {
@@ -112,20 +112,24 @@ object PreprocPerPatSeriesToVector {
               val data = listBuf.toSeq.map{case (start_date, vec) => Row(start_date, vec)}
               val row = Row(race_cd, sex_cd, birth_date, data)
               val ds = spark.createDataFrame(seqAsJavaList(Seq(row)), schema)
-              ds.write.json(config.output_directory.get + p)
+              ds.write.json(config.output_prefix.get + p)
             }
 
           config.patient_num_list match {
             case Some(pnl) =>
               pnl.foreach(proc_pid)
             case None =>
-              val pdif = config.patient_dimension.get
-              println("loading patient_dimension from " + pdif)
-              val pddf0 = spark.read.format("csv").option("header", true).load(pdif)
+              config.patient_dimension match {
+                case Some(pdif) =>
+                  println("loading patient_dimension from " + pdif)
+                  val pddf0 = spark.read.format("csv").option("header", true).load(pdif)
 
-              val patl = pddf0.select("patient_num").map(r => r.getString(0)).collect.toList.par
+                  val patl = pddf0.select("patient_num").map(r => r.getString(0)).collect.toList.par
 
-              patl.foreach(proc_pid)
+                  patl.foreach(proc_pid)
+                case None =>
+              }
+
           }
           spark.stop()
         }
