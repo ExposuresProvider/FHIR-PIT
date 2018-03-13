@@ -5,7 +5,9 @@ import org.apache.hadoop.fs.Path
 import org.apache.spark.sql.{Row, SparkSession}
 import org.apache.spark.sql.types._
 import play.api.libs.json._
+
 import scala.collection.JavaConversions._
+import org.joda.time._
 
 import scala.collection.mutable.ListBuffer
 
@@ -40,6 +42,7 @@ object PreprocPerPatSeriesToVector {
 
       val patl = pddf0.select("patient_num").map(r => r.getString(0)).collect.toList.par
 
+      val format =
       patl.foreach{p =>
         time {
 
@@ -57,31 +60,43 @@ object PreprocPerPatSeriesToVector {
           val jsvalue = Json.parse(input_file_input_stream)
           input_file_input_stream.close()
           println(jsvalue)
-          val listBuf = scala.collection.mutable.Map[String, Array[Int]]() // a list of concept, start_time
+          val listBuf = scala.collection.mutable.Map[DateTime, ListBuffer[String]]() // a list of concept, start_time
           val observations = jsvalue("observation").as[JsObject]
+          val sex_cd = jsvalue("sex_cd").as[String]
+          val race_cd = jsvalue("race_cd").as[String]
+          val birth_date = DateTime.parse(jsvalue("birth_date").as[String])
+
           val encounters = observations.fields
           encounters.foreach{ case (_, encounter) =>
             encounter.as[JsObject].fields.foreach{case (concept_cd, instances) =>
-              val col_index = cols.indexOf(concept_cd)
               instances.as[JsObject].fields.foreach{case (_, modifiers) =>
-                val start_date = modifiers.as[JsObject].values.toSeq(0)("start_date").as[String]
+                val start_date = DateTime.parse(modifiers.as[JsObject].values.toSeq(0)("start_date").as[String])
+                val age = Days.daysBetween(birth_date, start_date).getDays
                 listBuf.get(start_date) match {
                 case Some(vec) =>
-                  vec(col_index) = 1
+                  vec.add(concept_cd)
 
                 case None =>
-                  val vec = Array.fill[Int](cols.length)(0)
-                  vec(col_index) = 1
+                  val vec = new ListBuffer[String]()
                   listBuf(start_date) = vec
-
+                  vec.add(concept_cd)
                 }
               }
             }
           }
-          val schema = StructType(Seq(StructField("start_date", StringType), StructField("features", ArrayType(IntegerType))))
-          val rows = listBuf.toSeq.map{case (start_date, vec) => Row(start_date, vec)}
-          val ds = spark.createDataFrame(seqAsJavaList(rows), schema).sort("start_date")
-          ds.write.csv(output_path + p)
+          val schema = StructType(Seq(
+            StructField("race_cd",StringType),
+            StructField("sex_cd",StringType),
+            StructField("birth_date", DateType),
+            StructField("data", ArrayType(StructType(Seq(
+              StructField("age", IntegerType),
+              StructField("features", ArrayType(StringType))
+            ))))
+          ))
+          val data = listBuf.toSeq.map{case (start_date, vec) => Row(start_date, vec)}
+          val row = Row(race_cd, sex_cd, birth_date, data)
+          val ds = spark.createDataFrame(seqAsJavaList(Seq(row)), schema)
+          ds.write.json(output_path + p)
         }
       }
 
