@@ -10,96 +10,129 @@ import scala.collection.JavaConversions._
 import org.joda.time._
 
 import scala.collection.mutable.ListBuffer
+import scopt._
+
+case class Config(
+                 generateHeader : Option[String] = None,
+                 patient_dimension : Option[String] = None,
+                 patient_num_list : Option[Seq[String]] = None,
+                 observation_fact : String = "",
+                 column_name : String = "",
+                 input_directory : Option[String] = None,
+                 output_directory : Option[String] = None
+                 )
 
 object PreprocPerPatSeriesToVector {
 
 
   def main(args: Array[String]) {
-    time {
-      val spark = SparkSession.builder().appName("datatrans preproc").config("spark.sql.pivotMaxValues", 100000).config("spark.executor.memory", "16g").config("spark.driver.memory", "64g").getOrCreate()
+    val parser = new OptionParser[Config]("series_to_vector") {
+      head("series_to_vector")
+      opt[String]("generate_header").action((x,c) => c.copy(generateHeader = Some(x)))
+      opt[String]("patient_dimension").action((x,c) => c.copy(patient_dimension = Some(x)))
+      opt[Seq[String]]("patient_num_list").action((x,c) => c.copy(patient_num_list = Some(x)))
+      opt[String]("observation_fact").action((x,c) => c.copy(observation_fact = x))
+      opt[String]("column_name").action((x,c) => c.copy(column_name = x))
+      opt[String]("input_directory").action((x,c) => c.copy(input_directory = Some(x)))
+      opt[String]("output_directory").action((x,c) => c.copy(output_directory = Some(x)))
+    }
 
-      spark.sparkContext.setLogLevel("WARN")
+    parser.parse(args, Config()) match {
+      case Some(config) =>
 
-      // For implicit conversions like converting RDDs to DataFrames
-      import spark.implicits._
-
-      val cmd = args(0)
-      val pdif = args(1)
-      val ofif = args(2)
-      val col = args(3)
-      val base = args(4)
-      val output_path = args(5)
-
-      def proc_pid(p:String) =
         time {
+          val spark = SparkSession.builder().appName("datatrans preproc").config("spark.sql.pivotMaxValues", 100000).config("spark.executor.memory", "16g").config("spark.driver.memory", "64g").getOrCreate()
 
-          println("processing pid " + p)
+          spark.sparkContext.setLogLevel("WARN")
 
-          val hc = spark.sparkContext.hadoopConfiguration
+          // For implicit conversions like converting RDDs to DataFrames
+          import spark.implicits._
 
-          val input_file = base + "/" + p
-          val input_file_path = new Path(input_file)
-          val input_file_file_system = input_file_path.getFileSystem(hc)
+          config.generateHeader match {
+            case Some(output_file) =>
 
-          println("loading json from " + input_file)
-          val input_file_input_stream = input_file_file_system.open(input_file_path)
+              val df = spark.read.format("csv").option("header", true).load(config.observation_fact)
+              val odf = df.select(config.column_name).distinct.map(r => r.getString(0))
 
-          val jsvalue = Json.parse(input_file_input_stream)
-          input_file_input_stream.close()
-          println(jsvalue)
-          val listBuf = scala.collection.mutable.Map[DateTime, ListBuffer[String]]() // a list of concept, start_time
-          val observations = jsvalue("observation").as[JsObject]
-          val sex_cd = jsvalue("sex_cd").as[String]
-          val race_cd = jsvalue("race_cd").as[String]
-          val birth_date = DateTime.parse(jsvalue("birth_date").as[String])
+              odf.write.csv(output_file)
+            case None =>
+          }
 
-          val encounters = observations.fields
-          encounters.foreach{ case (_, encounter) =>
-            encounter.as[JsObject].fields.foreach{case (concept_cd, instances) =>
-              instances.as[JsObject].fields.foreach{case (_, modifiers) =>
-                val start_date = DateTime.parse(modifiers.as[JsObject].values.toSeq(0)("start_date").as[String])
-                val age = Days.daysBetween(birth_date, start_date).getDays
-                listBuf.get(start_date) match {
-                case Some(vec) =>
-                  vec.add(concept_cd)
 
-                case None =>
-                  val vec = new ListBuffer[String]()
-                  listBuf(start_date) = vec
-                  vec.add(concept_cd)
+          def proc_pid(p:String) =
+            time {
+
+              println("processing pid " + p)
+
+              val hc = spark.sparkContext.hadoopConfiguration
+
+              val input_file = config.input_directory.get + "/" + p
+              val input_file_path = new Path(input_file)
+              val input_file_file_system = input_file_path.getFileSystem(hc)
+
+              println("loading json from " + input_file)
+              val input_file_input_stream = input_file_file_system.open(input_file_path)
+
+              val jsvalue = Json.parse(input_file_input_stream)
+              input_file_input_stream.close()
+              println(jsvalue)
+              val listBuf = scala.collection.mutable.Map[DateTime, ListBuffer[String]]() // a list of concept, start_time
+              val observations = jsvalue("observation").as[JsObject]
+              val sex_cd = jsvalue("sex_cd").as[String]
+              val race_cd = jsvalue("race_cd").as[String]
+              val birth_date = DateTime.parse(jsvalue("birth_date").as[String])
+
+              val encounters = observations.fields
+              encounters.foreach{ case (_, encounter) =>
+                encounter.as[JsObject].fields.foreach{case (concept_cd, instances) =>
+                  instances.as[JsObject].fields.foreach{case (_, modifiers) =>
+                    val start_date = DateTime.parse(modifiers.as[JsObject].values.toSeq(0)("start_date").as[String])
+                    val age = Days.daysBetween(birth_date, start_date).getDays
+                    listBuf.get(start_date) match {
+                    case Some(vec) =>
+                      vec.add(concept_cd)
+
+                    case None =>
+                      val vec = new ListBuffer[String]()
+                      listBuf(start_date) = vec
+                      vec.add(concept_cd)
+                    }
+                  }
                 }
               }
+              val schema = StructType(Seq(
+                StructField("race_cd",StringType),
+                StructField("sex_cd",StringType),
+                StructField("birth_date", DateType),
+                StructField("data", ArrayType(StructType(Seq(
+                  StructField("age", IntegerType),
+                  StructField("features", ArrayType(StringType))
+                ))))
+              ))
+              val data = listBuf.toSeq.map{case (start_date, vec) => Row(start_date, vec)}
+              val row = Row(race_cd, sex_cd, birth_date, data)
+              val ds = spark.createDataFrame(seqAsJavaList(Seq(row)), schema)
+              ds.write.json(config.output_directory.get + p)
             }
+
+          config.patient_num_list match {
+            case Some(pnl) =>
+              pnl.foreach(proc_pid)
+            case None =>
+              val pdif = config.patient_dimension.get
+              println("loading patient_dimension from " + pdif)
+              val pddf0 = spark.read.format("csv").option("header", true).load(pdif)
+
+              val patl = pddf0.select("patient_num").map(r => r.getString(0)).collect.toList.par
+
+              patl.foreach(proc_pid)
           }
-          val schema = StructType(Seq(
-            StructField("race_cd",StringType),
-            StructField("sex_cd",StringType),
-            StructField("birth_date", DateType),
-            StructField("data", ArrayType(StructType(Seq(
-              StructField("age", IntegerType),
-              StructField("features", ArrayType(StringType))
-            ))))
-          ))
-          val data = listBuf.toSeq.map{case (start_date, vec) => Row(start_date, vec)}
-          val row = Row(race_cd, sex_cd, birth_date, data)
-          val ds = spark.createDataFrame(seqAsJavaList(Seq(row)), schema)
-          ds.write.json(output_path + p)
+          spark.stop()
         }
-
-      if (cmd == "param") {
-        pdif.split(",").foreach(proc_pid)
-      } else {
-        println("loading patient_dimension from " + pdif)
-        val pddf0 = spark.read.format("csv").option("header", true).load(pdif)
-
-        val patl = pddf0.select("patient_num").map(r => r.getString(0)).collect.toList.par
-
-        patl.foreach(proc_pid)
-      }
-
-
-      spark.stop()
-
+      case None =>
     }
+
+
+
   }
 }
