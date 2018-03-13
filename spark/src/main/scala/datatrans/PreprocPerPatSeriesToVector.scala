@@ -17,6 +17,7 @@ case class Config(
                    patient_dimension : Option[String] = None,
                    patient_num_list : Option[Seq[String]] = None,
                    observation_fact : String = "",
+                   sparse : Option[Unit] = None,
                    column_name : String = "",
                    input_directory : Option[String] = None,
                    output_prefix : Option[String] = None
@@ -32,6 +33,7 @@ object PreprocPerPatSeriesToVector {
       opt[String]("patient_dimension").action((x,c) => c.copy(patient_dimension = Some(x)))
       opt[Seq[String]]("patient_num_list").action((x,c) => c.copy(patient_num_list = Some(x)))
       opt[String]("observation_fact").required().action((x,c) => c.copy(observation_fact = x))
+      opt[Unit]("sparse").action((x,c) => c.copy(sparse = Some(x)))
       opt[String]("column_name").required().action((x,c) => c.copy(column_name = x))
       opt[String]("input_directory").action((x,c) => c.copy(input_directory = Some(x)))
       opt[String]("output_directory").action((x,c) => c.copy(output_prefix = Some(x)))

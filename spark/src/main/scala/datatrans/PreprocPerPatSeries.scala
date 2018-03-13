@@ -1,15 +1,9 @@
 package datatrans
 
-import java.io.{BufferedWriter, OutputStreamWriter}
-
 import datatrans.Utils._
-import org.apache.commons.lang3.StringEscapeUtils
-import org.apache.hadoop.fs.{FileUtil, Path}
-import org.apache.spark.sql.{DataFrame, Row, SparkSession}
-import org.apache.spark.sql.catalyst.encoders.RowEncoder
+import org.apache.hadoop.fs.{Path}
+import org.apache.spark.sql.{SparkSession}
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types._
-import org.apache.spark.storage.StorageLevel
 
 import scopt._
 
