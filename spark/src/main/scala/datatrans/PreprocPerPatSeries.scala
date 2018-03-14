@@ -19,7 +19,7 @@ object PreprocPerPatSeries {
 
   def main(args: Array[String]) {
     val parser = new OptionParser[PreprocPerPatSeriesConfig]("series_to_vector") {
-      head("series_to_vector")
+      head("series")
       opt[String]("patient_dimension").action((x,c) => c.copy(patient_dimension = Some(x)))
       opt[Seq[String]]("patient_num_list").action((x,c) => c.copy(patient_num_list = Some(x)))
       opt[String]("input_directory").required().action((x,c) => c.copy(input_directory = x))
