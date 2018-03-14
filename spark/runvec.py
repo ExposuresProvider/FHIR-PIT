@@ -40,7 +40,7 @@ with open(sys.argv[1]) as f:
         n += 1
         pid = line.rstrip("\n")
         print("processing", pid)
-        if os.path.exists("/mnt/d/json/"+pid):
+        if os.path.exists("/mnt/d/json/vector"+pid):
             print(pid + " exists")
         else:
             pids.append(pid)
