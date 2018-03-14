@@ -36,7 +36,7 @@ object PreprocPerPatSeriesToVector {
       opt[Unit]("sparse").action((x,c) => c.copy(sparse = Some(x)))
       opt[String]("column_name").required().action((x,c) => c.copy(column_name = x))
       opt[String]("input_directory").action((x,c) => c.copy(input_directory = Some(x)))
-      opt[String]("output_directory").action((x,c) => c.copy(output_prefix = Some(x)))
+      opt[String]("output_prefix").action((x,c) => c.copy(output_prefix = Some(x)))
     }
 
     parser.parse(args, Config()) match {
