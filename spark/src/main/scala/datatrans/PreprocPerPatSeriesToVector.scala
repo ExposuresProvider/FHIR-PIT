@@ -119,7 +119,7 @@ object PreprocPerPatSeriesToVector {
 
           config.patient_num_list match {
             case Some(pnl) =>
-              pnl.foreach(proc_pid)
+              pnl.par.foreach(proc_pid)
             case None =>
               config.patient_dimension match {
                 case Some(pdif) =>
