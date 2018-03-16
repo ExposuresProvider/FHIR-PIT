@@ -22,8 +22,8 @@ object PreprocPerPatSeries {
       head("series")
       opt[String]("patient_dimension").action((x,c) => c.copy(patient_dimension = Some(x)))
       opt[Seq[String]]("patient_num_list").action((x,c) => c.copy(patient_num_list = Some(x)))
-      opt[String]("input_directory").required().action((x,c) => c.copy(input_directory = x))
-      opt[String]("output_prefix").required().action((x,c) => c.copy(output_prefix = x))
+      opt[String]("input_directory").required.action((x,c) => c.copy(input_directory = x))
+      opt[String]("output_prefix").required.action((x,c) => c.copy(output_prefix = x))
     }
 
     parser.parse(args, PreprocPerPatSeriesConfig()) match {
@@ -94,14 +94,10 @@ object PreprocPerPatSeries {
               //        .select($"patient_num", $"encounter_num", $"sex_cd", $"race_cd", $"birth_date", merge_map($"observation", $"visit"))
 
               // https://stackoverflow.com/questions/41601874/how-to-convert-row-to-json-in-spark-2-scala
-              val json = features_wide.toJSON.first().getBytes("utf-8")
+              val json = features_wide.toJSON.first()
 
               val hc = spark.sparkContext.hadoopConfiguration
-              val output_file_path = new Path(config.output_prefix + p)
-              val output_file_file_system = output_file_path.getFileSystem(hc)
-              val output_file_output_stream = output_file_file_system.create(output_file_path)
-              output_file_output_stream.write(json)
-              output_file_output_stream.close()
+              writeToFile(hc, config.output_prefix + p, json)
 
             }
 

@@ -3,6 +3,7 @@ package datatrans
 import java.io.{BufferedWriter, OutputStreamWriter}
 
 import org.apache.commons.lang3.StringEscapeUtils
+import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileUtil, Path}
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
@@ -144,6 +145,15 @@ object Utils {
 
   }
 
+  def writeToFile(hc:Configuration, path :String, text :String) = {
+    val bytes = text.getBytes ("utf-8")
+    val output_file_path = new Path (path)
+    val output_file_file_system = output_file_path.getFileSystem (hc)
+    val output_file_output_stream = output_file_file_system.create (output_file_path)
+    output_file_output_stream.write (bytes)
+    output_file_output_stream.close ()
+
+  }
   sealed trait Format
   case object JSON extends Format
   case object CSV extends Format
