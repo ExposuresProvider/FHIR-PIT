@@ -10,18 +10,15 @@ def process_pids(pids):
            "--master",
            "spark://a-HP-Z820-Workstation:7077",
            "--jars",
-           "/home/a/.ivy2/cache/com.github.scopt/scopt_2.11/jars/scopt_2.11-3.7.0.jar",
+           "/home/a/.ivy2/cache/com.github.scopt/scopt_2.11/jars/scopt_2.11-3.7.0.jar,/home/a/.ivy2/cache/com.typesafe.play/play-json_2.11/jars/play-json_2.11-2.6.7.jar,/home/a/.ivy2/cache/com.typesafe.play/play-functional_2.11/jars/play-functional_2.11-2.6.7.jar",
            "--class",
            "datatrans.PreprocPerPatSeriesToVector",
            "target/scala-2.11/preproc_2.11-1.0.jar",
            "--patient_num_list={0}".format(pids0),
-           "--observation_fact=/mnt/d/observation_fact.csv",
-           "--sparse",
-           "--column_name=concept_cd"
-           "--input_directory=/mnt/d/patient_series",
+           "--input_directory=/mnt/d/json",
            "--output_prefix=/mnt/d/json/vector"]
-    log = "/mnt/d/json/stdout" + pids0
-    log2 = "/mnt/d/json/stderr" + pids0
+    log = "/mnt/d/json/stdoutvec" + pids0
+    log2 = "/mnt/d/json/stderrvec" + pids0
     with open(log, "w") as file:
         with open(log2, "w") as file2:
             proc = subprocess.Popen(cmd, stdout=file, stderr=file2)

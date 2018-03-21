@@ -15,6 +15,9 @@ import org.joda.time._
 import scala.collection.mutable.ListBuffer
 import scopt._
 
+// cut -f3 -d, observation_fact.csv | tail -n +2 | tr -d '"' | sed '/^\s*$/d' | sort -u > json/header0
+// cut -f6 -d, visit_dimension.csv | tail -n +2 | tr -d '"' | sed '/^\s*$/d' | sort -u > json/header1
+
 case class PreprocPerPatSeriesToHeaderConfig(
                    tables : Seq[String] = Seq(),
                    columns : Seq[String] = Seq(),

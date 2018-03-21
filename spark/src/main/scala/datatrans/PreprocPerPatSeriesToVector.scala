@@ -134,7 +134,7 @@ object PreprocPerPatSeriesToVector {
                     "race_cd" -> race_cd,
                     "sex_cd" -> sex_cd,
                     "birth_date" -> birth_date,
-                    "data" -> Json.arr (data)
+                    "data" -> data
                   )
 
 
