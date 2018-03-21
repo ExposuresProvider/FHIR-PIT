@@ -68,6 +68,8 @@ object PreprocPerPatSeriesToVector {
               val observations = jsvalue("observation").as[JsObject]
               val sex_cd = jsvalue("sex_cd").as[String]
               val race_cd = jsvalue("race_cd").as[String]
+              val lat = jsvalue("lat").as[Double]
+              val lon = jsvalue("lon").as[Double]
 
               jsvalue \ "birth_date" match {
                 case JsDefined (bd) =>
@@ -134,6 +136,8 @@ object PreprocPerPatSeriesToVector {
                     "race_cd" -> race_cd,
                     "sex_cd" -> sex_cd,
                     "birth_date" -> birth_date,
+                    "lat" -> lat,
+                    "lon" -> lon,
                     "data" -> data
                   )
 
