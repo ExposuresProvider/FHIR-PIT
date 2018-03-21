@@ -56,7 +56,7 @@ object PreprocPerPatSeriesToHeader {
           }
           val hc = spark.sparkContext.hadoopConfiguration
 
-          writeToFile(hc, config.output_file, keys.mkString(","))
+          writeToFile(hc, config.output_file, keys.mkString("\n"))
         }
       case None =>
     }
