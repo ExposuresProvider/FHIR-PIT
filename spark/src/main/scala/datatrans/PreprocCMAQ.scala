@@ -1,14 +1,9 @@
 package datatrans
 
-import java.io.{BufferedWriter, OutputStreamWriter}
+import org.apache.hadoop.fs.Path
+import org.apache.spark.sql.SparkSession
 
-import datatrans.Utils.{CSV, JSON, time, typeToTrans}
-import org.apache.hadoop.fs.{FileUtil, LocatedFileStatus, Path}
-import org.apache.spark.sql.{Row, SparkSession}
-import org.apache.spark.sql.catalyst.encoders.RowEncoder
-import org.apache.spark.sql.types.{StringType, StructField, StructType}
-
-class PreprocCMAQ {
+object PreprocCMAQ {
   def main(args: Array[String]) {
     time {
       val spark = SparkSession.builder().appName("datatrans preproc").config("spark.sql.pivotMaxValues", 100000).config("spark.executor.memory", "16g").config("spark.driver.memory", "64g").getOrCreate()
