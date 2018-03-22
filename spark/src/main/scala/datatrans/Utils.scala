@@ -167,9 +167,10 @@ object Utils {
 
     val buf = new Array[Byte](4 * 1024)
 
-    var n = 0
-    while((n = input_file_input_stream.read(buf)) != -1) {
+    var n = input_file_input_stream.read(buf)
+    while(n != -1) {
       output_file_output_stream.write (buf, 0, n)
+      n = input_file_input_stream.read(buf)
     }
 
     input_file_input_stream.close()
