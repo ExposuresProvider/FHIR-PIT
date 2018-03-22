@@ -15,6 +15,7 @@ for i, dirname in enumerate(dirs):
         df = pd.read_csv(filename)
         df = df[["Date","O3_ppb", "PM25_Total_ugm3"]]
         df.columns = ["a", "o3", "pmij"]
+        return df
     df = pd.concat(list(map (load_csv, filenames)))
 
     df.to_csv(output_rowcol_filename, index=False)
