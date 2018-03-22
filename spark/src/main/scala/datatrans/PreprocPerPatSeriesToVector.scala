@@ -132,6 +132,8 @@ object PreprocPerPatSeriesToVector {
                       Json.obj (
                         "age" -> age,
                         "year" -> year,
+                        "month" -> start_date.monthOfYear.get,
+                        "day" -> start_date.dayOfMonth.get,
                         "row" -> row,
                         "col" -> col,
                         "features" -> vec
