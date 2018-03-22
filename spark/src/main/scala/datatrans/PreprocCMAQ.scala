@@ -26,12 +26,12 @@ object PreprocCMAQ {
         output_dir_fs.listStatus(path).filter(p => p.isDirectory).map(f => f.getPath)
       }
 
-      val rowdirs = listDirs(output_dir_path)
+      val rowdirs = listDirs(output_dir_path).par
 
       for(rowdir <- rowdirs) {
         println(f"processing row $rowdir")
         val row = rowdir.getName.split("=")(1).toInt
-        val coldirs = listDirs(rowdir)
+        val coldirs = listDirs(rowdir).par
         for (coldir <- coldirs) {
           println(f"processing column $coldir")
           val col = coldir.getName.split("=")(1).toInt
