@@ -5,7 +5,7 @@ from timeit import default_timer as timer
 import sys
 
 dir = sys.argv[1]
-cache_dir = sys.argv[3]
+cache_dir = sys.argv[2]
 
 start = timer()
 cmd = ["spark-submit",
