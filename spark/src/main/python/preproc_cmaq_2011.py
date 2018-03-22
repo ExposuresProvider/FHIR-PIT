@@ -18,5 +18,5 @@ for i, dirname in enumerate(dirs):
         return df
     df = pd.concat(list(map (load_csv, filenames)))
 
-    df.to_csv(output_rowcol_filename, index=False)
+    df.to_csv(output_rowcol_filename, index=False, header=False)
 
