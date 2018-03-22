@@ -62,7 +62,7 @@ object PreprocPerPatSeriesToVector {
 
               val jsvalue = Json.parse(input_file_input_stream)
               input_file_input_stream.close()
-              val listBuf = scala.collection.mutable.Map[Int, ListBuffer[String]]() // a list of concept, start_time
+              val listBuf = scala.collection.mutable.Map[DateTime, ListBuffer[String]]() // a list of concept, start_time
 
               val visits = jsvalue("visit").as[JsObject]
               val observations = jsvalue("observation").as[JsObject]
@@ -82,17 +82,16 @@ object PreprocPerPatSeriesToVector {
                       encounter \ "start_date" match {
                         case JsDefined (x) =>
                           val start_date = DateTime.parse (x.as[String] )
-                          val age = Days.daysBetween (birth_date_joda, start_date).getDays
                           encounter \ "inout_cd" match {
                             case JsDefined (y) =>
                               val inout_cd = y.as[String]
-                              listBuf.get (age) match {
+                              listBuf.get (start_date) match {
                                 case Some (vec) =>
                                   vec.add (inout_cd)
 
                                 case None =>
                                   val vec = new ListBuffer[String] ()
-                                  listBuf (age) = vec
+                                  listBuf (start_date) = vec
                                   vec.add (inout_cd)
                               }
                             case _ =>
@@ -111,14 +110,14 @@ object PreprocPerPatSeriesToVector {
                           instances.as[JsObject].fields.foreach {
                             case (_, modifiers) =>
                               val start_date = DateTime.parse (modifiers.as[JsObject].values.toSeq (0) ("start_date").as[String] )
-                              val age = Days.daysBetween (birth_date_joda, start_date).getDays
-                              listBuf.get (age) match {
+
+                              listBuf.get (start_date) match {
                                 case Some (vec) =>
                                   vec.add (concept_cd)
 
                                 case None =>
                                   val vec = new ListBuffer[String] ()
-                                  listBuf (age) = vec
+                                  listBuf (start_date) = vec
                                   vec.add (concept_cd)
                               }
                           }
@@ -126,10 +125,17 @@ object PreprocPerPatSeriesToVector {
                   }
 
                   val data = listBuf.toSeq.map {
-                    case (age, vec) => Json.obj (
-                      "age" -> age,
-                      "features" -> vec
-                    )
+                    case (start_date, vec) =>
+                      val age = Days.daysBetween (birth_date_joda, start_date).getDays
+                      val year = start_date.year.get
+                      val (row, col) = latlon2rowcol(lat, lon, year)
+                      Json.obj (
+                        "age" -> age,
+                        "year" -> year,
+                        "row" -> row,
+                        "col" -> col,
+                        "features" -> vec
+                      )
                   }.sortBy (row => row ("age").as[Int] )
 
                   val o = Json.obj (
