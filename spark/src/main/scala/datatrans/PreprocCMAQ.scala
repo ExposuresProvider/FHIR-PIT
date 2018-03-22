@@ -9,7 +9,7 @@ object PreprocCMAQ {
     time {
       val spark = SparkSession.builder().appName("datatrans preproc").config("spark.sql.pivotMaxValues", 100000).config("spark.executor.memory", "16g").config("spark.driver.memory", "64g").getOrCreate()
 
-      spark.sparkContext.setLogLevel("WARN")
+      // spark.sparkContext.setLogLevel("WARN")
 
       val input_file = args(0)
       val output_dir = args(1)
