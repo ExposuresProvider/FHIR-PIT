@@ -36,14 +36,8 @@ object PreprocCMAQ {
           println(f"processing column $coldir")
           val col = coldir.getName.split("=")(1).toInt
           val output_filename = output_dir + "/" + f"C$col%03dR$row%03d.csv"
-          val output_filename_no_header = "." + output_filename
-          val output_file_path_no_header = new Path(output_filename_no_header)
-          FileUtil.copyMerge(output_dir_fs, coldir, output_dir_fs, output_file_path_no_header, true, hc, null)
-
-          writeToFile(hc, output_filename, "a,o3,pmij\n")
-          appendToFile(hc, output_filename, output_filename_no_header)
-
-          output_dir_fs.delete(output_file_path_no_header, false)
+          val output_file_path = new Path(output_filename)
+          FileUtil.copyMerge(output_dir_fs, coldir, output_dir_fs, output_file_path, true, hc, null)
         }
       }
 
