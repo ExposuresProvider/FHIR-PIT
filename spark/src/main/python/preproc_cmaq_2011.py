@@ -6,8 +6,9 @@ import sys
 input_dir = sys.argv[1]
 output_dir = sys.argv[2]
 
-for dirname in glob.glob(os.path.join(input_dir, "C*")):
+dirs = sorted(glob.glob(os.path.join(input_dir, "C*")))
+for i, dirname in enumerate(dirs):
+    print("processing", i, "/", len(dirs), dirname)
     for filename in glob.glob(os.path.join(dirname, "*.csv")):
-        print("processing", filename)
-        shutil.copy(filename, os.path.join(output_dir, os.path.basename(filename).replace("_extractions_12k", "")))
+        shutil.copy(filename, os.path.join(output_dir, os.path.basename(filename).replace("CMAQ_2011_extractions_12k.", "")))
 
