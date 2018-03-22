@@ -162,7 +162,7 @@ object Utils {
     val input_file_path = new Path (path2)
     val input_file_file_system = input_file_path.getFileSystem (hc)
 
-    val output_file_output_stream = output_file_file_system.create(output_file_path)
+    val output_file_output_stream = output_file_file_system.append(output_file_path)
     val input_file_input_stream = input_file_file_system.open(input_file_path)
 
     val buf = new Array[Byte](4 * 1024)
