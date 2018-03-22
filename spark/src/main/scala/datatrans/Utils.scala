@@ -153,8 +153,29 @@ object Utils {
     val output_file_output_stream = output_file_file_system.create (output_file_path)
     output_file_output_stream.write (bytes)
     output_file_output_stream.close ()
-
   }
+
+  def appendToFile(hc:Configuration, path :String, path2:String) = {
+    val output_file_path = new Path (path)
+    val output_file_file_system = output_file_path.getFileSystem (hc)
+
+    val input_file_path = new Path (path2)
+    val input_file_file_system = input_file_path.getFileSystem (hc)
+
+    val output_file_output_stream = output_file_file_system.create(output_file_path)
+    val input_file_input_stream = input_file_file_system.open(input_file_path)
+
+    val buf = new Array[Byte](4 * 1024)
+
+    var n = 0
+    while((n = input_file_input_stream.read(buf)) != -1) {
+      output_file_output_stream.write (buf, 0, n)
+    }
+
+    input_file_input_stream.close()
+    output_file_output_stream.close ()
+  }
+
   sealed trait Format
   case object JSON extends Format
   case object CSV extends Format
