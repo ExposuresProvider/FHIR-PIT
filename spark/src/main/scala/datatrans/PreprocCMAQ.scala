@@ -1,8 +1,9 @@
 package datatrans
 
-import org.apache.hadoop.fs.Path
+import org.apache.hadoop.fs.{FileUtil, Path}
 import org.apache.spark.sql.SparkSession
 import datatrans.Utils.time
+
 
 object PreprocCMAQ {
   def main(args: Array[String]) {
@@ -21,11 +22,23 @@ object PreprocCMAQ {
       val output_dir_path = new Path(output_dir)
       val output_dir_fs = output_dir_path.getFileSystem(hc)
 
-      val files = output_dir_fs.listFiles(output_dir_path, false)
+      def listDirs(path: Path) = {
+        output_dir_fs.listStatus(path).filter(p => p.isDirectory).map(f => f.getPath)
+      }
 
-      while(files.hasNext) {
-        val file = files.next
-        val filename = file.getPath.getName
+      val rowdirs = listDirs(output_dir_path)
+
+      for(rowdir <- rowdirs) {
+        println(f"processing row $rowdir")
+        val row = rowdir.getName.split("=")(1)
+        val coldirs = listDirs(rowdir)
+        for (coldir <- coldirs) {
+          println(f"processing column $coldir")
+          val col = coldir.getName.split("=")(1)
+          val output_filename = output_dir + "/" + f"C$col%03dR$row%03d"
+          val output_file_path = new Path(output_filename)
+          FileUtil.copyMerge(output_dir_fs, coldir, output_dir_fs, output_file_path, true, hc, null)
+        }
       }
 
       spark.stop()
