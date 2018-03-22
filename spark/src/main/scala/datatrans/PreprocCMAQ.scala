@@ -2,6 +2,7 @@ package datatrans
 
 import org.apache.hadoop.fs.Path
 import org.apache.spark.sql.SparkSession
+import datatrans.Utils.time
 
 object PreprocCMAQ {
   def main(args: Array[String]) {
