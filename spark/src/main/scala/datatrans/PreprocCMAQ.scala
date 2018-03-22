@@ -35,7 +35,7 @@ object PreprocCMAQ {
         for (coldir <- coldirs) {
           println(f"processing column $coldir")
           val col = coldir.getName.split("=")(1).toInt
-          val output_filename = output_dir + "/" + f"C$col%03dR$row%03d"
+          val output_filename = output_dir + "/" + f"C$col%03dR$row%03d.csv"
           val output_filename_no_header = output_filename + ".noheader"
           val output_file_path_no_header = new Path(output_filename_no_header)
           FileUtil.copyMerge(output_dir_fs, coldir, output_dir_fs, output_file_path_no_header, true, hc, null)
