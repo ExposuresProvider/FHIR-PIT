@@ -14,7 +14,7 @@ object PreprocCMAQ {
       val input_file = args(0)
       val output_dir = args(1)
 
-      val df = spark.read.csv(input_file)
+      val df = spark.read.format("csv").option("header", true).load(input_file)
       df.write.partitionBy("row", "col").csv(output_dir)
 
       val hc = spark.sparkContext.hadoopConfiguration
