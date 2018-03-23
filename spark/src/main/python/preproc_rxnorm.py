@@ -14,7 +14,7 @@ def getRxnorm(concept_path):
     return None
 
 df["RXNORM"] = df["CONCEPT_PATH"].map(getRxnorm)
-df = df[["CONCEPT_CD", "RXNORM"]]
+df = df[["CONCEPT_CD", "RXNORM"]][df.RXNORM.isnull()].drop_duplicates()
 
 df.to_csv(output_file, index=False)
 
