@@ -30,8 +30,8 @@ object PreprocPerPatSeriesToVector {
     val (row, col) = latlon2rowcol(lat, lon, year)
 
 
-    val filename = f"${config.input_directory}/cmaq$year/C$col%03dR$row%03d.csv"
-    val df = spark.read.format("csv").load(filename).toDF("a", "o3", "pmij")
+    val filename = f"${config.input_directory}/cmaq$year/C$col%03dR$row%03dDaily.csv"
+    val df = spark.read.format("csv").load(filename).toDF("a","o3_avg","pmij_avg","o3_max","pmij_max")
 
     val env = Json.obj()
 
@@ -39,11 +39,11 @@ object PreprocPerPatSeriesToVector {
       val start_time = start_date.plusDays(i)
       val end_time = start_date.plusDays(i + 1)
 
-      val aggregate = df.filter(to_timestamp(df("a")).between(start_time.toString("%Y-%m-%D"), end_time.toString("%Y-%m-%D"))).agg(avg("o3"), avg("pmij"), max("o3"), max("pmij")).first
-      env("ozone_avg_day"+i) = aggregate.getDouble(0)
-      env("pm25_avg_day"+i) = aggregate.getDouble(1)
-      env("ozone_max_day"+i) = aggregate.getDouble(2)
-      env("pm25_max_day"+i) = aggregate.getDouble(3)
+      val aggregate = df.filter(df("start_date") === start_time.toString("%Y-%m-%D")).select("o3_avg", "pmij_avg", "o3_max", "pmij_max").first
+      env("o3_avg_day"+i) = aggregate.getDouble(0)
+      env("pmij_avg_day"+i) = aggregate.getDouble(1)
+      env("o3_max_day"+i) = aggregate.getDouble(2)
+      env("pmij_max_day"+i) = aggregate.getDouble(3)
     }
 
     env
