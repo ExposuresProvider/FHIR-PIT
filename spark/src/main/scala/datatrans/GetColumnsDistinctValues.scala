@@ -52,6 +52,8 @@ object GetColumnsDistinctValues {
 
             val patl = pddf0.select(column).map(r => r.getString(0)).collect
 
+            pddf0.unpersist()
+
             keys ++= patl
           }
           val hc = spark.sparkContext.hadoopConfiguration
