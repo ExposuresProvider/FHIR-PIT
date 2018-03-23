@@ -24,7 +24,7 @@ case class PreprocPerPatSeriesToPatNumConfig(
                    output_file : String = ""
                  )
 
-object PreprocPerPatSeriesToPatNum {
+object GetColumnDistinctValues {
 
 
   def main(args: Array[String]) {

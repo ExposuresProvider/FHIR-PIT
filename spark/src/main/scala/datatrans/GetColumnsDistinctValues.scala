@@ -24,7 +24,7 @@ case class PreprocPerPatSeriesToHeaderConfig(
                    output_file : String = ""
                  )
 
-object PreprocPerPatSeriesToHeader {
+object GetColumnsDistinctValues {
 
 
   def main(args: Array[String]) {
