@@ -50,7 +50,7 @@ object GetColumnsDistinctValues {
             println("loading " + table)
             val pddf0 = spark.read.format("csv").option("header", true).load(table)
 
-            val patl = pddf0.select(column).map(r => r.getString(0)).collect
+            val patl = pddf0.select(column).distinct.map(r => r.getString(0)).collect
 
             pddf0.unpersist()
 
