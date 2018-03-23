@@ -9,7 +9,7 @@ cache_dir = sys.argv[2]
 host_name = sys.argv[3]
 
 start = timer()
-cmd = ["spark-submit",
+cmd2 = ["spark-submit",
        "--master",
        "spark://{0}:7077".format(host_name),
        "--jars",
@@ -20,10 +20,10 @@ cmd = ["spark-submit",
        "--class",
        "datatrans.GetColumnsDistinctValues",
        "target/scala-2.11/preproc_2.11-1.0.jar",
-       "--tables=" + dir + "/observation_fact.csv," + dir + "/visit_dimension.csv",
-       "--columns=concept_cd,inout_cd",
-       "--output_file=" + dir + "/json/header"]
-proc = subprocess.Popen(cmd)
+       "--tables=" + dir + "/patient_dimension.csv",
+       "--columns=patient_num",
+       "--output_file=" + dir + "/json/patient_num"]
+proc = subprocess.Popen(cmd2)
 err = proc.wait()
 if err:
     print("error:", err)
