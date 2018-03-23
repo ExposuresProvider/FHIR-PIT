@@ -57,107 +57,106 @@ object PreprocPerPatSeriesToVector {
               val input_file_path = new Path(input_file)
               val input_file_file_system = input_file_path.getFileSystem(hc)
 
-              println("loading json from " + input_file)
-              val input_file_input_stream = input_file_file_system.open(input_file_path)
+              if(!input_file_file_system.exists(input_file_path)) {
+                println("json not found, skipped " + p)
+              } else {
+                println("loading json from " + input_file)
+                val input_file_input_stream = input_file_file_system.open(input_file_path)
 
-              val jsvalue = Json.parse(input_file_input_stream)
-              input_file_input_stream.close()
-              val listBuf = scala.collection.mutable.Map[DateTime, ListBuffer[String]]() // a list of concept, start_time
+                val jsvalue = Json.parse(input_file_input_stream)
+                input_file_input_stream.close()
+                val listBuf = scala.collection.mutable.Map[DateTime, ListBuffer[String]]() // a list of concept, start_time
 
-              val visits = jsvalue("visit").as[JsObject]
-              val observations = jsvalue("observation").as[JsObject]
-              val sex_cd = jsvalue("sex_cd").as[String]
-              val race_cd = jsvalue("race_cd").as[String]
-              val lat = jsvalue("lat").as[Double]
-              val lon = jsvalue("lon").as[Double]
+                val visits = jsvalue("visit").as[JsObject]
+                val observations = jsvalue("observation").as[JsObject]
+                val sex_cd = jsvalue("sex_cd").as[String]
+                val race_cd = jsvalue("race_cd").as[String]
+                val lat = jsvalue("lat").as[Double]
+                val lon = jsvalue("lon").as[Double]
 
-              jsvalue \ "birth_date" match {
-                case JsDefined (bd) =>
-                  val birth_date = bd.as[String]
-                  val birth_date_joda = DateTime.parse (birth_date)
+                jsvalue \ "birth_date" match {
+                  case JsDefined (bd) =>
+                    val birth_date = bd.as[String]
+                    val birth_date_joda = DateTime.parse (birth_date)
 
-                  val encounters_visit = visits.fields
-                  encounters_visit.foreach {
-                    case (visit, encounter) =>
-                      encounter \ "start_date" match {
-                        case JsDefined (x) =>
-                          val start_date = DateTime.parse (x.as[String] )
-                          encounter \ "inout_cd" match {
-                            case JsDefined (y) =>
-                              val inout_cd = y.as[String]
-                              listBuf.get (start_date) match {
-                                case Some (vec) =>
-                                  vec.add (inout_cd)
+                    val encounters_visit = visits.fields
+                    encounters_visit.foreach {
+                      case (visit, encounter) =>
+                        encounter \ "start_date" match {
+                          case JsDefined (x) =>
+                            val start_date = DateTime.parse (x.as[String] )
+                            encounter \ "inout_cd" match {
+                              case JsDefined (y) =>
+                                val inout_cd = y.as[String]
+                                listBuf.get (start_date) match {
+                                  case Some (vec) =>
+                                    vec.add (inout_cd)
 
-                                case None =>
-                                  val vec = new ListBuffer[String] ()
-                                  listBuf (start_date) = vec
-                                  vec.add (inout_cd)
-                              }
-                            case _ =>
-                              println ("no inout cd " + visit)
-                          }
-                    case _ =>
-                      println ("no start date " + visit)
-                    }
-                  }
-
-                  val encounters = observations.fields
-                  encounters.foreach {
-                    case (_, encounter) =>
-                      encounter.as[JsObject].fields.foreach {
-                        case (concept_cd, instances) =>
-                          instances.as[JsObject].fields.foreach {
-                            case (_, modifiers) =>
-                              val start_date = DateTime.parse (modifiers.as[JsObject].values.toSeq (0) ("start_date").as[String] )
-
-                              listBuf.get (start_date) match {
-                                case Some (vec) =>
-                                  vec.add (concept_cd)
-
-                                case None =>
-                                  val vec = new ListBuffer[String] ()
-                                  listBuf (start_date) = vec
-                                  vec.add (concept_cd)
-                              }
-                          }
+                                  case None =>
+                                    val vec = new ListBuffer[String] ()
+                                    listBuf (start_date) = vec
+                                    vec.add (inout_cd)
+                                }
+                              case _ =>
+                                println ("no inout cd " + visit)
+                            }
+                      case _ =>
+                        println ("no start date " + visit)
                       }
-                  }
+                    }
 
-                  val data = listBuf.toSeq.map {
-                    case (start_date, vec) =>
-                      val age = Days.daysBetween (birth_date_joda, start_date).getDays
-                      val year = start_date.year.get
-                      val (row, col) = latlon2rowcol(lat, lon, year)
-                      Json.obj (
-                        "age" -> age,
-                        "year" -> year,
-                        "month" -> start_date.monthOfYear.get,
-                        "day" -> start_date.dayOfMonth.get,
-                        "row" -> row,
-                        "col" -> col,
-                        "features" -> vec
-                      )
-                  }.sortBy (row => row ("age").as[Int] )
+                    val encounters = observations.fields
+                    encounters.foreach {
+                      case (_, encounter) =>
+                        encounter.as[JsObject].fields.foreach {
+                          case (concept_cd, instances) =>
+                            instances.as[JsObject].fields.foreach {
+                              case (_, modifiers) =>
+                                val start_date = DateTime.parse (modifiers.as[JsObject].values.toSeq (0) ("start_date").as[String] )
 
-                  val o = Json.obj (
-                    "race_cd" -> race_cd,
-                    "sex_cd" -> sex_cd,
-                    "birth_date" -> birth_date,
-                    "lat" -> lat,
-                    "lon" -> lon,
-                    "data" -> data
-                  )
+                                listBuf.get (start_date) match {
+                                  case Some (vec) =>
+                                    vec.add (concept_cd)
+
+                                  case None =>
+                                    val vec = new ListBuffer[String] ()
+                                    listBuf (start_date) = vec
+                                    vec.add (concept_cd)
+                                }
+                            }
+                        }
+                    }
+
+                    val data = listBuf.toSeq.map {
+                      case (start_date, vec) =>
+                        val age = Years.yearsBetween (birth_date_joda, start_date).getYears
+                        val year = start_date.year.get
+                        val (row, col) = latlon2rowcol(lat, lon, year)
+                        Json.obj (
+                          "age" -> age,
+                          "start_date" -> start_date.toString("%Y-%m-%D"),
+                          "row" -> row,
+                          "col" -> col,
+                          "features" -> vec
+                        )
+                    }.sortBy (row => row ("age").as[Int] )
+
+                    val o = Json.obj (
+                      "race_cd" -> race_cd,
+                      "sex_cd" -> sex_cd,
+                      "birth_date" -> birth_date,
+                      "data" -> data
+                    )
 
 
-                  val json = Json.stringify (o)
+                    val json = Json.stringify (o)
 
-                  writeToFile(hc, config.output_prefix.get + p, json)
-                case _ =>
-                  println("no birth date " + p)
+                    writeToFile(hc, config.output_prefix.get + p, json)
+                  case _ =>
+                    println("no birth date " + p)
 
+                }
               }
-
             }
 
           config.patient_num_list match {

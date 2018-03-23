@@ -1,12 +1,11 @@
-import matplotlib.pyplot as plt
 import numpy as np
-import h5py
 import datetime
 import glob
 from time import time
 from keras.callbacks import TensorBoard
 from keras.models import Model
 from keras.layers import LSTM, Input, Dense, RepeatVector
+import sys
 import vec_to_array
 
 epoch = datetime.datetime(1970,1,1)
@@ -16,7 +15,25 @@ epochs = 100  # Number of epochs to train for.
 
 MODEL_PATH = "/mnt/d/autoencoder.model"
 
-header_map = vec_to_array.header_map("/mnt/d/json/header")
+dir = sys.argv[1]
+
+header0 = vec_to_array.header(dir + "/json/header")
+mdctn_rxnorm_map = vec_to_array.mdctn_to_rxnorm_map(dir + "/mdctn_rxnorm_map.csv")
+
+header0.extend(list(mdctn_rxnorm_map.keys()))
+
+header_map = vec_to_array.header_map(header0)
+
+def header_map2(feature):
+    if feature in mdctn_rxnorm_map:
+        feature2 = mdctn_rxnorm_map[feature]
+        col = feature2["name"]
+        return col, 1
+    elif feature.startswith("ICD"):
+        return feature.split(".")[0], 1
+    else:
+        return feature, 1
+
 
 samples = []
 for filename in glob.glob("/mnt/d/json/vector*"):
@@ -25,7 +42,7 @@ for filename in glob.glob("/mnt/d/json/vector*"):
     sex_cd = ["M", "F"].index(sex_cd0)
     race_cd = int(race_cd0)
     birth_date = (datetime.datetime.strptime(birth_date0, "%Y-%m-%d") - epoch).days
-    abs_timestamps = list(map(lambda x : x + birth_date, timestamps))
+    abs_timestamps = list(map(lambda x : (datetime.datetime.strptime(x, "%Y-%m-%d") - epoch).days, timestamps))
     rel_timestamps = list(map(lambda x : x - timestamps[0], timestamps))
 
     num_rows, num_cols = time_series.shape
