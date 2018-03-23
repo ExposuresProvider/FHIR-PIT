@@ -9,6 +9,10 @@ import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.types._
 import geotrellis.proj4._
+import org.joda.time.DateTime
+import play.api.libs.json.{JsObject, JsValue, Json}
+
+import scala.collection.mutable
 
 object Utils {
 
@@ -155,6 +159,15 @@ object Utils {
     output_file_output_stream.close ()
   }
 
+  def appendStringToFile(hc:Configuration, path :String, text:String) = {
+    val bytes = text.getBytes ("utf-8")
+    val output_file_path = new Path (path)
+    val output_file_file_system = output_file_path.getFileSystem (hc)
+    val output_file_output_stream = output_file_file_system.append (output_file_path)
+    output_file_output_stream.write (bytes)
+    output_file_output_stream.close ()
+  }
+
   def appendToFile(hc:Configuration, path :String, path2:String) = {
     val output_file_path = new Path (path)
     val output_file_file_system = output_file_path.getFileSystem (hc)
@@ -256,5 +269,13 @@ object Utils {
 
   }
 
+  def insertOrUpdate(mmap: mutable.Map[DateTime, JsObject], key: DateTime, col: String, value: JsValue) = {
+    mmap.get(key) match {
+      case Some(vec) =>
+        vec(col) = value
+      case None =>
+        mmap(key) = Json.obj(col -> value)
+    }
+  }
 
 }
