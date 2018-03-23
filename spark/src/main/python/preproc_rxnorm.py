@@ -8,7 +8,7 @@ df = pd.read_csv(input_file)
 df = df[["CONCEPT_PATH","CONCEPT_CD"]][df.CONCEPT_CD.str.startswith("MDCTN:")]
 
 def getRxnorm(concept_path):
-    for s in concept_path.split("/"):
+    for s in concept_path.split("\\"):
         if s.startswith("RX:"):
             return s
     return None
