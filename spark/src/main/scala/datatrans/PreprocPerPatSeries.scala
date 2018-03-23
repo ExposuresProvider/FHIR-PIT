@@ -36,11 +36,10 @@ object PreprocPerPatSeries {
           // For implicit conversions like converting RDDs to DataFrames
           import spark.implicits._
 
-          val hc = spark.sparkContext.hadoopConfiguration
-
           def proc_pid(p:String) =
             time {
 
+              val hc = spark.sparkContext.hadoopConfiguration
               println("processing pid " + p)
 
               val pdif = config.input_directory + "/patient_dimension/patient_num=" + p + ".csv"
@@ -110,7 +109,6 @@ object PreprocPerPatSeries {
               // https://stackoverflow.com/questions/41601874/how-to-convert-row-to-json-in-spark-2-scala
               val json = features_wide.toJSON.first()
 
-              val hc = spark.sparkContext.hadoopConfiguration
               writeToFile(hc, config.output_prefix + p, json)
 
             }
