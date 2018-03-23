@@ -48,11 +48,11 @@ object GetColumnDistinctValues {
           println("loading " + config.table)
           val pddf0 = spark.read.format("csv").option("header", true).load(config.table)
 
-          val patl = pddf0.select(config.column).map(r => r.getString(0)).collect
+          val patl = pddf0.select(config.column).distinct.map(r => r.getString(0)).collect
 
           val hc = spark.sparkContext.hadoopConfiguration
 
-          writeToFile(hc, config.output_file, patl.distinct.mkString("\n"))
+          writeToFile(hc, config.output_file, patl.mkString("\n"))
         }
       case None =>
     }

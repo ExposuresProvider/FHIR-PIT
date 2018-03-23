@@ -52,13 +52,14 @@ object GetColumnsDistinctValues {
 
             val patl = pddf0.select(column).distinct.map(r => r.getString(0)).collect
 
+            keys ++= patl
+
             pddf0.unpersist()
 
-            keys ++= patl
           }
           val hc = spark.sparkContext.hadoopConfiguration
 
-          writeToFile(hc, config.output_file, keys.mkString("\n"))
+          writeToFile(hc, config.output_file, keys.distinct.mkString("\n"))
         }
       case None =>
     }
