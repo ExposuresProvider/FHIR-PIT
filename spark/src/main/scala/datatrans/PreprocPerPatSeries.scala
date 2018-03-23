@@ -1,10 +1,10 @@
 package datatrans
 
 import datatrans.Utils._
-import org.apache.hadoop.fs.{Path}
-import org.apache.spark.sql.{SparkSession}
+import org.apache.hadoop.fs.Path
+import org.apache.spark.sql.{Row, SparkSession}
 import org.apache.spark.sql.functions._
-
+import org.apache.spark.sql.types.{StringType, StructField, StructType}
 import scopt._
 
 case class PreprocPerPatSeriesConfig(
@@ -36,6 +36,8 @@ object PreprocPerPatSeries {
           // For implicit conversions like converting RDDs to DataFrames
           import spark.implicits._
 
+          val hc = spark.sparkContext.hadoopConfiguration
+
           def proc_pid(p:String) =
             time {
 
@@ -47,8 +49,6 @@ object PreprocPerPatSeries {
 
               println("loading patient_dimension from " + pdif)
               val pddf = spark.read.format("csv").option("header", true).load(pdif)
-              println("loading visit_dimension from " + vdif)
-              val vddf = spark.read.format("csv").option("header", true).load(vdif)
               println("loading observation_fact from " + ofif)
               val ofdf = spark.read.format("csv").option("header", true).load(ofif)
 
@@ -77,6 +77,20 @@ object PreprocPerPatSeries {
               val observation_wide = aggregate(observation, Seq("encounter_num", "concept_cd", "instance_num", "modifier_cd"), observation_cols, "observation")
 
               // visit
+              println("loading visit_dimension from " + vdif)
+              val vdif_path = new Path(vdif)
+              val vdif_fs = vdif_path.getFileSystem(hc)
+              val vddf = if(vdif_fs.exists(vdif_path)) {
+                spark.read.format("csv").option("header", true).load(vdif)
+              } else {
+                val schema = StructType(Seq(
+                  StructField("inout_cd", StringType, true),
+                  StructField("start_date", StringType, true),
+                  StructField("end_date", StringType, true)
+                ))
+
+                spark.createDataFrame(spark.sparkContext.emptyRDD[Row], schema)
+              }
               val visit_cols = Seq(
                 "inout_cd",
                 "start_date",
