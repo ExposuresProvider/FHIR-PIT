@@ -6,13 +6,14 @@ import sys
 
 dir = sys.argv[3]
 cache_dir = sys.argv[4]
+host_name = sys.argv[5]
 
 def process_pids(pids):
     pids0 = ",".join(pids)
     start = timer()
     cmd = ["spark-submit",
            "--master",
-           "spark://a-HP-Z820-Workstation:7077",
+           "spark://{1}:7077".format(host_name),
            "--jars",
            cache_dir + "/.ivy2/cache/com.github.scopt/scopt_2.11/jars/scopt_2.11-3.7.0.jar," +
            cache_dir + "/.ivy2/cache/com.typesafe.play/play-json_2.11/jars/play-json_2.11-2.6.7.jar," +
@@ -24,7 +25,6 @@ def process_pids(pids):
            "--patient_num_list={0}".format(pids0),
            "--input_directory=" + dir + "/json",
            "--output_prefix=" + dir + "/json/vector"]
-    print
     log = dir + "/json/stdoutvec" + pids0
     log2 = dir + "/json/stderrvec" + pids0
     with open(log, "w") as file:
