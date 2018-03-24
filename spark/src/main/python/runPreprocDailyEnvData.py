@@ -17,7 +17,7 @@ cmd = ["spark-submit",
        cache_dir + "/.ivy2/cache/com.github.scopt/scopt_2.11/jars/scopt_2.11-3.7.0.jar," +
        cache_dir + "/.ivy2/cache/org.locationtech.geotrellis/geotrellis-proj4_2.11/jars/geotrellis-proj4_2.11-1.1.0.jar",
        "--class",
-       "datatrans.PreprocDailyEnv",
+       "datatrans.PreprocDailyEnvData",
        "target/scala-2.11/preproc_2.11-1.0.jar",
        "{0}/cmaq{1}".format(dir, year),
        "{0}/cmaq{1}/".format(dir, year)]
