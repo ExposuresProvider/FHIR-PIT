@@ -16,11 +16,11 @@ import scala.util.matching.Regex
 case class Config(
                    patient_dimension : Option[String] = None,
                    patient_num_list : Option[Seq[String]] = None,
-                   input_directory : Option[String] = None,
-                   output_prefix : Option[String] = None,
+                   input_directory : String = "",
+                   output_prefix : String = "",
                    start_date : Option[DateTime] = None,
                    end_date : Option[DateTime] = None,
-                   regex : Option[Regex] = None,
+                   regex : Option[String] = None,
                    map : Option[String] = None
                  )
 
@@ -33,17 +33,19 @@ object PreprocPerPatSeriesToVector {
     val filename = f"${config.input_directory}/cmaq$year/C$col%03dR$row%03dDaily.csv"
     val df = spark.read.format("csv").load(filename).toDF("a","o3_avg","pmij_avg","o3_max","pmij_max")
 
-    val env = Json.obj()
+    var env = Json.obj()
 
     for(i <- -7 until 7) {
       val start_time = start_date.plusDays(i)
       val end_time = start_date.plusDays(i + 1)
 
       val aggregate = df.filter(df("start_date") === start_time.toString("%Y-%m-%D")).select("o3_avg", "pmij_avg", "o3_max", "pmij_max").first
-      env("o3_avg_day"+i) = aggregate.getDouble(0)
-      env("pmij_avg_day"+i) = aggregate.getDouble(1)
-      env("o3_max_day"+i) = aggregate.getDouble(2)
-      env("pmij_max_day"+i) = aggregate.getDouble(3)
+      env ++= Json.obj(
+        "o3_avg_day"+i -> aggregate.getDouble(0),
+        "pmij_avg_day"+i -> aggregate.getDouble(1),
+        "o3_max_day"+i -> aggregate.getDouble(2),
+        "pmij_max_day"+i -> aggregate.getDouble(3)
+      )
     }
 
     env
@@ -56,7 +58,7 @@ object PreprocPerPatSeriesToVector {
 
       val hc = spark.sparkContext.hadoopConfiguration
 
-      val input_file = config.input_directory.get + "/" + p
+      val input_file = config.input_directory + "/" + p
       val input_file_path = new Path(input_file)
       val input_file_file_system = input_file_path.getFileSystem(hc)
 
@@ -94,6 +96,7 @@ object PreprocPerPatSeriesToVector {
                         col_filter(inout_cd, start_date) match {
                           case Some((col, value)) =>
                             insertOrUpdate(listBuf, start_date, col, value)
+                          case None =>
                         }
                       case _ =>
                         println ("no inout cd " + visit)
@@ -114,6 +117,7 @@ object PreprocPerPatSeriesToVector {
                         col_filter(concept_cd, start_date) match {
                           case Some((col, value)) =>
                             insertOrUpdate(listBuf, start_date, col, value)
+                          case None =>
                         }
 
                     }
@@ -137,7 +141,7 @@ object PreprocPerPatSeriesToVector {
 
             val json = data.map(obj => Json.stringify (obj)+"\n").mkString("")
 
-            writeToFile(hc, config.output_prefix.get + p, json)
+            writeToFile(hc, config.output_prefix + p, json)
           case _ =>
             println("no birth date " + p)
 
@@ -151,11 +155,11 @@ object PreprocPerPatSeriesToVector {
       head("series_to_vector")
       opt[String]("patient_dimension").action((x,c) => c.copy(patient_dimension = Some(x)))
       opt[Seq[String]]("patient_num_list").action((x,c) => c.copy(patient_num_list = Some(x)))
-      opt[String]("input_directory").required.action((x,c) => c.copy(input_directory = Some(x)))
-      opt[String]("output_prefix").required.action((x,c) => c.copy(output_prefix = Some(x)))
+      opt[String]("input_directory").required.action((x,c) => c.copy(input_directory = x))
+      opt[String]("output_prefix").required.action((x,c) => c.copy(output_prefix = x))
       opt[String]("start_date").action((x,c) => c.copy(start_date = Some(DateTime.parse(x))))
       opt[String]("end_date").action((x,c) => c.copy(end_date = Some(DateTime.parse(x))))
-      opt[String]("regex").action((x,c) => c.copy(regex = Some(x.r)))
+      opt[String]("regex").action((x,c) => c.copy(regex = Some(x)))
       opt[String]("map").action((x,c) => c.copy(map = Some(x)))
     }
 
@@ -181,12 +185,11 @@ object PreprocPerPatSeriesToVector {
             if (df.isDefined && df.get.contains(col)) {
               Some(df.get(col))
             } else if(config.regex.isDefined) {
-              col match {
-                case config.regex.get =>
-                  Some((col, JsNumber(1)))
-                case _ =>
-                  None
-              }
+              if(col.matches(config.regex.get))
+                Some((col, JsNumber(1)))
+              else
+                None
+
             } else {
               Some((col, JsNumber(1)))
             }
@@ -194,7 +197,7 @@ object PreprocPerPatSeriesToVector {
 
           def crit(jsObject: JsObject) = {
             val start_date = DateTime.parse(jsObject("start_date").as[String])
-            (config.start_date.isEmpty || config.start_date.get <= start_date) && (config.end_date.isEmpty || start_date < config.end_date.get)
+            (config.start_date.isEmpty || config.start_date.get.isEqual(start_date) || config.start_date.get.isBefore(start_date)) && (config.end_date.isEmpty || start_date.isBefore(config.end_date.get))
           }
 
           def proc_pid2(p : String) =

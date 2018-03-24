@@ -9,19 +9,13 @@ import scopt._
 
 import scala.util.matching.Regex
 
-case class Config(
-                   patient_dimension : Option[String] = None,
-                   patient_num_list : Option[Seq[String]] = None,
-                   input_directory : Option[String] = None,
-                   output_prefix : Option[String] = None,
-                   start_date : Option[DateTime] = None,
-                   end_date : Option[DateTime] = None,
-                   regex : Option[Regex] = None,
-                   map : Option[String] = None
+case class PreprocDailyEnvDataConfig(
+                   input_directory : String = "",
+                   output_prefix : String = ""
                  )
 
 object PreprocDailyEnvData {
-  def preproceEnvData(config : Config, spark: SparkSession, filename : String) = {
+  def preproceEnvData(config : PreprocDailyEnvDataConfig, spark: SparkSession, filename : String) = {
     println("processing " + filename)
     val df = spark.read.format("csv").load(filename).toDF("a", "o3", "pmij")
 
@@ -45,10 +39,10 @@ object PreprocDailyEnvData {
 
 
   def main(args: Array[String]) {
-    val parser = new OptionParser[Config]("series_to_vector") {
+    val parser = new OptionParser[PreprocDailyEnvDataConfig]("series_to_vector") {
       head("series_to_vector")
-      opt[String]("input_directory").required.action((x, c) => c.copy(input_directory = Some(x)))
-      opt[String]("output_prefix").required.action((x, c) => c.copy(output_prefix = Some(x)))
+      opt[String]("input_directory").required.action((x, c) => c.copy(input_directory = x))
+      opt[String]("output_prefix").required.action((x, c) => c.copy(output_prefix = x))
     }
 
     val spark = SparkSession.builder().appName("datatrans preproc").config("spark.sql.pivotMaxValues", 100000).config("spark.executor.memory", "16g").config("spark.driver.memory", "64g").getOrCreate()
@@ -58,7 +52,7 @@ object PreprocDailyEnvData {
     // For implicit conversions like converting RDDs to DataFrames
     import spark.implicits._
 
-    parser.parse(args, Config()) match {
+    parser.parse(args, PreprocDailyEnvDataConfig()) match {
       case Some(config) =>
 
         time {
@@ -74,6 +68,7 @@ object PreprocDailyEnvData {
             }
           }
         }
+      case None =>
     }
 
 
