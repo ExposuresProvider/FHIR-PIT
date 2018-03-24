@@ -64,7 +64,7 @@ object PreprocDailyEnvData {
           while (itr.hasNext) {
             val file = itr.next()
             if (file.getPath.getName.endsWith(".csv")) {
-              preproceEnvData(config, spark, file.getPath.getName)
+              preproceEnvData(config, spark, file.getPath.toString)
             }
           }
         }
