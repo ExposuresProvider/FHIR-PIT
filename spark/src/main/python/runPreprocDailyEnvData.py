@@ -19,8 +19,8 @@ cmd = ["spark-submit",
        "--class",
        "datatrans.PreprocDailyEnvData",
        "target/scala-2.11/preproc_2.11-1.0.jar",
-       "{0}/cmaq{1}".format(dir, year),
-       "{0}/cmaq{1}/".format(dir, year)]
+       "--input_directory={0}/cmaq{1}".format(dir, year),
+       "--output_prefix={0}/cmaq{1}/".format(dir, year)]
 proc = subprocess.Popen(cmd)
 err = proc.wait()
 if err:
