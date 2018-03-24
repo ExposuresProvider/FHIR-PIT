@@ -22,7 +22,7 @@ object PreprocDailyEnvData {
     val aggregate = df.withColumn("start_date", to_date(to_timestamp(df("a")))).groupBy("start_date").agg(avg("o3").alias("o3_avg"), avg("pmij").alias("pmij_avg"), max("o3").alias("o3_max"), max("pmij").alias("pmij_max"))
 
     val hc = spark.sparkContext.hadoopConfiguration
-    val name = filename.split("/").last.split(".")(0)
+    val name = new Path(filename).getName.split(".")(0)
     val output_dir = f"${config.output_prefix}${name}Daily"
     val output_dir_path = new Path(output_dir)
     val output_dir_fs = output_dir_path.getFileSystem(hc)
