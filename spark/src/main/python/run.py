@@ -3,6 +3,7 @@ import sys
 import subprocess
 from timeit import default_timer as timer
 import sys
+from utils import submit
 
 dir = sys.argv[3]
 cache_dir = sys.argv[4]
@@ -10,32 +11,13 @@ host_name = sys.argv[5]
 
 def process_pids(pids):
     pids0 = ",".join(pids)
-    start = timer()
-    cmd = ["spark-submit",
-           "--master",
-           "spark://{0}:7077".format(host_name),
-           "--jars",
-           cache_dir + "/.ivy2/cache/com.github.scopt/scopt_2.11/jars/scopt_2.11-3.7.0.jar," +
-           cache_dir + "/.ivy2/cache/com.typesafe.play/play-json_2.11/jars/play-json_2.11-2.6.7.jar," +
-           cache_dir + "/.ivy2/cache/com.typesafe.play/play-functional_2.11/jars/play-functional_2.11-2.6.7.jar," +
-           cache_dir + "/.ivy2/cache/org.locationtech.geotrellis/geotrellis-proj4_2.11/jars/geotrellis-proj4_2.11-1.1.0.jar",
-           "--class",
-           "datatrans.PreprocPerPatSeries",
-           "target/scala-2.11/preproc_2.11-1.0.jar",
+
+    submit(host_name, cache_dir, "datatrans.PreprocPerPatSeries",
            "--patient_num_list={0}".format(pids0),
            "--input_directory=" + dir + "/patient_series",
-           "--output_prefix=" + dir + "/json/"]
-    log = dir + "/json/stdout" + pids0
-    log2 = dir + "/json/stderr" + pids0
-    with open(log, "w") as file:
-        with open(log2, "w") as file2:
-            proc = subprocess.Popen(cmd, stdout=file, stderr=file2)
-            err = proc.wait()
-            if err:
-                print("error:", err)
-    end = timer()
-    print(end - start)
-
+           "--output_prefix=" + dir + "/json/",
+           log = dir + "/json/stdout" + pids0,
+           log2 = dir + "/json/stderr" + pids0)
 
 with open(sys.argv[1]) as f:
     count = int(sys.argv[2])
