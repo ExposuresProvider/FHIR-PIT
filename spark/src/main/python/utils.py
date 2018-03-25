@@ -15,7 +15,7 @@ def submit(host_name, cache_dir, cls, *args, **kwargs):
            cache_dir + "/.ivy2/cache/org.locationtech.geotrellis/geotrellis-proj4_2.11/jars/geotrellis-proj4_2.11-1.1.0.jar",
            "--class",
            cls,
-           "target/scala-2.11/preproc_2.11-1.0.jar"] + args
+           "target/scala-2.11/preproc_2.11-1.0.jar"] + list(args)
     if "log" in kwargs and "log2" in kwargs:
         log = kwargs["log"]
         log2 = kwargs["log2"]
