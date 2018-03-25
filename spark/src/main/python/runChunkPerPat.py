@@ -19,7 +19,7 @@ cmd = ["spark-submit",
        "--class",
        "datatrans.ChunkPerPat",
        "target/scala-2.11/preproc_2.11-1.0.jar",
-       "{0}/{1}.csv".format(dir, input),
+       "{0}/{1}.csv".format(dir, input_file),
        "{0}/patient_series/{1}".format(dir, input_file)]
 proc = subprocess.Popen(cmd)
 err = proc.wait()
