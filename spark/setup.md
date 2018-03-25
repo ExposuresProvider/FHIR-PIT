@@ -1,6 +1,6 @@
 ### yum
 
-tmux, git, tig, fish, pip, python36 
+tmux, git, tig, fish, pip, python36, htop, p7zip
 
 change to fish shell
 

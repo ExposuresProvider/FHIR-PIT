@@ -45,14 +45,17 @@ object PreprocPerPatSeries {
               val pdif = config.input_directory + "/patient_dimension/patient_num=" + p + ".csv"
               val vdif = config.input_directory + "/visit_dimension/patient_num=" + p + ".csv"
               val ofif = config.input_directory + "/observation_fact/patient_num=" + p + ".csv"
+              val geodata_input_filename = config.input_directory + "/geodata/patient_num=" + p + ".csv"
 
               val vdif_path = new Path(vdif)
               val vdif_fs = vdif_path.getFileSystem(hc)
               val ofif_path = new Path(ofif)
               val ofif_fs = ofif_path.getFileSystem(hc)
+              val geodata_input_path = new Path(geodata_input_filename)
+              val geodata_input_fs = geodata_input_path.getFileSystem(hc)
 
-              if(!vdif_fs.exists(vdif_path) || !ofif_fs.exists(ofif_path)) {
-                println("of or vd file not found, skipped " + p)
+              if(!vdif_fs.exists(vdif_path) || !ofif_fs.exists(ofif_path) || !geodata_input_fs.exists(geodata_input_path)) {
+                println("of, vd, or geodata file not found, skipped " + p)
               } else {
                 println("loading patient_dimension from " + pdif)
                 val pddf = spark.read.format("csv").option("header", true).load(pdif)
@@ -60,12 +63,14 @@ object PreprocPerPatSeries {
                 val ofdf = spark.read.format("csv").option("header", true).load(ofif)
                 println("loading visit_dimension from " + vdif)
                 val vddf = spark.read.format("csv").option("header", true).load(vdif)
+                println("loading geodata from " + geodata_input_filename)
+                val geodata_df = spark.read.format("csv").option("header", true).load(geodata_input_filename)
 
                 val pat = pddf.select("race_cd", "sex_cd", "birth_date")
 
-                val lat = ofdf.filter($"concept_cd".like("GEO:LAT")).select("nval_num").agg(avg("nval_num").as("lat"))
+                val lat = geodata_df.filter($"concept_cd".like("GEOLAT")).select("nval_num").agg(avg("nval_num").as("lat"))
 
-                val lon = ofdf.filter($"concept_cd".like("GEO:LONG")).select("nval_num").agg(avg("nval_num").as("lon"))
+                val lon = geodata_df.filter($"concept_cd".like("GEOLONG")).select("nval_num").agg(avg("nval_num").as("lon"))
 
                 val features = pat
                   .crossJoin(lat)

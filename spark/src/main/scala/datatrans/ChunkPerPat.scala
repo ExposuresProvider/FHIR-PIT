@@ -1,7 +1,5 @@
 package datatrans
 
-import java.io.{BufferedWriter, OutputStreamWriter}
-
 import datatrans.Utils._
 import org.apache.hadoop.fs.{FileUtil, Path}
 import org.apache.spark.sql.SparkSession
@@ -59,19 +57,7 @@ object ChunkPerPat {
 
       spark.sparkContext.setLogLevel("WARN")
 
-      val pdif = args(0)
-      val vdif = args(1)
-      val ofif = args(2)
-      val output_path = args(3)
-
-      val pdod = output_path + "/patient_dimension"
-      writePartitionsCSV(spark, pdif, pdod)
-
-      val vdod = output_path + "/visit_dimension"
-      writePartitionsCSV(spark, vdif, vdod)
-
-      val ofod = output_path + "/observation_fact"
-      writePartitionsCSV(spark, ofif, ofod)
+      writePartitionsCSV(spark, args(0), args(1))
 
       spark.stop()
 

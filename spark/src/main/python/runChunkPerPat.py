@@ -1,12 +1,11 @@
-import os
-import sys
 import subprocess
 from timeit import default_timer as timer
 import sys
 
-dir = sys.argv[1]
-cache_dir = sys.argv[2]
-host_name = sys.argv[3]
+input_file = sys.argv[1]
+dir = sys.argv[2]
+cache_dir = sys.argv[3]
+host_name = sys.argv[4]
 
 start = timer()
 cmd = ["spark-submit",
@@ -18,10 +17,8 @@ cmd = ["spark-submit",
        "--class",
        "datatrans.ChunkPerPat",
        "target/scala-2.11/preproc_2.11-1.0.jar",
-       dir + "/patient_dimension.csv",
-       dir + "/visit_dimension.csv",
-       dir + "/observation_fact.csv",
-       dir + "/patient_series/"]
+       "{0}/{1}.csv".format(dir, input),
+       "{0}/patient_series/{1}".format(dir, input_file)]
 proc = subprocess.Popen(cmd)
 err = proc.wait()
 if err:
