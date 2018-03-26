@@ -19,8 +19,6 @@ object PreprocDailyEnvData {
     println("processing " + filename)
     val df = spark.read.format("csv").load(filename).toDF("a", "o3", "pmij")
 
-    val aggregate = df.withColumn("start_date", to_date(to_timestamp(df("a")))).groupBy("start_date").agg(avg("o3").alias("o3_avg"), avg("pmij").alias("pmij_avg"), max("o3").alias("o3_max"), max("pmij").alias("pmij_max"))
-
     val hc = spark.sparkContext.hadoopConfiguration
     val name = new Path(filename).getName.split("[.]")(0)
     val output_dir = f"${config.output_prefix}${name}Daily"
@@ -30,10 +28,15 @@ object PreprocDailyEnvData {
     val output_filename = f"${config.output_prefix}${name}Daily.csv"
     val output_file_path = new Path(output_filename)
     val output_file_fs = output_file_path.getFileSystem(hc)
+    if(!output_file_fs.exists(output_file_path)) {
+      val aggregate = df.withColumn("start_date", to_date(to_timestamp(df("a")))).groupBy("start_date").agg(avg("o3").alias("o3_avg"), avg("pmij").alias("pmij_avg"), max("o3").alias("o3_max"), max("pmij").alias("pmij_max"))
 
-    aggregate.write.csv(output_dir)
+      aggregate.write.csv(output_dir)
 
-    FileUtil.copyMerge(output_dir_fs, output_dir_path, output_dir_fs, output_file_path, true, hc, null)
+      FileUtil.copyMerge(output_dir_fs, output_dir_path, output_dir_fs, output_file_path, true, hc, null)
+
+    }
+
   }
 
 
