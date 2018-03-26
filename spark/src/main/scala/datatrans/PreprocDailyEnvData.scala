@@ -35,6 +35,8 @@ object PreprocDailyEnvData {
 
       FileUtil.copyMerge(output_dir_fs, output_dir_path, output_dir_fs, output_file_path, true, hc, null)
 
+    } else {
+      println(output_filename + "exists")
     }
 
   }
@@ -51,9 +53,6 @@ object PreprocDailyEnvData {
     val spark = SparkSession.builder().appName("datatrans preproc").config("spark.sql.pivotMaxValues", 100000).config("spark.executor.memory", "16g").config("spark.driver.memory", "64g").getOrCreate()
 
     spark.sparkContext.setLogLevel("WARN")
-
-    // For implicit conversions like converting RDDs to DataFrames
-    import spark.implicits._
 
     parser.parse(args, PreprocDailyEnvDataConfig()) match {
       case Some(config) =>
