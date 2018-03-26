@@ -174,16 +174,14 @@ object PreprocPerPatSeriesToVector {
       case Some(config) =>
 
         time {
-          val df = if(config.map.isDefined)
-            Some(spark.read.format("csv").option("header", true).load(config.input_directory + "/mdctn_rxnorm_map.csv")
-              .map(row => (row.getString(0), (row.getString(1), JsString(row.getString(2))))).collect.toMap)
-          else
-            None
+          val df = config.map.map(map0 =>
+            Some(spark.read.format("csv").option("header", true).load(config.input_directory + "/" + map0)
+              .map(row => row.getString(0)).collect.toSeq))
 
 
           def col_filter(col:String, start_date: DateTime) : Option[(String, JsValue)]= {
             if (df.isDefined && df.get.contains(col)) {
-              Some(df.get(col))
+              Some((col, JsNumber(1)))
             } else if(config.regex.isDefined) {
               if(col.matches(config.regex.get))
                 Some((col, JsNumber(1)))
