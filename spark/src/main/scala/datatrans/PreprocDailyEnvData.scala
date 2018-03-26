@@ -1,7 +1,7 @@
 package datatrans
 
 import datatrans.Utils._
-import org.apache.hadoop.fs.{FileUtil, Path}
+import org.apache.hadoop.fs.{FileUtil, Path, PathFilter}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
 import org.joda.time._
@@ -16,9 +16,6 @@ case class PreprocDailyEnvDataConfig(
 
 object PreprocDailyEnvData {
   def preproceEnvData(config : PreprocDailyEnvDataConfig, spark: SparkSession, filename : String) = {
-    println("processing " + filename)
-    val df = spark.read.format("csv").load(filename).toDF("a", "o3", "pmij")
-
     val hc = spark.sparkContext.hadoopConfiguration
     val name = new Path(filename).getName.split("[.]")(0)
     val output_dir = f"${config.output_prefix}${name}Daily"
@@ -29,6 +26,8 @@ object PreprocDailyEnvData {
     val output_file_path = new Path(output_filename)
     val output_file_fs = output_file_path.getFileSystem(hc)
     if(!output_file_fs.exists(output_file_path)) {
+      val df = spark.read.format("csv").load(filename).toDF("a", "o3", "pmij")
+
       val aggregate = df.withColumn("start_date", to_date(to_timestamp(df("a")))).groupBy("start_date").agg(avg("o3").alias("o3_avg"), avg("pmij").alias("pmij_avg"), max("o3").alias("o3_max"), max("pmij").alias("pmij_max"))
 
       aggregate.write.csv(output_dir)
@@ -36,7 +35,7 @@ object PreprocDailyEnvData {
       FileUtil.copyMerge(output_dir_fs, output_dir_path, output_dir_fs, output_file_path, true, hc, null)
 
     } else {
-      println(output_filename + "exists")
+      println(output_filename + " exists")
     }
 
   }
@@ -62,12 +61,14 @@ object PreprocDailyEnvData {
           val input_dir_path = new Path(config.input_directory)
           val input_dir_fs = input_dir_path.getFileSystem(hc)
 
-          val itr = input_dir_fs.listFiles(input_dir_path, false)
-          while (itr.hasNext) {
-            val file = itr.next()
-            if (file.getPath.getName.matches(raw"C\d*R\d*.csv")) {
-              preproceEnvData(config, spark, file.getPath.toString)
-            }
+          val itr = input_dir_fs.listStatus(input_dir_path, new PathFilter {
+            override def accept(path : Path) : Boolean = path.getName.matches(raw"C\d*R\d*.csv")
+          })
+          var counter = 0
+          val n = itr.size
+          for (file <- itr) {
+            println("processing " + counter + " / " + n + " " + file)
+            preproceEnvData(config, spark, file.getPath.toString)
           }
         }
       case None =>
