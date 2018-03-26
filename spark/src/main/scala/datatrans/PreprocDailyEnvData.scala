@@ -1,5 +1,7 @@
 package datatrans
 
+import java.util.concurrent.atomic.AtomicInteger
+
 import datatrans.Utils._
 import org.apache.hadoop.fs.{FileUtil, Path, PathFilter}
 import org.apache.spark.sql.SparkSession
@@ -69,9 +71,11 @@ object PreprocDailyEnvData {
           val itr = input_dir_fs.listStatus(input_dir_path, new PathFilter {
             override def accept(path : Path) : Boolean = path.getName.matches(raw"C\d*R\d*.csv")
           }).par
+
+          val count = new AtomicInteger(0)
           val n = itr.size
-          for ((file, i) <- itr.zipWithIndex) {
-            println("processing " + i + " / " + n + " " + file.getPath)
+          for (file <- itr) {
+            println("processing " + count.getAndIncrement() + " / " + n + " " + file.getPath)
             preproceEnvData(config, spark, file.getPath.toString)
           }
         }
