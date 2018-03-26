@@ -176,7 +176,7 @@ object PreprocPerPatSeriesToVector {
         time {
           val df = config.map.map(map0 =>
             Some(spark.read.format("csv").option("header", true).load(config.input_directory + "/" + map0)
-              .map(row => row.getString(0)).collect.toSeq))
+              .map(row => row.getString(0)).collect.toSet))
 
 
           def col_filter(col:String, start_date: DateTime) : Option[(String, JsValue)]= {
