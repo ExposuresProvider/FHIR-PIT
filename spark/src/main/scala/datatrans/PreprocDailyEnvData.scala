@@ -66,7 +66,7 @@ object PreprocDailyEnvData {
           val itr = input_dir_fs.listFiles(input_dir_path, false)
           while (itr.hasNext) {
             val file = itr.next()
-            if (file.getPath.getName.endsWith(".csv")) {
+            if (file.getPath.getName.matches(raw"C\d*R\d*.csv")) {
               preproceEnvData(config, spark, file.getPath.toString)
             }
           }
