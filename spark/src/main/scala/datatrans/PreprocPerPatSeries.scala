@@ -1,5 +1,7 @@
 package datatrans
 
+import java.util.concurrent.atomic.AtomicInteger
+
 import datatrans.Utils._
 import org.apache.hadoop.fs.Path
 import org.apache.spark.sql.{Row, SparkSession}
@@ -40,7 +42,6 @@ object PreprocPerPatSeries {
             time {
 
               val hc = spark.sparkContext.hadoopConfiguration
-              println("processing pid " + p)
 
               val pdif = config.input_directory + "/patient_dimension/patient_num=" + p + ".csv"
               val vdif = config.input_directory + "/visit_dimension/patient_num=" + p + ".csv"
@@ -126,7 +127,12 @@ object PreprocPerPatSeries {
 
                   val patl = pddf0.select("patient_num").map(r => r.getString(0)).collect.toList.par
 
-                  patl.foreach(proc_pid)
+                  val count = new AtomicInteger(0)
+                  val n = patl.size
+                  patl.foreach(pid => {
+                    println("processing " + count.incrementAndGet + " / " + n + " " + pid)
+                    proc_pid(pid)
+                  })
                 case None =>
               }
           }

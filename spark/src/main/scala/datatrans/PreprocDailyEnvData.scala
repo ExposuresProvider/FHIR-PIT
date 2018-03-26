@@ -75,7 +75,7 @@ object PreprocDailyEnvData {
           val count = new AtomicInteger(0)
           val n = itr.size
           for (file <- itr) {
-            println("processing " + count.incrementAndGet() + " / " + n + " " + file.getPath)
+            println("processing " + count.incrementAndGet + " / " + n + " " + file.getPath)
             preproceEnvData(config, spark, file.getPath.toString)
           }
         }
