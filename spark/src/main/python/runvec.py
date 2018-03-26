@@ -1,8 +1,5 @@
 import os
 import sys
-import subprocess
-from timeit import default_timer as timer
-import sys
 from utils import submit
 
 dir = sys.argv[3]
