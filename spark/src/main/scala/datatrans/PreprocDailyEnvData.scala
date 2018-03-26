@@ -69,6 +69,7 @@ object PreprocDailyEnvData {
           for (file <- itr) {
             println("processing " + counter + " / " + n + " " + file.getPath)
             preproceEnvData(config, spark, file.getPath.toString)
+            counter += 1
           }
         }
       case None =>
