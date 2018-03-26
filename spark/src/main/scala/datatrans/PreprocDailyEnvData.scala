@@ -23,6 +23,10 @@ object PreprocDailyEnvData {
       val output_dir_path = new Path(output_dir)
       val output_dir_fs = output_dir_path.getFileSystem(hc)
 
+      if (output_dir_fs.exists(output_dir_path)) {
+        output_dir_fs.delete(output_dir_path, true)
+      }
+
       val output_filename = f"${config.output_prefix}${name}Daily.csv"
       val output_file_path = new Path(output_filename)
       val output_file_fs = output_file_path.getFileSystem(hc)
@@ -64,13 +68,11 @@ object PreprocDailyEnvData {
 
           val itr = input_dir_fs.listStatus(input_dir_path, new PathFilter {
             override def accept(path : Path) : Boolean = path.getName.matches(raw"C\d*R\d*.csv")
-          })
-          var counter = 0
+          }).par
           val n = itr.size
-          for (file <- itr) {
-            println("processing " + counter + " / " + n + " " + file.getPath)
+          for ((file, i) <- itr.zipWithIndex) {
+            println("processing " + i + " / " + n + " " + file.getPath)
             preproceEnvData(config, spark, file.getPath.toString)
-            counter += 1
           }
         }
       case None =>
