@@ -1,16 +1,17 @@
 package datatrans
 
+import scala.ref.SoftReference
+
 import datatrans.Utils._
 import org.apache.hadoop.fs.Path
-import org.apache.spark.sql.{Row, SparkSession}
+import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.functions._
 import play.api.libs.json._
-
 import org.joda.time._
-
 import scopt._
 
+import scala.ref.SoftReference
 import scala.util.matching.Regex
 
 case class Config(
@@ -26,32 +27,53 @@ case class Config(
 
 object PreprocPerPatSeriesToVector {
   def loadEnvData(config : Config, spark: SparkSession, lat: Double, lon:Double, start_date: DateTime) = {
-    val year = start_date.year.get
-    val (row, col) = latlon2rowcol(lat, lon, year)
-
-
-    val filename = f"${config.input_directory}/cmaq$year/C$col%03dR$row%03dDaily.csv"
-    val df = spark.read.format("csv").load(filename).toDF("a","o3_avg","pmij_avg","o3_max","pmij_max")
 
     var env = Json.obj()
 
     for(i <- -7 until 7) {
       val start_time = start_date.plusDays(i)
-      val end_time = start_date.plusDays(i + 1)
 
-      val aggregate = df.filter(df("start_date") === start_time.toString("%Y-%m-%D")).select("o3_avg", "pmij_avg", "o3_max", "pmij_max").first
-      env ++= Json.obj(
-        "o3_avg_day"+i -> aggregate.getDouble(0),
-        "pmij_avg_day"+i -> aggregate.getDouble(1),
-        "o3_max_day"+i -> aggregate.getDouble(2),
-        "pmij_max_day"+i -> aggregate.getDouble(3)
-      )
+      loadDailyEnvData(config, spark, lat, lon, start_date) match {
+        case Some(obj) =>
+          env += "o3_avg_day"+i -> obj("o3_avg")
+          env += "pmij_avg_day"+i -> obj("pmij_avg")
+          env += "o3_max_day"+i -> obj("o3_max")
+          env += "pmij_max_day"+i -> obj("pmij_avg")
+        case None =>
+      }
     }
 
     env
   }
 
-  def proc_pid(config : Config, spark: SparkSession, p:String, col_filter: (String, DateTime) => Option[(String, JsValue)], crit : JsObject => Boolean) =
+  val cache = scala.collection.mutable.Map[String, SoftReference[DataFrame]]()
+
+  def loadDailyEnvData(config : Config, spark: SparkSession, lat: Double, lon:Double, start_date: DateTime) : Option[JsObject] = {
+    val year = start_date.year.get
+    val (row, col) = latlon2rowcol(lat, lon, year)
+
+    if (row == -1 || col == -1) {
+      None
+    } else {
+      val filename = f"${config.input_directory}/cmaq$year/C$col%03dR$row%03dDaily.csv"
+      val df = cache.get(filename).flatMap(x => x.get).getOrElse {
+        val df = spark.read.format("csv").load(filename).toDF("a","o3_avg","pmij_avg","o3_max","pmij_max")
+        cache(filename) = new SoftReference(df)
+        df
+      }
+
+      val aggregate = df.filter(df("start_date") === start_date.toString("%Y-%m-%D")).select("o3_avg", "pmij_avg", "o3_max", "pmij_max").first
+      Some(Json.obj(
+          "o3_avg" -> aggregate.getDouble(0),
+          "pmij_avg" -> aggregate.getDouble(1),
+          "o3_max" -> aggregate.getDouble(2),
+          "pmij_max" -> aggregate.getDouble(3)
+        ))
+
+    }
+  }
+
+  def proc_pid(config : Config, spark: SparkSession, p:String, col_filter: (String, DateTime) => Seq[(String, JsValue)], crit : JsObject => Boolean) =
     time {
 
       println("processing pid " + p)
@@ -93,10 +115,9 @@ object PreprocPerPatSeriesToVector {
                     encounter \ "inout_cd" match {
                       case JsDefined (y) =>
                         val inout_cd = y.as[String]
-                        col_filter(inout_cd, start_date) match {
-                          case Some((col, value)) =>
+                        col_filter(inout_cd, start_date).foreach {
+                          case (col, value) =>
                             insertOrUpdate(listBuf, start_date, col, value)
-                          case None =>
                         }
                       case _ =>
                         println ("no inout cd " + visit)
@@ -114,10 +135,9 @@ object PreprocPerPatSeriesToVector {
                     instances.as[JsObject].fields.foreach {
                       case (_, modifiers) =>
                         val start_date = DateTime.parse (modifiers.as[JsObject].values.toSeq (0) ("start_date").as[String] )
-                        col_filter(concept_cd, start_date) match {
-                          case Some((col, value)) =>
+                        col_filter(concept_cd, start_date).foreach {
+                          case (col, value) =>
                             insertOrUpdate(listBuf, start_date, col, value)
-                          case None =>
                         }
 
                     }
@@ -149,6 +169,9 @@ object PreprocPerPatSeriesToVector {
       }
     }
 
+  case class MDCTN_map_entry (name:String, rxCUIList:Seq[String], rxCUIList2:Seq[String])
+  implicit val MDCTN_map_entry_encoder : org.apache.spark.sql.Encoder[(String, MDCTN_map_entry)] = org.apache.spark.sql.Encoders.kryo[(String, MDCTN_map_entry)]
+
 
   def main(args: Array[String]) {
     val parser = new OptionParser[Config]("series_to_vector") {
@@ -174,22 +197,34 @@ object PreprocPerPatSeriesToVector {
       case Some(config) =>
 
         time {
-          val df = config.map.map(map0 =>
-            Some(spark.read.format("csv").option("header", true).load(config.input_directory + "/" + map0)
-              .map(row => row.getString(0)).collect.toSet))
 
+          case class MDCTN_map(mdctn_rxcui : Map[String, MDCTN_map_entry], rxcui_name : Map[String, String])
+          val df = config.map.map(map0 => {
+            val df = spark.read.format("csv").option("header", false).load(config.input_directory + "/" + map0)
+            val valmap = df.map(row => (row.getString(0),MDCTN_map_entry(row.getString(2).stripSuffix(";"), row.getString(1).split(";"), row.getString(3).split(";")))).collect.toMap
+            val colmap = valmap.flatMap {
+              case (_, MDCTN_map_entry(name, rxCUIList, _)) =>
+                rxCUIList.map(rxCUI => (rxCUI, name))
+            }
+            MDCTN_map(valmap, colmap)
+          })
 
-          def col_filter(col:String, start_date: DateTime) : Option[(String, JsValue)]= {
-            if (df.isDefined && df.get.contains(col)) {
-              Some((col, JsNumber(1)))
+          def col_filter(col:String, start_date: DateTime) : Seq[(String, JsValue)]= {
+            if (df.isDefined && df.get.mdctn_rxcui.contains(col)) {
+              val map_entry = (df.get.mdctn_rxcui)(col)
+              val colmap = df.get.rxcui_name
+              map_entry.rxCUIList.flatMap(col => {
+                val colname = colmap(col)
+                Seq((colname, JsNumber(1)), (colname + "2", JsString(map_entry.rxCUIList2.mkString(";"))))
+              })
             } else if(config.regex.isDefined) {
               if(col.matches(config.regex.get))
-                Some((col, JsNumber(1)))
+                Seq((col, JsNumber(1)))
               else
-                None
+                Seq.empty
 
             } else {
-              Some((col, JsNumber(1)))
+              Seq((col, JsNumber(1)))
             }
           }
 
