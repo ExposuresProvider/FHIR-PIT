@@ -150,6 +150,20 @@ object Utils {
 
   }
 
+  def groupByAndAggregate(df: DataFrame, groupcols: Seq[String], keycols : Seq[String], cols : Seq[String], col:String) : DataFrame = {
+    println("processing " + col)
+
+    val pivot = new Pivot(
+      keycols,
+      cols
+    )
+
+    df.groupBy(groupcols.map(x => df.col(x)) : _*).agg(pivot(
+      (keycols ++ cols).map(x => df.col(x)) : _*
+    ).as(col))
+
+  }
+
   def writeToFile(hc:Configuration, path :String, text :String) = {
     val bytes = text.getBytes ("utf-8")
     val output_file_path = new Path (path)
