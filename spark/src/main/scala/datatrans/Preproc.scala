@@ -57,7 +57,7 @@ object Preproc {
         val mdctn = spark.sql("select patient_num, encounter_num, concept_cd, instance_num, modifier_cd, valueflag_cd, valtype_cd, nval_num, tval_char, units_cd, start_date, end_date" +
           " from global_temp.observation_fact where concept_cd like 'MDCTN:%'")
 
-        val mdctn_wide = longToWide(mdctn, Seq("patient_num", "encounter_num"), Seq("concept_cd", "instance_num", "modifier_cd"), cols, "mdctn")
+        val mdctn_wide = groupByAndAggregate(mdctn, Seq("patient_num", "encounter_num"), Seq("concept_cd", "instance_num", "modifier_cd"), cols, "mdctn")
 
         mdctn_wide.persist(StorageLevel.MEMORY_AND_DISK)
 
@@ -70,7 +70,7 @@ object Preproc {
       val icd_wide = time {
         val icd = spark.sql("select patient_num, encounter_num, concept_cd, start_date, end_date from global_temp.observation_fact where concept_cd like 'ICD%'")
 
-        val icd_wide = longToWide(icd, Seq("patient_num", "encounter_num"), Seq("concept_cd"), Seq("start_date", "end_date"), "icd")
+        val icd_wide = groupByAndAggregate(icd, Seq("patient_num", "encounter_num"), Seq("concept_cd"), Seq("start_date", "end_date"), "icd")
 
         icd_wide.persist(StorageLevel.MEMORY_AND_DISK)
 
@@ -83,7 +83,7 @@ object Preproc {
       val loinc_wide = time {
         val loinc = spark.sql("select patient_num, encounter_num, concept_cd, instance_num, valueflag_cd, valtype_cd, nval_num, tval_char, units_cd, start_date, end_date from global_temp.observation_fact where concept_cd like 'LOINC:%'")
 
-        val loinc_wide = longToWide(loinc, Seq("patient_num", "encounter_num"), Seq("concept_cd", "instance_num"), cols, "loinc")
+        val loinc_wide = groupByAndAggregate(loinc, Seq("patient_num", "encounter_num"), Seq("concept_cd", "instance_num"), cols, "loinc")
 
         loinc_wide.persist(StorageLevel.MEMORY_AND_DISK)
 
@@ -96,7 +96,7 @@ object Preproc {
       val vital_wide = time {
         val vital = spark.sql("select patient_num, encounter_num, concept_cd, instance_num, valueflag_cd, valtype_cd, nval_num, tval_char, units_cd, start_date, end_date from global_temp.observation_fact where concept_cd like 'VITAL:%'")
 
-        val vital_wide = longToWide(vital, Seq("patient_num", "encounter_num"), Seq("concept_cd", "instance_num"), cols, "vital")
+        val vital_wide = groupByAndAggregate(vital, Seq("patient_num", "encounter_num"), Seq("concept_cd", "instance_num"), cols, "vital")
 
         vital_wide.persist(StorageLevel.MEMORY_AND_DISK)
 

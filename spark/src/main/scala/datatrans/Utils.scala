@@ -111,33 +111,9 @@ object Utils {
 
     }
   }
-  def longToWide(df: DataFrame, indexcols: Seq[String], keycols : Seq[String], cols : Seq[String], col:String) : DataFrame = {
-    println("processing " + col)
-    val nkeyvals = df.select(keycols.map(x=>df(x)):_*).distinct.count //rdd.map(r => r.togetString(0)).collect.toSeq
-    val nrows = df.count
-
-    println(nrows + " rows")
-    println(nkeyvals + " columns")
-
-    val pivot = new Pivot(
-      keycols,
-      cols
-    )
-
-    df.groupBy(indexcols.map(x => df.col(x)) : _*).agg(pivot(
-      (keycols ++ cols).map(x => df.col(x)) : _*
-    ).as(col))
-
-  }
-
 
   def aggregate(df: DataFrame, keycols : Seq[String], cols : Seq[String], col:String) : DataFrame = {
     println("processing " + col)
-    val nkeyvals = df.select(keycols.map(x=>df(x)):_*).distinct.count //rdd.map(r => r.togetString(0)).collect.toSeq
-    val nrows = df.count
-
-    println(nrows + " rows")
-    println(nkeyvals + " columns")
 
     val pivot = new Pivot(
       keycols,
