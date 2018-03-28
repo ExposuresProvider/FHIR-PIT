@@ -42,10 +42,10 @@ object PreprocPerPatSeriesToVector {
           env += "pmij_avg_day"+i -> obj("pmij_avg")
           env += "o3_max_day"+i -> obj("o3_max")
           env += "pmij_max_day"+i -> obj("pmij_max")
-          env += "o3_min_day"+i -> obj("o3_min")
-          env += "pmij_min_day"+i -> obj("pmij_min")
-          env += "o3_stddev_day"+i -> obj("o3_stddev")
-          env += "pmij_stddev_day"+i -> obj("pmij_stddev")
+//          env += "o3_min_day"+i -> obj("o3_min")
+//          env += "pmij_min_day"+i -> obj("pmij_min")
+//          env += "o3_stddev_day"+i -> obj("o3_stddev")
+//          env += "pmij_stddev_day"+i -> obj("pmij_stddev")
         case None =>
       }
     }
@@ -64,11 +64,11 @@ object PreprocPerPatSeriesToVector {
     } else {
       val filename = f"${config.environmental_data}/cmaq$year/C$col%03dR$row%03dDaily.csv"
       val df = cache.get(filename).flatMap(x => x.get).getOrElse {
-        val df = spark.read.format("csv").load(filename).toDF("a", "o3_avg", "pmij_avg", "o3_max", "pmij_max", "o3_min", "pmij_min", "o3_stddev", "pmij_stddev")
+        val df = spark.read.format("csv").load(filename).toDF("a", "o3_avg", "pmij_avg", "o3_max", "pmij_max"/*, "o3_min", "pmij_min", "o3_stddev", "pmij_stddev"*/)
         cache(filename) = new SoftReference(df)
         df
       }
-      val aggregatedf = df.filter(df("a") === start_date.toString("yyyy-MM-dd")).select("o3_avg", "pmij_avg", "o3_max", "pmij_max", "o3_min", "pmij_min", "o3_stddev", "pmij_stddev")
+      val aggregatedf = df.filter(df("a") === start_date.toString("yyyy-MM-dd")).select("o3_avg", "pmij_avg", "o3_max", "pmij_max"/*, "o3_min", "pmij_min", "o3_stddev", "pmij_stddev"*/)
       if (aggregatedf.count == 0) {
         println("env data not found" + " " + "row " + row + " col " + col + " start_date " + start_date.toString("yyyy-MM-dd"))
         None
@@ -78,11 +78,11 @@ object PreprocPerPatSeriesToVector {
           "o3_avg" -> aggregate.getString(0).toDouble,
           "pmij_avg" -> aggregate.getString(1).toDouble,
           "o3_max" -> aggregate.getString(2).toDouble,
-          "pmij_max" -> aggregate.getString(3).toDouble,
+          "pmij_max" -> aggregate.getString(3).toDouble/*,
           "o3_min" -> aggregate.getString(4).toDouble,
           "pmij_min" -> aggregate.getString(5).toDouble,
           "o3_stddev" -> aggregate.getString(6).toDouble,
-          "pmij_stddev" -> aggregate.getString(7).toDouble
+          "pmij_stddev" -> aggregate.getString(7).toDouble*/
         ))
 
       }
