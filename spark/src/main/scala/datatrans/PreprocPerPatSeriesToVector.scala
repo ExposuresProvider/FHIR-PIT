@@ -11,6 +11,7 @@ import org.apache.spark.sql.functions._
 import play.api.libs.json._
 import org.joda.time._
 import org.joda.time.format.DateTimeFormat
+import play.api.libs.json.Json.JsValueWrapper
 import scopt._
 
 import scala.ref.SoftReference
@@ -29,23 +30,17 @@ case class Config(
                  )
 
 object PreprocPerPatSeriesToVector {
-  def loadEnvData(config : Config, spark: SparkSession, lat: Double, lon:Double, start_date: DateTime) = {
+  def loadEnvData(config : Config, spark: SparkSession, lat: Double, lon:Double, start_date: DateTime, indices : Seq[String], statistics : Seq[String]) = {
 
     var env = Json.obj()
+    val names = for(i <- statistics; j <- indices) yield f"$j_$i"
 
     for(i <- -7 until 7) {
       val start_time = start_date.plusDays(i)
 
-      loadDailyEnvData(config, spark, lat, lon, start_date) match {
+      loadDailyEnvData(config, spark, lat, lon, start_date, names) match {
         case Some(obj) =>
-          env += "o3_avg_day"+i -> obj("o3_avg")
-          env += "pmij_avg_day"+i -> obj("pmij_avg")
-          env += "o3_max_day"+i -> obj("o3_max")
-          env += "pmij_max_day"+i -> obj("pmij_max")
-//          env += "o3_min_day"+i -> obj("o3_min")
-//          env += "pmij_min_day"+i -> obj("pmij_min")
-//          env += "o3_stddev_day"+i -> obj("o3_stddev")
-//          env += "pmij_stddev_day"+i -> obj("pmij_stddev")
+          env ++= Json.obj(names.map(x => x + "_day" + i -> (obj(x) : JsValueWrapper)) : _*)
         case None =>
       }
     }
@@ -55,7 +50,7 @@ object PreprocPerPatSeriesToVector {
 
   val cache = scala.collection.mutable.Map[String, SoftReference[DataFrame]]()
 
-  def loadDailyEnvData(config : Config, spark: SparkSession, lat: Double, lon:Double, start_date: DateTime) : Option[JsObject] = {
+  def loadDailyEnvData(config : Config, spark: SparkSession, lat: Double, lon:Double, start_date: DateTime, names : Seq[String]) : Option[JsObject] = {
     val year = start_date.year.get
     val (row, col) = latlon2rowcol(lat, lon, year)
 
@@ -64,27 +59,17 @@ object PreprocPerPatSeriesToVector {
     } else {
       val filename = f"${config.environmental_data}/cmaq$year/C$col%03dR$row%03dDaily.csv"
       val df = cache.get(filename).flatMap(x => x.get).getOrElse {
-        val df = spark.read.format("csv").load(filename).toDF("a", "o3_avg", "pmij_avg", "o3_max", "pmij_max"/*, "o3_min", "pmij_min", "o3_stddev", "pmij_stddev"*/)
+        val df = spark.read.format("csv").load(filename).toDF(("a" :: names) : _*)
         cache(filename) = new SoftReference(df)
         df
       }
-      val aggregatedf = df.filter(df("a") === start_date.toString("yyyy-MM-dd")).select("o3_avg", "pmij_avg", "o3_max", "pmij_max"/*, "o3_min", "pmij_min", "o3_stddev", "pmij_stddev"*/)
+      val aggregatedf = df.filter(df("a") === start_date.toString("yyyy-MM-dd")).select(names.map(df.col) : _*)
       if (aggregatedf.count == 0) {
         println("env data not found" + " " + "row " + row + " col " + col + " start_date " + start_date.toString("yyyy-MM-dd"))
         None
       } else {
         val aggregate = aggregatedf.first
-        Some(Json.obj(
-          "o3_avg" -> aggregate.getString(0).toDouble,
-          "pmij_avg" -> aggregate.getString(1).toDouble,
-          "o3_max" -> aggregate.getString(2).toDouble,
-          "pmij_max" -> aggregate.getString(3).toDouble/*,
-          "o3_min" -> aggregate.getString(4).toDouble,
-          "pmij_min" -> aggregate.getString(5).toDouble,
-          "o3_stddev" -> aggregate.getString(6).toDouble,
-          "pmij_stddev" -> aggregate.getString(7).toDouble*/
-        ))
-
+        Some(Json.obj((0 until names.size).map(i => names(i) -> (JsNumber(aggregate.getString(i).toDouble) : JsValueWrapper)) : _*))
       }
 
     }
@@ -174,7 +159,7 @@ object PreprocPerPatSeriesToVector {
               val data = listBuf.toSeq.map {
                 case (start_date, vec) =>
                   val age = Years.yearsBetween (birth_date_joda, start_date).getYears
-                  val env = loadEnvData(config, spark, lat, lon, start_date)
+                  val env = loadEnvData(config, spark, lat, lon, start_date, Seq("o3", "pmij"), Seq("avg", "max"/*, "min", "stddev"*/))
                   Json.obj (
                     "race_cd" -> race_cd,
                     "sex_cd" -> sex_cd,
