@@ -1,7 +1,6 @@
 package datatrans
 
 import scala.ref.SoftReference
-
 import datatrans.Utils._
 import org.apache.hadoop.fs.Path
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
@@ -9,6 +8,7 @@ import org.apache.spark.sql.types._
 import org.apache.spark.sql.functions._
 import play.api.libs.json._
 import org.joda.time._
+import org.joda.time.format.DateTimeFormat
 import scopt._
 
 import scala.ref.SoftReference
@@ -104,7 +104,7 @@ object PreprocPerPatSeriesToVector {
         jsvalue \ "birth_date" match {
           case JsDefined (bd) =>
             val birth_date = bd.as[String]
-            val birth_date_joda = DateTime.parse (birth_date)
+            val birth_date_joda = DateTime.parse (birth_date, DateTimeFormat.forPattern("M/d/y H:m"))
 
             val encounters_visit = visits.fields
             encounters_visit.foreach {
