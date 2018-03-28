@@ -227,7 +227,7 @@ object PreprocPerPatSeriesToVector {
               val row3 = row.getString(3)
               (
                 row.getString(0),
-                MDCTN_map_entry(row.getString(2).split(";"), row.getString(1).split(";"), if (row3 == null) Seq.empty else row3.split(";"))
+                MDCTN_map_entry(row.getString(2).split(";"), row.getString(1).split(";"), if (row3 == null) Seq("[In]") else row3.split(";"))
               )
             }).collect.toMap
 
