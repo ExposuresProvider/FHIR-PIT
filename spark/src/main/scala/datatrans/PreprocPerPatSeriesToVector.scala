@@ -111,7 +111,7 @@ object PreprocPerPatSeriesToVector {
               case (visit, encounter) =>
                 encounter \ "start_date" match {
                   case JsDefined (x) =>
-                    val start_date = DateTime.parse (x.as[String] )
+                    val start_date = DateTime.parse (x.as[String], DateTimeFormat.forPattern("Y-M-d H:m:s") )
                     encounter \ "inout_cd" match {
                       case JsDefined (y) =>
                         val inout_cd = y.as[String]
