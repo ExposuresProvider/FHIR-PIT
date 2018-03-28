@@ -93,88 +93,98 @@ object PreprocPerPatSeriesToVector {
       val input_file_path = new Path(input_file)
       val input_file_file_system = input_file_path.getFileSystem(hc)
 
-      if(!input_file_file_system.exists(input_file_path)) {
-        println("json not found, skipped " + p)
+      val output_file = config.output_prefix + p
+      val output_file_path = new Path(output_file)
+      val output_file_file_system = output_file_path.getFileSystem(hc)
+
+      if(output_file_file_system.exists(output_file_path)) {
+        println(output_file + " exists")
       } else {
-        println("loading json from " + input_file)
-        val input_file_input_stream = input_file_file_system.open(input_file_path)
 
-        val jsvalue = Json.parse(input_file_input_stream)
-        input_file_input_stream.close()
-        val listBuf = scala.collection.mutable.Map[DateTime, JsObject]() // a list of concept, start_time
+        if(!input_file_file_system.exists(input_file_path)) {
+          println("json not found, skipped " + p)
+        } else {
+          println("loading json from " + input_file)
+          val input_file_input_stream = input_file_file_system.open(input_file_path)
 
-        val visits = jsvalue("visit").as[JsObject]
-        val observations = jsvalue("observation").as[JsObject]
-        val sex_cd = jsvalue("sex_cd").as[String]
-        val race_cd = jsvalue("race_cd").as[String]
-        val lat = jsvalue("lat").as[Double]
-        val lon = jsvalue("lon").as[Double]
+          val jsvalue = Json.parse(input_file_input_stream)
+          input_file_input_stream.close()
+          val listBuf = scala.collection.mutable.Map[DateTime, JsObject]() // a list of concept, start_time
 
-        jsvalue \ "birth_date" match {
-          case JsDefined (bd) =>
-            val birth_date = bd.as[String]
-            val birth_date_joda = DateTime.parse (birth_date, DateTimeFormat.forPattern("M/d/y H:m"))
+          val visits = jsvalue("visit").as[JsObject]
+          val observations = jsvalue("observation").as[JsObject]
+          val sex_cd = jsvalue("sex_cd").as[String]
+          val race_cd = jsvalue("race_cd").as[String]
+          val lat = jsvalue("lat").as[Double]
+          val lon = jsvalue("lon").as[Double]
 
-            val encounters_visit = visits.fields
-            encounters_visit.foreach {
-              case (visit, encounter) =>
-                encounter \ "start_date" match {
-                  case JsDefined (x) =>
-                    val start_date = DateTime.parse (x.as[String], DateTimeFormat.forPattern("y-M-d H:m:s") )
-                    encounter \ "inout_cd" match {
-                      case JsDefined (y) =>
-                        val inout_cd = y.as[String]
-                        col_filter(inout_cd, start_date).foreach {
-                          case (col, value) =>
-                            insertOrUpdate(listBuf, start_date, col, value)
-                        }
-                      case _ =>
-                        println ("no inout cd " + visit)
-                    }
-                  case _ =>
-                    println ("no start date " + visit)
-                }
-            }
+          jsvalue \ "birth_date" match {
+            case JsDefined (bd) =>
+              val birth_date = bd.as[String]
+              val birth_date_joda = DateTime.parse (birth_date, DateTimeFormat.forPattern("M/d/y H:m"))
 
-            val encounters = observations.fields
-            encounters.foreach {
-              case (_, encounter) =>
-                encounter.as[JsObject].fields.foreach {
-                  case (concept_cd, instances) =>
-                    instances.as[JsObject].fields.foreach {
-                      case (_, modifiers) =>
-                        val start_date = DateTime.parse (modifiers.as[JsObject].values.toSeq (0) ("start_date").as[String], DateTimeFormat.forPattern("Y-M-d H:m:s") )
-                        col_filter(concept_cd, start_date).foreach {
-                          case (col, value) =>
-                            insertOrUpdate(listBuf, start_date, col, value)
-                        }
+              val encounters_visit = visits.fields
+              encounters_visit.foreach {
+                case (visit, encounter) =>
+                  encounter \ "start_date" match {
+                    case JsDefined (x) =>
+                      val start_date = DateTime.parse (x.as[String], DateTimeFormat.forPattern("y-M-d H:m:s") )
+                      encounter \ "inout_cd" match {
+                        case JsDefined (y) =>
+                          val inout_cd = y.as[String]
+                          col_filter(inout_cd, start_date).foreach {
+                            case (col, value) =>
+                              insertOrUpdate(listBuf, start_date, col, value)
+                          }
+                        case _ =>
+                          println ("no inout cd " + visit)
+                      }
+                    case _ =>
+                      println ("no start date " + visit)
+                  }
+              }
 
-                    }
-                }
-            }
+              val encounters = observations.fields
+              encounters.foreach {
+                case (_, encounter) =>
+                  encounter.as[JsObject].fields.foreach {
+                    case (concept_cd, instances) =>
+                      instances.as[JsObject].fields.foreach {
+                        case (_, modifiers) =>
+                          val start_date = DateTime.parse (modifiers.as[JsObject].values.toSeq (0) ("start_date").as[String], DateTimeFormat.forPattern("Y-M-d H:m:s") )
+                          col_filter(concept_cd, start_date).foreach {
+                            case (col, value) =>
+                              insertOrUpdate(listBuf, start_date, col, value)
+                          }
+
+                      }
+                  }
+              }
 
 
 
-            val data = listBuf.toSeq.map {
-              case (start_date, vec) =>
-                val age = Years.yearsBetween (birth_date_joda, start_date).getYears
-                val env = loadEnvData(config, spark, lat, lon, start_date)
-                Json.obj (
-                  "race_cd" -> race_cd,
-                  "sex_cd" -> sex_cd,
-                  "birth_date" -> birth_date,
-                  "age" -> age,
-                  "start_date" -> start_date.toString("y-M-d")
-                ) ++ vec ++ env
-            }.filter(crit)
+              val data = listBuf.toSeq.map {
+                case (start_date, vec) =>
+                  val age = Years.yearsBetween (birth_date_joda, start_date).getYears
+                  val env = loadEnvData(config, spark, lat, lon, start_date)
+                  Json.obj (
+                    "race_cd" -> race_cd,
+                    "sex_cd" -> sex_cd,
+                    "birth_date" -> birth_date,
+                    "age" -> age,
+                    "start_date" -> start_date.toString("y-M-d")
+                  ) ++ vec ++ env
+              }.filter(crit)
 
-            if (data.nonEmpty) {
-              val json = data.map(obj => Json.stringify (obj)+"\n").mkString("")
-              writeToFile(hc, config.output_prefix + p, json)
-            }
+              if (data.nonEmpty) {
+                val json = data.map(obj => Json.stringify (obj)+"\n").mkString("")
+                writeToFile(hc, output_file, json)
+              }
 
-          case _ =>
-            println("no birth date " + p)
+            case _ =>
+              println("no birth date " + p)
+
+          }
 
         }
       }
@@ -198,7 +208,7 @@ object PreprocPerPatSeriesToVector {
       opt[String]("map").action((x,c) => c.copy(map = Some(x)))
     }
 
-    val spark = SparkSession.builder().appName("datatrans preproc").config("spark.sql.pivotMaxValues", 100000).config("spark.executor.memory", "16g").config("spark.driver.memory", "64g").getOrCreate()
+    val spark = SparkSession.builder().appName("datatrans preproc").config("spark.sql.pivotMaxValues", 100000).config("spark.executor.memory", "2g").config("spark.driver.memory", "64g").getOrCreate()
 
     spark.sparkContext.setLogLevel("WARN")
 
