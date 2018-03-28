@@ -6,6 +6,7 @@ import datatrans.Utils._
 import org.apache.hadoop.fs.{FileUtil, Path, PathFilter}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
+import org.apache.spark.sql.types.{StructField, _}
 import org.joda.time._
 import scopt._
 
@@ -17,8 +18,17 @@ case class PreprocDailyEnvDataConfig(
                  )
 
 object PreprocDailyEnvData {
+  val schema = StructType(
+    Seq(
+      StructField("a", TimestampType, true),
+      StructField("o3", DoubleType, true),
+      StructField("pmij", DoubleType, true)
+    ))
+
   def preproceEnvData(config : PreprocDailyEnvDataConfig, spark: SparkSession, filename : String) =
     time {
+
+
       val hc = spark.sparkContext.hadoopConfiguration
       val name = new Path(filename).getName.split("[.]")(0)
       val output_dir = f"${config.output_prefix}${name}Daily"
@@ -33,9 +43,9 @@ object PreprocDailyEnvData {
       val output_file_path = new Path(output_filename)
       val output_file_fs = output_file_path.getFileSystem(hc)
       if(!output_file_fs.exists(output_file_path)) {
-        val df = spark.read.format("csv").load(filename).toDF("a", "o3", "pmij")
+        val df = spark.read.format("csv").schema(schema).load(filename)
 
-        val aggregate = df.withColumn("start_date", to_date(to_timestamp(df("a")))).groupBy("start_date").agg(
+        val aggregate = df.withColumn("start_date", to_date(df("a"))).groupBy("start_date").agg(
           avg("o3").alias("o3_avg"),
           avg("pmij").alias("pmij_avg"),
           max("o3").alias("o3_max"),
