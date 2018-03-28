@@ -70,10 +70,10 @@ object PreprocPerPatSeriesToVector {
       } else {
         val aggregate = aggregatedf.first
         Some(Json.obj(
-          "o3_avg" -> aggregate.getString(0).toDouble,
-          "pmij_avg" -> aggregate.getString(1).toDouble,
-          "o3_max" -> aggregate.getString(2).toDouble,
-          "pmij_max" -> aggregate.getString(3).toDouble
+          "o3_avg" -> aggregate.getDouble(1),
+          "pmij_avg" -> aggregate.getDouble(2),
+          "o3_max" -> aggregate.getDouble(3),
+          "pmij_max" -> aggregate.getDouble(4)
         ))
 
       }
