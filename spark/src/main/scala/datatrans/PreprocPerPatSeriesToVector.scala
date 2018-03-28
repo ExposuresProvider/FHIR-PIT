@@ -155,7 +155,7 @@ object PreprocPerPatSeriesToVector {
                   "sex_cd" -> sex_cd,
                   "birth_date" -> birth_date,
                   "age" -> age,
-                  "start_date" -> start_date.toString("%Y-%m-%D")
+                  "start_date" -> start_date.toString("Y-m-D")
                 ) ++ vec ++ env
             }.filter(crit)
 
@@ -236,7 +236,7 @@ object PreprocPerPatSeriesToVector {
           }
 
           def crit(jsObject: JsObject) = {
-            val start_date = DateTime.parse(jsObject("start_date").as[String])
+            val start_date = DateTime.parse(jsObject("start_date").as[String], DateTimeFormat.forPattern("Y-M-d"))
             (config.start_date.isEmpty || config.start_date.get.isEqual(start_date) || config.start_date.get.isBefore(start_date)) && (config.end_date.isEmpty || start_date.isBefore(config.end_date.get))
           }
 
