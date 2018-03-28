@@ -134,7 +134,7 @@ object PreprocPerPatSeriesToVector {
                   case (concept_cd, instances) =>
                     instances.as[JsObject].fields.foreach {
                       case (_, modifiers) =>
-                        val start_date = DateTime.parse (modifiers.as[JsObject].values.toSeq (0) ("start_date").as[String] )
+                        val start_date = DateTime.parse (modifiers.as[JsObject].values.toSeq (0) ("start_date").as[String], DateTimeFormat.forPattern("Y-M-d H:m:s") )
                         col_filter(concept_cd, start_date).foreach {
                           case (col, value) =>
                             insertOrUpdate(listBuf, start_date, col, value)
