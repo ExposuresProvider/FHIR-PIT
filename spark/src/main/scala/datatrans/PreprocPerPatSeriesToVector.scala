@@ -62,7 +62,7 @@ object PreprocPerPatSeriesToVector {
         df
       }
 
-      val aggregate = df.filter(df("start_date") === start_date.toString("YYYY-mm-DD")).select("o3_avg", "pmij_avg", "o3_max", "pmij_max").first
+      val aggregate = df.filter(df("start_date") === start_date.toString("y-M-d")).select("o3_avg", "pmij_avg", "o3_max", "pmij_max").first
       Some(Json.obj(
           "o3_avg" -> aggregate.getDouble(0),
           "pmij_avg" -> aggregate.getDouble(1),
@@ -111,7 +111,7 @@ object PreprocPerPatSeriesToVector {
               case (visit, encounter) =>
                 encounter \ "start_date" match {
                   case JsDefined (x) =>
-                    val start_date = DateTime.parse (x.as[String], DateTimeFormat.forPattern("Y-M-d H:m:s") )
+                    val start_date = DateTime.parse (x.as[String], DateTimeFormat.forPattern("y-M-d H:m:s") )
                     encounter \ "inout_cd" match {
                       case JsDefined (y) =>
                         val inout_cd = y.as[String]
@@ -155,7 +155,7 @@ object PreprocPerPatSeriesToVector {
                   "sex_cd" -> sex_cd,
                   "birth_date" -> birth_date,
                   "age" -> age,
-                  "start_date" -> start_date.toString("YYYY-mm-DD")
+                  "start_date" -> start_date.toString("y-M-d")
                 ) ++ vec ++ env
             }.filter(crit)
 
