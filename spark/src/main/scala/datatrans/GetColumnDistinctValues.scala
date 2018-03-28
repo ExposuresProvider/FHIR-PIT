@@ -35,7 +35,7 @@ object GetColumnDistinctValues {
       opt[String]("output_file").required.action((x,c) => c.copy(output_file = x))
     }
 
-    val spark = SparkSession.builder().appName("datatrans preproc").config("spark.sql.pivotMaxValues", 100000).config("spark.executor.memory", "16g").config("spark.driver.memory", "64g").getOrCreate()
+    val spark = SparkSession.builder().appName("datatrans preproc").getOrCreate()
 
     spark.sparkContext.setLogLevel("WARN")
 

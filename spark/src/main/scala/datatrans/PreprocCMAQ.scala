@@ -8,7 +8,7 @@ import datatrans.Utils._
 object PreprocCMAQ {
   def main(args: Array[String]) {
     time {
-      val spark = SparkSession.builder().appName("datatrans preproc").config("spark.sql.pivotMaxValues", 100000).config("spark.executor.memory", "16g").config("spark.driver.memory", "64g").getOrCreate()
+      val spark = SparkSession.builder().appName("datatrans preproc").getOrCreate()
 
       val input_file = args(0)
       val output_dir = args(1)
