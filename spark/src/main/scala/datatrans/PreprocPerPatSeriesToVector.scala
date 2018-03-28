@@ -58,15 +58,16 @@ object PreprocPerPatSeriesToVector {
     } else {
       val filename = f"${config.environmental_data}/cmaq$year/C$col%03dR$row%03dDaily.csv"
       val df = cache.get(filename).flatMap(x => x.get).getOrElse {
-        val df = spark.read.format("csv").load(filename).toDF("a","o3_avg","pmij_avg","o3_max","pmij_max")
+        val df = spark.read.format("csv").load(filename).toDF("a", "o3_avg", "pmij_avg", "o3_max", "pmij_max")
         cache(filename) = new SoftReference(df)
         df
       }
 
-      val aggregatedf = df.filter(df("a") === start_date.toString("y-M-d")).select("o3_avg", "pmij_avg", "o3_max", "pmij_max")
-      if (aggregatedf.count == 0)
+      val aggregatedf = df.filter(df("a") === start_date.toString("yyyy-MM-dd")).select("o3_avg", "pmij_avg", "o3_max", "pmij_max")
+      if (aggregatedf.count == 0) {
+        println("env data not found " + start_date.toString("yyyy-MM-dd"))
         None
-      else {
+      } else {
         val aggregate = aggregatedf.first
         Some(Json.obj(
           "o3_avg" -> aggregate.getDouble(0),
