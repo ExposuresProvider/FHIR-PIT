@@ -18,6 +18,7 @@ case class Config(
                    patient_dimension : Option[String] = None,
                    patient_num_list : Option[Seq[String]] = None,
                    input_directory : String = "",
+                   environmental_data : String = "",
                    output_prefix : String = "",
                    start_date : Option[DateTime] = None,
                    end_date : Option[DateTime] = None,
@@ -55,7 +56,7 @@ object PreprocPerPatSeriesToVector {
     if (row == -1 || col == -1) {
       None
     } else {
-      val filename = f"${config.input_directory}/cmaq$year/C$col%03dR$row%03dDaily.csv"
+      val filename = f"${config.environmental_data}/cmaq$year/C$col%03dR$row%03dDaily.csv"
       val df = cache.get(filename).flatMap(x => x.get).getOrElse {
         val df = spark.read.format("csv").load(filename).toDF("a","o3_avg","pmij_avg","o3_max","pmij_max")
         cache(filename) = new SoftReference(df)
@@ -179,6 +180,7 @@ object PreprocPerPatSeriesToVector {
       opt[String]("patient_dimension").action((x,c) => c.copy(patient_dimension = Some(x)))
       opt[Seq[String]]("patient_num_list").action((x,c) => c.copy(patient_num_list = Some(x)))
       opt[String]("input_directory").required.action((x,c) => c.copy(input_directory = x))
+      opt[String]("environmental_data").required.action((x,c) => c.copy(environmental_data = x))
       opt[String]("output_prefix").required.action((x,c) => c.copy(output_prefix = x))
       opt[String]("start_date").action((x,c) => c.copy(start_date = Some(DateTime.parse(x))))
       opt[String]("end_date").action((x,c) => c.copy(end_date = Some(DateTime.parse(x))))
