@@ -69,7 +69,7 @@ object PreprocPerPatSeriesToVector {
         None
       } else {
         val aggregate = aggregatedf.first
-        Some(Json.obj((0 until names.size).map(i => names(i) -> (aggregate.getString(i).toDouble : JsValueWrapper)) : _*))
+        Some(Json.obj(("row" -> (row : JsValueWrapper)) +: (("col" -> (col : JsValueWrapper)) +: (("start_date" -> (start_date.toString("yyyy-MM-dd") : JsValueWrapper)) +: (0 until names.size).map(i => names(i) -> (aggregate.getString(i).toDouble : JsValueWrapper)))) : _*))
       }
 
     }
