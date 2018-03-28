@@ -167,9 +167,11 @@ object PreprocPerPatSeriesToVector {
                 ) ++ vec ++ env
             }.filter(crit)
 
-            val json = data.map(obj => Json.stringify (obj)+"\n").mkString("")
+            if (data.nonEmpty) {
+              val json = data.map(obj => Json.stringify (obj)+"\n").mkString("")
+              writeToFile(hc, config.output_prefix + p, json)
+            }
 
-            writeToFile(hc, config.output_prefix + p, json)
           case _ =>
             println("no birth date " + p)
 
@@ -231,7 +233,7 @@ object PreprocPerPatSeriesToVector {
               val colmap = df.get.rxcui_name
               map_entry.rxCUIList.flatMap(col => {
                 val colname = colmap(col)
-                Seq((colname, JsNumber(1)), (colname + "2", JsString(map_entry.rxCUIList2.mkString(";"))))
+                Seq((col, JsNumber(1)), (colname, JsNumber(1)), (colname + "2", JsString(map_entry.rxCUIList2.mkString(";"))))
               })
             } else if(config.regex.isDefined) {
               if(col.matches(config.regex.get))
