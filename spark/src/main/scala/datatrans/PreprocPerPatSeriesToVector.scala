@@ -1,5 +1,7 @@
 package datatrans
 
+import java.util.concurrent.atomic.AtomicInteger
+
 import scala.ref.SoftReference
 import datatrans.Utils._
 import org.apache.hadoop.fs.Path
@@ -62,10 +64,9 @@ object PreprocPerPatSeriesToVector {
         cache(filename) = new SoftReference(df)
         df
       }
-      println("row " + row + " col " + col + " start_date " + start_date.toString("yyyy-MM-dd"))
       val aggregatedf = df.filter(df("a") === start_date.toString("yyyy-MM-dd")).select("o3_avg", "pmij_avg", "o3_max", "pmij_max")
       if (aggregatedf.count == 0) {
-        println("env data not found")
+        println("env data not found" + " " + "row " + row + " col " + col + " start_date " + start_date.toString("yyyy-MM-dd"))
         None
       } else {
         val aggregate = aggregatedf.first
@@ -265,7 +266,12 @@ object PreprocPerPatSeriesToVector {
 
                   val patl = pddf0.select("patient_num").map(r => r.getString(0)).collect.toList.par
 
-                  patl.foreach(proc_pid2)
+                  val count = new AtomicInteger(0)
+                  val n = patl.size
+                  patl.foreach(pid => {
+                    println("processing " + count.incrementAndGet + " / " + n + " " + pid)
+                    proc_pid2(pid)
+                  })
                 case None =>
               }
 
