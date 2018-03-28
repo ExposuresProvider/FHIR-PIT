@@ -40,7 +40,7 @@ object PreprocPerPatSeriesToVector {
 
       loadDailyEnvData(config, spark, lat, lon, start_date, names) match {
         case Some(obj) =>
-          env ++= Json.obj(names.map(x => x + "_day" + i -> (obj(x) : JsValueWrapper)) : _*)
+          env ++= Json.obj(("row" +: ("col" +: ("start_date" +: names))).map(x => x + "_day" + i -> (obj(x) : JsValueWrapper)) : _*)
         case None =>
       }
     }
