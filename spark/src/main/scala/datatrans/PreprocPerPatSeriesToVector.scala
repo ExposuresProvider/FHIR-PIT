@@ -59,7 +59,7 @@ object PreprocPerPatSeriesToVector {
     } else {
       val filename = f"${config.environmental_data}/cmaq$year/C$col%03dR$row%03dDaily.csv"
       val df = cache.get(filename).flatMap(x => x.get).getOrElse {
-        val df = spark.read.format("csv").load(filename).toDF(("a" :: names) : _*)
+        val df = spark.read.format("csv").load(filename).toDF(("a" +: names) : _*)
         cache(filename) = new SoftReference(df)
         df
       }
@@ -201,7 +201,7 @@ object PreprocPerPatSeriesToVector {
       opt[String]("map").action((x,c) => c.copy(map = Some(x)))
     }
 
-    val spark = SparkSession.builder().appName("datatrans preproc").config("spark.sql.pivotMaxValues", 100000).config("spark.executor.memory", "2g").config("spark.driver.memory", "64g").getOrCreate()
+    val spark = SparkSession.builder().appName("datatrans preproc").config("spark.executor.memory", "7.5g").getOrCreate()
 
     spark.sparkContext.setLogLevel("WARN")
 
