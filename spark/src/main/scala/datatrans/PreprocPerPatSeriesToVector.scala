@@ -201,7 +201,11 @@ object PreprocPerPatSeriesToVector {
           case class MDCTN_map(mdctn_rxcui : Map[String, MDCTN_map_entry], rxcui_name : Map[String, String])
           val df = config.map.map(map0 => {
             val df = spark.read.format("csv").option("delimiter", "\t").option("header", false).load(config.input_directory + "/" + map0)
-            val valmap = df.map(row => (row.getString(0),MDCTN_map_entry(row.getString(2).stripSuffix(";"), row.getString(1).split(";"), row.getString(3).split(";")))).collect.toMap
+            val valmap = df.map(row =>
+              (
+                row.getString(0),
+                MDCTN_map_entry(row.getString(2).stripSuffix(";"), row.getString(1).split(";"), row.getString(3).split(";"))
+              )).collect.toMap
             val colmap = valmap.flatMap {
               case (_, MDCTN_map_entry(name, rxCUIList, _)) =>
                 rxCUIList.map(rxCUI => (rxCUI, name))
