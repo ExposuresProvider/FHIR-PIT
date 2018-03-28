@@ -231,8 +231,8 @@ object PreprocPerPatSeriesToVector {
             if (df.isDefined && df.get.mdctn_rxcui.contains(col)) {
               val map_entry = (df.get.mdctn_rxcui)(col)
               val colmap = df.get.rxcui_name
-              map_entry.rxCUIList.flatMap(col => {
-                val colname = colmap(col)
+              map_entry.rxCUIList.flatMap(rxcuicol => {
+                val colname = colmap(rxcuicol)
                 Seq((col, JsNumber(1)), (colname, JsNumber(1)), (colname + "2", JsString(map_entry.rxCUIList2.mkString(";"))))
               })
             } else if(config.regex.isDefined) {
