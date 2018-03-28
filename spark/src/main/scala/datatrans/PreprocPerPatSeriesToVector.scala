@@ -201,7 +201,7 @@ object PreprocPerPatSeriesToVector {
       opt[String]("map").action((x,c) => c.copy(map = Some(x)))
     }
 
-    val spark = SparkSession.builder().appName("datatrans preproc").config("spark.executor.memory", "7.5g").getOrCreate()
+    val spark = SparkSession.builder().appName("datatrans preproc").config("spark.executor.memory", "16g").getOrCreate()
 
     spark.sparkContext.setLogLevel("WARN")
 
