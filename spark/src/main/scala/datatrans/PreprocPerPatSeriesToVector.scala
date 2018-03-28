@@ -159,7 +159,7 @@ object PreprocPerPatSeriesToVector {
               val data = listBuf.toSeq.map {
                 case (start_date, vec) =>
                   val age = Years.yearsBetween (birth_date_joda, start_date).getYears
-                  val env = loadEnvData(config, spark, lat, lon, start_date, Seq("o3", "pmij"), Seq("avg", "max"))
+                  val env = loadEnvData(config, spark, lat, lon, start_date, Seq("o3", "pmij"), Seq("avg", "max", "min", "stddev"))
                   Json.obj (
                     "race_cd" -> race_cd,
                     "sex_cd" -> sex_cd,
