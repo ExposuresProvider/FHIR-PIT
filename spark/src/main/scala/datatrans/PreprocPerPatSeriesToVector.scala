@@ -62,7 +62,7 @@ object PreprocPerPatSeriesToVector {
         df
       }
 
-      val aggregate = df.filter(df("start_date") === start_date.toString("%Y-%m-%D")).select("o3_avg", "pmij_avg", "o3_max", "pmij_max").first
+      val aggregate = df.filter(df("start_date") === start_date.toString("Y-m-D")).select("o3_avg", "pmij_avg", "o3_max", "pmij_max").first
       Some(Json.obj(
           "o3_avg" -> aggregate.getDouble(0),
           "pmij_avg" -> aggregate.getDouble(1),
