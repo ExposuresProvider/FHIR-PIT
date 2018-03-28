@@ -190,7 +190,7 @@ object PreprocPerPatSeriesToVector {
       }
     }
 
-  case class MDCTN_map_entry (name:String, rxCUIList:Seq[String], rxCUIList2:Seq[String])
+  case class MDCTN_map_entry (name:Seq[String], rxCUIList:Seq[String], rxCUIList2:Seq[String])
   implicit val MDCTN_map_entry_encoder : org.apache.spark.sql.Encoder[(String, MDCTN_map_entry)] = org.apache.spark.sql.Encoders.kryo[(String, MDCTN_map_entry)]
 
 
@@ -223,28 +223,21 @@ object PreprocPerPatSeriesToVector {
           case class MDCTN_map(mdctn_rxcui : Map[String, MDCTN_map_entry], rxcui_name : Map[String, String])
           val df = config.map.map(map0 => {
             val df = spark.read.format("csv").option("delimiter", "\t").option("header", false).load(config.input_directory + "/" + map0)
-            val valmap = df.map(row => {
+            df.map(row => {
               val row3 = row.getString(3)
               (
                 row.getString(0),
                 MDCTN_map_entry(row.getString(2).split(";"), row.getString(1).split(";"), if (row3 == null) Seq.empty else row3.split(";"))
               )
-            }
-              ).collect.toMap
-            val colmap = valmap.flatMap {
-              case (_, MDCTN_map_entry(name, rxCUIList, _)) =>
-                rxCUIList.map(rxCUI => (rxCUI, name))
-            }
-            MDCTN_map(valmap, colmap)
+            }).collect.toMap
+
           })
 
           def col_filter(col:String, start_date: DateTime) : Seq[(String, JsValue)]= {
-            if (df.isDefined && df.get.mdctn_rxcui.contains(col)) {
-              val map_entry = (df.get.mdctn_rxcui)(col)
-              val colmap = df.get.rxcui_name
-              map_entry.rxCUIList.flatMap(rxcuicol => {
-                val colname = colmap(rxcuicol)
-                Seq((col, JsNumber(1)), (colname, JsString(map_entry.rxCUIList2.mkString(";"))))
+            if (df.isDefined && df.get.contains(col)) {
+              val map_entry = (df.get)(col)
+              (col, JsNumber(1)) +: map_entry.rxCUIList.map(rxcuicol => {
+                (rxcuicol, JsString(map_entry.rxCUIList2.mkString(";")))
               })
             } else if(config.regex.isDefined) {
               if(col.matches(config.regex.get))
