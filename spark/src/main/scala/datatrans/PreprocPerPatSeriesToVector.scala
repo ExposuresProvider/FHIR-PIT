@@ -62,10 +62,10 @@ object PreprocPerPatSeriesToVector {
         cache(filename) = new SoftReference(df)
         df
       }
-
+      println("row " + row + " col " + col + " start_date " + start_date.toString("yyyy-MM-dd"))
       val aggregatedf = df.filter(df("a") === start_date.toString("yyyy-MM-dd")).select("o3_avg", "pmij_avg", "o3_max", "pmij_max")
       if (aggregatedf.count == 0) {
-        println("env data not found row " + row + " col " + col + " start_date " + start_date.toString("yyyy-MM-dd"))
+        println("env data not found")
         None
       } else {
         val aggregate = aggregatedf.first
