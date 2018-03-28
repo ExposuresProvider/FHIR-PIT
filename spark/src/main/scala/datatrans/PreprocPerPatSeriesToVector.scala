@@ -65,15 +65,15 @@ object PreprocPerPatSeriesToVector {
 
       val aggregatedf = df.filter(df("a") === start_date.toString("yyyy-MM-dd")).select("o3_avg", "pmij_avg", "o3_max", "pmij_max")
       if (aggregatedf.count == 0) {
-        println("env data not found " + start_date.toString("yyyy-MM-dd"))
+        println("env data not found row " + row + " col " + col + " start_date " + start_date.toString("yyyy-MM-dd"))
         None
       } else {
         val aggregate = aggregatedf.first
         Some(Json.obj(
-          "o3_avg" -> aggregate.getDouble(1),
-          "pmij_avg" -> aggregate.getDouble(2),
-          "o3_max" -> aggregate.getDouble(3),
-          "pmij_max" -> aggregate.getDouble(4)
+          "o3_avg" -> aggregate.getDouble(0),
+          "pmij_avg" -> aggregate.getDouble(1),
+          "o3_max" -> aggregate.getDouble(2),
+          "pmij_max" -> aggregate.getDouble(3)
         ))
 
       }
