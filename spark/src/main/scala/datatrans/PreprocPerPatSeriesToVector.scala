@@ -78,8 +78,6 @@ object PreprocPerPatSeriesToVector {
   def proc_pid(config : Config, spark: SparkSession, p:String, col_filter: (String, DateTime) => Seq[(String, JsValue)], crit : JsObject => Boolean) =
     time {
 
-      println("processing pid " + p)
-
       val hc = spark.sparkContext.hadoopConfiguration
 
       val input_file = config.input_directory + "/" + p
