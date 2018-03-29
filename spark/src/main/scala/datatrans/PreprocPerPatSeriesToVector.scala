@@ -38,7 +38,7 @@ object PreprocPerPatSeriesToVector {
     for(i <- -7 until 7) {
       val start_time = start_date.plusDays(i)
 
-      loadDailyEnvData(config, spark, lat, lon, start_date, names) match {
+      loadDailyEnvData(config, spark, lat, lon, start_time, names) match {
         case Some(obj) =>
           env ++= Json.obj(("row" +: ("col" +: ("start_date" +: names))).map(x => x + "_day" + i -> (obj(x) : JsValueWrapper)) : _*)
         case None =>
