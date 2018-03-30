@@ -25,8 +25,11 @@ case class Config(
                    output_prefix : String = "",
                    start_date : Option[DateTime] = None,
                    end_date : Option[DateTime] = None,
-                   regex : Option[String] = None,
-                   map : Option[String] = None
+                   regex_observation : Option[String] = None,
+                   regex_observation_filter_visit : Option[String] = None,
+                   regex_visit : Option[String] = None,
+                   map : Option[String] = None,
+                   debug : Boolean = false
                  )
 
 object PreprocPerPatSeriesToVector {
@@ -58,10 +61,20 @@ object PreprocPerPatSeriesToVector {
       None
     } else {
       val filename = f"${config.environmental_data}/cmaq$year/C$col%03dR$row%03dDaily.csv"
-      val df = cache.get(filename).flatMap(x => x.get).getOrElse {
+      def loadEnvDataFrame(filename : String) = {
         val df = spark.read.format("csv").load(filename).toDF(("a" +: names) : _*)
         cache(filename) = new SoftReference(df)
+        println("SoftReference created for " + filename)
         df
+      }
+      val df = cache.get(filename) match {
+        case None =>
+          loadEnvDataFrame(filename)
+        case Some(x) =>
+          x.get.getOrElse {
+            println("SoftReference has already be garbage collected " + filename)
+            loadEnvDataFrame(filename)
+          }
       }
       val aggregatedf = df.filter(df("a") === start_date.toString("yyyy-MM-dd")).select(names.map(df.col) : _*)
       if (aggregatedf.count == 0) {
@@ -69,13 +82,18 @@ object PreprocPerPatSeriesToVector {
         None
       } else {
         val aggregate = aggregatedf.first
-        Some(Json.obj(("row" -> (row : JsValueWrapper)) +: (("col" -> (col : JsValueWrapper)) +: (("start_date" -> (start_date.toString("yyyy-MM-dd") : JsValueWrapper)) +: (0 until names.size).map(i => names(i) -> (aggregate.getString(i).toDouble : JsValueWrapper)))) : _*))
+        val tuples = (0 until names.size).map(i => names(i) -> (aggregate.getString(i).toDouble: JsValueWrapper))
+        Some(Json.obj(
+          (if(config.debug)
+            ("row" -> (row : JsValueWrapper)) +: (("col" -> (col : JsValueWrapper)) +: (("start_date" -> (start_date.toString("yyyy-MM-dd") : JsValueWrapper)) +: tuples))
+          else
+            tuples) : _*))
       }
 
     }
   }
 
-  def proc_pid(config : Config, spark: SparkSession, p:String, col_filter: (String, DateTime) => Seq[(String, JsValue)], crit : JsObject => Boolean) =
+  def proc_pid(config : Config, spark: SparkSession, p:String, col_filter_observation: (String, DateTime) => (Boolean, Seq[(String, JsValue)]), col_filter_visit: (String, DateTime) => Seq[(String, JsValue)], crit : JsObject => Boolean) =
     time {
 
       val hc = spark.sparkContext.hadoopConfiguration
@@ -109,31 +127,12 @@ object PreprocPerPatSeriesToVector {
           val lat = jsvalue("lat").as[Double]
           val lon = jsvalue("lon").as[Double]
 
+          val start_date_set = scala.collection.mutable.Set[DateTime]()
+
           jsvalue \ "birth_date" match {
             case JsDefined (bd) =>
               val birth_date = bd.as[String]
               val birth_date_joda = DateTime.parse (birth_date, DateTimeFormat.forPattern("M/d/y H:m"))
-
-              val encounters_visit = visits.fields
-              encounters_visit.foreach {
-                case (visit, encounter) =>
-                  encounter \ "start_date" match {
-                    case JsDefined (x) =>
-                      val start_date = DateTime.parse (x.as[String], DateTimeFormat.forPattern("y-M-d H:m:s") )
-                      encounter \ "inout_cd" match {
-                        case JsDefined (y) =>
-                          val inout_cd = y.as[String]
-                          col_filter(inout_cd, start_date).foreach {
-                            case (col, value) =>
-                              insertOrUpdate(listBuf, start_date, col, value)
-                          }
-                        case _ =>
-                          println ("no inout cd " + visit)
-                      }
-                    case _ =>
-                      println ("no start date " + visit)
-                  }
-              }
 
               val encounters = observations.fields
               encounters.foreach {
@@ -143,7 +142,11 @@ object PreprocPerPatSeriesToVector {
                       instances.as[JsObject].fields.foreach {
                         case (_, modifiers) =>
                           val start_date = DateTime.parse (modifiers.as[JsObject].values.toSeq (0) ("start_date").as[String], DateTimeFormat.forPattern("Y-M-d H:m:s") )
-                          col_filter(concept_cd, start_date).foreach {
+                          val (start_date_filtered, cols) = col_filter_observation(concept_cd, start_date)
+                          if(start_date_filtered) {
+                            start_date_set.add(start_date)
+                          }
+                          cols.foreach {
                             case (col, value) =>
                               insertOrUpdate(listBuf, start_date, col, value)
                           }
@@ -151,6 +154,30 @@ object PreprocPerPatSeriesToVector {
                       }
                   }
               }
+
+              val encounters_visit = visits.fields
+              encounters_visit.foreach {
+                case (visit, encounter) =>
+                  encounter \ "start_date" match {
+                    case JsDefined (x) =>
+                      val start_date = DateTime.parse (x.as[String], DateTimeFormat.forPattern("y-M-d H:m:s") )
+                      if(!config.regex_observation_filter_visit.isDefined || start_date_set.contains(start_date)) {
+                        encounter \ "inout_cd" match {
+                          case JsDefined (y) =>
+                            val inout_cd = y.as[String]
+                            col_filter_visit(inout_cd, start_date).foreach {
+                              case (col, value) =>
+                                insertOrUpdate(listBuf, start_date, col, value)
+                            }
+                          case _ =>
+                            println ("no inout cd " + visit)
+                        }
+                      }
+                    case _ =>
+                      println ("no start date " + visit)
+                  }
+              }
+
 
 
 
@@ -195,8 +222,11 @@ object PreprocPerPatSeriesToVector {
       opt[String]("output_prefix").required.action((x,c) => c.copy(output_prefix = x))
       opt[String]("start_date").action((x,c) => c.copy(start_date = Some(DateTime.parse(x))))
       opt[String]("end_date").action((x,c) => c.copy(end_date = Some(DateTime.parse(x))))
-      opt[String]("regex").action((x,c) => c.copy(regex = Some(x)))
+      opt[String]("regex_observation").action((x,c) => c.copy(regex_observation = Some(x)))
+      opt[String]("regex_observation_filter_visit").action((x,c) => c.copy(regex_observation_filter_visit = Some(x)))
+      opt[String]("regex_visit").action((x,c) => c.copy(regex_visit = Some(x)))
       opt[String]("map").action((x,c) => c.copy(map = Some(x)))
+      opt[Unit]("debug").action((_,c) => c.copy(debug = true))
     }
 
     val spark = SparkSession.builder().appName("datatrans preproc").getOrCreate()
@@ -224,21 +254,34 @@ object PreprocPerPatSeriesToVector {
 
           })
 
-          def col_filter(col:String, start_date: DateTime) : Seq[(String, JsValue)]= {
-            if (df.isDefined && df.get.contains(col)) {
-              val map_entry = (df.get)(col)
-              (col, JsNumber(1)) +: map_entry.rxCUIList.map(rxcuicol => {
+          def col_filter_observation(col:String, start_date: DateTime) : (Boolean, Seq[(String, JsValue)]) = {
+            df.flatMap(x => x.get(col)).map(map_entry => {
+              val tuples = map_entry.rxCUIList.map(rxcuicol => {
                 (rxcuicol, JsString(map_entry.rxCUIList2.mkString(";")))
               })
-            } else if(config.regex.isDefined) {
-              if(col.matches(config.regex.get))
+              (false, if(config.debug)
+                (col, JsNumber(1)) +: tuples
+              else
+                tuples)
+            }).getOrElse {
+              val filtered_visit = config.regex_observation_filter_visit.map(x => col.matches(x)).getOrElse(true)
+
+              (filtered_visit, config.regex_observation.map(x => {
+                if(col.matches(x))
+                  Seq((col, JsNumber(1)))
+                else
+                  Seq.empty
+              }).getOrElse(Seq((col, JsNumber(1)))))
+            }
+          }
+
+          def col_filter_visit(col:String, start_date: DateTime) : Seq[(String, JsValue)] = {
+            config.regex_visit.map(x => {
+              if(col.matches(config.regex_visit.get))
                 Seq((col, JsNumber(1)))
               else
                 Seq.empty
-
-            } else {
-              Seq((col, JsNumber(1)))
-            }
+            }).getOrElse(Seq((col, JsNumber(1))))
           }
 
           def crit(jsObject: JsObject) = {
@@ -247,7 +290,7 @@ object PreprocPerPatSeriesToVector {
           }
 
           def proc_pid2(p : String) =
-            proc_pid(config, spark, p, col_filter, crit)
+            proc_pid(config, spark, p, col_filter_visit, col_filter_observation, crit)
 
           config.patient_num_list match {
             case Some(pnl) =>
