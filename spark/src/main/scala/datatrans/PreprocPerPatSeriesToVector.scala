@@ -290,7 +290,7 @@ object PreprocPerPatSeriesToVector {
           }
 
           def proc_pid2(p : String) =
-            proc_pid(config, spark, p, col_filter_visit, col_filter_observation, crit)
+            proc_pid(config, spark, p, col_filter_observation, col_filter_visit, crit)
 
           config.patient_num_list match {
             case Some(pnl) =>
