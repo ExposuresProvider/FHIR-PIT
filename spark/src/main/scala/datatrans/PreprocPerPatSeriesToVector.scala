@@ -35,7 +35,7 @@ object PreprocPerPatSeriesToVector {
     var env = Json.obj()
     val names = for(i <- statistics; j <- indices) yield f"${j}_$i"
 
-    for(i <- -7 until 7) {
+    for(i <- -7 to 7) {
       val start_time = start_date.plusDays(i)
 
       loadDailyEnvData(config, spark, lat, lon, start_time, names) match {
