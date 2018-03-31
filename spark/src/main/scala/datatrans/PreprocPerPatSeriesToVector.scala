@@ -8,6 +8,7 @@ import org.apache.hadoop.fs.Path
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.functions._
+import org.apache.zookeeper.KeeperException.UnimplementedException
 import play.api.libs.json._
 import org.joda.time._
 import org.joda.time.format.DateTimeFormat
@@ -21,7 +22,7 @@ case class Config(
                    patient_dimension : Option[String] = None,
                    patient_num_list : Option[Seq[String]] = None,
                    input_directory : String = "",
-                   environmental_data : String = "",
+                   environmental_data : Option[String] = None,
                    output_prefix : String = "",
                    start_date : Option[DateTime] = None,
                    end_date : Option[DateTime] = None,
@@ -29,6 +30,7 @@ case class Config(
                    regex_observation_filter_visit : Option[String] = None,
                    regex_visit : Option[String] = None,
                    map : Option[String] = None,
+                   aggregate_by : Option[String] = None,
                    debug : Boolean = false
                  )
 
@@ -179,19 +181,62 @@ object PreprocPerPatSeriesToVector {
               }
 
 
+              val listBuf2 = if(config.aggregate_by.isDefined)
+                config.aggregate_by.get match {
+                  case "year" =>
+                    def combine(a : JsObject, b:JsObject): JsObject = {
+                      b.fields.foldLeft(a)((x, field) =>
+                        field match {
+                          case (key, value) =>
+                            a \ key match {
+                              case JsDefined(value0) =>
+                                value0 match {
+                                  case s:JsString =>
+                                    if (value != value0) {
+                                      throw new UnsupportedOperationException("string values are different for the same year")
+                                    } else
+                                      a
+                                  case n:JsNumber =>
+                                    a + (key -> JsNumber(value.asInstanceOf[JsNumber].value + n.value))
+                                  case _ =>
+                                    throw new UnsupportedOperationException("unsupport JsValue")
+                                }
+                              case _ =>
+                                a + field
+                            }
+                        })
+                    }
+                    listBuf.groupBy { case (start_date, vec) => start_date.withDayOfYear(1) }.mapValues{ g => g.values.fold(Json.obj())(combine) }
+
+                  case _ =>
+                    throw new UnsupportedOperationException("aggregate by any field other than year is not implemented")
+                }
+              else
+                listBuf
 
 
-              val data = listBuf.toSeq.map {
+
+              val data = listBuf2.toSeq.map {
                 case (start_date, vec) =>
                   val age = Years.yearsBetween (birth_date_joda, start_date).getYears
-                  val env = loadEnvData(config, spark, lat, lon, start_date, Seq("o3", "pmij"), Seq("avg", "max", "min", "stddev"))
-                  Json.obj (
+                  val obj = Json.obj (
                     "race_cd" -> race_cd,
                     "sex_cd" -> sex_cd,
                     "birth_date" -> birth_date,
                     "age" -> age,
-                    "start_date" -> start_date.toString("y-M-d")
-                  ) ++ vec ++ env
+                    "start_date" -> (if(config.aggregate_by.map(x => x == "year").getOrElse(false))
+                      start_date.toString("y")
+                    else
+                      start_date.toString("y-M-d"))) ++ vec
+                  if (config.environmental_data.isDefined) {
+                    if (config.aggregate_by.isDefined && config.aggregate_by.get != "day") {
+                      throw new UnsupportedOperationException("aggregate environmental data is not implemented")
+                    }
+                    val env = loadEnvData(config, spark, lat, lon, start_date, Seq("o3", "pmij"), Seq("avg", "max", "min", "stddev"))
+                    obj ++ env
+                  }
+                  else
+                    obj
               }.filter(crit)
 
               if (data.nonEmpty) {
@@ -218,7 +263,7 @@ object PreprocPerPatSeriesToVector {
       opt[String]("patient_dimension").action((x,c) => c.copy(patient_dimension = Some(x)))
       opt[Seq[String]]("patient_num_list").action((x,c) => c.copy(patient_num_list = Some(x)))
       opt[String]("input_directory").required.action((x,c) => c.copy(input_directory = x))
-      opt[String]("environmental_data").required.action((x,c) => c.copy(environmental_data = x))
+      opt[String]("environmental_data").action((x,c) => c.copy(environmental_data = Some(x)))
       opt[String]("output_prefix").required.action((x,c) => c.copy(output_prefix = x))
       opt[String]("start_date").action((x,c) => c.copy(start_date = Some(DateTime.parse(x))))
       opt[String]("end_date").action((x,c) => c.copy(end_date = Some(DateTime.parse(x))))
@@ -226,6 +271,7 @@ object PreprocPerPatSeriesToVector {
       opt[String]("regex_observation_filter_visit").action((x,c) => c.copy(regex_observation_filter_visit = Some(x)))
       opt[String]("regex_visit").action((x,c) => c.copy(regex_visit = Some(x)))
       opt[String]("map").action((x,c) => c.copy(map = Some(x)))
+      opt[String]("aggregate_by").action((x,c) => c.copy(map = Some(x)))
       opt[Unit]("debug").action((_,c) => c.copy(debug = true))
     }
 
