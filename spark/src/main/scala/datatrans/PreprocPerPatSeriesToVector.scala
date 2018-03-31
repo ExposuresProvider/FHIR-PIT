@@ -31,6 +31,7 @@ case class Config(
                    regex_visit : Option[String] = None,
                    map : Option[String] = None,
                    aggregate_by : Option[String] = None,
+                   output_format : String = "json",
                    debug : Boolean = false
                  )
 
@@ -240,7 +241,21 @@ object PreprocPerPatSeriesToVector {
               }.filter(crit)
 
               if (data.nonEmpty) {
-                val json = data.map(obj => Json.stringify (obj)+"\n").mkString("")
+                val json = config.output_format match {
+                  case "json" =>
+                    data.map(obj => Json.stringify (obj)+"\n").mkString("")
+                  case "csv" =>
+                    val headers = data.map(obj => obj.keys).fold(Set.empty[String])((keys1, keys2) => keys1.union(keys2)).toSeq
+                    val rows = data.map(obj => headers.map(col => obj \ col match {
+                      case JsDefined(a) =>
+                        a.toString
+                      case _ =>
+                        ""
+                    }).mkString("!")).mkString("\n")
+                    headers.mkString("!") + "\n" + rows
+                  case _ =>
+                    throw new UnsupportedOperationException("unsupported output format " + config.output_format)
+                }
                 writeToFile(hc, output_file, json)
               }
 
@@ -272,6 +287,7 @@ object PreprocPerPatSeriesToVector {
       opt[String]("regex_visit").action((x,c) => c.copy(regex_visit = Some(x)))
       opt[String]("map").action((x,c) => c.copy(map = Some(x)))
       opt[String]("aggregate_by").action((x,c) => c.copy(map = Some(x)))
+      opt[String]("output_format").action((x,c) => c.copy(output_format = x))
       opt[Unit]("debug").action((_,c) => c.copy(debug = true))
     }
 
