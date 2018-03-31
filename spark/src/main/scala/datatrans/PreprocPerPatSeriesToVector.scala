@@ -8,15 +8,11 @@ import org.apache.hadoop.fs.Path
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.functions._
-import org.apache.zookeeper.KeeperException.UnimplementedException
 import play.api.libs.json._
 import org.joda.time._
 import org.joda.time.format.DateTimeFormat
 import play.api.libs.json.Json.JsValueWrapper
 import scopt._
-
-import scala.ref.SoftReference
-import scala.util.matching.Regex
 
 case class Config(
                    patient_dimension : Option[String] = None,
@@ -164,7 +160,7 @@ object PreprocPerPatSeriesToVector {
                   encounter \ "start_date" match {
                     case JsDefined (x) =>
                       val start_date = DateTime.parse (x.as[String], DateTimeFormat.forPattern("y-M-d H:m:s") )
-                      if(!config.regex_observation_filter_visit.isDefined || start_date_set.contains(start_date)) {
+                      if(config.regex_observation_filter_visit.isEmpty || start_date_set.contains(start_date)) {
                         encounter \ "inout_cd" match {
                           case JsDefined (y) =>
                             val inout_cd = y.as[String]
@@ -225,7 +221,7 @@ object PreprocPerPatSeriesToVector {
                     "sex_cd" -> sex_cd,
                     "birth_date" -> birth_date,
                     "age" -> age,
-                    "start_date" -> (if(config.aggregate_by.map(x => x == "year").getOrElse(false))
+                    "start_date" -> (if(config.aggregate_by.contains("year"))
                       start_date.toString("y")
                     else
                       start_date.toString("y-M-d"))) ++ vec
@@ -326,7 +322,7 @@ object PreprocPerPatSeriesToVector {
               else
                 tuples)
             }).getOrElse {
-              val filtered_visit = config.regex_observation_filter_visit.map(x => col.matches(x)).getOrElse(true)
+              val filtered_visit = config.regex_observation_filter_visit.forall(x => col.matches(x))
 
               (filtered_visit, config.regex_observation.map(x => {
                 if(col.matches(x))
