@@ -60,7 +60,7 @@ object PreprocPerPatSeriesToVector {
     if (row == -1 || col == -1) {
       None
     } else {
-      val filename = f"${config.input_directory}/${config.environmental_data}/cmaq$year/C$col%03dR$row%03dDaily.csv"
+      val filename = f"${config.input_directory}/${config.environmental_data.get}/cmaq$year/C$col%03dR$row%03dDaily.csv"
       def loadEnvDataFrame(filename : String) = {
         val df = spark.read.format("csv").load(filename).toDF(("a" +: names) : _*)
         cache(filename) = new SoftReference(df)
