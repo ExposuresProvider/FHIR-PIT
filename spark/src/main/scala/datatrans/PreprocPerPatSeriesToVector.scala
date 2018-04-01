@@ -18,6 +18,7 @@ case class Config(
                    patient_dimension : Option[String] = None,
                    patient_num_list : Option[Seq[String]] = None,
                    input_directory : String = "",
+                   time_series : String = "",
                    environmental_data : Option[String] = None,
                    output_prefix : String = "",
                    start_date : Option[DateTime] = None,
@@ -59,7 +60,7 @@ object PreprocPerPatSeriesToVector {
     if (row == -1 || col == -1) {
       None
     } else {
-      val filename = f"${config.environmental_data}/cmaq$year/C$col%03dR$row%03dDaily.csv"
+      val filename = f"${config.input_directory}/${config.environmental_data}/cmaq$year/C$col%03dR$row%03dDaily.csv"
       def loadEnvDataFrame(filename : String) = {
         val df = spark.read.format("csv").load(filename).toDF(("a" +: names) : _*)
         cache(filename) = new SoftReference(df)
@@ -97,7 +98,7 @@ object PreprocPerPatSeriesToVector {
 
       val hc = spark.sparkContext.hadoopConfiguration
 
-      val input_file = config.input_directory + "/" + p
+      val input_file = f"${config.input_directory}/${config.time_series}/$p"
       val input_file_path = new Path(input_file)
       val input_file_file_system = input_file_path.getFileSystem(hc)
 
@@ -274,6 +275,7 @@ object PreprocPerPatSeriesToVector {
       opt[String]("patient_dimension").action((x,c) => c.copy(patient_dimension = Some(x)))
       opt[Seq[String]]("patient_num_list").action((x,c) => c.copy(patient_num_list = Some(x)))
       opt[String]("input_directory").required.action((x,c) => c.copy(input_directory = x))
+      opt[String]("time_series").required.action((x,c) => c.copy(time_series = x))
       opt[String]("environmental_data").action((x,c) => c.copy(environmental_data = Some(x)))
       opt[String]("output_prefix").required.action((x,c) => c.copy(output_prefix = x))
       opt[String]("start_date").action((x,c) => c.copy(start_date = Some(DateTime.parse(x))))
@@ -357,7 +359,7 @@ object PreprocPerPatSeriesToVector {
               config.patient_dimension match {
                 case Some(pdif) =>
                   println("loading patient_dimension from " + pdif)
-                  val pddf0 = spark.read.format("csv").option("header", true).load(pdif)
+                  val pddf0 = spark.read.format("csv").option("header", true).load(config.input_directory + "/" + pdif)
 
                   val patl = pddf0.select("patient_num").map(r => r.getString(0)).collect.toList.par
 
