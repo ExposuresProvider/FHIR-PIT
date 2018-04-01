@@ -250,6 +250,7 @@ object PreprocPerPatSeriesToVector {
                   case _ =>
                     throw new UnsupportedOperationException("unsupported output format " + config.output_format)
                 }
+                println("writing output to " + output_file)
                 writeToFile(hc, output_file, json)
               } else {
                 println("no rows found " + p)
