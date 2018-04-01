@@ -284,7 +284,7 @@ object PreprocPerPatSeriesToVector {
       opt[String]("regex_observation_filter_visit").action((x,c) => c.copy(regex_observation_filter_visit = Some(x)))
       opt[String]("regex_visit").action((x,c) => c.copy(regex_visit = Some(x)))
       opt[String]("map").action((x,c) => c.copy(map = Some(x)))
-      opt[String]("aggregate_by").action((x,c) => c.copy(map = Some(x)))
+      opt[String]("aggregate_by").action((x,c) => c.copy(aggregate_by = Some(x)))
       opt[String]("output_format").action((x,c) => c.copy(output_format = x))
       opt[Unit]("debug").action((_,c) => c.copy(debug = true))
     }
