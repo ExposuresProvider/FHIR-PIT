@@ -222,10 +222,7 @@ object PreprocPerPatSeriesToVector {
                     "sex_cd" -> sex_cd,
                     "birth_date" -> birth_date,
                     "age" -> age,
-                    "start_date" -> (if(config.aggregate_by.contains("year"))
-                      start_date.toString("y")
-                    else
-                      start_date.toString("y-M-d"))) ++ vec
+                    "start_date" -> start_date.toString("y-M-d")) ++ vec
                   if (config.environmental_data.isDefined) {
                     if (config.aggregate_by.isDefined && config.aggregate_by.get != "day") {
                       throw new UnsupportedOperationException("aggregate environmental data is not implemented")
