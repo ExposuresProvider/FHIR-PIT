@@ -23,5 +23,8 @@ for file in glob.glob(dir):
 
         df1 = pd.concat([df1, df2], axis=0, ignore_index=True)
 
+    if count % 1000 == 0:
+        df1.to_csv(output_file, sep="!", index=False)
+
 
 df1.to_csv(output_file, sep="!", index=False)
