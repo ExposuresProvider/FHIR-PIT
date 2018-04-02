@@ -9,10 +9,9 @@ output_file = sys.argv[2]
 
 df1 = None
 count = 0
-globs = list(glob.glob(dir, False))
-size = len(globs)
-for file in globs:
-    print("loading " + count + " / " + size + " " + file)
+for file in glob.glob(dir):
+    count += 1
+    print("loading " + str(count) + " " + file)
     df2 = pd.read_csv(file,sep="!")
     if df1 is None:
         df1 = df2
