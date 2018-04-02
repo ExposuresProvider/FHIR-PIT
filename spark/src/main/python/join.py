@@ -19,3 +19,5 @@ def combine(a, b):
     return pd.concat([df1, df2], axis=0, ignore_index=True)
 
 df = reduce(combine, map(load, glob.glob(dir, False)))
+
+df.to_csv(output_file)
