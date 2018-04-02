@@ -26,5 +26,5 @@ for file in glob.glob(dir):
     if count % 1000 == 0:
         df1.to_csv(output_file, sep="!", index=False)
 
-
-df1.to_csv(output_file, sep="!", index=False)
+if count % 1000 != 0:
+    df1.to_csv(output_file, sep="!", index=False)
