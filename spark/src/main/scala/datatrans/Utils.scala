@@ -10,7 +10,7 @@ import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.types._
 import geotrellis.proj4._
 import org.joda.time.DateTime
-import play.api.libs.json.{JsObject, JsValue, Json}
+import play.api.libs.json.{JsDefined, JsObject, JsValue, Json}
 
 import scala.collection.mutable
 
@@ -262,6 +262,14 @@ object Utils {
   def insertOrUpdate(mmap: mutable.Map[DateTime, JsObject], key: DateTime, col: String, value: JsValue) = {
     mmap.get(key) match {
       case Some(vec) =>
+        val json = mmap(key)
+        json \ col match {
+          case JsDefined(value0) =>
+            if (value0 != value) {
+              throw new RuntimeException("the key " + col + " is mapped to different values " + value0 + " " + value)
+            }
+          case _ =>
+        }
         mmap(key) ++= Json.obj(col -> value)
       case None =>
         mmap(key) = Json.obj(col -> value)
