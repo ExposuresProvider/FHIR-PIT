@@ -73,11 +73,12 @@ def merge(input_dirs, pats, output_dir):
 
     for f in glob.glob(input_dirs[0] + "/*"):
         bn = os.path.basename(f)
-        print("processing", f)
+
 
         dfs = []
         for dir, a in zip(input_dirs, rs):
             f = dir + "/" + bn
+            print("processing", f)
             df = pd.read_csv(f, sep="!")
             df3 = df[list(filter(lambda x : a.fullmatch(x), df.columns))]
             dfs.append(df3)
