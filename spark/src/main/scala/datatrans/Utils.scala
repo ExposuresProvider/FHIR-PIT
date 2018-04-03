@@ -10,7 +10,7 @@ import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.types._
 import geotrellis.proj4._
 import org.joda.time.DateTime
-import play.api.libs.json.{JsDefined, JsObject, JsValue, Json}
+import play.api.libs.json._
 
 import scala.collection.mutable
 
@@ -265,12 +265,19 @@ object Utils {
         val json = mmap(key)
         json \ col match {
           case JsDefined(value0) =>
-            if (value0 != value) {
-              throw new RuntimeException("the key " + col + " is mapped to different values " + value0 + " " + value)
+            value0 match {
+              case JsArray(arr) =>
+                mmap(key) ++= Json.obj(col -> (arr ++ value.asInstanceOf[JsArray].value))
+              case JsNumber(n) =>
+                mmap(key) ++= Json.obj(col -> (n + value.asInstanceOf[JsNumber].value))
+              case _ =>
+                if (value0 != value) {
+                  throw new RuntimeException("the key " + col + " is mapped to different values " + value0 + " " + value)
+                }
             }
           case _ =>
+            mmap(key) ++= Json.obj(col -> value)
         }
-        mmap(key) ++= Json.obj(col -> value)
       case None =>
         mmap(key) = Json.obj(col -> value)
     }

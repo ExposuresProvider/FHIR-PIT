@@ -318,7 +318,7 @@ object PreprocPerPatSeriesToVector {
           def col_filter_observation(col:String, start_date: DateTime) : (Boolean, Seq[(String, JsValue)]) = {
             df.flatMap(x => x.get(col)).map(map_entry => {
               val tuples = map_entry.rxCUIList.map(rxcuicol => {
-                (rxcuicol, JsString(map_entry.rxCUIList2.mkString(";")))
+                (rxcuicol, Json.arr(map_entry.rxCUIList2.mkString(";")))
               })
               (false, if(config.debug)
                 (col, JsNumber(1)) +: tuples
