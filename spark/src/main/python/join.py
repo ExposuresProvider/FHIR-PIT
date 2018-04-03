@@ -9,7 +9,7 @@ output_file = sys.argv[2]
 
 dfs = []
 count = 0
-common_columns = []
+common_columns = pd.Index([])
 for file in glob.glob(dir):
     count += 1
     print("loading " + str(count) + " " + file)
