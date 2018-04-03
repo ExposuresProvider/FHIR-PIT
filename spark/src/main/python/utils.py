@@ -1,5 +1,6 @@
 import subprocess
 import glob
+import os.path
 import pandas as pd
 from timeit import default_timer as timer
 
@@ -40,7 +41,7 @@ def submit(host_name, cache_dir, cls, *args, **kwargs):
     end = timer()
     print(end - start)
 
-def merge(dir, output_file, default_value):
+def merge(dir, output_file, filename_column, default_value):
     dfs = []
     count = 0
     common_columns = pd.Index([])
@@ -59,6 +60,7 @@ def merge(dir, output_file, default_value):
         count += 1
         print("reindexing " + str(count) + " " + file)
         df2 = df2.reindex(columns=common_columns, fill_value=default_value)
+        df2[filename_column] = os.path.basename(file)
         df1 = pd.concat([df1, df2], axis=0, ignore_index=True)
 
     df1.to_csv(output_file, sep="!", index=False)
