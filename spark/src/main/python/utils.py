@@ -1,6 +1,8 @@
 import subprocess
 import glob
 import os.path
+from functools import reduce
+
 import pandas as pd
 from timeit import default_timer as timer
 
@@ -41,7 +43,7 @@ def submit(host_name, cache_dir, cls, *args, **kwargs):
     end = timer()
     print(end - start)
 
-def merge(dir, output_file, filename_column, default_value):
+def concat(dir, output_file, filename_column, default_value):
     dfs = []
     count = 0
     common_columns = pd.Index([])
@@ -64,3 +66,20 @@ def merge(dir, output_file, filename_column, default_value):
         df1 = pd.concat([df1, df2], axis=0, ignore_index=True)
 
     df1.to_csv(output_file, sep="!", index=False)
+
+def merge(input_dirs, pats, output_dir):
+    a = map(lambda pat : re.compile(pat + "|start_date"), pats)
+
+    for f in glob.glob(input_dirs[0] + "/*"):
+        bn = os.path.basename(f)
+        print("processing", f)
+
+        dfs = []
+        for dir, a in zip(input_dirs, a):
+            f = dir + "/" + bn
+            df = pd.read_csv(f, sep="!")
+            df3 = df[list(filter(lambda x : a.fullmatch(x), df.columns))]
+            dfs.append(df3)
+
+        dfo = reduce(lambda a, b : a.merge(b), dfs)
+        dfo.to_csv(output_dir + "/" + bn, sep="!", index=False)

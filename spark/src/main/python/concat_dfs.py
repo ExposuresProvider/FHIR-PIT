@@ -1,5 +1,5 @@
 import sys
-from utils import merge
+from utils import concat
 
 dir = sys.argv[1]
 
@@ -9,4 +9,4 @@ filename_column = sys.argv[3]
 
 default_value = sys.argv[4]
 
-merge(dir, output_file, filename_column, default_value)
+concat(dir, output_file, filename_column, default_value)
