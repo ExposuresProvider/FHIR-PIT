@@ -313,6 +313,7 @@ object PreprocPerPatSeriesToVector {
             }).collect.toMap
 
           })
+          println(df)
 
           def col_filter_observation(col:String, start_date: DateTime) : (Boolean, Seq[(String, JsValue)]) = {
             println("filter observation column " + col)
