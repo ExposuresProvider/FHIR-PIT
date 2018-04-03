@@ -2,6 +2,7 @@ import subprocess
 import glob
 import os.path
 from functools import reduce
+import re
 
 import pandas as pd
 from timeit import default_timer as timer
