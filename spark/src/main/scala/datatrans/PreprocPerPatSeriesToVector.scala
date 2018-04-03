@@ -303,6 +303,7 @@ object PreprocPerPatSeriesToVector {
 
           case class MDCTN_map(mdctn_rxcui : Map[String, MDCTN_map_entry], rxcui_name : Map[String, String])
           val df = config.map.map(map0 => {
+            println("loading map from " + map0)
             val df = spark.read.format("csv").option("delimiter", "\t").option("header", false).load(config.input_directory + "/" + map0)
             df.map(row => {
               val row3 = row.getString(3)
