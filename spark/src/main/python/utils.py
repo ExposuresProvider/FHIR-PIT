@@ -69,14 +69,14 @@ def concat(dir, output_file, filename_column, default_value):
     df1.to_csv(output_file, sep="!", index=False)
 
 def merge(input_dirs, pats, output_dir):
-    a = map(lambda pat : re.compile(pat + "|start_date"), pats)
+    rs = map(lambda pat : re.compile(pat + "|start_date"), pats)
 
     for f in glob.glob(input_dirs[0] + "/*"):
         bn = os.path.basename(f)
         print("processing", f)
 
         dfs = []
-        for dir, a in zip(input_dirs, a):
+        for dir, a in zip(input_dirs, rs):
             f = dir + "/" + bn
             df = pd.read_csv(f, sep="!")
             df3 = df[list(filter(lambda x : a.fullmatch(x), df.columns))]
