@@ -314,10 +314,8 @@ object PreprocPerPatSeriesToVector {
             }).collect.toMap
 
           })
-          println(df)
 
           def col_filter_observation(col:String, start_date: DateTime) : (Boolean, Seq[(String, JsValue)]) = {
-            println("filter observation column " + col)
             df.flatMap(x => x.get(col)).map(map_entry => {
               val tuples = map_entry.rxCUIList.map(rxcuicol => {
                 (rxcuicol, JsString(map_entry.rxCUIList2.mkString(";")))
@@ -327,7 +325,6 @@ object PreprocPerPatSeriesToVector {
               else
                 tuples)
             }).getOrElse {
-              println("filter observation column " + col + " is not in map")
               val filtered_visit = config.regex_observation_filter_visit.forall(x => col.matches(x))
 
               (filtered_visit, config.regex_observation.map(x => {
