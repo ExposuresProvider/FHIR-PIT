@@ -6,6 +6,7 @@ dir = sys.argv[1]
 
 output_file = sys.argv[2]
 
+default_value = sys.argv[3]
 
 dfs = []
 count = 0
@@ -23,7 +24,7 @@ count = 0
 for file, df2 in dfs:
     count += 1
     print("reindexing " + str(count) + " " + file)
-    df2 = df2.reindex(columns=common_columns, fill_value='')
+    df2 = df2.reindex(columns=common_columns, fill_value=default_value)
     df1 = pd.concat([df1, df2], axis=0, ignore_index=True)
 
 df1.to_csv(output_file, sep="!", index=False)
