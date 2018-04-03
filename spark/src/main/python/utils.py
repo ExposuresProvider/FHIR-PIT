@@ -51,6 +51,7 @@ def merge(dir, output_file, default_value):
         dfs.append((file, df2))
         common_columns = common_columns.union(df2.columns)
 
+    print("merged columns: ", common_columns)
     df1 = pd.DataFrame(columns = common_columns)
     count = 0
     # https://stackoverflow.com/questions/29929639/when-combining-pandas-dataframe-concat-or-append-can-i-set-the-default-value
