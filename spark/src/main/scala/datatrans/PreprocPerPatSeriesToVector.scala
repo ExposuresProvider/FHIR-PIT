@@ -39,7 +39,7 @@ object PreprocPerPatSeriesToVector {
     var env = Json.obj()
     val names = for(i <- statistics; j <- indices) yield f"${j}_$i"
     var names2 = Seq() ++ (if (config.geo_coordinates)
-      Seq("row", "col", "start_date")
+      Seq("row", "col", "year")
     else Seq()) ++ (if (config.environmental_data.isDefined)
       names
     else Seq())
@@ -98,7 +98,7 @@ object PreprocPerPatSeriesToVector {
           }
           val aggregatedf = df.filter(df("a") === start_date.toString("yyyy-MM-dd")).select(names.map(df.col) : _*)
           if (aggregatedf.count == 0) {
-            println("env data not found" + " " + "row " + row + " col " + col + " start_date " + start_date.toString("yyyy-MM-dd"))
+            println("env data not found" + " " + "row " + row + " col " + col + " year " + year)
             Seq()
           } else {
             val aggregate = aggregatedf.first
@@ -108,7 +108,7 @@ object PreprocPerPatSeriesToVector {
           Seq()
 
         if(config.geo_coordinates) {
-          tuples ++= Seq("row" -> (row : JsValueWrapper), "col" -> (col : JsValueWrapper), "start_date" -> (start_date.toString("yyyy-MM-dd") : JsValueWrapper))
+          tuples ++= Seq("row" -> (row : JsValueWrapper), "col" -> (col : JsValueWrapper), "year" -> (year : JsValueWrapper))
         }
 
         Json.obj(tuples : _*)
