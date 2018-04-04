@@ -3,6 +3,7 @@ import glob
 import os.path
 from functools import reduce
 import re
+import joblib
 
 import pandas as pd
 from timeit import default_timer as timer
@@ -86,20 +87,20 @@ def concat(dir, output_file, filename_column, default_value):
 
 def merge(input_dirs, pats, output_dir):
     rs = list(map(lambda pat : re.compile(pat), pats))
-    files = list()
-    count = 0
-    for f in glob.glob(input_dirs[0] + "/*"):
-        count += 1
-        bn = os.path.basename(f)
+    files = glob.glob(input_dirs[0] + "/*")
 
+    def proc_pid(count, f):
+        bn = os.path.basename(f)
 
         dfs = []
         for dir, a in zip(input_dirs, rs):
             f = dir + "/" + bn
-            print("processing " + str(count) + " " + f)
+            print("processing " + f)
             df = pd.read_csv(f, sep="!")
             df3 = df[list(filter(lambda x : a.fullmatch(x), df.columns))]
             dfs.append(df3)
 
         dfo = reduce(lambda a, b : a.merge(b), dfs)
         dfo.to_csv(output_dir + "/" + bn, sep="!", index=False)
+
+    joblib.Parallel(30)(joblib.delayed(proc_pid)(f) for f in files)
