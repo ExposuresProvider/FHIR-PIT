@@ -86,15 +86,17 @@ def concat(dir, output_file, filename_column, default_value):
 
 def merge(input_dirs, pats, output_dir):
     rs = list(map(lambda pat : re.compile(pat), pats))
-
+    files = list()
+    count = 0
     for f in glob.glob(input_dirs[0] + "/*"):
+        count += 1
         bn = os.path.basename(f)
 
 
         dfs = []
         for dir, a in zip(input_dirs, rs):
             f = dir + "/" + bn
-            print("processing", f)
+            print("processing " + str(count) + " " + f)
             df = pd.read_csv(f, sep="!")
             df3 = df[list(filter(lambda x : a.fullmatch(x), df.columns))]
             dfs.append(df3)
