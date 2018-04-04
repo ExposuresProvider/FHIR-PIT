@@ -184,11 +184,9 @@ object Utils {
   case object JSON extends Format
   case object CSV extends Format
 
-  def latlon2rowcol(latitude : Double, longitude : Double, year : Int) : (Int, Int) = {
+  def latlon2rowcol(latitude : Double, longitude : Double, year : Int) : Option[(Int, Int)] = {
     // CMAQ uses Lambert Conformal Conic projection
     val proj = "lcc"
-    var row_no = -1
-    var col_no = -1
 
     if (year == 2010 || year == 2011) {
       // open CMAQ 12K NetCDF file (47Gb!!)
@@ -248,14 +246,14 @@ object Utils {
       if ((x1 >= xorig) && (x1 <= (xorig + (xcell * number_of_columns))) &&
         (y1 >= yorig) && (y1 <= (yorig + (ycell * number_of_rows)))) {
         // find row and column in grid
-        col_no = ((xorig - x1).abs / xcell).floor.toInt + 1
-        row_no = ((yorig.abs + y1) / ycell).floor.toInt + 1
-      }
+        val col_no = ((xorig - x1).abs / xcell).floor.toInt + 1
+        val row_no = ((yorig.abs + y1) / ycell).floor.toInt + 1
+        Some(row_no, col_no)
+      } else
+        None
 
-    }
-
-
-    return Tuple2(row_no, col_no)
+    } else
+      None
 
   }
 

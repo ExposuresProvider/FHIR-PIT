@@ -134,7 +134,14 @@ object PreprocPerPatSeriesEnvData {
           val lat = jsvalue("lat").as[Double]
           val lon = jsvalue("lon").as[Double]
 
-          val coors = (config.start_date.year.get to config.end_date.minusDays(1).year.get).map(year => (year, latlon2rowcol(lat, lon, year)))
+          val coors = (config.start_date.year.get to config.end_date.minusDays(1).year.get).flatMap(year => {
+            latlon2rowcol(lat, lon, year) match {
+              case Some((row, col)) =>
+                Seq((year, (row, col)))
+              case _ =>
+                Seq()
+            }
+          })
           val indices = Seq("o3", "pmij")
           val statistics = Seq("avg", "max", "min", "stddev")
           val names = for (i <- statistics; j <- indices) yield f"${j}_$i"
