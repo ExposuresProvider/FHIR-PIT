@@ -17,4 +17,4 @@ add bin dirs via `set -u fish_user_paths $fish_user_paths <bin dirs>`
 
 ### pip in virtualenv
 
-tensorflow, keras, h5py, numpy, sklearn, pandas
+tensorflow, keras, h5py, numpy, sklearn, pandas, joblib
