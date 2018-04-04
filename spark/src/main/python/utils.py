@@ -85,22 +85,23 @@ def concat(dir, output_file, filename_column, default_value):
 
     combined_dfs[0].to_csv(output_file, sep="!", index=False)
 
-def merge(input_dirs, pats, output_dir):
+def proc_pid(input_dirs, rs, output_dir, f):
+    bn = os.path.basename(f)
+
+    dfs = []
+    for dir, a in zip(input_dirs, rs):
+        f = dir + "/" + bn
+        print("processing " + f)
+        df = pd.read_csv(f, sep="!")
+        df3 = df[list(filter(lambda x : a.fullmatch(x), df.columns))]
+        dfs.append(df3)
+
+    dfo = reduce(lambda a, b : a.merge(b), dfs)
+    dfo.to_csv(output_dir + "/" + bn, sep="!", index=False)
+
+def merge(input_dirs, pats, output_dir, n_jobs):
     rs = list(map(lambda pat : re.compile(pat), pats))
     files = glob.glob(input_dirs[0] + "/*")
 
-    def proc_pid(count, f):
-        bn = os.path.basename(f)
 
-        dfs = []
-        for dir, a in zip(input_dirs, rs):
-            f = dir + "/" + bn
-            print("processing " + f)
-            df = pd.read_csv(f, sep="!")
-            df3 = df[list(filter(lambda x : a.fullmatch(x), df.columns))]
-            dfs.append(df3)
-
-        dfo = reduce(lambda a, b : a.merge(b), dfs)
-        dfo.to_csv(output_dir + "/" + bn, sep="!", index=False)
-
-    joblib.Parallel(30)(joblib.delayed(proc_pid)(f) for f in files)
+    joblib.Parallel(n_jobs = n_jobs)(joblib.delayed(proc_pid)(input_dirs, rs, output_dir, f) for f in files)
