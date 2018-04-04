@@ -58,15 +58,29 @@ def concat(dir, output_file, filename_column, default_value):
     print("merged columns: ", common_columns.tolist())
     df1 = pd.DataFrame(columns = common_columns)
     count = 0
+    reindxed_dfs = []
     # https://stackoverflow.com/questions/29929639/when-combining-pandas-dataframe-concat-or-append-can-i-set-the-default-value
     for file, df2 in dfs:
         count += 1
         print("reindexing " + str(count) + " " + file)
         df2 = df2.reindex(columns=common_columns, fill_value=default_value)
         df2[filename_column] = os.path.basename(file)
-        df1 = pd.concat([df1, df2], axis=0, ignore_index=True)
+        reindxed_dfs.append(df2)
 
-    df1.to_csv(output_file, sep="!", index=False)
+    count = 0
+    combined_dfs = reindxed_dfs
+    while len(combined_dfs) > 1:
+        count += 1
+        print("combining pass " + str(count))
+        combine0 = combined_dfs[0::2]
+        combine1 = combined_dfs[1::2]
+
+        combined_dfs = []
+        for df0, df1 in zip(combine0, combine1):
+            print("combining " + str(len(combined_dfs) + 1))
+            combined_dfs.append(pd.concat([df0, df1], axis=0, ignore_index=True)
+
+    combined_dfs[0].to_csv(output_file, sep="!", index=False)
 
 def merge(input_dirs, pats, output_dir):
     rs = list(map(lambda pat : re.compile(pat), pats))
