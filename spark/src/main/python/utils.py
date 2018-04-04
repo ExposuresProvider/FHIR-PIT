@@ -69,7 +69,7 @@ def concat(dir, output_file, filename_column, default_value):
     df1.to_csv(output_file, sep="!", index=False)
 
 def merge(input_dirs, pats, output_dir):
-    rs = list(map(lambda pat : re.compile(pat + "|start_date"), pats))
+    rs = list(map(lambda pat : re.compile(pat), pats))
 
     for f in glob.glob(input_dirs[0] + "/*"):
         bn = os.path.basename(f)
