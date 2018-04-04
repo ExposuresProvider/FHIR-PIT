@@ -57,6 +57,12 @@ object PreprocPerPatSeriesToVector {
 
     }
 
+    if(config.geo_coordinates)
+      env ++= Json.obj(
+        "lat" -> lat,
+        "lon" -> lon
+      )
+
     env
   }
 

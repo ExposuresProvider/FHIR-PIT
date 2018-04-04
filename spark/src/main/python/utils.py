@@ -97,7 +97,8 @@ def proc_pid(input_dirs, rs, output_dir, f):
         dfs.append(df3)
 
     dfo = reduce(lambda a, b : a.merge(b), dfs)
-    dfo.to_csv(output_dir + "/" + bn, sep="!", index=False)
+    if dfo.count() != 0:
+        dfo.to_csv(output_dir + "/" + bn, sep="!", index=False)
 
 def merge(input_dirs, pats, output_dir, n_jobs):
     rs = list(map(lambda pat : re.compile(pat), pats))
