@@ -79,6 +79,8 @@ def concat(dir, output_file, filename_column, default_value):
         for df0, df1 in zip(combine0, combine1):
             print("combining " + str(len(combined_dfs) + 1))
             combined_dfs.append(pd.concat([df0, df1], axis=0, ignore_index=True))
+        if len(combine0) > len(combine1):
+            combined_dfs.append(combine0[-1])
 
     combined_dfs[0].to_csv(output_file, sep="!", index=False)
 
