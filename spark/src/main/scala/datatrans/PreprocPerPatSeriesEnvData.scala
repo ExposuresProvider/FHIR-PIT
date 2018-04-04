@@ -57,7 +57,7 @@ object PreprocPerPatSeriesEnvData {
 
     }
 
-    if(dfs.size !=0) {
+    if(dfs.nonEmpty) {
       val df1 = dfs.head
       for (df2 <- dfs.tail) {
         df1.union(df2)
