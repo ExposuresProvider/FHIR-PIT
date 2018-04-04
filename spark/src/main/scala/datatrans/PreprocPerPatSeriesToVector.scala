@@ -19,7 +19,6 @@ case class Config(
                    patient_num_list : Option[Seq[String]] = None,
                    input_directory : String = "",
                    time_series : String = "",
-                   environmental_data : Option[String] = None,
                    output_prefix : String = "",
                    start_date : Option[DateTime] = None,
                    end_date : Option[DateTime] = None,
@@ -29,96 +28,10 @@ case class Config(
                    map : Option[String] = None,
                    aggregate_by : Option[String] = None,
                    output_format : String = "json",
-                   debug : Boolean = false,
-                   geo_coordinates : Boolean = false
+                   debug : Boolean = false
                  )
 
 object PreprocPerPatSeriesToVector {
-  def loadEnvData(config : Config, spark: SparkSession, lat: Double, lon:Double, start_date: DateTime, indices : Seq[String], statistics : Seq[String]) = {
-
-    var env = Json.obj()
-    val names = for(i <- statistics; j <- indices) yield f"${j}_$i"
-    var names2 = Seq() ++ (if (config.geo_coordinates)
-      Seq("row", "col", "year")
-    else Seq()) ++ (if (config.environmental_data.isDefined)
-      names
-    else Seq())
-
-    for(i <- -7 to 7) {
-      val start_time = start_date.plusDays(i)
-
-      val obj = loadDailyEnvData(config, spark, lat, lon, start_time, names)
-      env ++= Json.obj(names2.flatMap(x => obj \ x match {
-        case JsDefined(value) =>
-          Seq(x + "_day" + i -> (value: JsValueWrapper))
-        case _ =>
-          Seq()
-      }): _*)
-
-    }
-
-    if(config.geo_coordinates)
-      env ++= Json.obj(
-        "lat" -> lat,
-        "lon" -> lon
-      )
-
-    env
-  }
-
-  val cache = scala.collection.mutable.Map[String, SoftReference[DataFrame]]()
-
-  def loadDailyEnvData(config : Config, spark: SparkSession, lat: Double, lon:Double, start_date: DateTime, names : Seq[String]) : JsObject = {
-    val year = start_date.year.get
-    val (row, col) = latlon2rowcol(lat, lon, year)
-
-    if (row == -1 || col == -1) {
-      Json.obj()
-    } else {
-      if (config.environmental_data.isDefined || config.geo_coordinates) {
-        if (config.aggregate_by.isDefined && config.aggregate_by.get != "day") {
-          throw new UnsupportedOperationException("aggregate environmental data is not implemented")
-        }
-        var tuples = if(config.environmental_data.isDefined) {
-          val filename = f"${config.input_directory}/${config.environmental_data.get}/cmaq$year/C$col%03dR$row%03dDaily.csv"
-          def loadEnvDataFrame(filename : String) = {
-            val df = spark.read.format("csv").load(filename).toDF(("a" +: names) : _*)
-            cache(filename) = new SoftReference(df)
-            println("SoftReference created for " + filename)
-            df
-          }
-          val df = cache.get(filename) match {
-            case None =>
-              loadEnvDataFrame(filename)
-            case Some(x) =>
-              x.get.getOrElse {
-                println("SoftReference has already be garbage collected " + filename)
-                loadEnvDataFrame(filename)
-              }
-          }
-          val aggregatedf = df.filter(df("a") === start_date.toString("yyyy-MM-dd")).select(names.map(df.col) : _*)
-          if (aggregatedf.count == 0) {
-            println("env data not found" + " " + "row " + row + " col " + col + " year " + year)
-            Seq()
-          } else {
-            val aggregate = aggregatedf.first
-            (0 until names.size).map(i => names(i) -> (aggregate.getString(i).toDouble: JsValueWrapper))
-          }
-        } else
-          Seq()
-
-        if(config.geo_coordinates) {
-          tuples ++= Seq("row" -> (row : JsValueWrapper), "col" -> (col : JsValueWrapper), "year" -> (year : JsValueWrapper))
-        }
-
-        Json.obj(tuples : _*)
-      } else {
-        Json.obj()
-      }
-
-
-    }
-  }
 
   def proc_pid(config : Config, spark: SparkSession, p:String, col_filter_observation: (String, DateTime) => (Boolean, Seq[(String, JsValue)]), col_filter_visit: (String, DateTime) => Seq[(String, JsValue)], crit : JsObject => Boolean) =
     time {
@@ -244,14 +157,12 @@ object PreprocPerPatSeriesToVector {
               val data = listBuf2.toSeq.map {
                 case (start_date, vec) =>
                   val age = Years.yearsBetween (birth_date_joda, start_date).getYears
-                  val obj = Json.obj (
+                  Json.obj (
                     "race_cd" -> race_cd,
                     "sex_cd" -> sex_cd,
                     "birth_date" -> birth_date,
                     "age" -> age,
                     "start_date" -> start_date.toString("y-M-d")) ++ vec
-                  val env = loadEnvData(config, spark, lat, lon, start_date, Seq("o3", "pmij"), Seq("avg", "max", "min", "stddev"))
-                  obj ++ env
               }.filter(crit)
 
               if (data.nonEmpty) {
@@ -296,7 +207,6 @@ object PreprocPerPatSeriesToVector {
       opt[Seq[String]]("patient_num_list").action((x,c) => c.copy(patient_num_list = Some(x)))
       opt[String]("input_directory").required.action((x,c) => c.copy(input_directory = x))
       opt[String]("time_series").required.action((x,c) => c.copy(time_series = x))
-      opt[String]("environmental_data").action((x,c) => c.copy(environmental_data = Some(x)))
       opt[String]("output_prefix").required.action((x,c) => c.copy(output_prefix = x))
       opt[String]("start_date").action((x,c) => c.copy(start_date = Some(DateTime.parse(x))))
       opt[String]("end_date").action((x,c) => c.copy(end_date = Some(DateTime.parse(x))))
@@ -307,7 +217,6 @@ object PreprocPerPatSeriesToVector {
       opt[String]("aggregate_by").action((x,c) => c.copy(aggregate_by = Some(x)))
       opt[String]("output_format").action((x,c) => c.copy(output_format = x))
       opt[Unit]("debug").action((_,c) => c.copy(debug = true))
-      opt[Unit]("coordinates").action((_,c) => c.copy(geo_coordinates = true))
     }
 
     val spark = SparkSession.builder().appName("datatrans preproc").getOrCreate()
