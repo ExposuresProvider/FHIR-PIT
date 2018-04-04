@@ -97,7 +97,9 @@ def proc_pid(input_dirs, rs, output_dir, f):
         dfs.append(df3)
 
     dfo = reduce(lambda a, b : a.merge(b), dfs)
-    if len(dfo.index) != 0:
+    nrows = len(dfo.index)
+    if nrows != 0:
+        print(nrows + " rows " + f)
         dfo.to_csv(output_dir + "/" + bn, sep="!", index=False)
     else:
         print("empty " + f)
