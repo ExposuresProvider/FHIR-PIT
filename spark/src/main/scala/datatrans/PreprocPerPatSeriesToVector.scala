@@ -2,7 +2,6 @@ package datatrans
 
 import java.util.concurrent.atomic.AtomicInteger
 
-import scala.ref.SoftReference
 import datatrans.Utils._
 import org.apache.hadoop.fs.Path
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
