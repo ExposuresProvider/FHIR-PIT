@@ -26,7 +26,8 @@ case class PreprocPerPatSeriesEnvDataConfig(
                    start_date : DateTime = DateTime.now(),
                    end_date : DateTime = DateTime.now(),
                    output_format : String = "json",
-                   geo_coordinates : Boolean = false
+                   geo_coordinates : Boolean = false,
+                   sequential : Boolean = false
                  )
 
 object PreprocPerPatSeriesEnvData {
@@ -191,6 +192,7 @@ object PreprocPerPatSeriesEnvData {
       opt[String]("end_date").required.action((x,c) => c.copy(end_date = DateTime.parse(x)))
       opt[String]("output_format").action((x,c) => c.copy(output_format = x))
       opt[Unit]("coordinates").action((_,c) => c.copy(geo_coordinates = true))
+      opt[Unit]("sequential").action((_,c) => c.copy(sequential = true))
     }
 
     val spark = SparkSession.builder().appName("datatrans preproc").getOrCreate()
@@ -208,27 +210,32 @@ object PreprocPerPatSeriesEnvData {
           def proc_pid2(p : String) =
             proc_pid(config, spark, p)
 
-          config.patient_num_list match {
+          val patl0 = config.patient_num_list match {
             case Some(pnl) =>
-              pnl.par.foreach(proc_pid2)
+              pnl
             case None =>
               config.patient_dimension match {
                 case Some(pdif) =>
                   println("loading patient_dimension from " + pdif)
                   val pddf0 = spark.read.format("csv").option("header", true).load(config.input_directory + "/" + pdif)
 
-                  val patl = pddf0.select("patient_num").map(r => r.getString(0)).collect.toList.par
+                  pddf0.select("patient_num").map(r => r.getString(0)).collect.toList
 
-                  val count = new AtomicInteger(0)
-                  val n = patl.size
-                  patl.foreach(pid => {
-                    println("processing " + count.incrementAndGet + " / " + n + " " + pid)
-                    proc_pid2(pid)
-                  })
                 case None =>
+                  Seq()
               }
 
           }
+
+          val patl = if (config.sequential) patl0 else patl0.par
+
+          val count = new AtomicInteger(0)
+          val n = patl.size
+          patl.foreach(pid => {
+            println("processing " + count.incrementAndGet + " / " + n + " " + pid)
+            proc_pid2(pid)
+          })
+
         }
       case None =>
     }
