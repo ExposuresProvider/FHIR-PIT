@@ -75,7 +75,7 @@ object PreprocPerPatSeriesEnvData {
 
     for(ioff <- - 7 to 7) {
       val curr_date = start_date.plusDays(ioff)
-      val str = curr_date.toString("yyyy-MM-dd")
+      val str = curr_date.toString(DATE_FORMAT)
 
       env_data.get(str) match {
         case Some(data) =>
@@ -102,7 +102,7 @@ object PreprocPerPatSeriesEnvData {
         "lat" -> lat,
         "lon" -> lon
       )
-    env ++= Json.obj("start_date" -> start_date.toString("yyyy-MM-dd"))
+    env ++= Json.obj("start_date" -> start_date.toString(DATE_FORMAT))
 
     env
   }

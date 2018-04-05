@@ -280,5 +280,6 @@ object Utils {
         mmap(key) = Json.obj(col -> value)
     }
   }
+  val DATE_FORMAT = "yyyy-MM-dd"
 
 }

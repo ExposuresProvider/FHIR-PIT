@@ -162,7 +162,7 @@ object PreprocPerPatSeriesToVector {
                     "sex_cd" -> sex_cd,
                     "birth_date" -> birth_date,
                     "age" -> age,
-                    "start_date" -> start_date.toString("y-M-d")) ++ vec
+                    "start_date" -> start_date.toString(DATE_FORMAT)) ++ vec
               }.filter(crit)
 
               if (data.nonEmpty) {
