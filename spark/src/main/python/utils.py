@@ -91,10 +91,14 @@ def proc_pid(input_dirs, rs, output_dir, f):
     dfs = []
     for dir, a in zip(input_dirs, rs):
         f = dir + "/" + bn
-        print("processing " + f)
-        df = pd.read_csv(f, sep="!")
-        df3 = df[list(filter(lambda x : a.fullmatch(x), df.columns))]
-        dfs.append(df3)
+        if os.path.exists(f):
+            print("processing " + f)
+            df = pd.read_csv(f, sep="!")
+            df3 = df[list(filter(lambda x : a.fullmatch(x), df.columns))]
+            dfs.append(df3)
+        else:
+            print(f + " does not exist")
+            return
 
     dfo = reduce(lambda a, b : a.merge(b), dfs)
     nrows = len(dfo.index)
