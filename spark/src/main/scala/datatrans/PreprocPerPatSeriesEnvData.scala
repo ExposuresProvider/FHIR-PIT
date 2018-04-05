@@ -32,14 +32,14 @@ case class PreprocPerPatSeriesEnvDataConfig(
 object PreprocPerPatSeriesEnvData {
   val cache = scala.collection.mutable.Map[String, SoftReference[DataFrame]]()
 
-  def loadEnvData(config : PreprocPerPatSeriesEnvDataConfig, spark: SparkSession, coors : Seq[(Int, (Int, Int))], names : Seq[String]) : Map[String, Seq[Double]] = {
+  def loadEnvData(config : PreprocPerPatSeriesEnvDataConfig, spark: SparkSession, coors : Seq[(Int, (Int, Int))]) : Map[String, Seq[Double]] = {
 
     val dfs = coors.map {
       case (year, (row, col)) =>
         val filename = f"${config.input_directory}/${config.environmental_data.get}/cmaq$year/C$col%03dR$row%03dDaily.csv"
 
         def loadEnvDataFrame(filename: String) = {
-          val df = spark.read.format("csv").load(filename).toDF(("a" +: names): _*)
+          val df = spark.read.format("csv").load(filename)
           cache(filename) = new SoftReference(df)
           println("SoftReference created for " + filename)
           df
@@ -144,7 +144,7 @@ object PreprocPerPatSeriesEnvData {
           val statistics = Seq("avg", "max", "min", "stddev")
           val names = for (i <- statistics; j <- indices) yield f"${j}_$i"
 
-          val env_data = loadEnvData(config, spark, coors, names)
+          val env_data = loadEnvData(config, spark, coors)
 
           for (i <- 0 until Days.daysBetween(config.start_date, config.end_date).getDays) {
             data += loadDailyEnvData(config, lat, lon, config.start_date.plusDays(i), env_data, coors.toMap, i, names)
