@@ -58,10 +58,7 @@ object PreprocPerPatSeriesEnvData {
     }
 
     if(dfs.nonEmpty) {
-      val df1 = dfs.head
-      for (df2 <- dfs.tail) {
-        df1.union(df2)
-      }
+      var df1 = dfs.reduce((a,b) => a.union(b))
       import spark.implicits._
       df1.map(row => (row.getString(0), row.toSeq.tail.map(x => x.asInstanceOf[String].toDouble))).collect.toMap
     } else
