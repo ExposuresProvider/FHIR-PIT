@@ -57,9 +57,13 @@ object PreprocPerPatSeriesEnvData {
 
     }
 
-    val df = dfs.fold(spark.emptyDataFrame)((a,b) => a.union(b))
-    import spark.implicits._
-    df.map(row => (row.getString(0), row.toSeq.tail.map(x => x.asInstanceOf[String].toDouble))).collect.toMap
+    if (dfs.nonEmpty) {
+      val df = dfs.reduce((a,b) => a.union(b))
+      import spark.implicits._
+      df.map(row => (row.getString(0), row.toSeq.tail.map(x => x.asInstanceOf[String].toDouble))).collect.toMap
+
+    } else
+      Map.empty
 
   }
 
