@@ -80,11 +80,15 @@ object PreprocPerPatSeriesEnvData {
       env_data.get(str) match {
         case Some(data) =>
           env ++= Json.obj("start_date" -> str)
-          env ++= Json.obj(names.zipWithIndex.map{
+          env ++= Json.obj(names.zipWithIndex.flatMap{
             case (name, coli) =>
               val num = data(coli)
-              println("num = " + num)
-              (name + "_day" + ioff -> (num: JsValueWrapper))
+              // println("num = " + num)
+              if (num == "NaN")
+                  Seq(name + "_day" + ioff -> (num: JsValueWrapper))
+              else
+                  Seq()
+
           }: _*)
         case None =>
       }
