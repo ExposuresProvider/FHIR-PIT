@@ -9,8 +9,9 @@ import scala.collection.mutable.ListBuffer
 
 object PreprocCMAQ {
 
-  def to_seq(itr: RemoteIterator[LocatedFileStatus]) : Array[Path] = {
+  def to_seq(header: Path, itr: RemoteIterator[LocatedFileStatus]) : Array[Path] = {
     val listBuf = new ListBuffer[Path]
+    listBuf.append(header)
     while(itr.hasNext) {
       val fstatus = itr.next()
       listBuf.append(fstatus.getPath)
@@ -41,6 +42,10 @@ object PreprocCMAQ {
       val rowdirs = listDirs(output_dir_path).par
 
       val header = "start_date,o3,pm25\n"
+      val header_filename = output_dir + "/.header"
+      val header_file_path = new Path(header_filename)
+      writeToFile(hc, header, header_filename)
+
       for(rowdir <- rowdirs) {
         println(f"processing row $rowdir")
         val row = rowdir.getName.split("=")(1).toInt
@@ -50,11 +55,11 @@ object PreprocCMAQ {
           val col = coldir.getName.split("=")(1).toInt
           val output_filename = output_dir + "/" + f"C$col%03dR$row%03d.csv"
           val output_file_path = new Path(output_filename)
-          val srcs = to_seq(output_dir_fs.listFiles(coldir, false))
+          val srcs = to_seq(header_file_path, output_dir_fs.listFiles(coldir, false))
           FileUtil.copy(output_dir_fs, srcs, output_dir_fs, output_file_path, false, true, hc)
-          prependStringToFile(hc, header, output_filename)
         }
       }
+      output_dir_fs.delete(header_file_path, false)
 
       spark.stop()
 
