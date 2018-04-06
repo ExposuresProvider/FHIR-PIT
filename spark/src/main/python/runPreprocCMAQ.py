@@ -1,12 +1,13 @@
 import sys
 from utils import submit
 
-dir = sys.argv[1]
-cache_dir = sys.argv[2]
-host_name = sys.argv[3]
+input_file = sys.argv[1]
+output_dir = sys.argv[2]
+cache_dir = sys.argv[3]
+host_name = sys.argv[4]
 
 submit(host_name, cache_dir, "datatrans.PreprocCMAQ",
-       dir + "/cmaq/cmaq2010.csv",
-       dir + "/cmaq2010")
+       input_file,
+       output_dir)
 
 
