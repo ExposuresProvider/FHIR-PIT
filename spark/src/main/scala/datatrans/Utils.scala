@@ -178,8 +178,8 @@ object Utils {
     output_file_output_stream.write (bytes)
     output_file_output_stream.close ()
   }
-  def appendFileToOutputStream(hc : Configuration, output_file_output_stream: FSDataOutputStream, path2: String) = {
-    val input_file_path = new Path(path2)
+
+  def appendFileToOutputStream(hc : Configuration, output_file_output_stream: FSDataOutputStream, input_file_path: Path) = {
     val input_file_file_system = input_file_path.getFileSystem(hc)
     val input_file_input_stream = input_file_file_system.open(input_file_path)
 
@@ -193,6 +193,12 @@ object Utils {
 
     input_file_input_stream.close()
   }
+
+  def appendFileToOutputStream(hc : Configuration, output_file_output_stream: FSDataOutputStream, path2: String) = {
+    val input_file_path = new Path(path2)
+    appendFileToOutputStream(hc, output_file_output_stream, input_file_path)
+  }
+
   def appendToFile(hc:Configuration, path :String, path2:String) = {
     val output_file_path = new Path (path)
     val output_file_file_system = output_file_path.getFileSystem (hc)
@@ -227,22 +233,22 @@ object Utils {
   }
 
   def copyMerge(hc: Configuration, output_dir_fs: FileSystem, overwrite: Boolean, output_filename: String, header_file_path: Path, coldir: Path): Boolean = {
-    printf("coldir = " + coldir)
     val srcs = to_seq(header_file_path, output_dir_fs.listFiles(coldir, false))
     copyMerge(hc, output_dir_fs, overwrite, output_filename, coldir, srcs)
   }
 
   def copyMerge(hc: Configuration, output_dir_fs: FileSystem, overwrite: Boolean, output_filename: String, coldir: Path): Boolean = {
-    printf("coldir = " + coldir)
     val srcs = to_seq(output_dir_fs.listFiles(coldir, false))
     copyMerge(hc, output_dir_fs, overwrite, output_filename, coldir, srcs)
   }
 
   private def copyMerge(hc: Configuration, output_dir_fs: FileSystem, overwrite: Boolean, output_filename: String, coldir: Path, srcs: Array[Path]) = {
     val output_file_path = new Path(output_filename)
-    println("srcs = " + srcs)
-    println("writing to " + output_filename)
-    FileUtil.copy(output_dir_fs, srcs, output_dir_fs, output_file_path, false, overwrite, hc)
+    val output_file_output_stream = output_dir_fs.create(output_file_path)
+    for (p <- srcs) {
+      appendFileToOutputStream(hc, output_file_output_stream, p)
+    }
+    output_file_output_stream.close()
     output_dir_fs.delete(coldir, true)
   }
 
