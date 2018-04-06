@@ -240,6 +240,7 @@ object Utils {
     val output_file_path = new Path(output_filename)
     val output_file_output_stream = output_dir_fs.create(output_file_path)
     for (p <- srcs) {
+      println("copying " + p)
       appendFileToOutputStream(hc, output_file_output_stream, p)
     }
     output_file_output_stream.close()
