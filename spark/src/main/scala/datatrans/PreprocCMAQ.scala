@@ -33,7 +33,7 @@ object PreprocCMAQ {
       val rowdirs = listDirs(output_dir_path).par
 
       val header = "start_date,o3,pm25\n"
-      val header_file_path = writeHeaderToFile(hc, output_dir, header)
+      val header_file_path = writeHeaderToFile(hc, output_dir + ".header", header)
 
       for(rowdir <- rowdirs) {
         println(f"processing row $rowdir")
