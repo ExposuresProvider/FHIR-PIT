@@ -229,14 +229,17 @@ object Utils {
   def copyMerge(hc: Configuration, output_dir_fs: FileSystem, overwrite: Boolean, output_filename: String, header_file_path: Path, coldir: Path): Boolean = {
     val output_file_path = new Path(output_filename)
     val srcs = to_seq(header_file_path, output_dir_fs.listFiles(coldir, false))
+    println("srcs = " + srcs)
+    println("writing to " + output_filename)
     FileUtil.copy(output_dir_fs, srcs, output_dir_fs, output_file_path, false, overwrite, hc)
     output_dir_fs.delete(coldir, true)
   }
 
   def copyMerge(hc: Configuration, output_dir_fs: FileSystem, overwrite: Boolean, output_filename: String, coldir: Path): Boolean = {
     val output_file_path = new Path(output_filename)
+    val output_file_fs = output_file_path.getFileSystem(hc)
     val srcs = to_seq(output_dir_fs.listFiles(coldir, false))
-    FileUtil.copy(output_dir_fs, srcs, output_dir_fs, output_file_path, false, overwrite, hc)
+    FileUtil.copy(output_dir_fs, srcs, output_file_fs, output_file_path, false, overwrite, hc)
     output_dir_fs.delete(coldir, true)
   }
 
