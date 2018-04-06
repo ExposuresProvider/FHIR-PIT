@@ -42,7 +42,7 @@ object PreprocCMAQ {
       val rowdirs = listDirs(output_dir_path).par
 
       val header = "start_date,o3,pm25\n"
-      val header_filename = output_dir + "/.header"
+      val header_filename = f"$output_dir/.header"
       val header_file_path = new Path(header_filename)
       writeToFile(hc, header, header_filename)
 
@@ -53,10 +53,11 @@ object PreprocCMAQ {
         for (coldir <- coldirs) {
           println(f"processing column $coldir")
           val col = coldir.getName.split("=")(1).toInt
-          val output_filename = output_dir + "/" + f"C$col%03dR$row%03d.csv"
+          val output_filename = f"$output_dir/C$col%03dR$row%03d.csv"
           val output_file_path = new Path(output_filename)
           val srcs = to_seq(header_file_path, output_dir_fs.listFiles(coldir, false))
           FileUtil.copy(output_dir_fs, srcs, output_dir_fs, output_file_path, false, true, hc)
+          output_dir_fs.delete(coldir, true)
         }
       }
       output_dir_fs.delete(header_file_path, false)
