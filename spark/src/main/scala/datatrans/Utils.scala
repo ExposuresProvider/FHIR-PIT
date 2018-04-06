@@ -4,7 +4,7 @@ import java.io.{BufferedWriter, OutputStreamWriter}
 
 import org.apache.commons.lang3.StringEscapeUtils
 import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.{FileUtil, Path}
+import org.apache.hadoop.fs.{FSDataOutputStream, FileUtil, Path}
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.types._
@@ -141,12 +141,16 @@ object Utils {
   }
 
   def writeToFile(hc:Configuration, path :String, text :String) = {
-    val bytes = text.getBytes ("utf-8")
     val output_file_path = new Path (path)
     val output_file_file_system = output_file_path.getFileSystem (hc)
     val output_file_output_stream = output_file_file_system.create (output_file_path)
-    output_file_output_stream.write (bytes)
+    writeStringToOutputStream(output_file_output_stream, text)
     output_file_output_stream.close ()
+  }
+
+  private def writeStringToOutputStream(output_file_output_stream: FSDataOutputStream, text: String): Unit = {
+    val bytes = text.getBytes("utf-8")
+    output_file_output_stream.write(bytes)
   }
 
   def prependStringToFile(hc:Configuration, text : String, path : String) = {
@@ -156,8 +160,11 @@ object Utils {
     val temp_input_file_path = new Path(path2)
     input_file_fs.rename(input_file_path, temp_input_file_path)
 
-    writeToFile(hc, path, text)
-    appendToFile(hc, path, path2)
+    val output_file_output_stream = input_file_fs.create (input_file_path)
+
+    writeStringToOutputStream(output_file_output_stream, text)
+    appendFileToOutputStream(hc, output_file_output_stream, path2)
+    output_file_output_stream.close()
     input_file_fs.delete(temp_input_file_path, false)
 
   }
@@ -170,26 +177,31 @@ object Utils {
     output_file_output_stream.write (bytes)
     output_file_output_stream.close ()
   }
-
-  def appendToFile(hc:Configuration, path :String, path2:String) = {
-    val output_file_path = new Path (path)
-    val output_file_file_system = output_file_path.getFileSystem (hc)
-
-    val input_file_path = new Path (path2)
-    val input_file_file_system = input_file_path.getFileSystem (hc)
-
-    val output_file_output_stream = output_file_file_system.append(output_file_path)
+  def appendFileToOutputStream(hc : Configuration, output_file_output_stream: FSDataOutputStream, path2: String) = {
+    val input_file_path = new Path(path2)
+    val input_file_file_system = input_file_path.getFileSystem(hc)
     val input_file_input_stream = input_file_file_system.open(input_file_path)
 
     val buf = new Array[Byte](4 * 1024)
 
     var n = input_file_input_stream.read(buf)
-    while(n != -1) {
-      output_file_output_stream.write (buf, 0, n)
+    while (n != -1) {
+      output_file_output_stream.write(buf, 0, n)
       n = input_file_input_stream.read(buf)
     }
 
     input_file_input_stream.close()
+  }
+  def appendToFile(hc:Configuration, path :String, path2:String) = {
+    val output_file_path = new Path (path)
+    val output_file_file_system = output_file_path.getFileSystem (hc)
+
+
+    val output_file_output_stream = output_file_file_system.append(output_file_path)
+
+
+
+    appendFileToOutputStream(hc, output_file_output_stream, path2)
     output_file_output_stream.close ()
   }
 
