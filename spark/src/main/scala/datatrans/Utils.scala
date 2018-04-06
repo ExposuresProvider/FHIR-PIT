@@ -179,7 +179,7 @@ object Utils {
     output_file_output_stream.close ()
   }
 
-  def appendFileToOutputStream(hc : Configuration, output_file_output_stream: FSDataOutputStream, input_file_path: Path) = {
+  def appendFileToOutputStream(hc : Configuration, output_file_output_stream: FSDataOutputStream, input_file_path: Path) : Unit = {
     val input_file_file_system = input_file_path.getFileSystem(hc)
     val input_file_input_stream = input_file_file_system.open(input_file_path)
 
@@ -194,7 +194,7 @@ object Utils {
     input_file_input_stream.close()
   }
 
-  def appendFileToOutputStream(hc : Configuration, output_file_output_stream: FSDataOutputStream, path2: String) = {
+  def appendFileToOutputStream(hc : Configuration, output_file_output_stream: FSDataOutputStream, path2: String) : Unit = {
     val input_file_path = new Path(path2)
     appendFileToOutputStream(hc, output_file_output_stream, input_file_path)
   }
