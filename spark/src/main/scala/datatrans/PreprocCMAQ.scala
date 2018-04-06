@@ -59,6 +59,7 @@ object PreprocCMAQ {
           FileUtil.copy(output_dir_fs, srcs, output_dir_fs, output_file_path, false, true, hc)
           output_dir_fs.delete(coldir, true)
         }
+        output_dir_fs.delete(rowdir, true)
       }
       output_dir_fs.delete(header_file_path, false)
 
