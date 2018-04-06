@@ -21,7 +21,7 @@ for i, dirname in enumerate(dirs):
         df = pd.read_csv(filename)
         df = df[["Date","O3_ppb", "PM25_Total_ugm3"]]
 
-        df2 = df[start_date <= pd.to_datetime(df["Date"]) < end_date]
+        df2 = df[(start_date <= pd.to_datetime(df["Date"])) & (pd.to_datetime(df["Date"]) < end_date)]
 
         df2.columns = ["start_date", "o3", "pm25"]
         return df2
