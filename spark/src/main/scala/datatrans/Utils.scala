@@ -149,6 +149,19 @@ object Utils {
     output_file_output_stream.close ()
   }
 
+  def prependStringToFile(hc:Configuration, text : String, path : String) = {
+    val input_file_path = new Path(path)
+    val input_file_fs = input_file_path.getFileSystem(hc)
+    val path2 = path + ".tmp"
+    val temp_input_file_path = new Path(path2)
+    input_file_fs.rename(input_file_path, temp_input_file_path)
+
+    writeToFile(hc, path, text)
+    appendToFile(hc, path, path2)
+    input_file_fs.delete(temp_input_file_path, false)
+
+  }
+
   def appendStringToFile(hc:Configuration, path :String, text:String) = {
     val bytes = text.getBytes ("utf-8")
     val output_file_path = new Path (path)

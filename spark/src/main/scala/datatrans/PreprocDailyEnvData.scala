@@ -20,9 +20,9 @@ case class PreprocDailyEnvDataConfig(
 object PreprocDailyEnvData {
   val schema = StructType(
     Seq(
-      StructField("a", TimestampType, true),
+      StructField("start_date", TimestampType, true),
       StructField("o3", DoubleType, true),
-      StructField("pmij", DoubleType, true)
+      StructField("pm25", DoubleType, true)
     ))
 
   def preproceEnvData(config : PreprocDailyEnvDataConfig, spark: SparkSession, filename : String) =
@@ -43,22 +43,25 @@ object PreprocDailyEnvData {
       val output_file_path = new Path(output_filename)
       val output_file_fs = output_file_path.getFileSystem(hc)
       if(!output_file_fs.exists(output_file_path)) {
-        val df = spark.read.format("csv").schema(schema).load(filename)
+        val df = spark.read.format("csv").option("header", true).schema(schema).load(filename)
 
         val aggregate = df.withColumn("start_date", to_date(df("a"))).groupBy("start_date").agg(
           avg("o3").alias("o3_avg"),
-          avg("pmij").alias("pmij_avg"),
+          avg("pm25").alias("pm25_avg"),
           max("o3").alias("o3_max"),
-          max("pmij").alias("pmij_max"),
+          max("pm25").alias("pm25_max"),
           min("o3").alias("o3_min"),
-          min("pmij").alias("pmij_min"),
+          min("pm25").alias("pm25_min"),
           stddev("o3").alias("o3_stddev"),
-          stddev("pmij").alias("pmij_stddev")
+          stddev("pm25").alias("pm25_stddev")
         )
 
         aggregate.write.csv(output_dir)
 
         FileUtil.copyMerge(output_dir_fs, output_dir_path, output_dir_fs, output_file_path, true, hc, null)
+
+        val header = aggregate.columns.mkString(",") + "\n"
+        prependStringToFile(hc, header, output_filename)
 
       } else {
         println(output_filename + " exists")

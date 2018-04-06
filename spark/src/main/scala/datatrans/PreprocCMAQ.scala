@@ -28,6 +28,7 @@ object PreprocCMAQ {
 
       val rowdirs = listDirs(output_dir_path).par
 
+      val header = "start_date,o3,pm25\n"
       for(rowdir <- rowdirs) {
         println(f"processing row $rowdir")
         val row = rowdir.getName.split("=")(1).toInt
@@ -38,6 +39,7 @@ object PreprocCMAQ {
           val output_filename = output_dir + "/" + f"C$col%03dR$row%03d.csv"
           val output_file_path = new Path(output_filename)
           FileUtil.copyMerge(output_dir_fs, coldir, output_dir_fs, output_file_path, true, hc, null)
+          prependStringToFile(hc, header, output_filename)
         }
       }
 

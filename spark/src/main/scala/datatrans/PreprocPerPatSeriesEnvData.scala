@@ -40,7 +40,7 @@ object PreprocPerPatSeriesEnvData {
         val filename = f"${config.input_directory}/${config.environmental_data.get}/cmaq$year/C$col%03dR$row%03dDaily.csv"
 
         def loadEnvDataFrame(filename: String) = {
-          val df = spark.read.format("csv").load(filename)
+          val df = spark.read.format("csv").option("header", true).load(filename)
           cache(filename) = new SoftReference(df)
           println("SoftReference created for " + filename)
           df
