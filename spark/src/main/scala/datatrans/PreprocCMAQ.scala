@@ -17,7 +17,7 @@ object PreprocCMAQ {
       val input_file = args(0)
       val output_dir = args(1)
 
-      val df = spark.read.format("csv").option("header", true).load(input_file)
+      val df = spark.read.format("csv").option("header", value = true).load(input_file)
       df.select("row","col","a","o3","pmij").write.partitionBy("row", "col").csv(output_dir)
 
       spark.sparkContext.setLogLevel("WARN")
@@ -47,7 +47,7 @@ object PreprocCMAQ {
           val col = coldir.getName.split("=")(1).toInt
           val output_filename = f"$output_dir/C$col%03dR$row%03d.csv"
           println("writing to " + output_filename)
-          copyMerge(hc, output_dir_fs, true, output_filename, header_file_path, coldir)
+          copyMerge(hc, output_dir_fs, overwrite = true, output_filename, header_file_path, coldir)
         }
         output_dir_fs.delete(rowdir, true)
       }

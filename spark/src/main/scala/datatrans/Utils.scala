@@ -67,7 +67,7 @@ object Utils {
         case StringType => "\"" + StringEscapeUtils.escapeCsv(x.asInstanceOf[String]) + "\""
         case MapType(_, _, _) => flattenMap(x.asInstanceOf[Map[String, Any]]).map({ case (k, v) => typeToTrans(StringType)(k.mkString("_")) + ":" + typeToTrans(StringType)(v) }).mkString("{", ",", "}")
         case ArrayType(et, _) => x.asInstanceOf[Seq[_]].map(typeToTrans(et)).mkString("[", ",", "]")
-        case StructType(fs) => (x.asInstanceOf[Row].toSeq zip fs).map({ case (x, f) => typeToTrans(f.dataType)(x) }).mkString("(", ",", ")")
+        case StructType(fs) => (x.asInstanceOf[Row].toSeq zip fs).map({ case (x2, f) => typeToTrans(f.dataType)(x2) }).mkString("(", ",", ")")
         case _ => throw new RuntimeException("typeToTrans: unsupported data type " + ty)
       }
 
@@ -97,7 +97,7 @@ object Utils {
         val schema2 = StructType(fields2)
         val encoder = RowEncoder(schema2)
 
-        wide.map(row => Row.fromSeq(row.toSeq.zip(trans).map({ case (x, t) => t(x)})))(encoder).write.option("sep", "!").option("header", false).csv(dirn)
+        wide.map(row => Row.fromSeq(row.toSeq.zip(trans).map({ case (x, t) => t(x)})))(encoder).write.option("sep", "!").option("header", value = false).csv(dirn)
         fname
 
       case JSON =>
@@ -108,7 +108,7 @@ object Utils {
     }
     val fpath = new Path(fname)
     dfs.delete(fpath, true)
-    copyMerge(hc, dfs, true, fname, dpath)
+    copyMerge(hc, dfs, overwrite = true, fname, dpath)
   }
 
   def aggregate(df: DataFrame, keycols : Seq[String], cols : Seq[String], col:String) : DataFrame = {

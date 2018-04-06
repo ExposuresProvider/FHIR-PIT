@@ -20,9 +20,9 @@ case class PreprocDailyEnvDataConfig(
 object PreprocDailyEnvData {
   val schema = StructType(
     Seq(
-      StructField("start_date", TimestampType, true),
-      StructField("o3", DoubleType, true),
-      StructField("pm25", DoubleType, true)
+      StructField("start_date", TimestampType, nullable = true),
+      StructField("o3", DoubleType, nullable = true),
+      StructField("pm25", DoubleType, nullable = true)
     ))
 
   def preproceEnvData(config : PreprocDailyEnvDataConfig, spark: SparkSession, filename : String) : Unit =
@@ -43,7 +43,7 @@ object PreprocDailyEnvData {
       val output_file_path = new Path(output_filename)
       val output_file_fs = output_file_path.getFileSystem(hc)
       if(!output_file_fs.exists(output_file_path)) {
-        val df = spark.read.format("csv").option("header", true).schema(schema).load(filename)
+        val df = spark.read.format("csv").option("header", value = true).schema(schema).load(filename)
 
         val aggregate = df.withColumn("start_date", to_date(df("a"))).groupBy("start_date").agg(
           avg("o3").alias("o3_avg"),
@@ -65,7 +65,7 @@ object PreprocDailyEnvData {
 
         val header_path = new Path(header_filename)
 
-        copyMerge(hc, output_dir_fs, true, output_filename, header_path, output_dir_path)
+        copyMerge(hc, output_dir_fs, overwrite = true, output_filename, header_path, output_dir_path)
 
         output_dir_fs.delete(header_path, false)
 
