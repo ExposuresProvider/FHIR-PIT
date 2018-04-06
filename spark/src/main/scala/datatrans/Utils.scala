@@ -57,20 +57,19 @@ object Utils {
     Map(_flattenMap(Seq(), m):_*)
   }
   def typeToTrans(ty : DataType) : Any=>String = (x:Any)=>
-    if (x == null) {
+    if (x == null)
       ""
-    } else {
+    else
 
       ty match {
         case IntegerType => x.toString
         case DoubleType => x.toString
         case StringType => "\"" + StringEscapeUtils.escapeCsv(x.asInstanceOf[String]) + "\""
-        case MapType(_,_,_) => flattenMap(x.asInstanceOf[Map[String,Any]]).map({case (k,v) => typeToTrans(StringType)(k.mkString("_")) + ":" + typeToTrans(StringType)(v)}).mkString("{",",","}")
-        case ArrayType(et,_) => x.asInstanceOf[Seq[_]].map(typeToTrans(et)).mkString("[",",","]")
-        case StructType(fs) => (x.asInstanceOf[Row].toSeq zip fs).map({ case (x, f)=>typeToTrans(f.dataType)(x)}).mkString("(",",",")")
+        case MapType(_, _, _) => flattenMap(x.asInstanceOf[Map[String, Any]]).map({ case (k, v) => typeToTrans(StringType)(k.mkString("_")) + ":" + typeToTrans(StringType)(v) }).mkString("{", ",", "}")
+        case ArrayType(et, _) => x.asInstanceOf[Seq[_]].map(typeToTrans(et)).mkString("[", ",", "]")
+        case StructType(fs) => (x.asInstanceOf[Row].toSeq zip fs).map({ case (x, f) => typeToTrans(f.dataType)(x) }).mkString("(", ",", ")")
         case _ => throw new RuntimeException("typeToTrans: unsupported data type " + ty)
       }
-    }
 
   def writeCSV(spark:SparkSession, wide:DataFrame, fn:String, form:Format) : Unit = {
 
@@ -90,7 +89,7 @@ object Utils {
 
         val mout = new BufferedWriter(new OutputStreamWriter(mfs.create(mpath)))
         mout.write(wide.columns.mkString("!"))
-        mout.close
+        mout.close()
         val fname = fn + ".csv"
         val schema = wide.schema
         val (fields2, trans) =
@@ -140,7 +139,7 @@ object Utils {
 
   }
 
-  def writeToFile(hc:Configuration, path :String, text :String) = {
+  def writeToFile(hc:Configuration, path :String, text :String) : Unit = {
     val output_file_path = new Path (path)
     val output_file_file_system = output_file_path.getFileSystem (hc)
     val output_file_output_stream = output_file_file_system.create (output_file_path)
@@ -153,7 +152,7 @@ object Utils {
     output_file_output_stream.write(bytes)
   }
 
-  def prependStringToFile(hc:Configuration, text : String, path : String) = {
+  def prependStringToFile(hc:Configuration, text : String, path : String) : Unit = {
     val input_file_path = new Path(path)
     val input_file_fs = input_file_path.getFileSystem(hc)
     val path2 = path + ".tmp"
@@ -166,10 +165,9 @@ object Utils {
     appendFileToOutputStream(hc, output_file_output_stream, path2)
     output_file_output_stream.close()
     input_file_fs.delete(temp_input_file_path, false)
-
   }
 
-  def appendStringToFile(hc:Configuration, path :String, text:String) = {
+  def appendStringToFile(hc:Configuration, path :String, text:String) : Unit = {
     val bytes = text.getBytes ("utf-8")
     val output_file_path = new Path (path)
     val output_file_file_system = output_file_path.getFileSystem (hc)
@@ -198,7 +196,7 @@ object Utils {
     appendFileToOutputStream(hc, output_file_output_stream, input_file_path)
   }
 
-  def appendToFile(hc:Configuration, path :String, path2:String) = {
+  def appendToFile(hc:Configuration, path :String, path2:String) : Unit = {
     val output_file_path = new Path (path)
     val output_file_file_system = output_file_path.getFileSystem (hc)
     val output_file_output_stream = output_file_file_system.append(output_file_path)
@@ -240,17 +238,10 @@ object Utils {
     val output_file_path = new Path(output_filename)
     val output_file_output_stream = output_dir_fs.create(output_file_path)
     for (p <- srcs) {
-      println("copying " + p)
       appendFileToOutputStream(hc, output_file_output_stream, p)
     }
     output_file_output_stream.close()
     output_dir_fs.delete(coldir, true)
-  }
-
-  def writeHeaderToFile(hc: Configuration, header_filename: String, header: String) = {
-    val header_file_path = new Path(header_filename)
-    writeToFile(hc, header_filename, header)
-    header_file_path
   }
 
   sealed trait Format
@@ -330,7 +321,7 @@ object Utils {
 
   }
 
-  def insertOrUpdate(mmap: mutable.Map[DateTime, JsObject], key: DateTime, col: String, value: JsValue) = {
+  def insertOrUpdate(mmap: mutable.Map[DateTime, JsObject], key: DateTime, col: String, value: JsValue): Unit = {
     mmap.get(key) match {
       case Some(vec) =>
         val json = mmap(key)
@@ -354,6 +345,6 @@ object Utils {
     }
   }
   val DATE_FORMAT = "yyyy-MM-dd"
-  val BUFFER_SIZE = 4 * 1024
+  val BUFFER_SIZE : Int = 4 * 1024
 
 }

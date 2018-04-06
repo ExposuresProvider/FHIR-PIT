@@ -25,7 +25,7 @@ object PreprocDailyEnvData {
       StructField("pm25", DoubleType, true)
     ))
 
-  def preproceEnvData(config : PreprocDailyEnvDataConfig, spark: SparkSession, filename : String) =
+  def preproceEnvData(config : PreprocDailyEnvDataConfig, spark: SparkSession, filename : String) : Unit =
     time {
 
 
@@ -59,15 +59,18 @@ object PreprocDailyEnvData {
         aggregate.write.csv(output_dir)
 
         val header = aggregate.columns.mkString(",") + "\n"
-        val header_path = writeHeaderToFile(hc, f"$output_dir/../.header", header)
+        val header_filename = f"$output_dir/../.header"
+
+        writeToFile(hc, header_filename, header)
+
+        val header_path = new Path(header_filename)
 
         copyMerge(hc, output_dir_fs, true, output_filename, header_path, output_dir_path)
 
         output_dir_fs.delete(header_path, false)
 
-      } else {
+      } else
         println(output_filename + " exists")
-      }
 
     }
 
