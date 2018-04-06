@@ -227,11 +227,13 @@ object Utils {
   }
 
   def copyMerge(hc: Configuration, output_dir_fs: FileSystem, overwrite: Boolean, output_filename: String, header_file_path: Path, coldir: Path): Boolean = {
+    printf("coldir = " + coldir)
     val srcs = to_seq(header_file_path, output_dir_fs.listFiles(coldir, false))
     copyMerge(hc, output_dir_fs, overwrite, output_filename, coldir, srcs)
   }
 
   def copyMerge(hc: Configuration, output_dir_fs: FileSystem, overwrite: Boolean, output_filename: String, coldir: Path): Boolean = {
+    printf("coldir = " + coldir)
     val srcs = to_seq(output_dir_fs.listFiles(coldir, false))
     copyMerge(hc, output_dir_fs, overwrite, output_filename, coldir, srcs)
   }
