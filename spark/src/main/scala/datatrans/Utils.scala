@@ -2,17 +2,19 @@ package datatrans
 
 import java.io.{BufferedWriter, OutputStreamWriter}
 
-import org.apache.commons.lang3.StringEscapeUtils
+import org.apache.commons.text.StringEscapeUtils
 import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.{FSDataOutputStream, FileUtil, Path}
+import org.apache.hadoop.fs._
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.types._
 import geotrellis.proj4._
+import org.apache.commons.text.StringEscapeUtils
 import org.joda.time.DateTime
 import play.api.libs.json._
 
 import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 
 object Utils {
 
@@ -78,7 +80,7 @@ object Utils {
     val dpath = new Path(dirn)
     val dfs = dpath.getFileSystem(hc)
 
-    form match {
+    val fname = form match {
       case CSV =>
         val mn = fn + "_meta.csv"
         val mpath = new Path(mn)
@@ -90,8 +92,7 @@ object Utils {
         val mout = new BufferedWriter(new OutputStreamWriter(mfs.create(mpath)))
         mout.write(wide.columns.mkString("!"))
         mout.close
-        val fpath = new Path(fn + ".csv")
-        val ffs = fpath.getFileSystem(hc)
+        val fname = fn + ".csv"
         val schema = wide.schema
         val (fields2, trans) =
           schema.map(f =>(StructField(f.name, StringType), typeToTrans(f.dataType))).unzip
@@ -99,17 +100,17 @@ object Utils {
         val encoder = RowEncoder(schema2)
 
         wide.map(row => Row.fromSeq(row.toSeq.zip(trans).map({ case (x, t) => t(x)})))(encoder).write.option("sep", "!").option("header", false).csv(dirn)
-        ffs.delete(fpath, true)
-        FileUtil.copyMerge(dfs, dpath, ffs, fpath, true, hc, null)
+        fname
 
       case JSON =>
-        val fpath = new Path(fn)
-        val ffs = fpath.getFileSystem(hc)
+
         wide.write.json(dirn)
-        ffs.delete(fpath, true)
-        FileUtil.copyMerge(dfs, dpath, ffs, fpath, true, hc, null)
+        fn
 
     }
+    val fpath = new Path(fname)
+    dfs.delete(fpath, true)
+    copyMerge(hc, dfs, true, fname, dpath)
   }
 
   def aggregate(df: DataFrame, keycols : Seq[String], cols : Seq[String], col:String) : DataFrame = {
@@ -203,6 +204,46 @@ object Utils {
 
     appendFileToOutputStream(hc, output_file_output_stream, path2)
     output_file_output_stream.close ()
+  }
+
+  def to_seq(header: Path, itr: RemoteIterator[LocatedFileStatus]) : Array[Path] = {
+    val listBuf = new ListBuffer[Path]
+    listBuf.append(header)
+    to_seq(listBuf,itr)
+    listBuf.toArray
+  }
+
+  def to_seq(itr: RemoteIterator[LocatedFileStatus]) : Array[Path] = {
+    val listBuf = new ListBuffer[Path]
+    to_seq(listBuf, itr)
+    listBuf.toArray
+  }
+
+  def to_seq(listBuf: ListBuffer[Path], itr: RemoteIterator[LocatedFileStatus]) : Unit = {
+    while(itr.hasNext) {
+      val fstatus = itr.next()
+      listBuf.append(fstatus.getPath)
+    }
+  }
+
+  def copyMerge(hc: Configuration, output_dir_fs: FileSystem, overwrite: Boolean, output_filename: String, header_file_path: Path, coldir: Path): Boolean = {
+    val output_file_path = new Path(output_filename)
+    val srcs = to_seq(header_file_path, output_dir_fs.listFiles(coldir, false))
+    FileUtil.copy(output_dir_fs, srcs, output_dir_fs, output_file_path, false, overwrite, hc)
+    output_dir_fs.delete(coldir, true)
+  }
+
+  def copyMerge(hc: Configuration, output_dir_fs: FileSystem, overwrite: Boolean, output_filename: String, coldir: Path): Boolean = {
+    val output_file_path = new Path(output_filename)
+    val srcs = to_seq(output_dir_fs.listFiles(coldir, false))
+    FileUtil.copy(output_dir_fs, srcs, output_dir_fs, output_file_path, false, overwrite, hc)
+    output_dir_fs.delete(coldir, true)
+  }
+
+  def writeHeaderToFile(hc: Configuration, header_filename: String, header: String) = {
+    val header_file_path = new Path(header_filename)
+    writeToFile(hc, header, header_filename)
+    header_file_path
   }
 
   sealed trait Format

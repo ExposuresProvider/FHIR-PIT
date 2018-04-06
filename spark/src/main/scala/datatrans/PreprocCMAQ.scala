@@ -1,23 +1,14 @@
 package datatrans
 
-import org.apache.hadoop.fs.{FileUtil, LocatedFileStatus, Path, RemoteIterator}
+import org.apache.hadoop.fs._
 import org.apache.spark.sql.SparkSession
 import datatrans.Utils._
+import org.apache.hadoop.conf.Configuration
 
 import scala.collection.mutable.ListBuffer
 
 
 object PreprocCMAQ {
-
-  def to_seq(header: Path, itr: RemoteIterator[LocatedFileStatus]) : Array[Path] = {
-    val listBuf = new ListBuffer[Path]
-    listBuf.append(header)
-    while(itr.hasNext) {
-      val fstatus = itr.next()
-      listBuf.append(fstatus.getPath)
-    }
-    listBuf.toArray
-  }
 
   def main(args: Array[String]) {
     time {
@@ -42,9 +33,7 @@ object PreprocCMAQ {
       val rowdirs = listDirs(output_dir_path).par
 
       val header = "start_date,o3,pm25\n"
-      val header_filename = f"$output_dir/.header"
-      val header_file_path = new Path(header_filename)
-      writeToFile(hc, header, header_filename)
+      val header_file_path = writeHeaderToFile(hc, output_dir, header)
 
       for(rowdir <- rowdirs) {
         println(f"processing row $rowdir")
@@ -54,10 +43,7 @@ object PreprocCMAQ {
           println(f"processing column $coldir")
           val col = coldir.getName.split("=")(1).toInt
           val output_filename = f"$output_dir/C$col%03dR$row%03d.csv"
-          val output_file_path = new Path(output_filename)
-          val srcs = to_seq(header_file_path, output_dir_fs.listFiles(coldir, false))
-          FileUtil.copy(output_dir_fs, srcs, output_dir_fs, output_file_path, false, true, hc)
-          output_dir_fs.delete(coldir, true)
+          copyMerge(hc, output_dir_fs, true, output_filename, header_file_path, coldir)
         }
         output_dir_fs.delete(rowdir, true)
       }
@@ -67,4 +53,5 @@ object PreprocCMAQ {
 
     }
   }
+
 }

@@ -58,10 +58,12 @@ object PreprocDailyEnvData {
 
         aggregate.write.csv(output_dir)
 
-        FileUtil.copyMerge(output_dir_fs, output_dir_path, output_dir_fs, output_file_path, true, hc, null)
-
         val header = aggregate.columns.mkString(",") + "\n"
-        prependStringToFile(hc, header, output_filename)
+        val header_path = writeHeaderToFile(hc, f"$output_dir/../.header", header)
+
+        copyMerge(hc, output_dir_fs, true, output_filename, header_path, output_dir_path)
+
+        output_dir_fs.delete(header_path, false)
 
       } else {
         println(output_filename + " exists")
