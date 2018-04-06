@@ -8,8 +8,8 @@ output_dir = sys.argv[2]
 start_date = sys.argv[3]
 end_date = sys.argv[4]
 
-if len(sys.argv) >= 4:
-    dirs = [os.path.join(input_dir, sys.argv[3])]
+if len(sys.argv) >= 5:
+    dirs = [os.path.join(input_dir, sys.argv[5])]
 else:
     dirs = sorted(glob.glob(os.path.join(input_dir, "C*")))
 
