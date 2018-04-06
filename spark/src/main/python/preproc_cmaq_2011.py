@@ -5,6 +5,8 @@ import pandas as pd
 
 input_dir = sys.argv[1]
 output_dir = sys.argv[2]
+start_date = sys.argv[3]
+end_date = sys.argv[4]
 
 if len(sys.argv) >= 4:
     dirs = [os.path.join(input_dir, sys.argv[3])]
@@ -18,8 +20,11 @@ for i, dirname in enumerate(dirs):
     def load_csv(filename):
         df = pd.read_csv(filename)
         df = df[["Date","O3_ppb", "PM25_Total_ugm3"]]
-        df.columns = ["start_date", "o3", "pm25"]
-        return df
+
+        df2 = df[pd.to_datetime(start_date) <= pd.to_datetime(df["Date"]) & pd.to_datetime(df["Date"]) < pd.to_datetime(end_date)]
+
+        df2.columns = ["start_date", "o3", "pm25"]
+        return df2
     df = pd.concat(list(map (load_csv, filenames)))
 
     df.to_csv(output_rowcol_filename, index=False)
