@@ -2,7 +2,6 @@ package datatrans
 
 import java.io.{BufferedWriter, OutputStreamWriter}
 
-import org.apache.commons.text.StringEscapeUtils
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs._
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
@@ -183,7 +182,7 @@ object Utils {
     val input_file_file_system = input_file_path.getFileSystem(hc)
     val input_file_input_stream = input_file_file_system.open(input_file_path)
 
-    val buf = new Array[Byte](4 * 1024)
+    val buf = new Array[Byte](BUFFER_SIZE)
 
     var n = input_file_input_stream.read(buf)
     while (n != -1) {
@@ -202,12 +201,7 @@ object Utils {
   def appendToFile(hc:Configuration, path :String, path2:String) = {
     val output_file_path = new Path (path)
     val output_file_file_system = output_file_path.getFileSystem (hc)
-
-
     val output_file_output_stream = output_file_file_system.append(output_file_path)
-
-
-
     appendFileToOutputStream(hc, output_file_output_stream, path2)
     output_file_output_stream.close ()
   }
@@ -359,5 +353,6 @@ object Utils {
     }
   }
   val DATE_FORMAT = "yyyy-MM-dd"
+  val BUFFER_SIZE = 4 * 1024
 
 }
