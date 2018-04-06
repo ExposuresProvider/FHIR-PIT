@@ -206,17 +206,17 @@ object Utils {
     output_file_output_stream.close ()
   }
 
-  def to_seq(header: Path, itr: RemoteIterator[LocatedFileStatus]) : Array[Path] = {
+  def to_seq(header: Path, itr: RemoteIterator[LocatedFileStatus]) : Seq[Path] = {
     val listBuf = new ListBuffer[Path]
     listBuf.append(header)
     to_seq(listBuf,itr)
-    listBuf.toArray
+    listBuf
   }
 
-  def to_seq(itr: RemoteIterator[LocatedFileStatus]) : Array[Path] = {
+  def to_seq(itr: RemoteIterator[LocatedFileStatus]) : Seq[Path] = {
     val listBuf = new ListBuffer[Path]
     to_seq(listBuf, itr)
-    listBuf.toArray
+    listBuf
   }
 
   def to_seq(listBuf: ListBuffer[Path], itr: RemoteIterator[LocatedFileStatus]) : Unit = {
@@ -236,9 +236,10 @@ object Utils {
     copyMerge(hc, output_dir_fs, overwrite, output_filename, coldir, srcs)
   }
 
-  private def copyMerge(hc: Configuration, output_dir_fs: FileSystem, overwrite: Boolean, output_filename: String, coldir: Path, srcs: Array[Path]) = {
+  private def copyMerge(hc: Configuration, output_dir_fs: FileSystem, overwrite: Boolean, output_filename: String, coldir: Path, srcs: Seq[Path]) = {
     val output_file_path = new Path(output_filename)
     val output_file_output_stream = output_dir_fs.create(output_file_path)
+    println(srcs)
     for (p <- srcs) {
       println("copying " + p)
       appendFileToOutputStream(hc, output_file_output_stream, p)
