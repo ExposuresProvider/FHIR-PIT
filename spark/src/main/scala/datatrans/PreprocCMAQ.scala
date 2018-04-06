@@ -51,7 +51,7 @@ object PreprocCMAQ {
           val output_filename = output_dir + "/" + f"C$col%03dR$row%03d.csv"
           val output_file_path = new Path(output_filename)
           val srcs = to_seq(output_dir_fs.listFiles(coldir, false))
-          FileUtil.copy(output_dir_fs, srcs, output_dir_fs, output_file_path, true, true, hc)
+          FileUtil.copy(output_dir_fs, srcs, output_dir_fs, output_file_path, false, true, hc)
           prependStringToFile(hc, header, output_filename)
         }
       }
