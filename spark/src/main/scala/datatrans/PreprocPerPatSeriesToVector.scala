@@ -4,13 +4,10 @@ import java.util.concurrent.atomic.AtomicInteger
 
 import datatrans.Utils._
 import org.apache.hadoop.fs.Path
-import org.apache.spark.sql.{DataFrame, Row, SparkSession}
-import org.apache.spark.sql.types._
-import org.apache.spark.sql.functions._
+import org.apache.spark.sql.SparkSession
 import play.api.libs.json._
 import org.joda.time._
 import org.joda.time.format.DateTimeFormat
-import play.api.libs.json.Json.JsValueWrapper
 import scopt._
 
 case class Config(
@@ -32,7 +29,7 @@ case class Config(
 
 object PreprocPerPatSeriesToVector {
 
-  def proc_pid(config : Config, spark: SparkSession, p:String, col_filter_observation: (String, DateTime) => (Boolean, Seq[(String, JsValue)]), col_filter_visit: (String, DateTime) => Seq[(String, JsValue)], crit : JsObject => Boolean) =
+  def proc_pid(config : Config, spark: SparkSession, p:String, col_filter_observation: (String, DateTime) => (Boolean, Seq[(String, JsValue)]), col_filter_visit: (String, DateTime) => Seq[(String, JsValue)], crit : JsObject => Boolean): Unit =
     time {
 
       val hc = spark.sparkContext.hadoopConfiguration
@@ -80,7 +77,7 @@ object PreprocPerPatSeriesToVector {
                     case (concept_cd, instances) =>
                       instances.as[JsObject].fields.foreach {
                         case (_, modifiers) =>
-                          val start_date = DateTime.parse (modifiers.as[JsObject].values.toSeq (0) ("start_date").as[String], DateTimeFormat.forPattern("Y-M-d H:m:s") )
+                          val start_date = DateTime.parse (modifiers.as[JsObject].values.toSeq.head ("start_date").as[String], DateTimeFormat.forPattern("Y-M-d H:m:s") )
                           val (start_date_filtered, cols) = col_filter_observation(concept_cd, start_date)
                           if(start_date_filtered) {
                             start_date_set.add(start_date)
@@ -122,13 +119,13 @@ object PreprocPerPatSeriesToVector {
                 config.aggregate_by.get match {
                   case "year" =>
                     def combine(a : JsObject, b:JsObject): JsObject = {
-                      b.fields.foldLeft(a)((x, field) =>
+                      b.fields.foldLeft(a)((_, field) =>
                         field match {
                           case (key, value) =>
                             a \ key match {
                               case JsDefined(value0) =>
                                 value0 match {
-                                  case s:JsString =>
+                                  case _:JsString =>
                                     if (value != value0) {
                                       throw new UnsupportedOperationException("string values are different for the same year")
                                     } else
@@ -143,7 +140,7 @@ object PreprocPerPatSeriesToVector {
                             }
                         })
                     }
-                    listBuf.groupBy { case (start_date, vec) => start_date.withDayOfYear(1) }.mapValues{ g => g.values.fold(Json.obj())(combine) }
+                    listBuf.groupBy { case (start_date, _) => start_date.withDayOfYear(1) }.mapValues{ g => g.values.fold(Json.obj())(combine) }
 
                   case _ =>
                     throw new UnsupportedOperationException("aggregate by any field other than year is not implemented")
@@ -161,6 +158,8 @@ object PreprocPerPatSeriesToVector {
                     "sex_cd" -> sex_cd,
                     "birth_date" -> birth_date,
                     "age" -> age,
+                    "lat" -> lat,
+                    "lon" -> lon,
                     "start_date" -> start_date.toString(DATE_FORMAT)) ++ vec
               }.filter(crit)
 
@@ -233,7 +232,7 @@ object PreprocPerPatSeriesToVector {
           case class MDCTN_map(mdctn_rxcui : Map[String, MDCTN_map_entry], rxcui_name : Map[String, String])
           val df = config.map.map(map0 => {
             println("loading map from " + map0)
-            val df = spark.read.format("csv").option("delimiter", "\t").option("header", false).load(config.input_directory + "/" + map0)
+            val df = spark.read.format("csv").option("delimiter", "\t").option("header", value = false).load(config.input_directory + "/" + map0)
             df.map(row => {
               val row3 = row.getString(3)
               (
@@ -267,7 +266,7 @@ object PreprocPerPatSeriesToVector {
 
           def col_filter_visit(col:String, start_date: DateTime) : Seq[(String, JsValue)] = {
             config.regex_visit.map(x => {
-              if(col.matches(config.regex_visit.get))
+              if(col.matches(x))
                 Seq((col, JsNumber(1)))
               else
                 Seq.empty
@@ -279,7 +278,7 @@ object PreprocPerPatSeriesToVector {
             (config.start_date.isEmpty || config.start_date.get.isEqual(start_date) || config.start_date.get.isBefore(start_date)) && (config.end_date.isEmpty || start_date.isBefore(config.end_date.get))
           }
 
-          def proc_pid2(p : String) =
+          def proc_pid2(p : String): Unit =
             proc_pid(config, spark, p, col_filter_observation, col_filter_visit, crit)
 
           config.patient_num_list match {
@@ -289,7 +288,7 @@ object PreprocPerPatSeriesToVector {
               config.patient_dimension match {
                 case Some(pdif) =>
                   println("loading patient_dimension from " + pdif)
-                  val pddf0 = spark.read.format("csv").option("header", true).load(config.input_directory + "/" + pdif)
+                  val pddf0 = spark.read.format("csv").option("header", value = true).load(config.input_directory + "/" + pdif)
 
                   val patl = pddf0.select("patient_num").map(r => r.getString(0)).collect.toList.par
 

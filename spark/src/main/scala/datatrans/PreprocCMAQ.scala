@@ -3,10 +3,6 @@ package datatrans
 import org.apache.hadoop.fs._
 import org.apache.spark.sql.SparkSession
 import datatrans.Utils._
-import org.apache.hadoop.conf.Configuration
-
-import scala.collection.mutable.ListBuffer
-
 
 object PreprocCMAQ {
 

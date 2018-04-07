@@ -5,15 +5,13 @@ import java.util.concurrent.atomic.AtomicInteger
 import scala.ref.SoftReference
 import datatrans.Utils._
 import org.apache.hadoop.fs.Path
-import org.apache.spark.sql.{DataFrame, Row, SparkSession}
-import org.apache.spark.sql.types._
-import org.apache.spark.sql.functions._
+import org.apache.spark.sql.{DataFrame, SparkSession}
 import play.api.libs.json._
 import org.joda.time._
-import org.joda.time.format.DateTimeFormat
 import play.api.libs.json.Json.JsValueWrapper
 import scopt._
 
+import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 case class PreprocPerPatSeriesEnvDataConfig(
@@ -31,7 +29,7 @@ case class PreprocPerPatSeriesEnvDataConfig(
                  )
 
 object PreprocPerPatSeriesEnvData {
-  val cache = scala.collection.mutable.Map[String, SoftReference[DataFrame]]()
+  val cache: mutable.Map[String, SoftReference[DataFrame]] = scala.collection.mutable.Map[String, SoftReference[DataFrame]]()
 
   def loadEnvData(config : PreprocPerPatSeriesEnvDataConfig, spark: SparkSession, coors : Seq[(Int, (Int, Int))]) : Map[String, Seq[Double]] = {
 
@@ -40,7 +38,7 @@ object PreprocPerPatSeriesEnvData {
         val filename = f"${config.input_directory}/${config.environmental_data.get}/cmaq$year/C$col%03dR$row%03dDaily.csv"
 
         def loadEnvDataFrame(filename: String) = {
-          val df = spark.read.format("csv").option("header", true).load(filename)
+          val df = spark.read.format("csv").option("header", value = true).load(filename)
           cache(filename) = new SoftReference(df)
           println("SoftReference created for " + filename)
           df
@@ -84,7 +82,7 @@ object PreprocPerPatSeriesEnvData {
             case (name, coli) =>
               val num = data(coli)
               // println("num = " + num)
-              if (num == "NaN")
+              if (!num.isNaN)
                   Seq(name + "_day" + ioff -> (num: JsValueWrapper))
               else
                   Seq()
@@ -113,7 +111,7 @@ object PreprocPerPatSeriesEnvData {
     env
   }
 
-  def proc_pid(config : PreprocPerPatSeriesEnvDataConfig, spark: SparkSession, p:String) =
+  def proc_pid(config : PreprocPerPatSeriesEnvDataConfig, spark: SparkSession, p:String): Unit =
     time {
 
       val hc = spark.sparkContext.hadoopConfiguration
@@ -211,7 +209,7 @@ object PreprocPerPatSeriesEnvData {
 
         time {
 
-          def proc_pid2(p : String) =
+          def proc_pid2(p : String): Unit =
             proc_pid(config, spark, p)
 
           val patl0 = config.patient_num_list match {
@@ -221,7 +219,7 @@ object PreprocPerPatSeriesEnvData {
               config.patient_dimension match {
                 case Some(pdif) =>
                   println("loading patient_dimension from " + pdif)
-                  val pddf0 = spark.read.format("csv").option("header", true).load(config.input_directory + "/" + pdif)
+                  val pddf0 = spark.read.format("csv").option("header", value = true).load(config.input_directory + "/" + pdif)
 
                   pddf0.select("patient_num").map(r => r.getString(0)).collect.toList
 

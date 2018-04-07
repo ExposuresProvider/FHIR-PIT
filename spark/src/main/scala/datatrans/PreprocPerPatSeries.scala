@@ -4,9 +4,8 @@ import java.util.concurrent.atomic.AtomicInteger
 
 import datatrans.Utils._
 import org.apache.hadoop.fs.Path
-import org.apache.spark.sql.{Row, SparkSession}
+import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types.{StringType, StructField, StructType}
 import scopt._
 
 case class PreprocPerPatSeriesConfig(
@@ -38,7 +37,7 @@ object PreprocPerPatSeries {
           // For implicit conversions like converting RDDs to DataFrames
           import spark.implicits._
 
-          def proc_pid(p:String) =
+          def proc_pid(p:String): Unit =
             time {
 
               val hc = spark.sparkContext.hadoopConfiguration
@@ -65,13 +64,13 @@ object PreprocPerPatSeries {
                   println("of, vd, or geodata file not found, skipped " + p)
                 } else {
                   println("loading patient_dimension from " + pdif)
-                  val pddf = spark.read.format("csv").option("header", true).load(pdif)
+                  val pddf = spark.read.format("csv").option("header", value = true).load(pdif)
                   println("loading observation_fact from " + ofif)
-                  val ofdf = spark.read.format("csv").option("header", true).load(ofif)
+                  val ofdf = spark.read.format("csv").option("header", value = true).load(ofif)
                   println("loading visit_dimension from " + vdif)
-                  val vddf = spark.read.format("csv").option("header", true).load(vdif)
+                  val vddf = spark.read.format("csv").option("header", value = true).load(vdif)
                   println("loading geodata from " + geodata_input_filename)
-                  val geodata_df = spark.read.format("csv").option("header", true).load(geodata_input_filename)
+                  val geodata_df = spark.read.format("csv").option("header", value = true).load(geodata_input_filename)
 
                   val pat = pddf.select("race_cd", "sex_cd", "birth_date")
 
@@ -137,7 +136,7 @@ object PreprocPerPatSeries {
               config.patient_dimension match {
                 case Some(pdif) =>
                   println("loading patient_dimension from " + pdif)
-                  val pddf0 = spark.read.format("csv").option("header", true).load(pdif)
+                  val pddf0 = spark.read.format("csv").option("header", value = true).load(pdif)
 
                   val patl = pddf0.select("patient_num").map(r => r.getString(0)).collect.toList.par
 

@@ -20,8 +20,8 @@ class Pivot(keycols : Seq[String], cols : Seq[String]) extends UserDefinedAggreg
   )
 
   private def buildDataType(keycols : Seq[String]) : DataType = keycols match {
-    case Seq() => MapType(StringType, StringType, false)
-    case Seq(kc, kcs@_*) => MapType(StringType, buildDataType(kcs), false)
+    case Seq() => MapType(StringType, StringType, valueContainsNull = false)
+    case Seq(_, kcs@_*) => MapType(StringType, buildDataType(kcs), valueContainsNull = false)
   }    
 
   // This is the output type of your aggregatation function.
@@ -42,7 +42,7 @@ class Pivot(keycols : Seq[String], cols : Seq[String]) extends UserDefinedAggreg
     val keyvals = inputSeq.take(keycols.length).map(x=>x.toString)
     val vals = inputSeq.drop(keycols.length)
     val curr = buffer.getAs[Map[String, Any]](0)
-    val fs = vals.zip(cols).filter({ case (v, col) => v != null }).map({case (v, col) => col -> v})
+    val fs = vals.zip(cols).filter({ case (v, _) => v != null }).map({case (v, col) => col -> v})
     val newrow = Map(fs:_*)
 
     buffer(0) = updateMap(curr, keyvals, newrow)

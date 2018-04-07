@@ -3,14 +3,11 @@ package datatrans
 import java.util.concurrent.atomic.AtomicInteger
 
 import datatrans.Utils._
-import org.apache.hadoop.fs.{FileUtil, Path, PathFilter}
+import org.apache.hadoop.fs.{Path, PathFilter}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.{StructField, _}
-import org.joda.time._
 import scopt._
-
-import scala.util.matching.Regex
 
 case class PreprocDailyEnvDataConfig(
                    input_directory : String = "",

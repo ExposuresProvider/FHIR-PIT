@@ -60,7 +60,6 @@ object Utils {
     if (x == null)
       ""
     else
-
       ty match {
         case IntegerType => x.toString
         case DoubleType => x.toString
