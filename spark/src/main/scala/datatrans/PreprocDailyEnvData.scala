@@ -42,7 +42,7 @@ object PreprocDailyEnvData {
       if(!output_file_fs.exists(output_file_path)) {
         val df = spark.read.format("csv").option("header", value = true).schema(schema).load(filename)
 
-        val aggregate = df.groupBy(to_date(df("start_date"))).agg(
+        val aggregate = df.groupBy(to_date(df("start_date")).alias("start_date")).agg(
           avg("o3").alias("o3_avg"),
           avg("pm25").alias("pm25_avg"),
           max("o3").alias("o3_max"),
