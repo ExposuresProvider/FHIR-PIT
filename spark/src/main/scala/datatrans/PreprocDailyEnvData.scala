@@ -56,7 +56,7 @@ object PreprocDailyEnvData {
         aggregate.write.csv(output_dir)
 
         val header = aggregate.columns.mkString(",") + "\n"
-        val header_filename = f"$output_dir/../.header"
+        val header_filename = f"${config.output_prefix}$name.header"
 
         writeToFile(hc, header_filename, header)
 
