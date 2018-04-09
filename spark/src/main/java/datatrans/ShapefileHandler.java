@@ -35,11 +35,5 @@ public class ShapefileHandler {
 		
 		return collection;
 	}
-	
-	
-	public void getDistancetoClosestRoad(double lat,  double lon) {
-		
-		
-	}
 
 }
