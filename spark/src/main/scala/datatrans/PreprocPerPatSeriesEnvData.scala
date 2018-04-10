@@ -25,13 +25,14 @@ case class PreprocPerPatSeriesEnvDataConfig(
                    end_date : DateTime = DateTime.now(),
                    output_format : String = "json",
                    geo_coordinates : Boolean = false,
-                   sequential : Boolean = false
+                   sequential : Boolean = false,
+                   date_offsets : Seq[Int]= -7 to 7
                  )
 
 object PreprocPerPatSeriesEnvData {
   val cache: mutable.Map[String, SoftReference[DataFrame]] = scala.collection.mutable.Map[String, SoftReference[DataFrame]]()
 
-  def loadEnvData(config : PreprocPerPatSeriesEnvDataConfig, spark: SparkSession, coors : Seq[(Int, (Int, Int))]) : Map[String, Seq[Double]] = {
+  def loadEnvData(config : PreprocPerPatSeriesEnvDataConfig, spark: SparkSession, coors : Seq[(Int, (Int, Int))], names : Seq[String]) : Map[String, Map[String, Double]] = {
 
     val dfs = coors.map {
       case (year, (row, col)) =>
@@ -59,7 +60,7 @@ object PreprocPerPatSeriesEnvData {
     if (dfs.nonEmpty) {
       val df = dfs.reduce((a,b) => a.union(b))
       import spark.implicits._
-      df.map(row => (row.getString(0), row.toSeq.tail.map(x => x.asInstanceOf[String].toDouble))).collect.toMap
+      df.map(row => (row.getString(0), row.getValuesMap[String](names).mapValues(x => x.toDouble))).collect.toMap
 
     } else
       Map.empty
@@ -68,26 +69,25 @@ object PreprocPerPatSeriesEnvData {
 
 
 
-  def loadDailyEnvData(config : PreprocPerPatSeriesEnvDataConfig, lat : Double, lon : Double, start_date : DateTime, env_data : Map[String, Seq[Double]], coors : Map[Int, (Int, Int)], i : Int, names : Seq[String]) : JsObject = {
+  def loadDailyEnvData(config : PreprocPerPatSeriesEnvDataConfig, lat : Double, lon : Double, start_date : DateTime, env_data : Map[String, Map[String, Double]], coors : Map[Int, (Int, Int)], i : Int, names : Seq[String]) : JsObject = {
     var env = Json.obj()
 
-    for(ioff <- - 7 to 7) {
+    for(ioff <- config.date_offsets) {
       val curr_date = start_date.plusDays(ioff)
       val str = curr_date.toString(DATE_FORMAT)
 
       env_data.get(str) match {
         case Some(data) =>
           env ++= Json.obj("start_date" -> str)
-          env ++= Json.obj(names.zipWithIndex.flatMap{
-            case (name, coli) =>
-              val num = data(coli)
-              // println("num = " + num)
-              if (!num.isNaN)
-                  Seq(name + "_day" + ioff -> (num: JsValueWrapper))
-              else
-                  Seq()
+          env ++= Json.obj(names.flatMap( name => {
+            val num = data(name)
+            // println("num = " + num)
+            if (!num.isNaN)
+              Seq(name + "_day" + ioff -> (num: JsValueWrapper))
+            else
+              Seq()
 
-          }: _*)
+          }): _*)
         case None =>
       }
 
@@ -153,7 +153,7 @@ object PreprocPerPatSeriesEnvData {
           val statistics = Seq("avg", "max", "min", "stddev")
           val names = for (i <- statistics; j <- indices) yield f"${j}_$i"
 
-          val env_data = loadEnvData(config, spark, coors)
+          val env_data = loadEnvData(config, spark, coors, names)
 
           for (i <- 0 until Days.daysBetween(config.start_date, config.end_date).getDays) {
             data += loadDailyEnvData(config, lat, lon, config.start_date.plusDays(i), env_data, coors.toMap, i, names)
@@ -195,6 +195,7 @@ object PreprocPerPatSeriesEnvData {
       opt[String]("output_format").action((x,c) => c.copy(output_format = x))
       opt[Unit]("coordinates").action((_,c) => c.copy(geo_coordinates = true))
       opt[Unit]("sequential").action((_,c) => c.copy(sequential = true))
+      opt[Seq[Int]]("date_offsets").action((x,c) => c.copy(date_offsets = x))
     }
 
     val spark = SparkSession.builder().appName("datatrans preproc").getOrCreate()
