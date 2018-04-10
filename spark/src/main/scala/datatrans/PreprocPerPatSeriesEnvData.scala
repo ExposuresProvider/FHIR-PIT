@@ -26,7 +26,9 @@ case class PreprocPerPatSeriesEnvDataConfig(
                    output_format : String = "json",
                    geo_coordinates : Boolean = false,
                    sequential : Boolean = false,
-                   date_offsets : Seq[Int]= -7 to 7
+                   date_offsets : Seq[Int]= -7 to 7,
+                   indices : Seq[String] = Seq("o3", "pm25"),
+                   statistics : Seq[String] = Seq("avg", "max", "min", "stddev")
                  )
 
 object PreprocPerPatSeriesEnvData {
@@ -149,9 +151,7 @@ object PreprocPerPatSeriesEnvData {
                 Seq()
             }
           })
-          val indices = Seq("o3", "pmij")
-          val statistics = Seq("avg", "max", "min", "stddev")
-          val names = for (i <- statistics; j <- indices) yield f"${j}_$i"
+          val names = for (i <- config.statistics; j <- config.indices) yield f"${j}_$i"
 
           val env_data = loadEnvData(config, spark, coors, names)
 
@@ -196,6 +196,8 @@ object PreprocPerPatSeriesEnvData {
       opt[Unit]("coordinates").action((_,c) => c.copy(geo_coordinates = true))
       opt[Unit]("sequential").action((_,c) => c.copy(sequential = true))
       opt[Seq[Int]]("date_offsets").action((x,c) => c.copy(date_offsets = x))
+      opt[Seq[String]]("query").action((x,c) => c.copy(indices = x))
+      opt[Seq[String]]("statistics").action((x,c) => c.copy(statistics = x))
     }
 
     val spark = SparkSession.builder().appName("datatrans preproc").getOrCreate()
