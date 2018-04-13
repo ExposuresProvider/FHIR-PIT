@@ -32,19 +32,24 @@ case class PreprocPerPatSeriesEnvDataConfig(
                  )
 
 object PreprocPerPatSeriesEnvData {
-  val cache: mutable.Map[String, SoftReference[DataFrame]] = scala.collection.mutable.Map[String, SoftReference[DataFrame]]()
+  val cache: mutable.Map[String, SoftReference[Seq[DataFrame]]] = scala.collection.mutable.Map[String, SoftReference[Seq[DataFrame]]]()
 
   def loadEnvData(config : PreprocPerPatSeriesEnvDataConfig, spark: SparkSession, coors : Seq[(Int, (Int, Int))], names : Seq[String]) : Map[String, Map[String, Double]] = {
 
-    val dfs = coors.map {
+    val dfs = coors.flatMap {
       case (year, (row, col)) =>
         val filename = f"${config.input_directory}/${config.environmental_data.get}/cmaq$year/C$col%03dR$row%03dDaily.csv"
 
         def loadEnvDataFrame(filename: String) = {
           val df = spark.read.format("csv").option("header", value = true).load(filename)
-          cache(filename) = new SoftReference(df)
-          println("SoftReference created for " + filename)
-          df
+          if (names.forall(x => df.columns.contains(x))) {
+            cache(filename) = new SoftReference(Seq(df))
+            println("SoftReference created for " + filename)
+            Seq(df)
+          } else {
+            print(f"$filename doesn't contain all required columns")
+            Seq()
+          }
         }
 
         cache.get(filename) match {
