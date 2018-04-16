@@ -90,8 +90,8 @@ public class NearestRoad {
 	    		SimpleFeature feature = itr.next();
 	    		
 	    		// use following 2 lines to get road name
-//	    		String attribute = (String) feature.getAttribute("FULLNAME");
-//	    		System.out.println(attribute);
+	    		//String attribute = (String) feature.getAttribute("FULLNAME");
+	    		//System.out.println(attribute);
 	    		
 	    		LocationIndexedLine line = new LocationIndexedLine(((Geometry)feature.getDefaultGeometry()));
 	    		LinearLocation here = line.project(coordinate);
@@ -141,6 +141,17 @@ public class NearestRoad {
 		p_lcc = gf.createPoint(targetCoordinate);
 		
 		return p_lcc;
+	}
+	
+	public String getMatchedRoadName() {
+		String roadName = null;
+		
+		if (lastMatched != null) {
+			roadName = (String) lastMatched.getAttribute("FULLNAME");
+		}
+		
+		return roadName;
+		
 	}
 
 }

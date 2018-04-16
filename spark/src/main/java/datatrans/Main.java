@@ -9,7 +9,7 @@ public class Main {
 		NearestRoad nr = new NearestRoad("/Users/lisa/RDP_Share/GIS/tl_2015_allstates_prisecroads_lcc.shp");
 		double distance = nr.getMinimumDistance(lat, lon);
 		
-		System.out.println("nearest road is " + distance + " meters away from point " + lon + ", " + lat);
+		System.out.println("Nearest primary or secondary road, " + nr.getMatchedRoadName() + ", is " + (int)distance + " meters away from point " + lon + ", " + lat);
 	}
 
 }
