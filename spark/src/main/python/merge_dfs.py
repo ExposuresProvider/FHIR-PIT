@@ -8,4 +8,4 @@ how = sys.argv[4::4]
 on = map(lambda x : x.split(","), sys.argv[5::4])
 
 
-merge(input_dirs, pats, output_dir, 30, how, on)
+merge(input_dirs, pats, how, on, output_dir, 30)
