@@ -1,7 +1,6 @@
 import subprocess
 import glob
 import os.path
-from functools import reduce
 import re
 import joblib
 
@@ -98,13 +97,29 @@ def proc_pid(input_dirs, column_patterns, hows, ons, output_dir, f):
             dfs.append(df_match_column_pattern)
         else:
             print(input_f + " does not exist")
-            return
+            dfs.append(None)
 
     df_out = dfs[0]
     for i in range(len(dfs) - 1):
-        df_out = df_out.merge(dfs[i+1], how=hows[i], on=ons[i])
-    nrows = len(df_out.index)
-    ncols = len(df_out.columns)
+        how = hows[i]
+        df_in = dfs[i+1]
+        if df_out is None:
+            if how == "left" or how == "inner":
+                return
+            else:
+                df_out = df_in
+        elif df_in is None:
+            if how == "right" or how == "inner":
+                return
+        else:
+            df_out = df_out.merge(dfs[i+1], how=hows[i], on=ons[i])
+
+    if df_out is None:
+        nrows = 0
+        ncols = 0
+    else:
+        nrows = len(df_out.index)
+        ncols = len(df_out.columns)
     output_f = output_dir + "/" + basename_f
     if nrows != 0 and ncols != 0:
         print(str(nrows) + " rows " + str(ncols) + " cols " + output_f)
