@@ -85,7 +85,7 @@ def concat(dir, output_file, filename_column, default_value):
 
     combined_dfs[0].to_csv(output_file, sep="!", index=False)
 
-def proc_pid(input_dirs, rs, output_dir, f):
+def proc_pid(input_dirs, rs, how, on, output_dir, f):
     bn = os.path.basename(f)
 
     dfs = []
@@ -100,7 +100,9 @@ def proc_pid(input_dirs, rs, output_dir, f):
             print(f + " does not exist")
             return
 
-    dfo = reduce(lambda a, b : a.merge(b), dfs)
+    dfo = dfs[0]
+    for i in range(len(dfs) - 1):
+        dfo = dfo.merge(dfs[i+1], how=how[i], on=on[i])
     nrows = len(dfo.index)
     ncols = len(dfo.columns)
     if nrows != 0 and ncols != 0:
@@ -109,9 +111,9 @@ def proc_pid(input_dirs, rs, output_dir, f):
     else:
         print("empty " + f)
 
-def merge(input_dirs, pats, output_dir, n_jobs):
+def merge(input_dirs, pats, how, on, output_dir, n_jobs):
     rs = list(map(lambda pat : re.compile(pat), pats))
     files = glob.glob(input_dirs[0] + "/*")
 
 
-    joblib.Parallel(n_jobs = n_jobs)(joblib.delayed(proc_pid)(input_dirs, rs, output_dir, f) for f in files)
+    joblib.Parallel(n_jobs = n_jobs)(joblib.delayed(proc_pid)(input_dirs, rs, how, on, output_dir, f) for f in files)
