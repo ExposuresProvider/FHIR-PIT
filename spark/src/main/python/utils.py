@@ -24,7 +24,7 @@ def submit(host_name, cache_dir, cls, *args, **kwargs):
            "1",
            "--executor-cores",
            "30",
-           "--jars"] + cache + [
+           "--jars"] + [cache] + [
            "--class",
            cls,
            "target/scala-2.11/preproc_2.11-1.0.jar"] + list(args)
