@@ -11,7 +11,7 @@ import os
 def submit(host_name, cache_dir, cls, *args, **kwargs):
     start = timer()
 
-    cache = ",".join([cache_dir + filename for filename in glob.iglob('src/**/*.c', recursive=True)])
+    cache = ",".join([filename for filename in glob.iglob(os.path.join(cache_dir, "**", "*.jar", recursive=True)])
 
     cmd = ["spark-submit",
            "--master",
