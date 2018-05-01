@@ -38,7 +38,7 @@ public class NearestRoad {
 	}
 	
 	public NearestRoad(String roadShapefilePath) {
-		// try {
+		try {
 			// roadShapefilePath = "/Users/lisa/RDP_Share/GIS/tl_2015_allstates_prisecroads_lcc.shp";
 			
 			ShapefileHandler shp = new ShapefileHandler(roadShapefilePath);
@@ -46,11 +46,11 @@ public class NearestRoad {
 			System.out.println("Shapefile Collection: " + shp.getFeatureCollection().size() + " features");
 			index = new SpatialIndexFeatureCollection(features.getSchema());
 			index.addAll(features);
-		// }
-		// catch(Exception e) {
+		}
+		catch(Exception e) {
 			// write to logfile instead??
-		//	System.out.println(e);
-		// }
+			System.out.println(e);
+		}
 	}
 	
 	public double getMinimumDistance(double lat, double lon) {

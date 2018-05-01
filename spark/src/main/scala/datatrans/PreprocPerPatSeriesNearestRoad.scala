@@ -89,7 +89,7 @@ object PreprocPerPatSeriesNearestRoad {
             println(config.output_file + " exists")
           } else {
 
-            val nearestRoad = new NearestRoad(config.nearestroad_data)
+            val nearestRoad = new NearestRoad(f"${config.input_directory}/${config.nearestroad_data}")
             val rows = patl.flatMap(pid => {
               println("processing " + count.incrementAndGet + " / " + n + " " + pid)
               proc_pid(config, spark, nearestRoad, pid)
