@@ -39,7 +39,7 @@ public class NearestRoad {
 	
 	public NearestRoad(String roadShapefilePath) {
 		try {
-			roadShapefilePath = "/Users/lisa/RDP_Share/GIS/tl_2015_allstates_prisecroads_lcc.shp";
+			// roadShapefilePath = "/Users/lisa/RDP_Share/GIS/tl_2015_allstates_prisecroads_lcc.shp";
 			
 			ShapefileHandler shp = new ShapefileHandler(roadShapefilePath);
 			SimpleFeatureCollection features = shp.getFeatureCollection();
