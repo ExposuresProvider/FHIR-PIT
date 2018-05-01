@@ -49,7 +49,7 @@ public class NearestRoad {
 		// }
 		// catch(Exception e) {
 			// write to logfile instead??
-			System.out.println(e);
+		//	System.out.println(e);
 		// }
 	}
 	
