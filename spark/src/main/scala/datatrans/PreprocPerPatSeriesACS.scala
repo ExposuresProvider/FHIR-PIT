@@ -97,6 +97,11 @@ object PreprocPerPatSeriesACS {
               proc_pid(config, spark, geoidFinder, pid)
             })
 
+            val lrows = for (row <- rows) yield f"${row._1},${row._2}"
+
+            val table0 = "patient_num,GEOID\n" + lrows.mkString("\n")
+            writeToFile(hc, config.output_file+".table", table0)
+
             val df = rows.toDF("patient_num", "GEOID")
 
             val acs_df = spark.read.format("csv").option("header", value = true).load(f"${config.input_directory}/${config.acs_data}")
@@ -104,7 +109,7 @@ object PreprocPerPatSeriesACS {
 
             val table = df.join(acs_df, "GEOID")
 
-            writeCSV(spark, table, config.output_file, CSV)
+            writeCSV(spark, table, config.output_file, CSV(","))
           }
 
 

@@ -78,7 +78,7 @@ object Utils {
     val dfs = dpath.getFileSystem(hc)
 
     val fname = form match {
-      case CSV =>
+      case CSV(sep) =>
         val mn = fn + "_meta.csv"
         val mpath = new Path(mn)
         val mfs = mpath.getFileSystem(hc)
@@ -96,7 +96,7 @@ object Utils {
         val schema2 = StructType(fields2)
         val encoder = RowEncoder(schema2)
 
-        wide.map(row => Row.fromSeq(row.toSeq.zip(trans).map({ case (x, t) => t(x)})))(encoder).write.option("sep", "!").option("header", value = false).csv(dirn)
+        wide.map(row => Row.fromSeq(row.toSeq.zip(trans).map({ case (x, t) => t(x)})))(encoder).write.option("sep", sep).option("header", value = false).csv(dirn)
         fname
 
       case JSON =>
@@ -245,7 +245,7 @@ object Utils {
 
   sealed trait Format
   case object JSON extends Format
-  case object CSV extends Format
+  case class CSV(sep: String) extends Format
 
   def latlon2rowcol(latitude : Double, longitude : Double, year : Int) : Option[(Int, Int)] = {
     // CMAQ uses Lambert Conformal Conic projection

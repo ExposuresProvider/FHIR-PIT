@@ -27,7 +27,7 @@ object Preproc {
       import spark.implicits._
 
       val form = args(0) match {
-        case "csv" => CSV
+        case "csv" => CSV("!")
         case "json" => JSON
       }
       val pdif = args(1)
