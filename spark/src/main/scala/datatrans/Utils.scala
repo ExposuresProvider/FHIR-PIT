@@ -79,16 +79,6 @@ object Utils {
 
     val fname = form match {
       case CSV(sep) =>
-        val mn = fn + "_meta.csv"
-        val mpath = new Path(mn)
-        val mfs = mpath.getFileSystem(hc)
-        if(mfs.exists(mpath)) {
-          mfs.delete(mpath, true)
-        }
-
-        val mout = new BufferedWriter(new OutputStreamWriter(mfs.create(mpath)))
-        mout.write(wide.columns.mkString("!"))
-        mout.close()
         val fname = fn + ".csv"
         val schema = wide.schema
         val (fields2, trans) =
@@ -108,6 +98,12 @@ object Utils {
     val fpath = new Path(fname)
     dfs.delete(fpath, true)
     copyMerge(hc, dfs, overwrite = true, fname, dpath)
+
+    form match {
+      case CSV(sep) =>
+        prependStringToFile(hc, wide.columns.mkString(sep), fname)
+      case JSON =>
+    }
   }
 
   def aggregate(df: DataFrame, keycols : Seq[String], cols : Seq[String], col:String) : DataFrame = {
