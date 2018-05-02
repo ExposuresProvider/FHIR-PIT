@@ -16,7 +16,7 @@ submit(host_name, cache_dir, "datatrans.PreprocPerPatSeriesACS",
            "--patient_dimension={0}".format(patient_dimension),
            "--input_directory=" + input_dir + "/",
            "--time_series=" + time_series,
-           "--output_file=" + output_dir + "/",
+           "--output_file=" + output_dir,
            "--geoid_data=" + environmental_data,
            "--acs_data=" + acs_data, *sys.argv[9:])
 
