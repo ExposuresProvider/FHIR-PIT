@@ -43,7 +43,7 @@ public class NearestRoad {
 			
 			ShapefileHandler shp = new ShapefileHandler(roadShapefilePath);
 			SimpleFeatureCollection features = shp.getFeatureCollection();
-			System.out.println("Shapefile Collection: " + shp.getFeatureCollection().size() + " features");
+			//System.out.println("Shapefile Collection: " + shp.getFeatureCollection().size() + " features");
 			index = new SpatialIndexFeatureCollection(features.getSchema());
 			index.addAll(features);
 		}
