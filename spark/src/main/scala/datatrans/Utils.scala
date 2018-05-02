@@ -101,9 +101,22 @@ object Utils {
 
     form match {
       case CSV(sep) =>
-        prependStringToFile(hc, wide.columns.mkString(sep), fname)
+        prependStringToFile(hc, wide.columns.mkString(sep) + "\n", fname)
       case JSON =>
     }
+  }
+
+  def writeDataframe(hc: Configuration, output_file: String, table: DataFrame) = {
+    val dname = output_file + "_temp"
+    val dpath = new Path(dname)
+    table.write.option("sep", ",").option("header", value = false).csv(dname)
+
+    val output_file_path = new Path(output_file)
+    val output_file_file_system = output_file_path.getFileSystem(hc)
+    output_file_file_system.delete(output_file_path, true)
+    copyMerge(hc, output_file_file_system, overwrite = true, output_file, dpath)
+
+    prependStringToFile(hc, table.columns.mkString(",") + "\n", output_file)
   }
 
   def aggregate(df: DataFrame, keycols : Seq[String], cols : Seq[String], col:String) : DataFrame = {

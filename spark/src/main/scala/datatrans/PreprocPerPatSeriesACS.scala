@@ -2,10 +2,11 @@ package datatrans
 
 import java.util.concurrent.atomic.AtomicInteger
 
-import datatrans.Utils._
-import org.apache.hadoop.fs.Path
+import datatrans.Utils.{JSON, _}
+import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.expressions.UserDefinedFunction
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import play.api.libs.json._
 import org.joda.time._
 import play.api.libs.json.Json.JsValueWrapper
@@ -109,7 +110,7 @@ object PreprocPerPatSeriesACS {
 
             val table = df.join(acs_df, "GEOID")
 
-            writeCSV(spark, table, config.output_file, CSV(","))
+            writeDataframe(hc, config.output_file, table)
           }
 
 
@@ -122,4 +123,5 @@ object PreprocPerPatSeriesACS {
 
 
   }
+
 }
