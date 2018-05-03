@@ -30,17 +30,12 @@ public class NearestRoad {
 	private GeometryFactory gf = new GeometryFactory();
 	private SpatialIndexFeatureCollection index;
 	private SimpleFeature lastMatched;
-	// make max search radius about 500 meters per karafecho
-	private double MAX_SEARCH_DISTANCE;
-	
-	public NearestRoad() {
-		// try and get shapefile path out of config file here?
-	}
+	private double maximum_search_radius;
 	
 	public NearestRoad(String roadShapefilePath, double maximum_search_radius) {
 		try {
 			// roadShapefilePath = "/Users/lisa/RDP_Share/GIS/tl_2015_allstates_prisecroads_lcc.shp";
-			MAX_SEARCH_DISTANCE = maximum_search_radius;
+			this.maximum_search_radius = maximum_search_radius;
 			ShapefileHandler shp = new ShapefileHandler(roadShapefilePath);
 			SimpleFeatureCollection features = shp.getFeatureCollection();
 			//System.out.println("Shapefile Collection: " + shp.getFeatureCollection().size() + " features");
@@ -54,10 +49,10 @@ public class NearestRoad {
 	}
 	
 	public double getMinimumDistance(double lat, double lon) {
-		double distance = MAX_SEARCH_DISTANCE;
+		double distance = maximum_search_radius;
 		
 		try {
-			Point  p = createPointLCC(lat, lon);
+			Point p = createPointLCC(lat, lon);
 			distance = findMinimumDistance(p);
 		}
 		catch(Exception e) {
@@ -70,19 +65,19 @@ public class NearestRoad {
   
 	private double findMinimumDistance(Point p) {
 		
-	    //final double MAX_SEARCH_DISTANCE = index.getBounds().getSpan(0);
+	    //final double maximum_search_radius = index.getBounds().getSpan(0);
 		// make max search radius about 500 meters
-		//final double MAX_SEARCH_DISTANCE = 500.0;
+		//final double maximum_search_radius = 500.0;
 	    Coordinate coordinate = p.getCoordinate();
 	    ReferencedEnvelope search = new ReferencedEnvelope(new Envelope(coordinate),
 	        index.getSchema().getCoordinateReferenceSystem());
-	    search.expandBy(MAX_SEARCH_DISTANCE);
+	    search.expandBy(maximum_search_radius);
 	    BBOX bbox = ff.bbox(ff.property(index.getSchema().getGeometryDescriptor().getName()), (BoundingBox) search);
 	    
 	    SimpleFeatureCollection candidates = index.subCollection(bbox);   
 	    //System.out.println(candidates.size());
 
-	    double minDist = MAX_SEARCH_DISTANCE + 1.0e-6;
+	    double minDist = -1;
 	    Coordinate minDistPoint = null;
 	    try (SimpleFeatureIterator itr = candidates.features()) {
 	    	
@@ -97,7 +92,7 @@ public class NearestRoad {
 	    		LinearLocation here = line.project(coordinate);
 	    		Coordinate point = line.extractPoint(here);
 	    		double dist = point.distance(coordinate);
-	    		if (dist < minDist) {
+	    		if (minDist < 0 || dist < minDist) {
 	    			minDist = dist;
 	    			minDistPoint = point;
 	    			lastMatched = feature;
