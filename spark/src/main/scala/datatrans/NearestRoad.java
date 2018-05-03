@@ -37,10 +37,10 @@ public class NearestRoad {
 		// try and get shapefile path out of config file here?
 	}
 	
-	public NearestRoad(String roadShapefilePath, double max_search_radius) {
+	public NearestRoad(String roadShapefilePath, double maximum_search_radius) {
 		try {
 			// roadShapefilePath = "/Users/lisa/RDP_Share/GIS/tl_2015_allstates_prisecroads_lcc.shp";
-			MAX_SEARCH_DISTANCE = max_search_radius
+			MAX_SEARCH_DISTANCE = maximum_search_radius;
 			ShapefileHandler shp = new ShapefileHandler(roadShapefilePath);
 			SimpleFeatureCollection features = shp.getFeatureCollection();
 			//System.out.println("Shapefile Collection: " + shp.getFeatureCollection().size() + " features");
