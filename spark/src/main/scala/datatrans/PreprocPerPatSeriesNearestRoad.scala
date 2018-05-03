@@ -20,6 +20,7 @@ case class PreprocPerPatSeriesNearestRoadConfig(
                    input_directory : String = "",
                    time_series : String = "",
                    nearestroad_data : String = "",
+                   maximum_search_radius : Double = 500,
                    output_file : String = ""
                  )
 
@@ -60,6 +61,7 @@ object PreprocPerPatSeriesNearestRoad {
       opt[String]("input_directory").required.action((x,c) => c.copy(input_directory = x))
       opt[String]("time_series").required.action((x,c) => c.copy(time_series = x))
       opt[String]("nearestroad_data").required.action((x,c) => c.copy(nearestroad_data = x))
+      opt[Double]("maximum_search_radius").action((x,c) => c.copy(maximum_search_radius = x))
       opt[String]("output_file").required.action((x,c) => c.copy(output_file = x))
     }
 
@@ -89,7 +91,7 @@ object PreprocPerPatSeriesNearestRoad {
             println(config.output_file + " exists")
           } else {
 
-            val nearestRoad = new NearestRoad(f"${config.input_directory}/${config.nearestroad_data}")
+            val nearestRoad = new NearestRoad(f"${config.input_directory}/${config.nearestroad_data}", config.maximum_search_radius)
             val rows = patl.flatMap(pid => {
               println("processing " + count.incrementAndGet + " / " + n + " " + pid)
               proc_pid(config, spark, nearestRoad, pid)

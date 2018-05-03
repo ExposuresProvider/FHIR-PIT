@@ -31,16 +31,16 @@ public class NearestRoad {
 	private SpatialIndexFeatureCollection index;
 	private SimpleFeature lastMatched;
 	// make max search radius about 500 meters per karafecho
-	private final double MAX_SEARCH_DISTANCE = 500;
+	private double MAX_SEARCH_DISTANCE;
 	
 	public NearestRoad() {
 		// try and get shapefile path out of config file here?
 	}
 	
-	public NearestRoad(String roadShapefilePath) {
+	public NearestRoad(String roadShapefilePath, double max_search_radius) {
 		try {
 			// roadShapefilePath = "/Users/lisa/RDP_Share/GIS/tl_2015_allstates_prisecroads_lcc.shp";
-			
+			MAX_SEARCH_DISTANCE = max_search_radius
 			ShapefileHandler shp = new ShapefileHandler(roadShapefilePath);
 			SimpleFeatureCollection features = shp.getFeatureCollection();
 			//System.out.println("Shapefile Collection: " + shp.getFeatureCollection().size() + " features");
