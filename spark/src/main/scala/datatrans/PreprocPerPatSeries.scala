@@ -67,7 +67,7 @@ object PreprocPerPatSeries {
 
                 val pat = pddf.select("race_cd", "sex_cd", "birth_date")
 
-                val emptyObjectLatLon = lit(None).cast(DoubleType)
+                val emptyObjectLatLon = lit(null).cast(DoubleType)
                 val features = if (geodata_input_fs.exists(geodata_input_path)) {
                   println("loading geodata from " + geodata_input_filename)
                   val geodata_df = spark.read.format("csv").option("header", value = true).load(geodata_input_filename)
