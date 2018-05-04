@@ -67,6 +67,7 @@ object PreprocPerPatSeries {
 
                 val pat = pddf.select("race_cd", "sex_cd", "birth_date")
 
+                val emptyObjectLatLon = lit(None).cast(DoubleType)
                 val features = if (geodata_input_fs.exists(geodata_input_path)) {
                   println("loading geodata from " + geodata_input_filename)
                   val geodata_df = spark.read.format("csv").option("header", value = true).load(geodata_input_filename)
@@ -74,12 +75,12 @@ object PreprocPerPatSeries {
 
                   val lon = geodata_df.filter($"concept_cd".like("GEOLONG")).select("nval_num")
 
-                  val pat2 = if (lat.count != 0) pat.crossJoin(lat.agg(avg("nval_num").as("lat"))) else pat
-                  if (lon.count == 0) pat2.crossJoin(lon.agg(avg("nval_num").as("lon"))) else pat2
+                  val pat2 = if (lat.count != 0) pat.crossJoin(lat.agg(avg("nval_num").as("lat"))) else pat.withColumn("lat", emptyObjectLatLon)
+                  if (lon.count == 0) pat2.crossJoin(lon.agg(avg("nval_num").as("lon"))) else pat2.withColumn("lon", emptyObjectLatLon)
                 } else
-                  pat
+                  pat.withColumn("lat", emptyObjectLatLon).withColumn("lon", emptyObjectLatLon)
 
-                def emptyObject(col:String) = {
+                def emptyObjectObervationVisit(col:String) = {
 
                   import collection.JavaConverters._
                   val bufferSchema: StructType = StructType(
@@ -110,7 +111,7 @@ object PreprocPerPatSeries {
                   aggregate(observation, Seq("encounter_num", "concept_cd", "instance_num", "modifier_cd"), observation_cols, "observation")
 
                 } else
-                  emptyObject("obervation")
+                  emptyObjectObervationVisit("obervation")
 
 
                 val visit_wide = if(vdif_fs.exists(vdif_path)) {
@@ -127,7 +128,7 @@ object PreprocPerPatSeries {
 
                   aggregate(visit, Seq("encounter_num"), visit_cols, "visit")
                 } else
-                  emptyObject("visit")
+                  emptyObjectObervationVisit("visit")
 
                 //      val merge_map = udf((a:Map[String,Any], b:Map[String,Any]) => mergeMap(a,b))
 
