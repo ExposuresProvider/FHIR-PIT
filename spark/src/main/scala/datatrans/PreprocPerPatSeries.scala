@@ -110,7 +110,7 @@ object PreprocPerPatSeries {
                   aggregate(observation, Seq("encounter_num", "concept_cd", "instance_num", "modifier_cd"), observation_cols, "observation")
 
                 } else
-                  emptyObject("obervations")
+                  emptyObject("obervation")
 
 
                 val visit_wide = if(vdif_fs.exists(vdif_path)) {
