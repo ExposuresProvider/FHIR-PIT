@@ -1,11 +1,13 @@
 package datatrans
 
+import java.util
 import java.util.concurrent.atomic.AtomicInteger
 
 import datatrans.Utils._
 import org.apache.hadoop.fs.Path
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{Row, SparkSession}
 import org.apache.spark.sql.functions._
+import org.apache.spark.sql.types._
 import scopt._
 
 case class PreprocPerPatSeriesConfig(
@@ -60,70 +62,85 @@ object PreprocPerPatSeries {
                 val geodata_input_path = new Path(geodata_input_filename)
                 val geodata_input_fs = geodata_input_path.getFileSystem(hc)
 
-                if (!vdif_fs.exists(vdif_path) || !ofif_fs.exists(ofif_path) || !geodata_input_fs.exists(geodata_input_path)) {
-                  println("of, vd, or geodata file not found, skipped " + p)
-                } else {
-                  println("loading patient_dimension from " + pdif)
-                  val pddf = spark.read.format("csv").option("header", value = true).load(pdif)
-                  println("loading observation_fact from " + ofif)
-                  val ofdf = spark.read.format("csv").option("header", value = true).load(ofif)
-                  println("loading visit_dimension from " + vdif)
-                  val vddf = spark.read.format("csv").option("header", value = true).load(vdif)
+                println("loading patient_dimension from " + pdif)
+                val pddf = spark.read.format("csv").option("header", value = true).load(pdif)
+
+                val pat = pddf.select("race_cd", "sex_cd", "birth_date")
+
+                val features = if (geodata_input_fs.exists(geodata_input_path)) {
                   println("loading geodata from " + geodata_input_filename)
                   val geodata_df = spark.read.format("csv").option("header", value = true).load(geodata_input_filename)
-
-                  val pat = pddf.select("race_cd", "sex_cd", "birth_date")
-
                   val lat = geodata_df.filter($"concept_cd".like("GEOLAT")).select("nval_num")
 
                   val lon = geodata_df.filter($"concept_cd".like("GEOLONG")).select("nval_num")
 
-                  if (lat.count == 0 || lon.count == 0) {
-                    println("lat or lon not found, skipped " + p)
-                  } else {
-                    val features = pat
-                      .crossJoin(lat.agg(avg("nval_num").as("lat")))
-                      .crossJoin(lon.agg(avg("nval_num").as("lon")))
+                  val pat2 = if (lat.count != 0) pat.crossJoin(lat.agg(avg("nval_num").as("lat"))) else pat
+                  if (lon.count == 0) pat2.crossJoin(lon.agg(avg("nval_num").as("lon"))) else pat2
+                } else
+                  pat
 
-                    // observation
-                    val observation_cols = Seq(
-                      "valueflag_cd",
-                      "valtype_cd",
-                      "nval_num",
-                      "tval_char",
-                      "units_cd",
-                      "start_date",
-                      "end_date"
+                def emptyObject(col:String) = {
+
+                  import collection.JavaConverters._
+                  val bufferSchema: StructType = StructType(
+                    Seq(
+                      StructField(col, MapType(StringType, StringType, valueContainsNull = false))
                     )
-                    val observation = ofdf.select("encounter_num", "concept_cd", "instance_num", "modifier_cd", "valueflag_cd", "valtype_cd", "nval_num", "tval_char", "units_cd", "start_date", "end_date").orderBy("start_date")
+                  )
 
-                    val observation_wide = aggregate(observation, Seq("encounter_num", "concept_cd", "instance_num", "modifier_cd"), observation_cols, "observation")
-
-                    // visit
-                    val visit_cols = Seq(
-                      "inout_cd",
-                      "start_date",
-                      "end_date"
-                    )
-                    val visit = vddf.select("encounter_num", "inout_cd", "start_date", "end_date").orderBy("start_date")
-
-                    val visit_wide = aggregate(visit, Seq("encounter_num"), visit_cols, "visit")
-
-                    //      val merge_map = udf((a:Map[String,Any], b:Map[String,Any]) => mergeMap(a,b))
-
-                    val features_wide = features
-                      .crossJoin(observation_wide)
-                      .crossJoin(visit_wide)
-                    //        .select($"patient_num", $"encounter_num", $"sex_cd", $"race_cd", $"birth_date", merge_map($"observation", $"visit"))
-
-                    // https://stackoverflow.com/questions/41601874/how-to-convert-row-to-json-in-spark-2-scala
-                    val json = features_wide.toJSON.first()
-
-                    writeToFile(hc, output_filename, json)
-
-                  }
-
+                  spark.createDataFrame(Seq(Row(Map())).asJava, bufferSchema)
                 }
+
+
+                val observation_wide = if(ofif_fs.exists(ofif_path)) {
+                  println("loading observation_fact from " + ofif)
+                  val ofdf = spark.read.format("csv").option("header", value = true).load(ofif)
+                  // observation
+                  val observation_cols = Seq(
+                    "valueflag_cd",
+                    "valtype_cd",
+                    "nval_num",
+                    "tval_char",
+                    "units_cd",
+                    "start_date",
+                    "end_date"
+                  )
+                  val observation = ofdf.select("encounter_num", "concept_cd", "instance_num", "modifier_cd", "valueflag_cd", "valtype_cd", "nval_num", "tval_char", "units_cd", "start_date", "end_date").orderBy("start_date")
+
+                  aggregate(observation, Seq("encounter_num", "concept_cd", "instance_num", "modifier_cd"), observation_cols, "observation")
+
+                } else
+                  emptyObject("obervations")
+
+
+                val visit_wide = if(vdif_fs.exists(vdif_path)) {
+                  println("loading visit_dimension from " + vdif)
+                  val vddf = spark.read.format("csv").option("header", value = true).load(vdif)
+
+                  // visit
+                  val visit_cols = Seq(
+                    "inout_cd",
+                    "start_date",
+                    "end_date"
+                  )
+                  val visit = vddf.select("encounter_num", "inout_cd", "start_date", "end_date").orderBy("start_date")
+
+                  aggregate(visit, Seq("encounter_num"), visit_cols, "visit")
+                } else
+                  emptyObject("visit")
+
+                //      val merge_map = udf((a:Map[String,Any], b:Map[String,Any]) => mergeMap(a,b))
+
+                val features_wide = features
+                  .crossJoin(observation_wide)
+                  .crossJoin(visit_wide)
+                //        .select($"patient_num", $"encounter_num", $"sex_cd", $"race_cd", $"birth_date", merge_map($"observation", $"visit"))
+
+                // https://stackoverflow.com/questions/41601874/how-to-convert-row-to-json-in-spark-2-scala
+                val json = features_wide.toJSON.first()
+
+                writeToFile(hc, output_filename, json)
+
 
               }
 
