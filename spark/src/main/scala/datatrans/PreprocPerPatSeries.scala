@@ -140,7 +140,6 @@ object PreprocPerPatSeries {
                 // https://stackoverflow.com/questions/41601874/how-to-convert-row-to-json-in-spark-2-scala
                 val json = features_wide.toJSON.first()
 
-                println("writing to file " + output_filename)
                 writeToFile(hc, output_filename, json)
 
 
