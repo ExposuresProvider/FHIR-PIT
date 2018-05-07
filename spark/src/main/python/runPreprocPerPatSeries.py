@@ -6,11 +6,14 @@ import sys
 from utils import submit
 
 dir = sys.argv[1]
-cache_dir = sys.argv[2]
-host_name = sys.argv[3]
+patient_dimension = sys.argv[2]
+patient_series = sys.argv[3]
+output_dir = sys.argv[4]
+cache_dir = sys.argv[5]
+host_name = sys.argv[6]
 
 submit(host_name, cache_dir, "datatrans.PreprocPerPatSeries",
-       "--patient_dimension={0}/patient_dimension.csv".format(dir),
-       "--input_directory=" + dir + "/patient_series",
-       "--output_prefix=" + dir + "/json/")
+       "--patient_dimension={0}/{1}".format(dir, patient_dimension),
+       "--input_directory=" + dir + "/" + patient_series,
+       "--output_prefix=" + output_dir + "/")
 
