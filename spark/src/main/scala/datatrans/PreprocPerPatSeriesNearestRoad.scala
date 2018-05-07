@@ -4,16 +4,9 @@ import java.util.concurrent.atomic.AtomicInteger
 
 import datatrans.Utils._
 import org.apache.hadoop.fs.Path
-import org.apache.spark.sql.expressions.UserDefinedFunction
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.SparkSession
 import play.api.libs.json._
-import org.joda.time._
-import play.api.libs.json.Json.JsValueWrapper
-import org.apache.spark.sql.functions.udf
 import scopt._
-
-import scala.collection.mutable
-import scala.collection.mutable.ListBuffer
 
 case class PreprocPerPatSeriesNearestRoadConfig(
                    patient_dimension : String = "",

@@ -8,7 +8,6 @@ import org.apache.spark.sql.SparkSession
 import play.api.libs.json._
 import org.joda.time._
 import org.joda.time.format.DateTimeFormat
-import play.api.libs.json.Json.JsValueWrapper
 import scopt._
 
 case class Config(
