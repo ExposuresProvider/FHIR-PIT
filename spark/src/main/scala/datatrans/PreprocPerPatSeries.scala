@@ -76,7 +76,7 @@ object PreprocPerPatSeries {
                   val lon = geodata_df.filter($"concept_cd".like("GEOLONG")).select("nval_num")
 
                   val pat2 = if (lat.count != 0) pat.crossJoin(lat.agg(avg("nval_num").as("lat"))) else pat.withColumn("lat", emptyObjectLatLon)
-                  if (lon.count == 0) pat2.crossJoin(lon.agg(avg("nval_num").as("lon"))) else pat2.withColumn("lon", emptyObjectLatLon)
+                  if (lon.count != 0) pat2.crossJoin(lon.agg(avg("nval_num").as("lon"))) else pat2.withColumn("lon", emptyObjectLatLon)
                 } else
                   pat.withColumn("lat", emptyObjectLatLon).withColumn("lon", emptyObjectLatLon)
 
