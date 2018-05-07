@@ -192,14 +192,6 @@ object PreprocPerPatSeriesToVector {
       }
     }
 
-  def extractField(jsvalue: JsValue, field: String) : Option[JsValue] = {
-    jsvalue \ field match {
-      case JsUndefined() =>
-        None
-      case JsDefined(lat) =>
-        Some(lat)
-    }
-  }
 
   case class MDCTN_map_entry(name:Seq[String], rxCUIList:Seq[String], rxCUIList2:Seq[String])
   implicit val MDCTN_map_entry_encoder : org.apache.spark.sql.Encoder[(String, MDCTN_map_entry)] = org.apache.spark.sql.Encoders.kryo[(String, MDCTN_map_entry)]

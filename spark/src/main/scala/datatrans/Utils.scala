@@ -1,14 +1,12 @@
 package datatrans
 
-import java.io.{BufferedWriter, OutputStreamWriter}
-
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs._
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.types._
 import geotrellis.proj4._
-import org.apache.commons.text.StringEscapeUtils
+import org.apache.commons.lang.StringEscapeUtils
 import org.joda.time.DateTime
 import play.api.libs.json._
 
@@ -105,8 +103,7 @@ object Utils {
       case JSON =>
     }
   }
-
-  def writeDataframe(hc: Configuration, output_file: String, table: DataFrame) = {
+  def writeDataframe(hc: Configuration, output_file: String, table: DataFrame): Unit = {
     val dname = output_file + "_temp"
     val dpath = new Path(dname)
     table.write.option("sep", ",").option("header", value = false).csv(dname)
@@ -328,7 +325,6 @@ object Utils {
       None
 
   }
-
   def insertOrUpdate(mmap: mutable.Map[DateTime, JsObject], key: DateTime, col: String, value: JsValue): Unit = {
     mmap.get(key) match {
       case Some(vec) =>
@@ -354,5 +350,14 @@ object Utils {
   }
   val DATE_FORMAT = "yyyy-MM-dd"
   val BUFFER_SIZE : Int = 4 * 1024
+
+  def extractField(jsvalue: JsValue, field: String) : Option[JsValue] = {
+    jsvalue \ field match {
+      case JsUndefined() =>
+        None
+      case JsDefined(lat) =>
+        Some(lat)
+    }
+  }
 
 }

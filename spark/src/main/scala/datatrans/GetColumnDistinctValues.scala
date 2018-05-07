@@ -1,18 +1,8 @@
 package datatrans
 
-import java.sql.Date
-import java.time.ZoneId
-
 import datatrans.Utils._
-import org.apache.hadoop.fs.Path
-import org.apache.spark.sql.{Row, SparkSession}
-import org.apache.spark.sql.types._
-import play.api.libs.json._
+import org.apache.spark.sql.SparkSession
 
-import scala.collection.JavaConversions._
-import org.joda.time._
-
-import scala.collection.mutable.ListBuffer
 import scopt._
 
 // cut -f3 -d, observation_fact.csv | tail -n +2 | tr -d '"' | sed '/^\s*$/d' | sort -u > json/header0
@@ -46,7 +36,7 @@ object GetColumnDistinctValues {
       case Some(config) =>
         time {
           println("loading " + config.table)
-          val pddf0 = spark.read.format("csv").option("header", true).load(config.table)
+          val pddf0 = spark.read.format("csv").option("header", value = true).load(config.table)
 
           val patl = pddf0.select(config.column).distinct.map(r => r.getString(0)).collect
 
