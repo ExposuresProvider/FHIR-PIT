@@ -1,6 +1,5 @@
 package datatrans
 
-import java.util
 import java.util.concurrent.atomic.AtomicInteger
 
 import datatrans.Utils._
@@ -130,12 +129,9 @@ object PreprocPerPatSeries {
                 } else
                   emptyObjectObervationVisit("visit")
 
-                //      val merge_map = udf((a:Map[String,Any], b:Map[String,Any]) => mergeMap(a,b))
-
                 val features_wide = features
                   .crossJoin(observation_wide)
                   .crossJoin(visit_wide)
-                //        .select($"patient_num", $"encounter_num", $"sex_cd", $"race_cd", $"birth_date", merge_map($"observation", $"visit"))
 
                 // https://stackoverflow.com/questions/41601874/how-to-convert-row-to-json-in-spark-2-scala
                 val json = features_wide.toJSON.first()
