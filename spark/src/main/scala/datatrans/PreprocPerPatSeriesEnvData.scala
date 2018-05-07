@@ -145,42 +145,56 @@ object PreprocPerPatSeriesEnvData {
           input_file_input_stream.close()
           val data = ListBuffer[JsObject]() // a list of concept, start_time
 
-          val lat = jsvalue("lat").as[Double]
-          val lon = jsvalue("lon").as[Double]
+          jsvalue \ "lat" match {
+            case JsUndefined() =>
+              println("lat doesn't exists")
+            case JsDefined(latitutestr) =>
+              val lat = latitutestr.as[Double]
+              jsvalue \ "lon" match {
+                case JsUndefined() =>
+                  println("lon doesn't exists")
+                case JsDefined(lons) =>
+                  val lon = lons.as[Double]
+                  val coors = (config.start_date.year.get to config.end_date.minusDays(1).year.get).flatMap(year => {
+                    latlon2rowcol(lat, lon, year) match {
+                      case Some((row, col)) =>
+                        Seq((year, (row, col)))
+                      case _ =>
+                        Seq()
+                    }
+                  })
+                  val names = for (i <- config.statistics; j <- config.indices) yield f"${j}_$i"
 
-          val coors = (config.start_date.year.get to config.end_date.minusDays(1).year.get).flatMap(year => {
-            latlon2rowcol(lat, lon, year) match {
-              case Some((row, col)) =>
-                Seq((year, (row, col)))
-              case _ =>
-                Seq()
-            }
-          })
-          val names = for (i <- config.statistics; j <- config.indices) yield f"${j}_$i"
+                  val env_data = loadEnvData(config, spark, coors, names)
 
-          val env_data = loadEnvData(config, spark, coors, names)
+                  for (i <- 0 until Days.daysBetween(config.start_date, config.end_date).getDays) {
+                    data += loadDailyEnvData(config, lat, lon, config.start_date.plusDays(i), env_data, coors.toMap, i, names)
+                  }
 
-          for (i <- 0 until Days.daysBetween(config.start_date, config.end_date).getDays) {
-            data += loadDailyEnvData(config, lat, lon, config.start_date.plusDays(i), env_data, coors.toMap, i, names)
+                  val json = config.output_format match {
+                    case "json" =>
+                      data.map(obj => Json.stringify (obj)+"\n").mkString("")
+                    case "csv" =>
+                      val headers = data.map(obj => obj.keys).fold(Set.empty[String])((keys1, keys2) => keys1.union(keys2)).toSeq
+                      val rows = data.map(obj => headers.map(col => obj \ col match {
+                        case JsDefined(a) =>
+                          a.toString
+                        case _ =>
+                          ""
+                      }).mkString("!")).mkString("\n")
+                      headers.mkString("!") + "\n" + rows
+                    case _ =>
+                      throw new UnsupportedOperationException("unsupported output format " + config.output_format)
+                  }
+                  println("writing output to " + output_file)
+                  writeToFile(hc, output_file, json)
+
+              }
+
           }
 
-          val json = config.output_format match {
-            case "json" =>
-              data.map(obj => Json.stringify (obj)+"\n").mkString("")
-            case "csv" =>
-              val headers = data.map(obj => obj.keys).fold(Set.empty[String])((keys1, keys2) => keys1.union(keys2)).toSeq
-              val rows = data.map(obj => headers.map(col => obj \ col match {
-                case JsDefined(a) =>
-                  a.toString
-                case _ =>
-                  ""
-              }).mkString("!")).mkString("\n")
-              headers.mkString("!") + "\n" + rows
-            case _ =>
-              throw new UnsupportedOperationException("unsupported output format " + config.output_format)
-          }
-          println("writing output to " + output_file)
-          writeToFile(hc, output_file, json)
+
+
         }
       }
     }

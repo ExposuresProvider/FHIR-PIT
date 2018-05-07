@@ -47,10 +47,22 @@ object PreprocPerPatSeriesACS {
         val jsvalue = Json.parse(input_file_input_stream)
         input_file_input_stream.close()
 
-        val lat = jsvalue("lat").as[Double]
-        val lon = jsvalue("lon").as[Double]
+        jsvalue \ "lat" match {
+          case JsUndefined() =>
+            println("lat doesn't exists")
+            None
+          case JsDefined(latitutestr) =>
+            val lat = latitutestr.as[Double]
+            jsvalue \ "lon" match {
+              case JsUndefined() =>
+                println("lon doesn't exists")
+                None
+              case JsDefined(lons) =>
+                val lon = lons.as[Double]
 
-        Some((p, nearestRoad.getGeoidForLatLon(lat,lon)))
+                Some((p, nearestRoad.getGeoidForLatLon(lat, lon)))
+            }
+        }
 
       }
     }

@@ -8,6 +8,7 @@ import org.apache.spark.sql.SparkSession
 import play.api.libs.json._
 import org.joda.time._
 import org.joda.time.format.DateTimeFormat
+import play.api.libs.json.Json.JsValueWrapper
 import scopt._
 
 case class Config(
@@ -58,10 +59,6 @@ object PreprocPerPatSeriesToVector {
 
           val visits = jsvalue("visit").as[JsObject]
           val observations = jsvalue("observation").as[JsObject]
-          val sex_cd = jsvalue("sex_cd").as[String]
-          val race_cd = jsvalue("race_cd").as[String]
-          val lat = jsvalue("lat").as[Double]
-          val lon = jsvalue("lon").as[Double]
 
           val start_date_set = scala.collection.mutable.Set[DateTime]()
 
@@ -69,6 +66,13 @@ object PreprocPerPatSeriesToVector {
             case JsDefined (bd) =>
               val birth_date = bd.as[String]
               val birth_date_joda = DateTime.parse (birth_date, DateTimeFormat.forPattern("M/d/y H:m"))
+              val sex_cd = jsvalue("sex_cd").as[String]
+              val race_cd = jsvalue("race_cd").as[String]
+              val demographic = Json.obj(
+                "race_cd" -> race_cd,
+                "sex_cd" -> sex_cd,
+                "birth_date" -> birth_date) ++ extractField(jsvalue, "lat").map(x => x.as[Double]).map(x => Json.obj("lat" -> x)).getOrElse(Json.obj()) ++ extractField(jsvalue, "lon").map(x => x.as[Double]).map(x => Json.obj("lon" -> x)).getOrElse(Json.obj())
+
 
               val encounters = observations.fields
               encounters.foreach {
@@ -153,14 +157,9 @@ object PreprocPerPatSeriesToVector {
               val data = listBuf2.toSeq.map {
                 case (start_date, vec) =>
                   val age = Years.yearsBetween (birth_date_joda, start_date).getYears
-                  Json.obj (
-                    "race_cd" -> race_cd,
-                    "sex_cd" -> sex_cd,
-                    "birth_date" -> birth_date,
-                    "age" -> age,
-                    "lat" -> lat,
-                    "lon" -> lon,
-                    "start_date" -> start_date.toString(DATE_FORMAT)) ++ vec
+                  demographic ++
+                    Json.obj("age" -> age) ++
+                    Json.obj("start_date" -> start_date.toString(DATE_FORMAT)) ++ vec
               }.filter(crit)
 
               if (data.nonEmpty) {
@@ -194,7 +193,16 @@ object PreprocPerPatSeriesToVector {
       }
     }
 
-  case class MDCTN_map_entry (name:Seq[String], rxCUIList:Seq[String], rxCUIList2:Seq[String])
+  def extractField(jsvalue: JsValue, field: String) : Option[JsValue] = {
+    jsvalue \ field match {
+      case JsUndefined() =>
+        None
+      case JsDefined(lat) =>
+        Some(lat)
+    }
+  }
+
+  case class MDCTN_map_entry(name:Seq[String], rxCUIList:Seq[String], rxCUIList2:Seq[String])
   implicit val MDCTN_map_entry_encoder : org.apache.spark.sql.Encoder[(String, MDCTN_map_entry)] = org.apache.spark.sql.Encoders.kryo[(String, MDCTN_map_entry)]
 
 

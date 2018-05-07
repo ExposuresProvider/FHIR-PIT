@@ -46,10 +46,22 @@ object PreprocPerPatSeriesNearestRoad {
         val jsvalue = Json.parse(input_file_input_stream)
         input_file_input_stream.close()
 
-        val lat = jsvalue("lat").as[Double]
-        val lon = jsvalue("lon").as[Double]
+        jsvalue \ "lat" match {
+          case JsUndefined() =>
+            println("lat doesn't exists")
+            None
+          case JsDefined(latitutestr) =>
+            val lat = latitutestr.as[Double]
+            jsvalue \ "lon" match {
+              case JsUndefined() =>
+                println("lon doesn't exists")
+                None
+              case JsDefined(lons) =>
+                val lon = lons.as[Double]
 
-        Some((p, nearestRoad.getMinimumDistance(lat,lon)))
+                Some((p, nearestRoad.getMinimumDistance(lat, lon)))
+            }
+        }
 
       }
     }
@@ -95,7 +107,7 @@ object PreprocPerPatSeriesNearestRoad {
             val rows = patl.flatMap(pid => {
               println("processing " + count.incrementAndGet + " / " + n + " " + pid)
               proc_pid(config, spark, nearestRoad, pid)
-            }).toSeq : Seq[(String, Double)]
+            })
 
             val lrows = for (row <- rows) yield f"${row._1},${row._2}"
 
