@@ -74,10 +74,20 @@ object PreprocPerPatSeries {
 
                   val lon = geodata_df.filter($"concept_cd".like("GEOLONG")).select("nval_num")
 
-                  val pat2 = if (lat.count != 0) pat.crossJoin(lat.agg(avg("nval_num").as("lat"))) else pat.withColumn("lat", emptyObjectLatLon)
-                  if (lon.count != 0) pat2.crossJoin(lon.agg(avg("nval_num").as("lon"))) else pat2.withColumn("lon", emptyObjectLatLon)
-                } else
+                  val pat2 = if (lat.count != 0) pat.crossJoin(lat.agg(avg("nval_num").as("lat"))) else {
+                    println("no lat found " + p)
+                    pat.withColumn("lat", emptyObjectLatLon)
+                  }
+                  if (lon.count != 0) pat2.crossJoin(lon.agg(avg("nval_num").as("lon"))) else {
+                    println("no lon found " + p)
+                    pat2.withColumn("lon", emptyObjectLatLon)
+                  }
+                } else {
+                  println("no lat or lon found " + p)
+
+
                   pat.withColumn("lat", emptyObjectLatLon).withColumn("lon", emptyObjectLatLon)
+                }
 
                 def emptyObjectObervationVisit(col:String) = {
 
