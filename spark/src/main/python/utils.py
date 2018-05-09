@@ -44,7 +44,8 @@ def submit(host_name, cache_dir, cls, *args, **kwargs):
     end = timer()
     print(end - start)
 
-def concat(dir, output_file, filename_column, default_value, sep):
+def concat(dir, output_file, column_pattern, filename_column, default_value, sep, distinct):
+    regular_expression = re.compile(column_pattern)
     dfs = []
     count = 0
     common_columns = pd.Index([])
@@ -55,16 +56,19 @@ def concat(dir, output_file, filename_column, default_value, sep):
         dfs.append((file, df2))
         common_columns = common_columns.union(df2.columns)
 
-    print("merged columns: ", common_columns.tolist())
-    df1 = pd.DataFrame(columns = common_columns)
+    columns_match_column_pattern = list(filter(lambda x : regular_expression.fullmatch(x), common_columns))
+
+    print("merged columns: ", columns_match_column_pattern)
+    df1 = pd.DataFrame(columns = columns_match_column_pattern)
     count = 0
     reindxed_dfs = []
     # https://stackoverflow.com/questions/29929639/when-combining-pandas-dataframe-concat-or-append-can-i-set-the-default-value
     for file, df2 in dfs:
         count += 1
         print("reindexing " + str(count) + " " + file)
-        df2 = df2.reindex(columns=common_columns, fill_value=default_value)
-        df2[filename_column] = os.path.basename(file)
+        df2 = df2.reindex(columns=columns_match_column_pattern, fill_value=default_value)
+        if filename_column is not None:
+            df2[filename_column] = os.path.basename(file)
         reindxed_dfs.append(df2)
 
     count = 0
@@ -82,7 +86,11 @@ def concat(dir, output_file, filename_column, default_value, sep):
         if len(combine0) > len(combine1):
             combined_dfs.append(combine0[-1])
 
-    combined_dfs[0].to_csv(output_file, sep=sep, index=False)
+    combined_df = combined_dfs[0]
+    if distinct:
+        combined_df = combined_df.drop_duplicates()
+
+    combined_df.to_csv(output_file, sep=sep, index=False)
 
 def proc_pid(input_dirs, in_seps, column_patterns, hows, ons, output_dir, f, out_sep):
     basename_f = os.path.basename(f)
