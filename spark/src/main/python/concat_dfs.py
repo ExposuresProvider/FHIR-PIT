@@ -9,4 +9,6 @@ filename_column = sys.argv[3]
 
 default_value = sys.argv[4]
 
-concat(dir, output_file, filename_column, default_value)
+sep = sys.argv[5]
+
+concat(dir, output_file, filename_column, default_value, sep)

@@ -44,14 +44,14 @@ def submit(host_name, cache_dir, cls, *args, **kwargs):
     end = timer()
     print(end - start)
 
-def concat(dir, output_file, filename_column, default_value):
+def concat(dir, output_file, filename_column, default_value, sep):
     dfs = []
     count = 0
     common_columns = pd.Index([])
     for file in glob.glob(dir):
         count += 1
         print("loading " + str(count) + " " + file)
-        df2 = pd.read_csv(file,sep="!")
+        df2 = pd.read_csv(file,sep=sep)
         dfs.append((file, df2))
         common_columns = common_columns.union(df2.columns)
 
@@ -82,17 +82,17 @@ def concat(dir, output_file, filename_column, default_value):
         if len(combine0) > len(combine1):
             combined_dfs.append(combine0[-1])
 
-    combined_dfs[0].to_csv(output_file, sep="!", index=False)
+    combined_dfs[0].to_csv(output_file, sep=sep, index=False)
 
-def proc_pid(input_dirs, column_patterns, hows, ons, output_dir, f):
+def proc_pid(input_dirs, in_seps, column_patterns, hows, ons, output_dir, f, out_sep):
     basename_f = os.path.basename(f)
 
     dfs = []
-    for dir, column_pattern in zip(input_dirs, column_patterns):
+    for dir, in_sep, column_pattern in zip(input_dirs, in_seps, column_patterns):
         input_f = dir + "/" + basename_f
         if os.path.exists(input_f):
             print("processing " + input_f)
-            df = pd.read_csv(input_f, sep="!")
+            df = pd.read_csv(input_f, sep=in_sep)
             df_match_column_pattern = df[list(filter(lambda x : column_pattern.fullmatch(x), df.columns))]
             dfs.append(df_match_column_pattern)
         else:
@@ -123,13 +123,13 @@ def proc_pid(input_dirs, column_patterns, hows, ons, output_dir, f):
     output_f = output_dir + "/" + basename_f
     if nrows != 0 and ncols != 0:
         print(str(nrows) + " rows " + str(ncols) + " cols " + output_f)
-        df_out.to_csv(output_f, sep="!", index=False)
+        df_out.to_csv(output_f, sep=out_sep, index=False)
     else:
         print("empty " + output_f)
 
-def merge(input_dirs, pats, hows, ons, output_dir, n_jobs):
+def merge(input_dirs, in_seps, pats, hows, ons, output_dir, out_sep, n_jobs):
     regular_expressions = list(map(lambda pat : re.compile(pat), pats))
     files = glob.glob(input_dirs[0] + "/*")
 
 
-    joblib.Parallel(n_jobs = n_jobs)(joblib.delayed(proc_pid)(input_dirs, regular_expressions, hows, ons, output_dir, f) for f in files)
+    joblib.Parallel(n_jobs = n_jobs)(joblib.delayed(proc_pid)(input_dirs, in_seps, regular_expressions, hows, ons, output_dir, f, out_sep) for f in files)
