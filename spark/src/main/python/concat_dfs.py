@@ -18,4 +18,4 @@ sep = sys.argv[6]
 
 distinct = len(sys.argv) == 8 and sys.argv[7] == "distinct"
 
-concat(dir, output_file, filename_column, default_value, sep, distinct)
+concat(dir, output_file, column_pattern, filename_column, default_value, sep, distinct)
