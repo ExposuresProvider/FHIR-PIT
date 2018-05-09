@@ -11,7 +11,7 @@ case class PreprocPerPatSeriesPatientSKConfig(
                    output_prefix : String = ""
                  )
 
-object PreprocPerPatSeries {
+object PreprocPerPatSeriesPatientSK {
 
 
   def main(args: Array[String]) {
