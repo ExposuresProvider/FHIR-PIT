@@ -31,7 +31,7 @@ object PreprocPerPatSeriesPatientSK {
 
           val hc = spark.sparkContext.hadoopConfiguration
 
-          val pdif = config.patient_dimension
+          val pdif = f"${config.input_directory}/${config.patient_dimension}"
           println("loading patient_dimension from " + pdif)
           val pddf0 = spark.read.format("csv").option("header", value = true).option("delimiter", "|").load(pdif)
 
