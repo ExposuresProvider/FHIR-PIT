@@ -38,8 +38,8 @@ object PreprocPerPatSeriesPatientSK {
           pddf0.select(pddf0("PATIENTSK_CHANGEME"), pddf0("XCOORD2017_DROPME"), pddf0("YCOORD2017_DROPME")).collect.foreach((row : Row) => {
             val patient_num = row.getString(0)
             val obj = Json.obj(
-              "lon" -> row.getDouble(1),
-              "lat" -> row.getDouble(2)
+              "lon" -> row.getString(1).toDouble,
+              "lat" -> row.getString(2).toDouble
             )
             val json = obj.toString()
             val output_filename = config.output_prefix + patient_num
