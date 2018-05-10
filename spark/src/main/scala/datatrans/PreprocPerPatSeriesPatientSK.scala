@@ -35,7 +35,7 @@ object PreprocPerPatSeriesPatientSK {
           println("loading patient_dimension from " + pdif)
           val pddf0 = spark.read.format("csv").option("header", value = true).option("delimiter", "|").load(pdif)
 
-          pddf0.select(pddf0("PATIENTSK_CHANGEME"), pddf0("XCOORD2017_DROPME"), pddf0("YCOORD2017_DROPME")).collect.foreach((row : Row) => {
+          pddf0.select(pddf0("patient_num"), pddf0("lon"), pddf0("lat")).collect.foreach((row : Row) => {
             val patient_num = row.getString(0)
             val lons = row.getString(1)
             val lats = row.getString(2)
