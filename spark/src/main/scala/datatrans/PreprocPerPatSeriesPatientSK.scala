@@ -40,13 +40,16 @@ object PreprocPerPatSeriesPatientSK {
             val lons = row.getString(1)
             val lats = row.getString(2)
             println(f"patient_num = $patient_num lat = $lats lon = $lons")
-            val obj = Json.obj(
-              "lon" -> lons.toDouble,
-              "lat" -> lats.toDouble
-            )
-            val json = obj.toString()
-            val output_filename = config.output_prefix + patient_num
-            writeToFile(hc, output_filename, json)
+            if (lons != null && lats != null) {
+              val obj = Json.obj(
+                "lon" -> lons.toDouble,
+                "lat" -> lats.toDouble
+              )
+              val json = obj.toString()
+              val output_filename = config.output_prefix + patient_num
+              writeToFile(hc, output_filename, json)
+
+            }
           })
 
 
