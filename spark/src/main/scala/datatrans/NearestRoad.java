@@ -92,7 +92,7 @@ public class NearestRoad {
 	    		LinearLocation here = line.project(coordinate);
 	    		Coordinate point = line.extractPoint(here);
 	    		double dist = point.distance(coordinate);
-	    		if (minDist < 0 || dist < minDist) {
+	    		if (dist <= maximum_search_radius && (minDist < 0 || dist < minDist)) {
 	    			minDist = dist;
 	    			minDistPoint = point;
 	    			lastMatched = feature;
