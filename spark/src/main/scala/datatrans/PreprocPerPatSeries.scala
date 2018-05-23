@@ -102,6 +102,7 @@ object PreprocPerPatSeries {
                     "nval_num",
                     "tval_char",
                     "units_cd",
+                    "valueflag_cd",
                     "start_date",
                     "end_date"
                   )
