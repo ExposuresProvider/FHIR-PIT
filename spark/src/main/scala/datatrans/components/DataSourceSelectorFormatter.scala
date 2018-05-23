@@ -1,19 +1,15 @@
 package datatrans.components
 
-import play.api.libs.json.JsValue
-
-sealed trait DataSourceSelectorFormatter {
-  def getRows(obj: JsValue): Seq[Seq[String]]
-  def header : Seq[String]
+sealed trait DataSourceSelectorFormatter[S,R] {
+  def getOutput(spark: S, obj: R): Seq[(String, ()=>String)]
 }
 
-final case class MkDataSourceSelectorFormatter[I,K,V](selector : Selector[I,K], dataSource : DataSource[K,V], formatter : Formatter[I, V]) extends DataSourceSelectorFormatter {
-  def getRows(obj: JsValue): Seq[Seq[String]] = {
+final case class MkDataSourceSelectorFormatter[S,R,I,K,V](selector : Selector[R,I,K], dataSource : DataSource[S,K,V], formatter : Formatter[S, I, V]) extends DataSourceSelectorFormatter[S,R] {
+  override def getOutput(spark: S, obj: R): Seq[(String, ()=>String)] = {
     selector.getIdentifierAndKey(obj).map{
       case (i, k) =>
-        formatter.format(i, dataSource.get(k))
+        formatter.format(spark, i, ()=>dataSource.get(spark, k))
     }
   }
 
-  def header : Seq[String] = formatter.header
 }
