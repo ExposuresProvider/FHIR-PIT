@@ -5,8 +5,8 @@ version := "1.0"
 scalaVersion := "2.11.8"
 
 resolvers ++= Seq(
-  "Java.net repository" at "http://download.java.net/maven/2",
   "Open Source Geospatial Foundation Repository" at "http://download.osgeo.org/webdav/geotools/",
+  "Java.net repository" at "http://download.java.net/maven/2",
   "Boundless Maven Repository" at "http://repo.boundlessgeo.com/main"
 )
 
