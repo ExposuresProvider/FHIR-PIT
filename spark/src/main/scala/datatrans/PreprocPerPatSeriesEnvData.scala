@@ -16,9 +16,8 @@ object PreprocPerPatSeriesEnvData {
     val parser = new OptionParser[EnvDataSourceConfig]("series_to_vector") {
       head("series_to_vector")
       opt[String]("patient_dimension").action((x,c) => c.copy(patient_dimension = x))
-      opt[String]("input_directory").required.action((x,c) => c.copy(input_directory = x))
       opt[String]("time_series").required.action((x,c) => c.copy(time_series = x))
-      opt[String]("environmental_data").required.action((x,c) => c.copy(environmental_data = Some(x)))
+      opt[String]("environmental_data").required.action((x,c) => c.copy(environmental_data = x))
       opt[String]("output_file").required.action((x,c) => c.copy(output_file = x))
       opt[String]("start_date").required.action((x,c) => c.copy(start_date = DateTime.parse(x)))
       opt[String]("end_date").required.action((x,c) => c.copy(end_date = DateTime.parse(x)))
@@ -39,7 +38,10 @@ object PreprocPerPatSeriesEnvData {
         time {
           val pdif = config.patient_dimension
 
-          DataSourceSelectorRunnerSparkJsValue.run(spark, pdif, "patient_num", config.sequential, config.time_series, MkDataSourceSelectorFormatter(new EnvSelector(), new EnvDataSource(config), new EnvFormatter(JSON)), config.output_file)
+          DataSourceSelectorRunnerSparkJsValue.run(spark, pdif, "patient_num", config.sequential, config.time_series, MkDataSourceSelectorFormatter(new EnvSelector(), new EnvDataSource(config), new EnvFormatter(config.output_format match {
+            case "json" => JSON
+            case "csv" => CSV(",")
+          })), config.output_file)
         }
       case None =>
     }

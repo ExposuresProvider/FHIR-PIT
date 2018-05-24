@@ -1,41 +1,35 @@
-package datatrans.environmentaldata
+package datatrans.hpo
 
-import scala.ref.SoftReference
 import datatrans.Utils._
 import datatrans.components.DataSource
 import org.apache.spark.sql.{DataFrame, SparkSession}
-import play.api.libs.json._
 import org.joda.time._
 import play.api.libs.json.Json.JsValueWrapper
+import play.api.libs.json._
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
+import scala.ref.SoftReference
 
 case class LatLon(lat:Double, long: Double)
 
-case class EnvDataSourceConfig(
+case class HpoSourceConfig(
                                 patient_dimension : String = "",
                                 time_series : String = "",
-                                environmental_data : String = "",
+                                hpo_annotation : String = "",
                                 output_file : String = "",
-                                start_date : DateTime = DateTime.now(),
-                                end_date : DateTime = DateTime.now(),
                                 output_format : String = "json",
-                                geo_coordinates : Boolean = false,
-                                sequential : Boolean = false,
-                                date_offsets : Seq[Int]= -7 to 7,
-                                indices : Seq[String] = Seq("o3", "pm25"),
-                                statistics : Seq[String] = Seq("avg", "max", "min", "stddev")
+                                sequential : Boolean = false
                  )
 
-class EnvDataSource(config: EnvDataSourceConfig) extends DataSource[SparkSession, LatLon, Seq[JsObject]] {
+class HpoDataSource(config: HpoSourceConfig) extends DataSource[SparkSession, LatLon, Seq[JsObject]] {
   val cache: mutable.Map[String, SoftReference[Seq[DataFrame]]] = scala.collection.mutable.Map[String, SoftReference[Seq[DataFrame]]]()
 
   def loadEnvData(spark: SparkSession, coors: Seq[(Int, (Int, Int))], names: Seq[String]): Map[String, Map[String, Double]] = {
 
     val dfs = coors.flatMap {
       case (year, (row, col)) =>
-        val filename = f"${config.environmental_data}/cmaq$year/C$col%03dR$row%03dDaily.csv"
+        val filename = f"${config.input_directory}/${config.environmental_data.get}/cmaq$year/C$col%03dR$row%03dDaily.csv"
 
         def loadEnvDataFrame(filename: String) = {
           val df = spark.read.format("csv").option("header", value = true).load(filename)
