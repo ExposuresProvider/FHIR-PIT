@@ -1,0 +1,42 @@
+# based on nickjer/singularity-rstudio-spark:latest 
+BootStrap: docker
+From: ubuntu:18.04
+
+%labels
+  Maintainer Hao Xu
+  Spark_Version 2.3.1
+  Hadoop_Version 2.7
+
+%help
+  This will run Apache Spark
+
+%apprun spark-class
+  exec spark-class "${@}"
+
+%apprun spark-master
+  exec spark-class "org.apache.spark.deploy.master.Master" "${@}"
+
+%apprun spark-worker
+  exec spark-class "org.apache.spark.deploy.worker.Worker" "${@}"
+
+%runscript
+  exec spark-class "${@}"
+
+%environment
+  export SPARK_HOME=/opt/spark
+  export PATH=${SPARK_HOME}/bin:${PATH}
+
+%post
+  # Software versions
+  export SPARK_VERSION=2.3.1
+  export HADOOP_VERSION=2.7
+
+  # Install Spark
+  apt-get update
+  apt-get install -y --no-install-recommends openjdk-8-jre wget
+  mkdir -p /opt/spark
+  wget "http://mirror.cc.columbia.edu/pub/software/apache/spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz"
+  tar zxvf spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz --strip-components=1 -C /opt/spark
+  rm spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz
+
+
