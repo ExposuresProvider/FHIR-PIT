@@ -1,6 +1,6 @@
 # based on nickjer/singularity-rstudio-spark:latest 
 BootStrap: docker
-From: ubuntu:18.04
+From: alpine:3.8
 
 %labels
   Maintainer Hao Xu
@@ -32,8 +32,7 @@ From: ubuntu:18.04
   export HADOOP_VERSION=2.7
 
   # Install Spark
-  apt-get update
-  apt-get install -y --no-install-recommends openjdk-8-jre wget
+  apk --update add openjdk8-jre
   mkdir -p /opt/spark
   wget "http://mirror.cc.columbia.edu/pub/software/apache/spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz"
   tar zxvf spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz --strip-components=1 -C /opt/spark
