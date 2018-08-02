@@ -20,6 +20,7 @@ libraryDependencies += "org.geotools" % "gt-shapefile" % "19.0"
 libraryDependencies += "org.geotools" % "gt-epsg-hsql" % "19.0"
 libraryDependencies += "com.vividsolutions" % "jts" % "1.13"
 libraryDependencies += "junit" % "junit" % "4.11" % Test
+libraryDependencies += "javax.media" % "jai_core" % "1.1.3" from "http://download.osgeo.org/webdav/geotools/javax/media/jai_core/1.1.3/jai_core-1.1.3.jar"
 
 maxErrors := 1
 
