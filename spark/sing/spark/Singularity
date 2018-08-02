@@ -11,18 +11,20 @@ From: ubuntu:18.04
   This will run Apache Spark
 
 %apprun spark-class
-  exec spark-class "${@}"
+  exec spark-class "$@"
 
 %apprun spark-master
-  exec spark-class "org.apache.spark.deploy.master.Master" "${@}"
+  exec spark-class "org.apache.spark.deploy.master.Master" "$@"
 
 %apprun spark-worker
-  exec spark-class "org.apache.spark.deploy.worker.Worker" "${@}"
+  exec spark-class "org.apache.spark.deploy.worker.Worker" "$@"
 
-%apprun
+%apprun preprocCMAQ
+  cd /opt/icees
+  exec python runPreprocCMAQ.py localhost ~ "$@"
 
 %runscript
-  exec spark-class "${@}"
+  exec spark-class "$@"
 
 %environment
   export SPARK_HOME=/opt/spark
@@ -47,3 +49,5 @@ From: ubuntu:18.04
   git clone https://github.com/xu-hao/datatrans
   cd datatrans/spark
   sbt compile
+  cp -r src/main/python /opt/icees
+

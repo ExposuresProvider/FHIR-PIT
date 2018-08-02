@@ -27,7 +27,7 @@ def submit(host_name, cache_dir, cls, *args, **kwargs):
            "--jars"] + [cache] + [
            "--class",
            cls,
-           "target/scala-2.11/preproc_2.11-1.0.jar"] + list(args)
+           "target/scala-2.12/preproc_2.12-1.0.jar"] + list(args)
     print(cmd)
     if "log" in kwargs and "log2" in kwargs:
         log = kwargs["log"]
