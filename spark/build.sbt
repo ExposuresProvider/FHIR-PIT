@@ -6,8 +6,8 @@ scalaVersion := "2.11.8"
 
 resolvers ++= Seq(
   "Open Source Geospatial Foundation Repository" at "http://download.osgeo.org/webdav/geotools/",
-  "Java.net repository" at "http://download.java.net/maven/2",
   "Boundless Maven Repository" at "http://repo.boundlessgeo.com/main"
+  "Java.net repository" at "http://download.java.net/maven/2",
 )
 
 libraryDependencies += "org.apache.spark" % "spark-core_2.11" % "2.2.1"
