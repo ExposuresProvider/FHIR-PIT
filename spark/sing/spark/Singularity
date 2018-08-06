@@ -23,7 +23,7 @@ From: ubuntu:18.04
 
 %apprun preprocCMAQ
   cd /opt/icees
-  exec python runPreprocCMAQ.py localhost ~ "$@"
+  exec python runPreprocCMAQ.py ~ "$@"
 
 %runscript
   exec spark-class "$@"
