@@ -20,6 +20,8 @@ From: ubuntu:18.04
   exec spark-class "org.apache.spark.deploy.worker.Worker" "$@"
 
 %apprun preprocCMAQ
+  start-master.sh
+  start-slave.sh spark://localhost:7077
   cd /opt/icees
   exec python runPreprocCMAQ.py localhost ~ "$@"
 
@@ -28,7 +30,7 @@ From: ubuntu:18.04
 
 %environment
   export SPARK_HOME=/opt/spark
-  export PATH=${SPARK_HOME}/bin:${PATH}
+  export PATH=${SPARK_HOME}/bin:${SPARK_HOME}/sbin:${PATH}
 
 %post
   # Software versions
