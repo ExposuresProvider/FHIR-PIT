@@ -12,13 +12,11 @@ From: ubuntu:18.04
 %help
   This will run Apache Spark
 
-%apprun start
-  start-master.sh
-  exec start-slave.sh spark://localhost:7077
+%apprun spark-master
+  exec spark-class "org.apache.spark.deploy.master.Master" "${@}"
 
-%apprun stop
-  stop-slaves.sh
-  exec start-master.sh
+%apprun spark-worker
+  exec spark-class "org.apache.spark.deploy.worker.Worker" "${@}"
 
 %apprun preprocCMAQ
   cd /opt/icees
