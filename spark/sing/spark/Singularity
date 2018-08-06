@@ -17,8 +17,8 @@ From: ubuntu:18.04
   exec start-slave.sh spark://localhost:7077
 
 %apprun stop
-  start-master.sh
-  exec stop-slaves.sh
+  stop-slaves.sh
+  exec start-master.sh
 
 %apprun preprocCMAQ
   cd /opt/icees
