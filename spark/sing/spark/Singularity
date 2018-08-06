@@ -1,4 +1,6 @@
-# based on nickjer/singularity-rstudio-spark:latest 
+# based on nickjer/singularity-rstudio-spark:latest
+# singularity run -B /tmp/logs:/opt/spark/logs -B /tmp/work:/opt/spark/work spark.img --app preprocCMAQ
+
 BootStrap: docker
 From: ubuntu:18.04
 
@@ -10,18 +12,15 @@ From: ubuntu:18.04
 %help
   This will run Apache Spark
 
-%apprun spark-class
-  exec spark-class "$@"
+%apprun start
+  start-master.sh
+  exec start-slave.sh spark://localhost:7077
 
-%apprun spark-master
-  exec spark-class "org.apache.spark.deploy.master.Master" "$@"
-
-%apprun spark-worker
-  exec spark-class "org.apache.spark.deploy.worker.Worker" "$@"
+%apprun stop
+  start-master.sh
+  exec stop-slaves.sh
 
 %apprun preprocCMAQ
-  start-master.sh
-  start-slave.sh spark://localhost:7077
   cd /opt/icees
   exec python runPreprocCMAQ.py localhost ~ "$@"
 
