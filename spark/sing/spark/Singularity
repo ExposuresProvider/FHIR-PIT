@@ -12,6 +12,9 @@ From: ubuntu:18.04
 %help
   This will run Apache Spark
 
+%apprun spark-class
+  exec spark-class "${@}"
+
 %apprun spark-master
   exec spark-class "org.apache.spark.deploy.master.Master" "${@}"
 
