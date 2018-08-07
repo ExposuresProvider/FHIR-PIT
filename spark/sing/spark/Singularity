@@ -21,10 +21,6 @@ From: ubuntu:18.04
 %apprun spark-worker
   exec spark-class "org.apache.spark.deploy.worker.Worker" "${@}"
 
-%apprun preprocCMAQ
-  cd /opt/datatrans/spark
-  exec python3 src/main/python/runPreprocCMAQ.py ~ "$@"
-
 %runscript
   exec spark-class "$@"
 
@@ -53,10 +49,6 @@ From: ubuntu:18.04
   tar zxvf spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz --strip-components=1 -C /opt/spark
   rm spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz
 
-  cd /opt
-  git clone https://github.com/xu-hao/datatrans
-  cd datatrans/spark
-  sbt package
   
   
 

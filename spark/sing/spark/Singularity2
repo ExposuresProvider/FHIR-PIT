@@ -1,0 +1,26 @@
+# based on nickjer/singularity-rstudio-spark:latest
+# singularity run -B /tmp/logs:/opt/spark/logs -B /tmp/work:/opt/spark/work spark.img --app preprocCMAQ
+
+BootStrap: localimage
+From: spark.img
+
+%labels
+  Maintainer Hao Xu
+  Spark_Version 2.3.1
+  Hadoop_Version 2.7
+
+%help
+  This will run Apache Spark
+
+%apprun preprocCMAQ
+  cd /opt/datatrans/spark
+  exec python3 src/main/python/runPreprocCMAQ.py ~ "$@"
+
+%post
+  cd /opt
+  git clone https://github.com/xu-hao/datatrans
+  cd datatrans/spark
+  sbt package
+  
+  
+
