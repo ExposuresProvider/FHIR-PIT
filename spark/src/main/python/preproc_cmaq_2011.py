@@ -16,6 +16,9 @@ if len(sys.argv) >= 6:
 else:
     dirs = sorted(glob.glob(os.path.join(input_dir, "C*")))
 
+if not os.path.isdir(output_dir):
+    os.mkdir(output_dir)
+
 for i, dirname in enumerate(dirs):
     print("processing", i, "/", len(dirs), dirname)
     output_rowcol_filename = os.path.join(output_dir, os.path.basename(dirname) + ".csv")
