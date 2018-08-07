@@ -22,8 +22,8 @@ From: ubuntu:18.04
   exec spark-class "org.apache.spark.deploy.worker.Worker" "${@}"
 
 %apprun preprocCMAQ
-  cd /opt/icees
-  exec python runPreprocCMAQ.py ~ "$@"
+  cd /opt/datatrans/spark
+  exec python3 src/main/python/runPreprocCMAQ.py ~ "$@"
 
 %runscript
   exec spark-class "$@"
@@ -33,12 +33,16 @@ From: ubuntu:18.04
   export PATH=${SPARK_HOME}/bin:${SPARK_HOME}/sbin:${PATH}
 
 %post
+  # Install python
+  apt-get update
+  apt-get install python3-pip -y
+  pip3 install pandas joblib
+
   # Software versions
   export SPARK_VERSION=2.3.1
   export HADOOP_VERSION=2.7
 
   # Install Spark
-  apt-get update
   apt-get install gnupg ca-certificates wget -y
   echo "deb https://dl.bintray.com/sbt/debian /" | tee -a /etc/apt/sources.list.d/sbt.list
   apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 2EE0EA64E40A89B84B2DF73499E82A75642AC823
@@ -48,8 +52,11 @@ From: ubuntu:18.04
   wget "http://mirror.cc.columbia.edu/pub/software/apache/spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz"
   tar zxvf spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz --strip-components=1 -C /opt/spark
   rm spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz
+
+  cd /opt
   git clone https://github.com/xu-hao/datatrans
   cd datatrans/spark
-  sbt compile
-  cp -r src/main/python /opt/icees
+  sbt package
+  
+  
 
