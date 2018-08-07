@@ -18,10 +18,9 @@ object PreprocPerPatSeriesEnvData {
       opt[String]("patient_dimension").action((x,c) => c.copy(patient_dimension = x))
       opt[String]("time_series").required.action((x,c) => c.copy(time_series = x))
       opt[String]("environmental_data").required.action((x,c) => c.copy(environmental_data = x))
-      opt[String]("output_file").required.action((x,c) => c.copy(output_file = x))
       opt[String]("start_date").required.action((x,c) => c.copy(start_date = DateTime.parse(x)))
       opt[String]("end_date").required.action((x,c) => c.copy(end_date = DateTime.parse(x)))
-      opt[String]("output_format").action((x,c) => c.copy(output_format = x))
+      opt[String]("output_file").action((x,c) => c.copy(output_format = x))
       opt[Unit]("coordinates").action((_,c) => c.copy(geo_coordinates = true))
       opt[Unit]("sequential").action((_,c) => c.copy(sequential = true))
       opt[Seq[Int]]("date_offsets").action((x,c) => c.copy(date_offsets = x))
@@ -41,7 +40,7 @@ object PreprocPerPatSeriesEnvData {
           DataSourceSelectorRunnerSparkJsValue.run(spark, pdif, "patient_num", config.sequential, config.time_series, MkDataSourceSelectorFormatter(new EnvSelector(), new EnvDataSource(config), new EnvFormatter(config.output_format match {
             case "json" => JSON
             case "csv" => CSV(",")
-          })), config.output_file)
+          })), config.output_format)
         }
       case None =>
     }

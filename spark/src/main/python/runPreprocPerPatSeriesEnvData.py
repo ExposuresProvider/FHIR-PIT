@@ -15,7 +15,7 @@ output_dir = sys.argv[8]
 submit(host_name, cache_dir, "datatrans.PreprocPerPatSeriesEnvData",
            "--patient_dimension={0}".format(patient_dimension),
            "--time_series=" + time_series,
-           "--output_prefix=" + output_dir + "/",
+           "--output_file=" + output_dir + "/%i",
            "--environmental_data=" + environmental_data,
            "--start_date=" + start_date,
            "--end_date=" + end_date, *sys.argv[10:])
