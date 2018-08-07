@@ -12,19 +12,19 @@ import com.vividsolutions.jts.geom.Coordinate
 import com.vividsolutions.jts.geom.GeometryFactory
 import com.vividsolutions.jts.geom.Geometry
 
-object GeoidFinder {
+object GeoidFinder2 {
   private val gf = new GeometryFactory()
   private var index = new SpatialIndexFeatureCollection()
   private val geoidPrefix = "15000US"
 }
 
-class GeoidFinder(blockgrpShapefilePath : String)  {
+class GeoidFinder2(blockgrpShapefilePath : String)  {
 
   try {
     val shp = new ShapefileHandler(blockgrpShapefilePath)
     val features = shp.getFeatureCollection()
-    GeoidFinder.index  = new SpatialIndexFeatureCollection(features.getSchema())
-    GeoidFinder.index.addAll(features)
+    GeoidFinder2.index  = new SpatialIndexFeatureCollection(features.getSchema())
+    GeoidFinder2.index.addAll(features)
   }
   catch {
     case e : Exception => { System.out.println(e) }
@@ -37,7 +37,7 @@ class GeoidFinder(blockgrpShapefilePath : String)  {
 
     try {
 
-      val itr = GeoidFinder.index.features()
+      val itr = GeoidFinder2.index.features()
       var done = false
       while (itr.hasNext()) {
         while (!done) {
@@ -80,7 +80,7 @@ class GeoidFinder(blockgrpShapefilePath : String)  {
     val transform = CRS.findMathTransform(sourceCRS, crs)
     val targetCoordinate = JTS.transform(c, null, transform )
 
-    GeoidFinder.gf.createPoint(targetCoordinate)
+    GeoidFinder2.gf.createPoint(targetCoordinate)
 
   }
 
@@ -100,7 +100,7 @@ class GeoidFinder(blockgrpShapefilePath : String)  {
 
     val feature = getCensusBlockContainingPoint(p)
     val id = feature.getAttribute("GEOID").asInstanceOf[String]
-    GeoidFinder.geoidPrefix + id
+    GeoidFinder2.geoidPrefix + id
 
   }
 
