@@ -2,30 +2,22 @@ package datatrans
 
 import java.util.concurrent.atomic.AtomicInteger
 
-import datatrans.Utils.{JSON, _}
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, Path}
-import org.apache.spark.sql.expressions.UserDefinedFunction
-import org.apache.spark.sql.{DataFrame, Row, SparkSession}
+import org.apache.spark.sql.{SparkSession}
 import play.api.libs.json._
-import org.joda.time._
-import play.api.libs.json.Json.JsValueWrapper
-import org.apache.spark.sql.functions.udf
 import scopt._
 
-import scala.collection.mutable
-import scala.collection.mutable.ListBuffer
-
-case class PreprocPerPatSeriesFIHRConfig(
+case class PreprocFIHRConfig(
                    input_dir : String = "",
                    output_dir : String = "",
                    resc_types : Seq[String] = Seq()
                  )
 
-object PreprocPerPatSeriesFIRH {
+object PreprocFIHR {
 
   def main(args: Array[String]) {
-    val parser = new OptionParser[PreprocPerPatSeriesFIHRConfig]("series_to_vector") {
+    val parser = new OptionParser[PreprocFIHRConfig]("series_to_vector") {
       head("series_to_vector")
       opt[String]("input_dir").required.action((x,c) => c.copy(input_dir = x))
       opt[String]("output_dir").required.action((x,c) => c.copy(output_dir = x))
@@ -39,10 +31,10 @@ object PreprocPerPatSeriesFIRH {
     // For implicit conversions like converting RDDs to DataFrames
     import spark.implicits._
 
-    parser.parse(args, PreprocPerPatSeriesFIHRConfig()) match {
+    parser.parse(args, PreprocFIHRConfig()) match {
       case Some(config) =>
 
-        time {
+        Utils.time {
 
 
           val hc = spark.sparkContext.hadoopConfiguration
@@ -69,7 +61,7 @@ object PreprocPerPatSeriesFIRH {
 
   }
 
-  private def proc_pat(config: PreprocPerPatSeriesFIHRConfig, hc: Configuration, input_dir_file_system: FileSystem, output_dir_file_system: FileSystem) = {
+  private def proc_pat(config: PreprocFIHRConfig, hc: Configuration, input_dir_file_system: FileSystem, output_dir_file_system: FileSystem) = {
     val count = new AtomicInteger(0)
 
     val input_file_patient = config.input_dir + "/Patient.json"
@@ -101,13 +93,13 @@ object PreprocPerPatSeriesFIRH {
           "lon" -> lon
         )
 
-        writeToFile(hc, output_file, Json.stringify(obj2))
+        Utils.writeToFile(hc, output_file, Json.stringify(obj2))
       }
 
     })
   }
 
-  private def proc_resc(config: PreprocPerPatSeriesFIHRConfig, hc: Configuration, input_dir_file_system: FileSystem, resc_type: String, output_dir_file_system: FileSystem) {
+  private def proc_resc(config: PreprocFIHRConfig, hc: Configuration, input_dir_file_system: FileSystem, resc_type: String, output_dir_file_system: FileSystem) {
     val count = new AtomicInteger(0)
 
     val input_file_resc = config.input_dir + "/" + resc_type + ".json"
@@ -135,13 +127,13 @@ object PreprocPerPatSeriesFIRH {
       } else {
         val obj2 = (obj1 \ "resource").get
 
-        writeToFile(hc, output_file, Json.stringify(obj2))
+        Utils.writeToFile(hc, output_file, Json.stringify(obj2))
       }
 
     })
   }
 
-  private def combine_pat(config: PreprocPerPatSeriesFIHRConfig, hc: Configuration, input_dir_file_system: FileSystem, output_dir_file_system: FileSystem) {
+  private def combine_pat(config: PreprocFIHRConfig, hc: Configuration, input_dir_file_system: FileSystem, output_dir_file_system: FileSystem) {
     val input_dir = config.output_dir + "/Patient"
     val input_dir_path = new Path(input_dir)
 
@@ -182,7 +174,7 @@ object PreprocPerPatSeriesFIRH {
       if (output_dir_file_system.exists(output_file_path)) {
         println(output_file + " exists")
       } else {
-        writeToFile(hc, output_file, Json.stringify(obj))
+        Utils.writeToFile(hc, output_file, Json.stringify(obj))
       }
 
     }
