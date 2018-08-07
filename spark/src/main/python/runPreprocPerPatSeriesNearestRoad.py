@@ -12,7 +12,6 @@ output_dir = sys.argv[6]
 
 submit(host_name, cache_dir, "datatrans.PreprocPerPatSeriesNearestRoad",
            "--patient_dimension={0}".format(patient_dimension),
-           "--input_directory=" + input_dir + "/",
            "--time_series=" + time_series,
            "--output_file=" + output_dir,
            "--nearestroad_data=" + environmental_data, *sys.argv[8:])
