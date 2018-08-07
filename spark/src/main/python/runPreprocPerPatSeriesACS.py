@@ -2,14 +2,14 @@ import os
 import sys
 from utils import submit
 
-input_dir = sys.argv[1]
-time_series = sys.argv[2]
-patient_dimension = sys.argv[3]
-environmental_data = sys.argv[4]
-acs_data = sys.argv[5]
-output_dir = sys.argv[6]
-cache_dir = sys.argv[7]
-host_name = sys.argv[8]
+cache_dir = sys.argv[1]
+host_name = sys.argv[2]
+input_dir = sys.argv[3]
+time_series = sys.argv[4]
+patient_dimension = sys.argv[5]
+environmental_data = sys.argv[6]
+acs_data = sys.argv[7]
+output_dir = sys.argv[8]
 
 
 submit(host_name, cache_dir, "datatrans.PreprocPerPatSeriesACS",

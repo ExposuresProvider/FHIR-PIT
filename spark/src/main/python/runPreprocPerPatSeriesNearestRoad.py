@@ -2,13 +2,13 @@ import os
 import sys
 from utils import submit
 
-input_dir = sys.argv[1]
-time_series = sys.argv[2]
-patient_dimension = sys.argv[3]
-environmental_data = sys.argv[4]
-output_dir = sys.argv[5]
-cache_dir = sys.argv[6]
-host_name = sys.argv[7]
+cache_dir = sys.argv[1]
+host_name = sys.argv[2]
+input_dir = sys.argv[3]
+time_series = sys.argv[4]
+patient_dimension = sys.argv[5]
+environmental_data = sys.argv[6]
+output_dir = sys.argv[7]
 
 
 submit(host_name, cache_dir, "datatrans.PreprocPerPatSeriesNearestRoad",
