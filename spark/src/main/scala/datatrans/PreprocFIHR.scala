@@ -159,7 +159,7 @@ object PreprocPerPatSeriesFIRH {
       println("processing " + count.incrementAndGet + " " + patient_num)
 
       config.resc_types.foreach(resc_type => {
-        val resc_list = ListBuffer[JsValue]()
+        var arr = Json.arr()
         val input_resc_dir = config.output_dir + "/" + resc_type + "/" + patient_num
         val input_resc_dir_path = new Path(input_resc_dir)
         if(output_dir_file_system.exists(input_resc_dir_path)) {
@@ -169,10 +169,10 @@ object PreprocPerPatSeriesFIRH {
             val input_resc_file_path = input_resc_file_status.getPath
             val input_resc_file_input_stream = output_dir_file_system.open(input_resc_file_path)
             val obj_resc = Json.parse(input_resc_file_input_stream)
-            resc_list.append(obj_resc)
+            arr +:= obj_resc
           }
           obj ++= Json.obj(
-            resc_type -> new JsArray(resc_list.toArray)
+            resc_type -> arr
           )
         }
       })
