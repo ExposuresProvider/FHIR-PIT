@@ -16,17 +16,16 @@ import scopt._
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-case class PreprocPerPatSeriesACSConfig(
+case class PreprocPerPatSeriesRowColConfig(
                    patient_dimension : String = "",
                    time_series : String = "",
-                   acs_data : String = "",
-                   geoid_data : String = "",
+                   year : Int = 2010,
                    output_file : String = ""
                  )
 
 object PreprocPerPatSeriesACS {
 
-  def proc_pid(config : PreprocPerPatSeriesACSConfig, spark: SparkSession, nearestRoad: GeoidFinder, p:String): Option[(String, String)] =
+  def proc_pid(config : PreprocPerPatSeriesRowColConfig, spark: SparkSession, year: Int, p:String): Option[(String, Int, Int)] =
     time {
 
       val hc = spark.sparkContext.hadoopConfiguration
@@ -57,8 +56,7 @@ object PreprocPerPatSeriesACS {
                 None
               case JsDefined(lons) =>
                 val lon = lons.as[Double]
-                val ret = Some((p, nearestRoad.getGeoidForLatLon(lat, lon)))
-                ret
+                Utils.latlon2rowcol(lat, lon, year).map{case (row, col) => (p, row, col)}
             }
         }
 
@@ -66,12 +64,11 @@ object PreprocPerPatSeriesACS {
     }
 
   def main(args: Array[String]) {
-    val parser = new OptionParser[PreprocPerPatSeriesACSConfig]("series_to_vector") {
+    val parser = new OptionParser[PreprocPerPatSeriesRowColConfig]("series_to_vector") {
       head("series_to_vector")
       opt[String]("patient_dimension").required.action((x,c) => c.copy(patient_dimension = x))
       opt[String]("time_series").required.action((x,c) => c.copy(time_series = x))
-      opt[String]("acs_data").required.action((x,c) => c.copy(acs_data = x))
-      opt[String]("geoid_data").required.action((x,c) => c.copy(geoid_data = x))
+      opt[String]("year").required.action((x,c) => c.copy(year = x.toInt))
       opt[String]("output_file").required.action((x,c) => c.copy(output_file = x))
     }
 
@@ -82,7 +79,7 @@ object PreprocPerPatSeriesACS {
     // For implicit conversions like converting RDDs to DataFrames
     import spark.implicits._
 
-    parser.parse(args, PreprocPerPatSeriesACSConfig()) match {
+    parser.parse(args, PreprocPerPatSeriesRowColConfig()) match {
       case Some(config) =>
 
         time {
@@ -101,25 +98,14 @@ object PreprocPerPatSeriesACS {
             println(config.output_file + " exists")
           } else {
 
-            val geoidFinder = new GeoidFinder(f"${config.geoid_data}")
             val rows = patl.flatMap(pid => {
               println("processing " + count.incrementAndGet + " / " + n + " " + pid)
-              proc_pid(config, spark, geoidFinder, pid)
+              proc_pid(config, spark, config.year, pid)
             })
 
-            val lrows = for (row <- rows) yield f"${row._1},${row._2}"
+            val df = rows.toDF("patient_num", "row", "col")
 
-            val table0 = "patient_num,GEOID\n" + lrows.mkString("\n")
-            writeToFile(hc, config.output_file+".table", table0)
-
-            val df = rows.toDF("patient_num", "GEOID")
-
-            val acs_df = spark.read.format("csv").option("header", value = true).load(f"${config.acs_data}")
-
-
-            val table = df.join(acs_df, "GEOID")
-
-            writeDataframe(hc, config.output_file, table)
+            writeDataframe(hc, config.output_file, df)
           }
 
 
