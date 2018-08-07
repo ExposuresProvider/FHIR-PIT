@@ -12,19 +12,19 @@ import com.vividsolutions.jts.geom.Coordinate
 import com.vividsolutions.jts.geom.GeometryFactory
 import com.vividsolutions.jts.geom.Geometry
 
-object GeoidFinder2 {
+object GeoidFinder {
   private val gf = new GeometryFactory()
   private var index = new SpatialIndexFeatureCollection()
   private val geoidPrefix = "15000US"
 }
 
-class GeoidFinder2(blockgrpShapefilePath : String)  {
+class GeoidFinder(blockgrpShapefilePath : String)  {
 
   try {
     val shp = new ShapefileHandler(blockgrpShapefilePath)
     val features = shp.getFeatureCollection()
-    GeoidFinder2.index  = new SpatialIndexFeatureCollection(features.getSchema())
-    GeoidFinder2.index.addAll(features)
+    GeoidFinder.index  = new SpatialIndexFeatureCollection(features.getSchema())
+    GeoidFinder.index.addAll(features)
   }
   catch {
     case e : Exception => { System.out.println(e) }
@@ -37,17 +37,15 @@ class GeoidFinder2(blockgrpShapefilePath : String)  {
 
     try {
 
-      val itr = GeoidFinder2.index.features()
+      val itr = GeoidFinder.index.features()
       var done = false
-      while (itr.hasNext()) {
-        while (!done) {
-          feature = itr.next().asInstanceOf[SimpleFeature]
+      while (itr.hasNext() && !done) {
+        feature = itr.next().asInstanceOf[SimpleFeature]
 
-          def geom = feature.getDefaultGeometry().asInstanceOf[Geometry]
+        def geom = feature.getDefaultGeometry().asInstanceOf[Geometry]
 
-          if (geom.contains(p)) {
-            done = true
-          }
+        if (geom.contains(p)) {
+          done = true
         }
       }
     }
@@ -80,7 +78,7 @@ class GeoidFinder2(blockgrpShapefilePath : String)  {
     val transform = CRS.findMathTransform(sourceCRS, crs)
     val targetCoordinate = JTS.transform(c, null, transform )
 
-    GeoidFinder2.gf.createPoint(targetCoordinate)
+    GeoidFinder.gf.createPoint(targetCoordinate)
 
   }
 
@@ -100,7 +98,7 @@ class GeoidFinder2(blockgrpShapefilePath : String)  {
 
     val feature = getCensusBlockContainingPoint(p)
     val id = feature.getAttribute("GEOID").asInstanceOf[String]
-    GeoidFinder2.geoidPrefix + id
+    GeoidFinder.geoidPrefix + id
 
   }
 

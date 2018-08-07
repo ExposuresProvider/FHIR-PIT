@@ -13,17 +13,17 @@ import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Geometry;
-public class GeoidFinder {
+public class GeoidFinder2 {
 
     private GeometryFactory gf = new GeometryFactory();
     private SpatialIndexFeatureCollection index;
     private final String geoidPrefix = "15000US";
 
-    public GeoidFinder() {
+    public GeoidFinder2() {
         // try and get shapefile path out of config file here?
     }
 
-    public GeoidFinder(String blockgrpShapefilePath) {
+    public GeoidFinder2(String blockgrpShapefilePath) {
         try {
             ShapefileHandler shp = new ShapefileHandler(blockgrpShapefilePath);
             SimpleFeatureCollection features = shp.getFeatureCollection();
