@@ -75,8 +75,8 @@ object PreprocFIHR {
     val n = entry.size
 
     entry.par.foreach(obj1 => {
-
-      val patient_num = (obj1 \ "id").get.as[Int]
+      val resource = (obj1 \ "resource").get.as[JsObject]
+      val patient_num = (resource \ "id").get.as[Int]
 
       println("processing " + count.incrementAndGet + " / " + n + " " + patient_num)
 
@@ -85,7 +85,7 @@ object PreprocFIHR {
       if (output_dir_file_system.exists(output_file_path)) {
         println(output_file + " exists")
       } else {
-        val resource = (obj1 \ "resource").get.as[JsObject]
+
         val lat = (resource \ "latitude").get.as[Double]
         val lon = (resource \ "longitude").get.as[Double]
         val obj2 = resource ++ Json.obj(
