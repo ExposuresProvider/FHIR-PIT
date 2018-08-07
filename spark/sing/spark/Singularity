@@ -1,5 +1,4 @@
 # based on nickjer/singularity-rstudio-spark:latest
-# singularity run -B /tmp/logs:/opt/spark/logs -B /tmp/work:/opt/spark/work spark.img --app preprocCMAQ
 
 BootStrap: docker
 From: ubuntu:18.04
@@ -10,7 +9,10 @@ From: ubuntu:18.04
   Hadoop_Version 2.7
 
 %help
-  This will run Apache Spark
+  Start master
+  singularity run -B /tmp/logs:/opt/spark/logs -B /tmp/work:/opt/spark/work spark.img --app spark-master
+  Start worker
+  singularity run -B /tmp/logs:/opt/spark/logs -B /tmp/work:/opt/spark/work spark.img --app spark-worker
 
 %apprun spark-class
   exec spark-class "${@}"

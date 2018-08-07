@@ -1,5 +1,4 @@
 # based on nickjer/singularity-rstudio-spark:latest
-# singularity run -B /tmp/logs:/opt/spark/logs -B /tmp/work:/opt/spark/work spark.img --app preprocCMAQ
 
 BootStrap: localimage
 From: spark.img
@@ -10,13 +9,24 @@ From: spark.img
   Hadoop_Version 2.7
 
 %help
-  This will run Apache Spark
+  preproc CMAQ:
+  singularity run spark.img --app preprocCMAQ <spark master host> <input file> <output directory>
+  preproc CMAQ2:
+  singularity run spark.img --app preprocCMAQ2 <spark master host> <input directory> <output directory>
+  preproc Daily Env Data:
+  singularity run spark.img --app preprocDailyEnvData <spark master host> <input file> <output directory>
+  preproc Per Patient Series Env Data:
+  singularity run spark.img --app preprocPerPatSeriesEnvData <spark master host> <input directory> <patient ids file> <fihr files> <environmental files> <start date> <end data> <output directory>
+  preproc Per Patient Series Nearest Road Data:
+  singularity run spark.img --app preprocPerPatSeriesNearestRoad <spark master host> <input directory> <patient ids file> <fihr files> <nearest road file> <output directory>
+  preproc Per Patient Series ACS Data:
+  singularity run spark.img --app preprocPerPatSeriesACS <spark master host> <input directory> <patient ids file> <fihr files> <geoid file> <acs file> <output directory>
 
 %apprun preprocCMAQ
   cd /opt/datatrans/spark
   exec python3 src/main/python/runPreprocCMAQ.py /opt/datatrans "$@"
 
-%apprun preproc_cmaq_2011
+%apprun preprocCMAQ2
   exec python3 src/main/python/preproc_cmaq_2011.py "$@"
 
 %apprun preprocDailyEnvData
