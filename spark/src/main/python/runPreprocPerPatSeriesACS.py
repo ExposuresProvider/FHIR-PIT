@@ -4,17 +4,15 @@ from utils import submit
 
 cache_dir = sys.argv[1]
 host_name = sys.argv[2]
-input_dir = sys.argv[3]
-patient_dimension = sys.argv[4]
-time_series = sys.argv[5]
-environmental_data = sys.argv[6]
-acs_data = sys.argv[7]
-output_dir = sys.argv[8]
+patient_dimension = sys.argv[3]
+time_series = sys.argv[4]
+environmental_data = sys.argv[5]
+acs_data = sys.argv[6]
+output_dir = sys.argv[7]
 
 
 submit(host_name, cache_dir, "datatrans.PreprocPerPatSeriesACS",
            "--patient_dimension={0}".format(patient_dimension),
-           "--input_directory=" + input_dir + "/",
            "--time_series=" + time_series,
            "--output_file=" + output_dir,
            "--geoid_data=" + environmental_data,

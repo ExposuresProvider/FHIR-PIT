@@ -10,7 +10,6 @@ import scopt._
 
 case class PreprocPerPatSeriesNearestRoadConfig(
                    patient_dimension : String = "",
-                   input_directory : String = "",
                    time_series : String = "",
                    nearestroad_data : String = "",
                    maximum_search_radius : Double = 500,
@@ -24,7 +23,7 @@ object PreprocPerPatSeriesNearestRoad {
 
       val hc = spark.sparkContext.hadoopConfiguration
 
-      val input_file = f"${config.input_directory}/${config.time_series}/$p"
+      val input_file = f"${config.time_series}/$p"
       val input_file_path = new Path(input_file)
       val input_file_file_system = input_file_path.getFileSystem(hc)
 
@@ -63,7 +62,6 @@ object PreprocPerPatSeriesNearestRoad {
     val parser = new OptionParser[PreprocPerPatSeriesNearestRoadConfig]("series_to_vector") {
       head("series_to_vector")
       opt[String]("patient_dimension").required.action((x,c) => c.copy(patient_dimension = x))
-      opt[String]("input_directory").required.action((x,c) => c.copy(input_directory = x))
       opt[String]("time_series").required.action((x,c) => c.copy(time_series = x))
       opt[String]("nearestroad_data").required.action((x,c) => c.copy(nearestroad_data = x))
       opt[Double]("maximum_search_radius").action((x,c) => c.copy(maximum_search_radius = x))
@@ -83,7 +81,7 @@ object PreprocPerPatSeriesNearestRoad {
         time {
 
           println("loading patient_dimension from " + config.patient_dimension)
-          val pddf0 = spark.read.format("csv").option("header", value = true).load(config.input_directory + "/" + config.patient_dimension)
+          val pddf0 = spark.read.format("csv").option("header", value = true).load(config.patient_dimension)
           val patl = pddf0.select("patient_num").map(r => r.getString(0)).collect.toList
 
           val count = new AtomicInteger(0)
@@ -96,7 +94,7 @@ object PreprocPerPatSeriesNearestRoad {
             println(config.output_file + " exists")
           } else {
 
-            val nearestRoad = new NearestRoad(f"${config.input_directory}/${config.nearestroad_data}", config.maximum_search_radius)
+            val nearestRoad = new NearestRoad(f"${config.nearestroad_data}", config.maximum_search_radius)
             val rows = patl.flatMap(pid => {
               println("processing " + count.incrementAndGet + " / " + n + " " + pid)
               proc_pid(config, spark, nearestRoad, pid)

@@ -16,11 +16,11 @@ From: spark.img
   preproc Daily Env Data:
   singularity run spark.img --app preprocDailyEnvData -B <data dir>:/data <spark master host> <input directory> <year>
   preproc Per Patient Series Env Data:
-  singularity run spark.img --app preprocPerPatSeriesEnvData -B <data dir>:/data <spark master host> <input directory> <patient ids file> <fihr files> <environmental files> <start date> <end data> <output directory>
+  singularity run spark.img --app preprocPerPatSeriesEnvData -B <data dir>:/data <spark master host> <patient ids file> <fihr files> <environmental files> <start date> <end data> <output directory>
   preproc Per Patient Series Nearest Road Data:
-  singularity run spark.img --app preprocPerPatSeriesNearestRoad -B <data dir>:/data <spark master host> <input directory> <patient ids file> <fihr files> <nearest road file> <output directory>
+  singularity run spark.img --app preprocPerPatSeriesNearestRoad -B <data dir>:/data <spark master host> <patient ids file> <fihr files> <nearest road file> <output directory>
   preproc Per Patient Series ACS Data:
-  singularity run spark.img --app preprocPerPatSeriesACS -B <data dir>:/data <spark master host> <input directory> <patient ids file> <fihr files> <geoid file> <acs file> <output directory>
+  singularity run spark.img --app preprocPerPatSeriesACS -B <data dir>:/data <spark master host> <patient ids file> <fihr files> <geoid file> <acs file> <output directory>
 
 %apprun preprocCMAQ
   cd /opt/datatrans/spark
