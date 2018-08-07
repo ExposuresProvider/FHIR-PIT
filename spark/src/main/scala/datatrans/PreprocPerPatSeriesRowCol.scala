@@ -23,7 +23,7 @@ case class PreprocPerPatSeriesRowColConfig(
                    output_file : String = ""
                  )
 
-object PreprocPerPatSeriesACS {
+object PreprocPerPatSeriesRowCol {
 
   def proc_pid(config : PreprocPerPatSeriesRowColConfig, spark: SparkSession, year: Int, p:String): Option[(String, Int, Int)] =
     time {
