@@ -16,5 +16,5 @@ submit(host_name, cache_dir, "datatrans.PreprocPerPatSeriesACS",
            "--time_series=" + time_series,
            "--output_file=" + output_dir,
            "--geoid_data=" + environmental_data,
-           "--acs_data=" + acs_data, *sys.argv[9:])
+           "--acs_data=" + acs_data, *sys.argv[8:])
 

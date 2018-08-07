@@ -14,5 +14,5 @@ submit(host_name, cache_dir, "datatrans.PreprocPerPatSeriesRowCol",
            "--patient_dimension={0}".format(patient_dimension),
            "--time_series=" + time_series,
            "--output_file=" + output_dir,
-           "--year=" + year, *sys.argv[9:])
+           "--year=" + year, *sys.argv[7:])
 

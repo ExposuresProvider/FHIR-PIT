@@ -9,6 +9,8 @@ From: spark.img
   Hadoop_Version 2.7
 
 %help
+  preproc FIHR:
+  singularity run spark.img --app preprocFIHR -B <data dir>:/data <spark master host> <input file> <resource types> <output directory>
   preproc CMAQ:
   singularity run spark.img --app preprocCMAQ -B <data dir>:/data <spark master host> <input file> <output directory>
   preproc CMAQ2:
@@ -21,6 +23,10 @@ From: spark.img
   singularity run spark.img --app preprocPerPatSeriesNearestRoad -B <data dir>:/data <spark master host> <patient ids file> <fihr files> <nearest road file> <output directory>
   preproc Per Patient Series ACS Data:
   singularity run spark.img --app preprocPerPatSeriesACS -B <data dir>:/data <spark master host> <patient ids file> <fihr files> <geoid file> <acs file> <output directory>
+
+%apprun preprocFIHR
+  cd /opt/datatrans/spark
+  exec python3 src/main/python/runPreprocFIHR.py /opt/datatrans "$@"
 
 %apprun preprocCMAQ
   cd /opt/datatrans/spark
