@@ -10,9 +10,9 @@ From: ubuntu:18.04
 
 %help
   Start master
-  singularity run -B /tmp/logs:/opt/spark/logs -B /tmp/work:/opt/spark/work spark.img --app spark-master
+  singularity run -B /tmp/logs:/opt/spark/logs -B /tmp/work:/opt/spark/work spark.img -B /data:/data --app spark-master
   Start worker
-  singularity run -B /tmp/logs:/opt/spark/logs -B /tmp/work:/opt/spark/work spark.img --app spark-worker
+  singularity run -B /tmp/logs:/opt/spark/logs -B /tmp/work:/opt/spark/work spark.img -B /data:/data --app spark-worker
 
 %apprun spark-class
   exec spark-class "${@}"
