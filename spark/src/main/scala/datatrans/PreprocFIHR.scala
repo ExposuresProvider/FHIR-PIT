@@ -76,7 +76,7 @@ object PreprocFIHR {
 
     entry.par.foreach(obj1 => {
       val resource = (obj1 \ "resource").get.as[JsObject]
-      val patient_num = (resource \ "id").get.as[Int]
+      val patient_num = (resource \ "id").get.as[String]
 
       println("processing " + count.incrementAndGet + " / " + n + " " + patient_num)
 
@@ -113,21 +113,21 @@ object PreprocFIHR {
     val n = entry.size
 
     entry.par.foreach(obj1 => {
-
-      val id = (obj1 \ "id").get.as[Int]
+      val resource = (obj1 \ "resource").get.as[JsObject]
+      val id = (resource \ "id").get.as[String]
 
       println("processing " + count.incrementAndGet + " / " + n + " " + id)
 
-      val patient_num = (obj1 \ "subject" \ "reference").get.as[String].split("/")(1).toInt
+      val patient_num = (resource \ "subject" \ "reference").get.as[String].split("/")(1).toInt
 
       val output_file = config.output_dir + "/" + resc_type + "/" + patient_num + "/" + id
       val output_file_path = new Path(output_file)
       if (output_dir_file_system.exists(output_file_path)) {
         println(output_file + " exists")
       } else {
-        val obj2 = (obj1 \ "resource").get
 
-        Utils.writeToFile(hc, output_file, Json.stringify(obj2))
+
+        Utils.writeToFile(hc, output_file, Json.stringify(resource))
       }
 
     })
