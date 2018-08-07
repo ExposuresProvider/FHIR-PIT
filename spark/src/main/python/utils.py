@@ -44,6 +44,33 @@ def submit(host_name, cache_dir, cls, *args, **kwargs):
     end = timer()
     print(end - start)
 
+
+def run(cache_dir, cls, *args, **kwargs):
+    start = timer()
+
+    cache = ":".join(["target/scala-2.11/preproc_2.11-1.0.jar"] + [filename for filename in glob.iglob(os.path.join(cache_dir, ".ivy2", "**", "*.jar"), recursive=True)])
+
+    cmd = ["scala",
+           "-classpath",
+           cache,
+           cls] + list(args)
+    print(cmd)
+    if "log" in kwargs and "log2" in kwargs:
+        log = kwargs["log"]
+        log2 = kwargs["log2"]
+        with open(log, "w") as file:
+            with open(log2, "w") as file2:
+                proc = subprocess.Popen(cmd, stdout=file, stderr=file2)
+                err = proc.wait()
+    else:
+        proc = subprocess.Popen(cmd)
+        err = proc.wait()
+    if err:
+        print("error:", err)
+    end = timer()
+    print(end - start)
+
+
 def concat(dir, output_file, column_pattern, filename_column, default_value, sep, distinct):
     regular_expression = re.compile(column_pattern)
     dfs = []

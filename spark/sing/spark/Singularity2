@@ -46,6 +46,10 @@ From: spark.img
   cd /opt/datatrans/spark
   exec python3 src/main/python/runPreprocPerPatSeriesACS.py /opt/datatrans "$@"
 
+%apprun latlon2rowcol
+  cd /opt/datatrans/spark
+  exec python3 src/main/python/runPreprocPerPatSeriesACS.py /opt/datatrans "$@"
+
 %post
   cd /opt
   git clone https://github.com/xu-hao/datatrans
