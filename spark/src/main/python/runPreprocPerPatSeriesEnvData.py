@@ -1,4 +1,3 @@
-import os
 import sys
 from utils import submit
 
@@ -16,6 +15,7 @@ submit(host_name, cache_dir, "datatrans.PreprocPerPatSeriesEnvData",
            "--patient_dimension={0}".format(patient_dimension),
            "--time_series=" + time_series + "/%i",
            "--output_file=" + output_dir + "/%i",
+           "--output_format=csv",
            "--environmental_data=" + environmental_data,
            "--start_date=" + start_date,
            "--end_date=" + end_date, *sys.argv[10:])
