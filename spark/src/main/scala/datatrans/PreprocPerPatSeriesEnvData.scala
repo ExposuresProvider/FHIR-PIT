@@ -41,7 +41,7 @@ object PreprocPerPatSeriesEnvData {
           DataSourceSelectorRunnerSparkJsValue.run(spark, pdif, "patient_num", config.sequential, config.time_series, MkDataSourceSelectorFormatter(new EnvSelector(), new EnvDataSource(config), new EnvFormatter(config.output_format match {
             case "json" => JSON
             case "csv" => CSV(",")
-          })), config.output_format)
+          })), config.output_file)
         }
       case None =>
     }
