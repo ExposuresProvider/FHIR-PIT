@@ -26,7 +26,7 @@ object PreprocCombineData {
       opt[String]("time_series").required.action((x,c) => c.copy(time_series = x))
       opt[String]("input_resc_dir").required.action((x,c) => c.copy(input_resc_dir = x))
       opt[String]("output_dir").required.action((x,c) => c.copy(output_dir = x))
-      opt[Seq[String]]("resc_types").required.action((x,c) => c.copy(resources = x))
+      opt[Seq[String]]("resources").required.action((x,c) => c.copy(resources = x))
     }
 
     val spark = SparkSession.builder().appName("datatrans preproc").getOrCreate()
