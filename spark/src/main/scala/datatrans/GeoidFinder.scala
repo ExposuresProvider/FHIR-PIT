@@ -22,7 +22,7 @@ class GeoidFinder(blockgrpShapefilePath : String)  {
 
   try {
     val shp = new ShapefileHandler(blockgrpShapefilePath)
-    val features = shp.getFeatureCollection()
+    val features = shp.getFeatureCollection
     GeoidFinder.index  = new SpatialIndexFeatureCollection(features.getSchema)
     GeoidFinder.index.addAll(features)
   }
