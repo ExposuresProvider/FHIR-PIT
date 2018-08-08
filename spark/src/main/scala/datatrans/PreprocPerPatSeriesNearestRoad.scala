@@ -2,6 +2,7 @@ package datatrans
 
 import java.util.concurrent.atomic.AtomicInteger
 
+import datatrans.PreprocPerPatSeriesACS.proc_pid
 import datatrans.Utils._
 import org.apache.hadoop.fs.Path
 import org.apache.spark.sql.SparkSession
@@ -95,15 +96,14 @@ object PreprocPerPatSeriesNearestRoad {
           } else {
 
             val nearestRoad = new NearestRoad(f"${config.nearestroad_data}", config.maximum_search_radius)
-            val rows = patl.flatMap(pid => {
+            val rows = patl.par.flatMap(pid => {
               println("processing " + count.incrementAndGet + " / " + n + " " + pid)
               proc_pid(config, spark, nearestRoad, pid)
             })
 
-            val lrows = for (row <- rows) yield f"${row._1},${row._2}"
+            val df = rows.toList.toDF("patient_num", "distant_to_nearest_road")
 
-            val table = "patient_num,distant_to_nearest_road\n" + lrows.mkString("\n")
-            writeToFile(hc, config.output_file, table)
+            writeDataframe(hc, config.output_file, df)
           }
 
 
@@ -116,4 +116,5 @@ object PreprocPerPatSeriesNearestRoad {
 
 
   }
+
 }

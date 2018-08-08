@@ -102,20 +102,15 @@ object PreprocPerPatSeriesACS {
           } else {
 
             val geoidFinder = new GeoidFinder(f"${config.geoid_data}")
-            val rows = patl.flatMap(pid => {
+            val rows = patl.par.flatMap(pid => {
               println("processing " + count.incrementAndGet + " / " + n + " " + pid)
               proc_pid(config, spark, geoidFinder, pid)
+              Some((1.0,""))
             })
 
-            val lrows = for (row <- rows) yield f"${row._1},${row._2}"
-
-            val table0 = "patient_num,GEOID\n" + lrows.mkString("\n")
-            writeToFile(hc, config.output_file+".table", table0)
-
-            val df = rows.toDF("patient_num", "GEOID")
+            val df = rows.toList.toDF("patient_num", "GEOID")
 
             val acs_df = spark.read.format("csv").option("header", value = true).load(f"${config.acs_data}")
-
 
             val table = df.join(acs_df, "GEOID")
 

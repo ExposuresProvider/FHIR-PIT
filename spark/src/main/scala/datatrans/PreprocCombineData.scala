@@ -91,7 +91,7 @@ object PreprocCombineData {
 
     val resourceMap = TrieMap[String, DataFrame]()
 
-    patl.foreach(patient_num =>  {
+    patl.par.foreach(patient_num =>  {
 
       println("processing " + count.incrementAndGet + " / " + n + " " + patient_num)
 
