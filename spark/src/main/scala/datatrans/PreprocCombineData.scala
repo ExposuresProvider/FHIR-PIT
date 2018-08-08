@@ -50,7 +50,9 @@ object PreprocCombineData {
 
 
   private def toJsValue(obj: Any) : JsValue = {
-    if(obj.isInstanceOf[Int]) {
+    if (obj == null) {
+      JsNull
+    } else if(obj.isInstanceOf[Int]) {
       JsNumber(obj.asInstanceOf[Int])
     } else if(obj.isInstanceOf[Float]) {
       JsNumber(BigDecimal(obj.asInstanceOf[Float]))
