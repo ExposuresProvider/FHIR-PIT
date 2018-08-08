@@ -30,7 +30,7 @@ class NearestRoad(roadShapefilePath : String, maximum_search_radius : Double) {
   try {
     NearestRoad.maximum_search_radius = maximum_search_radius
     val shp = new ShapefileHandler(roadShapefilePath)
-    val features = shp.getFeatureCollection()
+    val features = shp.getFeatureCollection
     NearestRoad.index = new SpatialIndexFeatureCollection(features.getSchema)
     NearestRoad.index.addAll(features)
   }
