@@ -112,7 +112,7 @@ object PreprocCombineData {
             val resource_file_path = new Path(resource_file)
             if (input_resc_dir_file_system.isFile(resource_file_path)) {
               val df = resourceMap.getOrElse(resource, {
-                val df2 = spark.read.format("csv").option("header", value = true).load()
+                val df2 = spark.read.format("csv").option("header", value = true).load(resource_file)
                 resourceMap(resource) = df2
                 df2
               })
@@ -121,7 +121,6 @@ object PreprocCombineData {
               val row = df.select(df.col("*")).where(df.col("patient_num").equalTo(patient_num)).first
               obj ++= JsObject(columns.map(column => column -> toJsValue(row(row.fieldIndex(column)))))
             } else if (input_resc_dir_file_system.isDirectory(resource_file_path)) {
-              var arr = Json.arr()
               val input_resc_file = config.input_resc_dir + "/" + resource + "/" + patient_num
               val input_resc_file_path = new Path(input_resc_file)
               if(input_resc_dir_file_system.exists(input_resc_file_path)) {
