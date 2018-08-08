@@ -8,6 +8,7 @@ import play.api.libs.json._
 import org.joda.time._
 import play.api.libs.json.Json.JsValueWrapper
 
+import scala.collection.concurrent.TrieMap
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
@@ -29,7 +30,7 @@ case class EnvDataSourceConfig(
                  )
 
 class EnvDataSource(config: EnvDataSourceConfig) extends DataSource[SparkSession, LatLon, Seq[JsObject]] {
-  val cache: mutable.Map[String, SoftReference[Seq[DataFrame]]] = scala.collection.mutable.Map[String, SoftReference[Seq[DataFrame]]]()
+  val cache = TrieMap[String, SoftReference[Seq[DataFrame]]]()
 
   def loadEnvData(spark: SparkSession, coors: Seq[(Int, (Int, Int))], names: Seq[String]): Map[String, Map[String, Double]] = {
 

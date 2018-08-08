@@ -2,7 +2,7 @@ package datatrans
 
 import java.util.concurrent.atomic.AtomicInteger
 
-import scala.collection.mutable.Map
+import scala.collection.concurrent.{Map, TrieMap}
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.{DataFrame, SparkSession}
@@ -89,7 +89,7 @@ object PreprocCombineData {
     val count = new AtomicInteger(0)
     val n = patl.size
 
-    val resourceMap = Map[String, DataFrame]()
+    val resourceMap = TrieMap[String, DataFrame]()
 
     patl.foreach(patient_num =>  {
 
@@ -97,50 +97,54 @@ object PreprocCombineData {
 
       val input_file = config.time_series + "/" + patient_num
       val input_file_path = new Path(input_file)
-      val input_file_input_stream = input_dir_file_system.open(input_file_path)
-      var obj = Json.parse(input_file_input_stream).as[JsObject]
 
-
-      val output_file = config.output_dir + "/" + patient_num
-      val output_file_path = new Path(output_file)
-      if (output_dir_file_system.exists(output_file_path)) {
-        println(output_file + " exists")
+      if(!input_dir_file_system.exists(input_file_path)) {
+        println("json not found, skipped " + patient_num)
       } else {
-        config.resources.foreach(
-          resource => {
-            val resource_file = config.input_resc_dir + "/" + resource
-            val resource_file_path = new Path(resource_file)
-            if (input_resc_dir_file_system.isFile(resource_file_path)) {
-              val df = resourceMap.getOrElse(resource, {
-                val df2 = spark.read.format("csv").option("header", value = true).load(resource_file)
-                resourceMap(resource) = df2
-                df2
-              })
+        val input_file_input_stream = input_dir_file_system.open(input_file_path)
+        var obj = Json.parse(input_file_input_stream).as[JsObject]
 
-              val columns = df.columns.filter(x => x != "patient_num")
-              val row = df.select(df.col("*")).where(df.col("patient_num").equalTo(patient_num)).first
-              obj ++= JsObject(columns.map(column => column -> toJsValue(row(row.fieldIndex(column)))))
-            } else if (input_resc_dir_file_system.isDirectory(resource_file_path)) {
-              val input_resc_file = config.input_resc_dir + "/" + resource + "/" + patient_num
-              val input_resc_file_path = new Path(input_resc_file)
-              if(input_resc_dir_file_system.exists(input_resc_file_path)) {
-                val df = spark.read.format("csv").option("header", value = true).load(input_resc_file)
+        val output_file = config.output_dir + "/" + patient_num
+        val output_file_path = new Path(output_file)
+        if (output_dir_file_system.exists(output_file_path)) {
+          println(output_file + " exists")
+        } else {
+          config.resources.foreach(
+            resource => {
+              val resource_file = config.input_resc_dir + "/" + resource
+              val resource_file_path = new Path(resource_file)
+              if (input_resc_dir_file_system.isFile(resource_file_path)) {
+                val df = resourceMap.getOrElse(resource, {
+                  val df2 = spark.read.format("csv").option("header", value = true).load(resource_file)
+                  resourceMap(resource) = df2
+                  df2
+                })
+
                 val columns = df.columns.filter(x => x != "patient_num")
-                val rows = df.collect()
-                val arr = JsArray(rows.map(row =>
-                  JsObject(columns.map(column => column -> toJsValue(row(row.fieldIndex(column)))))))
+                val row = df.select(df.col("*")).where(df.col("patient_num").equalTo(patient_num)).first
+                obj ++= JsObject(columns.map(column => column -> toJsValue(row(row.fieldIndex(column)))))
+              } else if (input_resc_dir_file_system.isDirectory(resource_file_path)) {
+                val input_resc_file = config.input_resc_dir + "/" + resource + "/" + patient_num
+                val input_resc_file_path = new Path(input_resc_file)
+                if (input_resc_dir_file_system.exists(input_resc_file_path)) {
+                  val df = spark.read.format("csv").option("header", value = true).load(input_resc_file)
+                  val columns = df.columns.filter(x => x != "patient_num")
+                  val rows = df.collect()
+                  val arr = JsArray(rows.map(row =>
+                    JsObject(columns.map(column => column -> toJsValue(row(row.fieldIndex(column)))))))
 
-                obj ++= Json.obj(
-                  resource -> arr
-                )
+                  obj ++= Json.obj(
+                    resource -> arr
+                  )
+                }
+              } else {
+                println("unknown object type")
               }
-            } else {
-              println("unknown object type")
             }
-          }
-        )
+          )
 
-        Utils.writeToFile(hc, output_file, Json.stringify(obj))
+          Utils.writeToFile(hc, output_file, Json.stringify(obj))
+        }
       }
 
     })
