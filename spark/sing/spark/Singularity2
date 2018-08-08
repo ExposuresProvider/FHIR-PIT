@@ -54,6 +54,10 @@ From: spark.img
   cd /opt/datatrans/spark
   exec python3 src/main/python/runPreprocPerPatSeriesACS.py /opt/datatrans "$@"
 
+%apprun preprocCombineData
+  cd /opt/datatrans/spark
+  exec python3 src/main/python/runPreprocCombineData.py /opt/datatrans "$@"
+
 %apprun preprocPerPatSeriesRowCol
   cd /opt/datatrans/spark
   exec python3 src/main/python/runPreprocPerPatSeriesRowCol.py /opt/datatrans "$@"
