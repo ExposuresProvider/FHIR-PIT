@@ -23,11 +23,11 @@ class GeoidFinder(blockgrpShapefilePath : String)  {
   try {
     val shp = new ShapefileHandler(blockgrpShapefilePath)
     val features = shp.getFeatureCollection()
-    GeoidFinder.index  = new SpatialIndexFeatureCollection(features.getSchema())
+    GeoidFinder.index  = new SpatialIndexFeatureCollection(features.getSchema)
     GeoidFinder.index.addAll(features)
   }
   catch {
-    case e : Exception => { System.out.println(e) }
+    case e : Exception => System.out.println(e)
   }
 
 
@@ -39,10 +39,10 @@ class GeoidFinder(blockgrpShapefilePath : String)  {
 
       val itr = GeoidFinder.index.features()
       var done = false
-      while (itr.hasNext() && !done) {
-        feature = itr.next().asInstanceOf[SimpleFeature]
+      while (itr.hasNext && !done) {
+        feature = itr.next
 
-        def geom = feature.getDefaultGeometry().asInstanceOf[Geometry]
+        def geom = feature.getDefaultGeometry.asInstanceOf[Geometry]
 
         if (geom.contains(p)) {
           done = true
@@ -50,13 +50,12 @@ class GeoidFinder(blockgrpShapefilePath : String)  {
       }
     }
     catch {
-      case e : Exception  => {
+      case e : Exception  =>
         System.out.println(e)
         None.asInstanceOf[SimpleFeature]
-      }
     }
 
-    return feature
+    feature
   }
 
   @throws(classOf[TransformException])
@@ -90,10 +89,9 @@ class GeoidFinder(blockgrpShapefilePath : String)  {
       p = createPointLCC(lat, lon)
     }
     catch {
-      case e : Exception  => {
+      case e : Exception  =>
         System.out.println(e)
         None.asInstanceOf[String]
-      }
     }
 
     val feature = getCensusBlockContainingPoint(p)

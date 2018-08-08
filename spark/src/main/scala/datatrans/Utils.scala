@@ -327,7 +327,7 @@ object Utils {
   }
   def insertOrUpdate(mmap: mutable.Map[DateTime, JsObject], key: DateTime, col: String, value: JsValue): Unit = {
     mmap.get(key) match {
-      case Some(vec) =>
+      case Some(_) =>
         val json = mmap(key)
         json \ col match {
           case JsDefined(value0) =>

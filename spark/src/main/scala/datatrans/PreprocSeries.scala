@@ -1,8 +1,7 @@
 package datatrans
 
 import datatrans.Utils._
-import org.apache.hadoop.fs.{Path}
-import org.apache.spark.sql.{SparkSession}
+import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
 
 import scopt._
@@ -34,21 +33,19 @@ object PreprocSeries {
           // For implicit conversions like converting RDDs to DataFrames
           import spark.implicits._
 
-          val hc = spark.sparkContext.hadoopConfiguration
-
           val pdif = config.input_directory + "/patient_dimension.csv"
           val vdif = config.input_directory + "/visit_dimension.csv"
           val ofif = config.input_directory + "/observation_fact.csv"
           val geodata_input_filename = config.input_directory + "/geodata.csv"
 
           println("loading patient_dimension from " + pdif)
-          val pddf = spark.read.format("csv").option("header", true).load(pdif)
+          val pddf = spark.read.format("csv").option("header", value = true).load(pdif)
           println("loading observation_fact from " + ofif)
-          val ofdf = spark.read.format("csv").option("header", true).load(ofif)
+          val ofdf = spark.read.format("csv").option("header", value = true).load(ofif)
           println("loading visit_dimension from " + vdif)
-          val vddf = spark.read.format("csv").option("header", true).load(vdif)
+          val vddf = spark.read.format("csv").option("header", value = true).load(vdif)
           println("loading geodata from " + geodata_input_filename)
-          val geodata_df = spark.read.format("csv").option("header", true).load(geodata_input_filename)
+          val geodata_df = spark.read.format("csv").option("header", value = true).load(geodata_input_filename)
 
           val pat = pddf.select("race_cd", "sex_cd", "birth_date")
 

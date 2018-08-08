@@ -1,19 +1,9 @@
 package datatrans
 
 import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.DataFrame
 import org.apache.spark.storage.StorageLevel
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.Row
-import org.apache.spark.sql.catalyst.encoders.RowEncoder
-import org.apache.spark.sql.types._
-
-import org.apache.hadoop.fs.{Path, FileUtil, FileSystem}
-import org.apache.hadoop.conf.Configuration
-import java.io.{BufferedWriter, OutputStreamWriter}
-import org.apache.commons.lang3.StringEscapeUtils
 import datatrans.Utils._
-import java.lang.RuntimeException
 
 object Preproc {
 
@@ -34,9 +24,9 @@ object Preproc {
       val vdif = args(2)
       val ofif = args(3)
 
-      val pddf = spark.read.format("csv").option("header", true).load(pdif)
-      val vddf = spark.read.format("csv").option("header", true).load(vdif)
-      val ofdf = spark.read.format("csv").option("header", true).load(ofif)
+      val pddf = spark.read.format("csv").option("header", value = true).load(pdif)
+      val vddf = spark.read.format("csv").option("header", value = true).load(vdif)
+      val ofdf = spark.read.format("csv").option("header", value = true).load(ofif)
 
       pddf.createGlobalTempView("patient_dimension")
       vddf.createGlobalTempView("visit_dimension")
@@ -118,9 +108,9 @@ object Preproc {
         .join(lat, "patient_num")
         .join(lon, "patient_num")
 
-      features.persist(StorageLevel.MEMORY_AND_DISK);
+      features.persist(StorageLevel.MEMORY_AND_DISK)
 
-//      writeCSV(spark, features, "/tmp/features",form)
+      //      writeCSV(spark, features, "/tmp/features",form)
 
       val features_wide = features
         .join(icd_wide, Seq("patient_num", "encounter_num"))

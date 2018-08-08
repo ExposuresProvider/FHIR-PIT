@@ -20,8 +20,8 @@ import com.vividsolutions.jts.geom.Point
 object NearestRoad {
   private val ff = CommonFactoryFinder.getFilterFactory2()
   private val gf = new GeometryFactory()
-  var index : SpatialIndexFeatureCollection = null
-  var lastMatched : SimpleFeature = null
+  var index : SpatialIndexFeatureCollection = _
+  var lastMatched : SimpleFeature = _
   var maximum_search_radius: Double = 0
 }
 
@@ -31,11 +31,11 @@ class NearestRoad(roadShapefilePath : String, maximum_search_radius : Double) {
     NearestRoad.maximum_search_radius = maximum_search_radius
     val shp = new ShapefileHandler(roadShapefilePath)
     val features = shp.getFeatureCollection()
-    NearestRoad.index = new SpatialIndexFeatureCollection(features.getSchema())
+    NearestRoad.index = new SpatialIndexFeatureCollection(features.getSchema)
     NearestRoad.index.addAll(features)
   }
   catch {
-    case e : Exception => { System.out.println(e) }
+    case e : Exception => System.out.println(e)
   }
 
   def getMinimumDistance(lat : Double, lon : Double) : Double = {
@@ -45,21 +45,20 @@ class NearestRoad(roadShapefilePath : String, maximum_search_radius : Double) {
       findMinimumDistance(p)
     }
     catch {
-      case e : Exception => {
+      case e : Exception =>
         System.out.println(e)
         None.asInstanceOf[Double]
-      }
     }
 
   }
 
   private def findMinimumDistance(p : Point) : Double = {
 
-    val coordinate = p.getCoordinate()
+    val coordinate = p.getCoordinate
     val search = new ReferencedEnvelope(new Envelope(coordinate),
-      NearestRoad.index.getSchema().getCoordinateReferenceSystem())
+      NearestRoad.index.getSchema.getCoordinateReferenceSystem)
     search.expandBy(NearestRoad.maximum_search_radius)
-    val bbox = NearestRoad.ff.bbox(NearestRoad.ff.property(NearestRoad.index.getSchema().getGeometryDescriptor().getName()),
+    val bbox = NearestRoad.ff.bbox(NearestRoad.ff.property(NearestRoad.index.getSchema.getGeometryDescriptor.getName),
       search.asInstanceOf[BoundingBox])
 
     val candidates = NearestRoad.index.subCollection(bbox)
@@ -72,14 +71,14 @@ class NearestRoad(roadShapefilePath : String, maximum_search_radius : Double) {
 
       val itr = candidates.features()
 
-      while (itr.hasNext()) {
+      while (itr.hasNext) {
         feature = itr.next()
 
         // use following 2 lines to get road name
         //attribute = feature.getAttribute("FULLNAME").asInstanceOf[String]
         //System.out.println(attribute)
 
-        val line = new LocationIndexedLine((feature.getDefaultGeometry().asInstanceOf[Geometry]))
+        val line = new LocationIndexedLine(feature.getDefaultGeometry.asInstanceOf[Geometry])
         val here = line.project(coordinate)
         val point = line.extractPoint(here)
         val dist = point.distance(coordinate)
@@ -91,17 +90,16 @@ class NearestRoad(roadShapefilePath : String, maximum_search_radius : Double) {
       }
     }
     catch {
-      case e: Exception => {
+      case e: Exception =>
         System.out.println(e)
         None.asInstanceOf[Double]
-      }
     }
 
-    return minDist
+    minDist
   }
 
-  def  getLastMatched() : SimpleFeature = {
-    return NearestRoad.lastMatched
+  def  getLastMatched : SimpleFeature = {
+    NearestRoad.lastMatched
   }
 
   @throws(classOf[TransformException])
@@ -114,7 +112,7 @@ class NearestRoad(roadShapefilePath : String, maximum_search_radius : Double) {
       "PARAMETER[\"False_Easting\",-2556000.0],PARAMETER[\"False_Northing\",-1728000.0]," +
       "PARAMETER[\"Central_Meridian\",-97.0],PARAMETER[\"Standard_Parallel_1\",33.0]," +
       "PARAMETER[\"Standard_Parallel_2\",45.0],PARAMETER[\"Scale_Factor\",1.0]," +
-      "PARAMETER[\"Latitude_Of_Origin\",40.0],UNIT[\"Meter\",1.0]]";
+      "PARAMETER[\"Latitude_Of_Origin\",40.0],UNIT[\"Meter\",1.0]]"
 
     val crs = CRS.parseWKT(wkt)
     val sourceCRS = CRS.decode("EPSG:4326")
@@ -127,7 +125,7 @@ class NearestRoad(roadShapefilePath : String, maximum_search_radius : Double) {
 
   }
 
-  def getMatchedRoadName() : String = {
+  def getMatchedRoadName : String = {
 
     var roadName : String = null
 
@@ -135,6 +133,6 @@ class NearestRoad(roadShapefilePath : String, maximum_search_radius : Double) {
       roadName = NearestRoad.lastMatched.getAttribute("FULLNAME").asInstanceOf[String]
     }
 
-    return roadName
+    roadName
   }
 }

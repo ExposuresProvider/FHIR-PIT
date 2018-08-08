@@ -4,7 +4,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, Path}
-import org.apache.spark.sql.{SparkSession}
+import org.apache.spark.sql.SparkSession
 import play.api.libs.json._
 import scopt._
 
@@ -29,7 +29,7 @@ object PreprocFIHR {
     spark.sparkContext.setLogLevel("WARN")
 
     // For implicit conversions like converting RDDs to DataFrames
-    import spark.implicits._
+    // import spark.implicits._
 
     parser.parse(args, PreprocFIHRConfig()) match {
       case Some(config) =>
@@ -61,7 +61,7 @@ object PreprocFIHR {
 
   }
 
-  private def proc_pat(config: PreprocFIHRConfig, hc: Configuration, input_dir_file_system: FileSystem, output_dir_file_system: FileSystem) = {
+  private def proc_pat(config: PreprocFIHRConfig, hc: Configuration, input_dir_file_system: FileSystem, output_dir_file_system: FileSystem) : Unit = {
     val count = new AtomicInteger(0)
 
     val input_file_patient = config.input_dir + "/Patient.json"
@@ -140,7 +140,7 @@ object PreprocFIHR {
     val count = new AtomicInteger(0)
 
     val input_file_iter = output_dir_file_system.listFiles(input_dir_path, false)
-    while(input_file_iter.hasNext()) {
+    while(input_file_iter.hasNext) {
 
       val input_file_status = input_file_iter.next()
       val input_file_path = input_file_status.getPath
@@ -156,7 +156,7 @@ object PreprocFIHR {
         val input_resc_dir_path = new Path(input_resc_dir)
         if(output_dir_file_system.exists(input_resc_dir_path)) {
           val input_resc_file_iter = output_dir_file_system.listFiles(input_resc_dir_path, false)
-          while(input_resc_file_iter.hasNext()) {
+          while(input_resc_file_iter.hasNext) {
             val input_resc_file_status = input_resc_file_iter.next()
             val input_resc_file_path = input_resc_file_status.getPath
             val input_resc_file_input_stream = output_dir_file_system.open(input_resc_file_path)

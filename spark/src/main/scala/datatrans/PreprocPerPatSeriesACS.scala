@@ -2,19 +2,11 @@ package datatrans
 
 import java.util.concurrent.atomic.AtomicInteger
 
-import datatrans.Utils.{JSON, _}
-import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.{FileSystem, Path}
-import org.apache.spark.sql.expressions.UserDefinedFunction
-import org.apache.spark.sql.{DataFrame, Row, SparkSession}
+import datatrans.Utils._
+import org.apache.hadoop.fs.Path
+import org.apache.spark.sql.SparkSession
 import play.api.libs.json._
-import org.joda.time._
-import play.api.libs.json.Json.JsValueWrapper
-import org.apache.spark.sql.functions.udf
 import scopt._
-
-import scala.collection.mutable
-import scala.collection.mutable.ListBuffer
 
 case class PreprocPerPatSeriesACSConfig(
                    patient_dimension : String = "",
@@ -105,7 +97,6 @@ object PreprocPerPatSeriesACS {
             val rows = patl.par.flatMap(pid => {
               println("processing " + count.incrementAndGet + " / " + n + " " + pid)
               proc_pid(config, spark, geoidFinder, pid)
-              Some((1.0,""))
             })
 
             val df = rows.toList.toDF("patient_num", "GEOID")

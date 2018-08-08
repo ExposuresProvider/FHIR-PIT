@@ -4,7 +4,7 @@ import java.io.File
 import java.io.IOException
 import java.net.MalformedURLException
 import java.net.URL
-import java.util.HashMap
+import java.util
 
 import org.geotools.data.DataStoreFinder
 import org.geotools.data.simple.SimpleFeatureCollection
@@ -19,11 +19,11 @@ class ShapefileHandler(shpFilePath : String) {
   @throws(classOf[TransformException])
   @throws(classOf[IOException])
   @throws(classOf[MalformedURLException])
-  def getFeatureCollection() : SimpleFeatureCollection = {
+  def getFeatureCollection : SimpleFeatureCollection = {
 
     val file = new File(this.shpFilePath)
-    val map = new HashMap[String, URL]()
-    map.put("url", file.toURI().toURL())
+    val map = new util.HashMap[String, URL]()
+    map.put("url", file.toURI.toURL)
 
     val dataStore= DataStoreFinder.getDataStore(map)
     val featureSource = dataStore.getFeatureSource(dataStore.getTypeNames()(0))

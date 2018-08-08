@@ -2,9 +2,8 @@ package datatrans
 
 import java.util.concurrent.atomic.AtomicInteger
 
-import scala.collection.concurrent.{Map, TrieMap}
-import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.{FileSystem, Path}
+import scala.collection.concurrent.TrieMap
+import org.apache.hadoop.fs.Path
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import play.api.libs.json._
 import scopt._
@@ -52,16 +51,17 @@ object PreprocCombineData {
   private def toJsValue(obj: Any) : JsValue = {
     if (obj == null) {
       JsNull
-    } else if(obj.isInstanceOf[Int]) {
-      JsNumber(obj.asInstanceOf[Int])
-    } else if(obj.isInstanceOf[Float]) {
-      JsNumber(BigDecimal(obj.asInstanceOf[Float]))
-    } else if(obj.isInstanceOf[Double]) {
-      JsNumber(BigDecimal(obj.asInstanceOf[Double]))
-    } else if(obj.isInstanceOf[String]) {
-      JsString(obj.asInstanceOf[String])
-    } else {
-      throw new RuntimeException("cannot convert to JSValue " + obj)
+    } else obj match {
+      case i: Int =>
+        JsNumber(i)
+      case fl: Float =>
+        JsNumber(BigDecimal(fl))
+      case d: Double =>
+        JsNumber(BigDecimal(d))
+      case str: String =>
+        JsString(str)
+      case _ =>
+        throw new RuntimeException("cannot convert to JSValue " + obj)
     }
   }
 
@@ -70,8 +70,6 @@ object PreprocCombineData {
     import spark.implicits._
 
     val hc = spark.sparkContext.hadoopConfiguration
-    val input_dir_path = new Path(config.patient_dimension)
-    val input_dir_file_system = input_dir_path.getFileSystem(hc)
 
     val time_series_path = new Path(config.time_series)
     val time_series_file_system = time_series_path.getFileSystem(hc)
@@ -98,10 +96,10 @@ object PreprocCombineData {
       val input_file = config.time_series + "/" + patient_num
       val input_file_path = new Path(input_file)
 
-      if(!input_dir_file_system.exists(input_file_path)) {
+      if(!time_series_file_system.exists(input_file_path)) {
         println("json not found, skipped " + patient_num)
       } else {
-        val input_file_input_stream = input_dir_file_system.open(input_file_path)
+        val input_file_input_stream = time_series_file_system.open(input_file_path)
         var obj = Json.parse(input_file_input_stream).as[JsObject]
 
         val output_file = config.output_dir + "/" + patient_num

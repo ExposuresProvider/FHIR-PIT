@@ -9,8 +9,6 @@ import org.joda.time._
 import play.api.libs.json.Json.JsValueWrapper
 
 import scala.collection.concurrent.TrieMap
-import scala.collection.mutable
-import scala.collection.mutable.ListBuffer
 
 case class LatLon(lat:Double, long: Double)
 
@@ -30,7 +28,7 @@ case class EnvDataSourceConfig(
                  )
 
 class EnvDataSource(config: EnvDataSourceConfig) extends DataSource[SparkSession, LatLon, Seq[JsObject]] {
-  val cache = TrieMap[String, SoftReference[Seq[DataFrame]]]()
+  private val cache = TrieMap[String, SoftReference[Seq[DataFrame]]]()
 
   def loadEnvData(spark: SparkSession, coors: Seq[(Int, (Int, Int))], names: Seq[String]): Map[String, Map[String, Double]] = {
 
@@ -118,10 +116,6 @@ class EnvDataSource(config: EnvDataSourceConfig) extends DataSource[SparkSession
   def get(spark: SparkSession, latlon: LatLon) : Seq[JsObject] =
     latlon match {
       case LatLon(lat, lon) =>
-
-        val hc = spark.sparkContext.hadoopConfiguration
-
-        val data = ListBuffer[JsObject]() // a list of concept, start_time
 
         val coors = (config.start_date.year.get to config.end_date.minusDays(1).year.get).flatMap(year => {
           latlon2rowcol(lat, lon, year) match {
