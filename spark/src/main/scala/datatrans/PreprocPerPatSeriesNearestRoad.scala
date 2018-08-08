@@ -2,7 +2,6 @@ package datatrans
 
 import java.util.concurrent.atomic.AtomicInteger
 
-import datatrans.PreprocPerPatSeriesACS.proc_pid
 import datatrans.Utils._
 import org.apache.hadoop.fs.Path
 import org.apache.spark.sql.SparkSession
