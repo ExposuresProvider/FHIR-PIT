@@ -1,5 +1,15 @@
 # spark data transformation tool #
 
+## build singularity container
+
+```
+singularity build spark.img Singularity
+```
+
+```
+singularity build spark2.img Singularity2
+```
+
 ## usage ##
 
 See `pipeline.md`
