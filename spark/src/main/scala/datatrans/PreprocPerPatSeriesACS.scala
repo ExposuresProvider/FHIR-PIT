@@ -93,7 +93,7 @@ object PreprocPerPatSeriesACS {
             println(config.output_file + " exists")
           } else {
 
-            val geoidFinder = new GeoidFinder(f"${config.geoid_data}")
+            val geoidFinder = new GeoidFinder(f"${config.geoid_data}", "15000US")
             val rows = patl.par.flatMap(pid => {
               println("processing " + count.incrementAndGet + " / " + n + " " + pid)
               proc_pid(config, spark, geoidFinder, pid)

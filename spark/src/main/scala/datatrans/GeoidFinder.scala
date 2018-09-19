@@ -15,10 +15,9 @@ import com.vividsolutions.jts.geom.Geometry
 object GeoidFinder {
   private val gf = new GeometryFactory()
   private var index = new SpatialIndexFeatureCollection()
-  private val geoidPrefix = "15000US"
 }
 
-class GeoidFinder(blockgrpShapefilePath : String)  {
+class GeoidFinder(blockgrpShapefilePath : String, geoidPrefix: String = "")  {
 
   try {
     val shp = new ShapefileHandler(blockgrpShapefilePath)
@@ -96,7 +95,7 @@ class GeoidFinder(blockgrpShapefilePath : String)  {
 
     val feature = getCensusBlockContainingPoint(p)
     val id = feature.getAttribute("GEOID").asInstanceOf[String]
-    GeoidFinder.geoidPrefix + id
+    geoidPrefix + id
 
   }
 

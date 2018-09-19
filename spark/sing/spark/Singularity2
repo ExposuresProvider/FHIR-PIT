@@ -64,7 +64,11 @@ From: spark.img
 
 %apprun latlon2rowcol
   cd /opt/datatrans/spark
-  exec python3 src/main/python/runPreprocPerPatSeriesACS.py /opt/datatrans "$@"
+  exec python3 src/main/python/runLatLonToRowCol.py /opt/datatrans "$@"
+
+%apprun latlon2fips
+  cd /opt/datatrans/spark
+  exec python3 src/main/python/runLatLonToFIPS.py /opt/datatrans "$@"
 
 %post
   cd /opt
