@@ -50,7 +50,7 @@ def run(cache_dir, cls, *args, **kwargs):
 
     cache = ":".join(["target/scala-2.11/preproc_2.11-1.0.jar"] + [filename for filename in glob.iglob(os.path.join(cache_dir, ".ivy2", "**", "*.jar"), recursive=True)])
 
-    cmd = ["scala",
+    cmd = ["java",
            "-classpath",
            cache,
            cls] + list(args)
