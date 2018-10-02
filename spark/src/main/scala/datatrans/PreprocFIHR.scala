@@ -14,6 +14,35 @@ case class PreprocFIHRConfig(
                    resc_types : Seq[String] = Seq()
                  )
 
+case class Patient(
+                  id : String,
+                  race : Seq[String],
+                  gender : String,
+                  birthDate : String,
+                  lat : Double,
+                  lon : Double
+                  )
+
+object Implicits {
+  implicit val patientReads: Reads[Patient] = new Reads[Patient] {
+    override def reads(json: JsValue): JsResult[Patient] = {
+      val resource = json \ "resource"
+      val id = (resource \ "id").as[String]
+      val extension = (resource \ "extension").as[Seq[JsValue]]
+      val race = extension.filter(json => (json \ "url").as[String] == "http://hl7.org/fhir/v3/Race").map(json => (json \ "valueString").as[String])
+      val gender = (json \ "gender").as[String]
+      val birthDate = (json \ "birthDate").as[String]
+      val geo = extension.filter(json => (json \ "url").as[String] == "http://hl7.org/fhir/StructureDefinition/geolocation")
+      assert(geo.size != 1)
+      val latlon = (geo(0) \ "extension").as[Seq[JsValue]]
+      val lat = (latlon.filter(json => (json \ "url").as[String] == "latitude")(0) \ "valueDecimal").as[Double]
+      val lon = (latlon.filter(json => (json \ "url").as[String] == "longitude")(0) \ "valueDecimal").as[Double]
+      JsSuccess(Patient(id, race, gender, birthDate, lat, lon))
+    }
+  }
+}
+
+
 object PreprocFIHR {
 
   def main(args: Array[String]) {
@@ -64,39 +93,36 @@ object PreprocFIHR {
   private def proc_pat(config: PreprocFIHRConfig, hc: Configuration, input_dir_file_system: FileSystem, output_dir_file_system: FileSystem) : Unit = {
     val count = new AtomicInteger(0)
 
-    val input_file_patient = config.input_dir + "/Patient.json"
-    val input_file_patient_path = new Path(input_file_patient)
-    val input_file_patient_input_stream = input_dir_file_system.open(input_file_patient_path)
+    val input_dir_patient = config.input_dir + "/Patient"
+    val input_dir_patient_path = new Path(input_dir_patient)
+    val itr = input_dir_file_system.listFiles(input_dir_patient_path, false)
+    while(itr.hasNext) {
+      val input_file_patient_path = itr.next().getPath()
+      val input_file_patient_input_stream = input_dir_file_system.open(input_file_patient_path)
 
-    println("loading " + input_file_patient)
+      println("loading " + input_file_patient_path.getName)
 
-    val obj = Json.parse(input_file_patient_input_stream)
-    val entry = (obj \ "entry").get.as[List[JsObject]]
-    val n = entry.size
+      val obj = Json.parse(input_file_patient_input_stream)
+      val entry = (obj \ "entry").get.as[List[JsObject]]
+      val n = entry.size
 
-    entry.par.foreach(obj1 => {
-      val resource = (obj1 \ "resource").get.as[JsObject]
-      val patient_num = (resource \ "id").get.as[String]
+      entry.par.foreach(obj1 => {
+        val resource = (obj1 \ "resource").get.as[JsObject]
+        val patient_num = (resource \ "id").get.as[String]
 
-      println("processing " + count.incrementAndGet + " / " + n + " " + patient_num)
+        println("processing " + count.incrementAndGet + " / " + n + " " + patient_num)
 
-      val output_file = config.output_dir + "/Patient/" + patient_num
-      val output_file_path = new Path(output_file)
-      if (output_dir_file_system.exists(output_file_path)) {
-        println(output_file + " exists")
-      } else {
+        val output_file = config.output_dir + "/Patient/" + patient_num
+        val output_file_path = new Path(output_file)
+        if (output_dir_file_system.exists(output_file_path)) {
+          println(output_file + " exists")
+        } else {
+          Utils.writeToFile(hc, output_file, Json.stringify(resource))
+        }
 
-        val lat = (resource \ "latitude").get.as[Double]
-        val lon = (resource \ "longitude").get.as[Double]
-        val obj2 = resource ++ Json.obj(
-          "lat" -> lat,
-          "lon" -> lon
-        )
+      })
+    }
 
-        Utils.writeToFile(hc, output_file, Json.stringify(obj2))
-      }
-
-    })
   }
 
   private def proc_resc(config: PreprocFIHRConfig, hc: Configuration, input_dir_file_system: FileSystem, resc_type: String, output_dir_file_system: FileSystem) {
@@ -125,8 +151,6 @@ object PreprocFIHR {
       if (output_dir_file_system.exists(output_file_path)) {
         println(output_file + " exists")
       } else {
-
-
         Utils.writeToFile(hc, output_file, Json.stringify(resource))
       }
 
