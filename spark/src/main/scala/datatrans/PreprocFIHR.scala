@@ -23,6 +23,17 @@ case class Patient(
                   lon : Double
                   )
 
+sealed trait Resource {
+  val id : String
+  val subjectReference : String
+}
+
+case class Condition(override val id : String, override val subjectReference : String, contextReference : String, system : String, code : String, assertedDate : String) extends Resource
+case class Encounter(override val id : String, override val subjectReference : String, code : Option[String], startDate : Option[String], endDate : Option[String]) extends Resource
+case class Labs(override val id : String, override val subjectReference : String, contextReference : String, code : String, value : Double, unit : String) extends Resource
+case class Medication(override val id : String, override val subjectReference : String) extends Resource
+case class Procedure(override val id : String, override val subjectReference : String) extends Resource
+
 object Implicits {
   implicit val patientReads: Reads[Patient] = new Reads[Patient] {
     override def reads(json: JsValue): JsResult[Patient] = {
@@ -33,13 +44,58 @@ object Implicits {
       val gender = (json \ "gender").as[String]
       val birthDate = (json \ "birthDate").as[String]
       val geo = extension.filter(json => (json \ "url").as[String] == "http://hl7.org/fhir/StructureDefinition/geolocation")
-      assert(geo.size != 1)
+      assert(geo.size == 1)
       val latlon = (geo(0) \ "extension").as[Seq[JsValue]]
       val lat = (latlon.filter(json => (json \ "url").as[String] == "latitude")(0) \ "valueDecimal").as[Double]
       val lon = (latlon.filter(json => (json \ "url").as[String] == "longitude")(0) \ "valueDecimal").as[Double]
       JsSuccess(Patient(id, race, gender, birthDate, lat, lon))
     }
   }
+  implicit val patientWrites: Writes[Patient] = Json.writes[Patient]
+  implicit val conditionReads: Reads[Condition] = new Reads[Condition] {
+    override def reads(json: JsValue): JsResult[Condition] = {
+      val resource = json \ "resource"
+      val id = (resource \ "id").as[String]
+      val subjectReference = (json \ "subject" \ "reference").as[String]
+      val contextReference = (json \ "context" \ "reference").as[String]
+      val coding = (resource \ "code" \ "coding").as[Seq[JsValue]]
+      assert(coding.size == 1)
+      val system = (coding \ "system").as[String]
+      val code = (coding \ "code").as[String]
+      val assertedDate = (resource \ "assertedDate").as[String]
+      JsSuccess(Condition(id, subjectReference, contextReference, system, code, assertedDate))
+    }
+  }
+  implicit val conditionWrites: Writes[Condition] = Json.writes[Condition]
+  implicit val encounterReads: Reads[Encounter] = new Reads[Encounter] {
+    override def reads(json: JsValue): JsResult[Encounter] = {
+      val resource = json \ "resource"
+      val id = (resource \ "id").as[String]
+      val subjectReference = (json \ "subject" \ "reference").as[String]
+      val code = (resource \ "class").toOption.map(obj => obj.as[String])
+      val period = resource \ "period"
+      val startDate = (period \ "start").asOpt[String]
+      val endDate = (period \ "end").asOpt[String]
+      JsSuccess(Encounter(id, subjectReference, code, startDate, endDate))
+    }
+  }
+  implicit val encounterWrites: Writes[Encounter] = Json.writes[Encounter]
+  implicit val labsReads: Reads[Labs] = new Reads[Labs] {
+    override def reads(json: JsValue): JsResult[Labs] = {
+      val resource = json \ "resource"
+      val id = (resource \ "id").as[String]
+      val subjectReference = (json \ "subject" \ "reference").as[String]
+      val contextReference = (json \ "context" \ "reference").as[String]
+      val coding = (resource \ "code" \ "coding").as[Seq[JsValue]]
+      assert(coding.size == 1)
+      val code = (coding \ "code").as[String]
+      val valueQuantity = resource \ "valueQuantity"
+      val value = (valueQuantity \ "value").as[Double]
+      val unit = (valueQuantity \ "unit").as[String]
+      JsSuccess(Labs(id, subjectReference, contextReference, code, value, unit))
+    }
+  }
+  implicit val labsWrites: Writes[Labs] = Json.writes[Labs]
 }
 
 
@@ -90,88 +146,96 @@ object PreprocFIHR {
 
   }
 
+  private def proc_gen(config: PreprocFIHRConfig, hc: Configuration, input_dir_file_system: FileSystem, resc_type: String, output_dir_file_system: FileSystem, proc : JsObject => Unit) : Unit = {
+    val input_dir = config.input_dir + "/" + resc_type
+    val input_dir_path = new Path(input_dir)
+    val itr = input_dir_file_system.listFiles(input_dir_path, false)
+    while(itr.hasNext) {
+      val input_file_path = itr.next().getPath()
+      val input_file_input_stream = input_dir_file_system.open(input_file_path)
+
+      println("loading " + input_file_path.getName)
+
+      val obj = Json.parse(input_file_input_stream)
+
+      if (!(obj \ "resourceType").isDefined) {
+        proc(obj)
+      } else {
+        val entry = (obj \ "entry").get.as[List[JsObject]]
+        val n = entry.size
+
+        entry.par.foreach(proc)
+      }
+    }
+  }
+
   private def proc_pat(config: PreprocFIHRConfig, hc: Configuration, input_dir_file_system: FileSystem, output_dir_file_system: FileSystem) : Unit = {
+    import Implicits._
     val count = new AtomicInteger(0)
 
-    val input_dir_patient = config.input_dir + "/Patient"
-    val input_dir_patient_path = new Path(input_dir_patient)
-    val itr = input_dir_file_system.listFiles(input_dir_patient_path, false)
-    while(itr.hasNext) {
-      val input_file_patient_path = itr.next().getPath()
-      val input_file_patient_input_stream = input_dir_file_system.open(input_file_patient_path)
+    val resc_type = "Patient"
 
-      println("loading " + input_file_patient_path.getName)
+    proc_gen(config, hc, input_dir_file_system, resc_type, output_dir_file_system, obj1 => {
+      val pat = obj1.as[Patient]
+      val patient_num = pat.id
 
-      val obj = Json.parse(input_file_patient_input_stream)
-      val entry = (obj \ "entry").get.as[List[JsObject]]
-      val n = entry.size
+      println("processing " + count.incrementAndGet + " " + patient_num)
 
-      entry.par.foreach(obj1 => {
-        val resource = (obj1 \ "resource").get.as[JsObject]
-        val patient_num = (resource \ "id").get.as[String]
-
-        println("processing " + count.incrementAndGet + " / " + n + " " + patient_num)
-
-        val output_file = config.output_dir + "/Patient/" + patient_num
-        val output_file_path = new Path(output_file)
-        if (output_dir_file_system.exists(output_file_path)) {
-          println(output_file + " exists")
-        } else {
-          Utils.writeToFile(hc, output_file, Json.stringify(resource))
-        }
-
-      })
-    }
+      val output_file = config.output_dir + "/Patient/" + patient_num
+      val output_file_path = new Path(output_file)
+      if (output_dir_file_system.exists(output_file_path)) {
+        println(output_file + " exists")
+      } else {
+        Utils.writeToFile(hc, output_file, Json.stringify(Json.toJson(pat)))
+      }
+    })
 
   }
 
   private def proc_resc(config: PreprocFIHRConfig, hc: Configuration, input_dir_file_system: FileSystem, resc_type: String, output_dir_file_system: FileSystem) {
+    import Implicits._
     val count = new AtomicInteger(0)
 
-    val input_file_resc = config.input_dir + "/" + resc_type + ".json"
-    val input_file_resc_path = new Path(input_file_resc)
-    val input_file_resc_input_stream = input_dir_file_system.open(input_file_resc_path)
+    proc_gen(config, hc, input_dir_file_system, resc_type, output_dir_file_system, obj1 => {
+      val obj : Resource = resc_type match {
+        case "Condition" =>
+          obj1.as[Condition]
+        case "Encounter" =>
+          obj1.as[Encounter]
+        case "Labs" =>
+          obj1.as[Labs]
+        case "Medication" =>
+          obj1.as[Medication]
+        case "Procedure" =>
+          obj1.as[Procedure]
+      }
 
-    println("loading " + input_file_resc)
+      val id = obj.id
+      val patient_num = obj.subjectReference.split("/")(1)
 
-    val obj = Json.parse(input_file_resc_input_stream)
-    val entry = (obj \ "entry").get.as[List[JsObject]]
-    val n = entry.size
-
-    entry.par.foreach(obj1 => {
-      val resource = (obj1 \ "resource").get.as[JsObject]
-      val id = (resource \ "id").get.as[String]
-
-      println("processing " + count.incrementAndGet + " / " + n + " " + id)
-
-      val patient_num = (resource \ "subject" \ "reference").get.as[String].split("/")(1).toInt
+      println("processing " + count.incrementAndGet + " " + id)
 
       val output_file = config.output_dir + "/" + resc_type + "/" + patient_num + "/" + id
       val output_file_path = new Path(output_file)
       if (output_dir_file_system.exists(output_file_path)) {
         println(output_file + " exists")
       } else {
-        Utils.writeToFile(hc, output_file, Json.stringify(resource))
+        Utils.writeToFile(hc, output_file, Json.stringify(obj1))
       }
 
     })
   }
 
   private def combine_pat(config: PreprocFIHRConfig, hc: Configuration, input_dir_file_system: FileSystem, output_dir_file_system: FileSystem) {
-    val input_dir = config.output_dir + "/Patient"
-    val input_dir_path = new Path(input_dir)
-
+    import Implicits._
     val count = new AtomicInteger(0)
 
-    val input_file_iter = output_dir_file_system.listFiles(input_dir_path, false)
-    while(input_file_iter.hasNext) {
+    val resc_type = "Patient"
 
-      val input_file_status = input_file_iter.next()
-      val input_file_path = input_file_status.getPath
-      val input_file_input_stream = output_dir_file_system.open(input_file_path)
-      var obj = Json.parse(input_file_input_stream).as[JsObject]
+    proc_gen(config, hc, input_dir_file_system, resc_type, output_dir_file_system, obj1 => {
+      val pat = obj1.as[Patient]
+      val patient_num = pat.id
 
-      val patient_num = input_file_path.getName
       println("processing " + count.incrementAndGet + " " + patient_num)
 
       config.resc_types.foreach(resc_type => {
@@ -187,7 +251,7 @@ object PreprocFIHR {
             val obj_resc = Json.parse(input_resc_file_input_stream)
             arr +:= obj_resc
           }
-          obj ++= Json.obj(
+          obj1 ++= Json.obj(
             resc_type -> arr
           )
         }
@@ -198,10 +262,10 @@ object PreprocFIHR {
       if (output_dir_file_system.exists(output_file_path)) {
         println(output_file + " exists")
       } else {
-        Utils.writeToFile(hc, output_file, Json.stringify(obj))
+        Utils.writeToFile(hc, output_file, Json.stringify(obj1))
       }
 
-    }
+    })
 
   }
 
