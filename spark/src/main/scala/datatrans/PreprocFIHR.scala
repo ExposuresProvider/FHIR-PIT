@@ -226,13 +226,13 @@ object PreprocFIHR {
           case "Condition" =>
             Json.toJson(obj.asInstanceOf[Condition])
           case "Encounter" =>
-            Json.toJson(obj1.asInstanceOf[Encounter])
+            Json.toJson(obj.asInstanceOf[Encounter])
           case "Labs" =>
-            Json.toJson(obj1.asInstanceOf[Labs])
+            Json.toJson(obj.asInstanceOf[Labs])
           case "Medication" =>
-            Json.toJson(obj1.asInstanceOf[Medication])
+            Json.toJson(obj.asInstanceOf[Medication])
           case "Procedure" =>
-            Json.toJson(obj1.asInstanceOf[Procedure])
+            Json.toJson(obj.asInstanceOf[Procedure])
         }
 
         Utils.writeToFile(hc, output_file, Json.stringify(obj2))
