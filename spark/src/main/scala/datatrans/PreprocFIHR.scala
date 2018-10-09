@@ -72,7 +72,7 @@ object Implicits {
       val resource = json \ "resource"
       val id = (resource \ "id").as[String]
       val subjectReference = (resource \ "subject" \ "reference").as[String]
-      val code = (resource \ "class").toOption.map(obj => obj.as[String])
+      val code = (resource \ "class").toOption.map(obj => (obj \ "code").as[String])
       val period = resource \ "period"
       val startDate = (period \ "start").asOpt[String]
       val endDate = (period \ "end").asOpt[String]
