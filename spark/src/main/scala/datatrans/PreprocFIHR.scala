@@ -31,8 +31,8 @@ sealed trait Resource {
 case class Condition(override val id : String, override val subjectReference : String, contextReference : String, system : String, code : String, assertedDate : String) extends Resource
 case class Encounter(override val id : String, override val subjectReference : String, code : Option[String], startDate : Option[String], endDate : Option[String]) extends Resource
 case class Labs(override val id : String, override val subjectReference : String, contextReference : String, code : String, value : Double, unit : String) extends Resource
-case class Medication(override val id : String, override val subjectReference : String) extends Resource
-case class Procedure(override val id : String, override val subjectReference : String) extends Resource
+case class Medication(override val id : String, override val subjectReference : String, contextReference : String, medication : String, authoredOn : String) extends Resource
+case class Procedure(override val id : String, override val subjectReference : String, contextReference : String, system : String, code : String, performedDateTime : String) extends Resource
 
 object Implicits {
   implicit val patientReads: Reads[Patient] = new Reads[Patient] {
@@ -60,8 +60,8 @@ object Implicits {
       val contextReference = (json \ "context" \ "reference").as[String]
       val coding = (resource \ "code" \ "coding").as[Seq[JsValue]]
       assert(coding.size == 1)
-      val system = (coding \ "system").as[String]
-      val code = (coding \ "code").as[String]
+      val system = (coding(0) \ "system").as[String]
+      val code = (coding(0) \ "code").as[String]
       val assertedDate = (resource \ "assertedDate").as[String]
       JsSuccess(Condition(id, subjectReference, contextReference, system, code, assertedDate))
     }
@@ -88,7 +88,7 @@ object Implicits {
       val contextReference = (json \ "context" \ "reference").as[String]
       val coding = (resource \ "code" \ "coding").as[Seq[JsValue]]
       assert(coding.size == 1)
-      val code = (coding \ "code").as[String]
+      val code = (coding(0) \ "code").as[String]
       val valueQuantity = resource \ "valueQuantity"
       val value = (valueQuantity \ "value").as[Double]
       val unit = (valueQuantity \ "unit").as[String]
@@ -96,6 +96,33 @@ object Implicits {
     }
   }
   implicit val labsWrites: Writes[Labs] = Json.writes[Labs]
+  implicit val medicationReads: Reads[Medication] = new Reads[Medication] {
+    override def reads(json: JsValue): JsResult[Medication] = {
+      val resource = json \ "resource"
+      val id = (resource \ "id").as[String]
+      val subjectReference = (json \ "subject" \ "reference").as[String]
+      val contextReference = (json \ "context" \ "reference").as[String]
+      val medication = (resource \ "medicationReference" \ "reference").as[String]
+      val authoredOn = (resource \ "authoredOn").as[String]
+      JsSuccess(Medication(id, subjectReference, contextReference, medication, authoredOn))
+    }
+  }
+  implicit val medicationWrites: Writes[Medication] = Json.writes[Medication]
+  implicit val procedureReads: Reads[Procedure] = new Reads[Procedure] {
+    override def reads(json: JsValue): JsResult[Procedure] = {
+      val resource = json \ "resource"
+      val id = (resource \ "id").as[String]
+      val subjectReference = (json \ "subject" \ "reference").as[String]
+      val contextReference = (json \ "context" \ "reference").as[String]
+      val coding = (resource \ "code" \ "coding").as[Seq[JsValue]]
+      assert(coding.size == 1)
+      val system = (coding(0) \ "system").as[String]
+      val code = (coding(0) \ "code").as[String]
+      val performedDateTime = (resource \ "performedDateTime").as[String]
+      JsSuccess(Procedure(id, subjectReference, contextReference, system, code, performedDateTime))
+    }
+  }
+  implicit val procedureWrites: Writes[Procedure] = Json.writes[Procedure]
 }
 
 
@@ -159,7 +186,7 @@ object PreprocFIHR {
       val obj = Json.parse(input_file_input_stream)
 
       if (!(obj \ "resourceType").isDefined) {
-        proc(obj)
+        proc(obj.as[JsObject])
       } else {
         val entry = (obj \ "entry").get.as[List[JsObject]]
         val n = entry.size
@@ -232,7 +259,8 @@ object PreprocFIHR {
 
     val resc_type = "Patient"
 
-    proc_gen(config, hc, input_dir_file_system, resc_type, output_dir_file_system, obj1 => {
+    proc_gen(config, hc, input_dir_file_system, resc_type, output_dir_file_system, obj => {
+      var obj1 = obj
       val pat = obj1.as[Patient]
       val patient_num = pat.id
 
