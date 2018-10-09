@@ -41,8 +41,8 @@ object Implicits {
       val id = (resource \ "id").as[String]
       val extension = (resource \ "extension").as[Seq[JsValue]]
       val race = extension.filter(json => (json \ "url").as[String] == "http://hl7.org/fhir/v3/Race").map(json => (json \ "valueString").as[String])
-      val gender = (json \ "gender").as[String]
-      val birthDate = (json \ "birthDate").as[String]
+      val gender = (resource \ "gender").as[String]
+      val birthDate = (resource \ "birthDate").as[String]
       val geo = extension.filter(json => (json \ "url").as[String] == "http://hl7.org/fhir/StructureDefinition/geolocation")
       assert(geo.size == 1)
       val latlon = (geo(0) \ "extension").as[Seq[JsValue]]
@@ -84,8 +84,8 @@ object Implicits {
     override def reads(json: JsValue): JsResult[Labs] = {
       val resource = json \ "resource"
       val id = (resource \ "id").as[String]
-      val subjectReference = (json \ "subject" \ "reference").as[String]
-      val contextReference = (json \ "context" \ "reference").as[String]
+      val subjectReference = (resource \ "subject" \ "reference").as[String]
+      val contextReference = (resource \ "context" \ "reference").as[String]
       val coding = (resource \ "code" \ "coding").as[Seq[JsValue]]
       assert(coding.size == 1)
       val code = (coding(0) \ "code").as[String]
@@ -100,8 +100,8 @@ object Implicits {
     override def reads(json: JsValue): JsResult[Medication] = {
       val resource = json \ "resource"
       val id = (resource \ "id").as[String]
-      val subjectReference = (json \ "subject" \ "reference").as[String]
-      val contextReference = (json \ "context" \ "reference").as[String]
+      val subjectReference = (resource \ "subject" \ "reference").as[String]
+      val contextReference = (resource \ "context" \ "reference").as[String]
       val medication = (resource \ "medicationReference" \ "reference").as[String]
       val authoredOn = (resource \ "authoredOn").as[String]
       JsSuccess(Medication(id, subjectReference, contextReference, medication, authoredOn))
@@ -112,8 +112,8 @@ object Implicits {
     override def reads(json: JsValue): JsResult[Procedure] = {
       val resource = json \ "resource"
       val id = (resource \ "id").as[String]
-      val subjectReference = (json \ "subject" \ "reference").as[String]
-      val contextReference = (json \ "context" \ "reference").as[String]
+      val subjectReference = (resource \ "subject" \ "reference").as[String]
+      val contextReference = (resource \ "context" \ "reference").as[String]
       val coding = (resource \ "code" \ "coding").as[Seq[JsValue]]
       assert(coding.size == 1)
       val system = (coding(0) \ "system").as[String]
