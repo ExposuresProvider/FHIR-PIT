@@ -247,7 +247,20 @@ object PreprocFIHR {
       if (output_dir_file_system.exists(output_file_path)) {
         println(output_file + " exists")
       } else {
-        Utils.writeToFile(hc, output_file, Json.stringify(obj1))
+        val obj2 : JsValue = resc_type match {
+          case "Condition" =>
+            Json.toJson(obj.asInstanceOf[Condition])
+          case "Encounter" =>
+            Json.toJson(obj1.asInstanceOf[Encounter])
+          case "Labs" =>
+            Json.toJson(obj1.asInstanceOf[Labs])
+          case "Medication" =>
+            Json.toJson(obj1.asInstanceOf[Medication])
+          case "Procedure" =>
+            Json.toJson(obj1.asInstanceOf[Procedure])
+        }
+
+        Utils.writeToFile(hc, output_file, Json.stringify(obj2))
       }
 
     })
@@ -266,6 +279,8 @@ object PreprocFIHR {
 
       println("processing " + count.incrementAndGet + " " + patient_num)
 
+      var obj_pat = Json.toJson(pat).as[JsObject]
+
       config.resc_types.foreach(resc_type => {
         var arr = Json.arr()
         val input_resc_dir = config.output_dir + "/" + resc_type + "/" + patient_num
@@ -279,7 +294,7 @@ object PreprocFIHR {
             val obj_resc = Json.parse(input_resc_file_input_stream)
             arr +:= obj_resc
           }
-          obj1 ++= Json.obj(
+          obj_pat ++= Json.obj(
             resc_type -> arr
           )
         }
@@ -290,7 +305,7 @@ object PreprocFIHR {
       if (output_dir_file_system.exists(output_file_path)) {
         println(output_file + " exists")
       } else {
-        Utils.writeToFile(hc, output_file, Json.stringify(obj1))
+        Utils.writeToFile(hc, output_file, Json.stringify(obj_pat))
       }
 
     })
