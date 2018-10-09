@@ -56,8 +56,8 @@ object Implicits {
     override def reads(json: JsValue): JsResult[Condition] = {
       val resource = json \ "resource"
       val id = (resource \ "id").as[String]
-      val subjectReference = (json \ "subject" \ "reference").as[String]
-      val contextReference = (json \ "context" \ "reference").as[String]
+      val subjectReference = (resource \ "subject" \ "reference").as[String]
+      val contextReference = (resource \ "context" \ "reference").as[String]
       val coding = (resource \ "code" \ "coding").as[Seq[JsValue]]
       assert(coding.size == 1)
       val system = (coding(0) \ "system").as[String]
@@ -71,7 +71,7 @@ object Implicits {
     override def reads(json: JsValue): JsResult[Encounter] = {
       val resource = json \ "resource"
       val id = (resource \ "id").as[String]
-      val subjectReference = (json \ "subject" \ "reference").as[String]
+      val subjectReference = (resource \ "subject" \ "reference").as[String]
       val code = (resource \ "class").toOption.map(obj => obj.as[String])
       val period = resource \ "period"
       val startDate = (period \ "start").asOpt[String]
