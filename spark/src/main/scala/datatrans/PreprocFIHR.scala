@@ -156,8 +156,6 @@ object PreprocFIHR {
           val output_dir_path = new Path(config.output_dir)
           val output_dir_file_system = output_dir_path.getFileSystem(hc)
 
-          println("processing Patient")
-          proc_pat(config, hc, input_dir_file_system, output_dir_file_system)
           println("processing Resources")
           config.resc_types.foreach(resc_type => proc_resc(config, hc, input_dir_file_system, resc_type, output_dir_file_system))
           println("combining Patient")
@@ -194,29 +192,6 @@ object PreprocFIHR {
         entry.par.foreach(proc)
       }
     }
-  }
-
-  private def proc_pat(config: PreprocFIHRConfig, hc: Configuration, input_dir_file_system: FileSystem, output_dir_file_system: FileSystem) : Unit = {
-    import Implicits._
-    val count = new AtomicInteger(0)
-
-    val resc_type = "Patient"
-
-    proc_gen(config, hc, input_dir_file_system, resc_type, output_dir_file_system, obj1 => {
-      val pat = obj1.as[Patient]
-      val patient_num = pat.id
-
-      println("processing " + count.incrementAndGet + " " + patient_num)
-
-      val output_file = config.output_dir + "/Patient/" + patient_num
-      val output_file_path = new Path(output_file)
-      if (output_dir_file_system.exists(output_file_path)) {
-        println(output_file + " exists")
-      } else {
-        Utils.writeToFile(hc, output_file, Json.stringify(Json.toJson(pat)))
-      }
-    })
-
   }
 
   private def proc_resc(config: PreprocFIHRConfig, hc: Configuration, input_dir_file_system: FileSystem, resc_type: String, output_dir_file_system: FileSystem) {
