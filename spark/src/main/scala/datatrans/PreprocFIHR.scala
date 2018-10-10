@@ -39,8 +39,8 @@ case class Medication(override val id : String, override val subjectReference : 
 case class Procedure(override val id : String, override val subjectReference : String, contextReference : String, system : String, code : String, performedDateTime : String) extends Resource
 
 abstract class Value
-case class ValueQuantity(value : Double, unit : Option[String]) extends Value
-case class ValueString(value: String) extends Value
+case class ValueQuantity(valueNumber : Double, unit : Option[String]) extends Value
+case class ValueString(valueText: String) extends Value
 
 object Implicits {
   implicit val valueWrites: Writes[Value] = new Writes[Value] {
