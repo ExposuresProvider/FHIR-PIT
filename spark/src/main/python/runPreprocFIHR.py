@@ -15,7 +15,7 @@ if replace_pat:
 args.extend(sys.argv[8:])
 
 submit(host_name, cache_dir, "datatrans.PreprocFIHR",
-           "--input_dir={0}".format(patient_dimension),
+           "--input_dir=" + input_dir,
            "--resc_types=" + resc_types,
            "--skip_preproc" + skip_preproc,
            "--output_dir=" + output_dir, *args)
