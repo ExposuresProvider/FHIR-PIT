@@ -252,7 +252,7 @@ object PreprocFIHR {
       val pat = obj1.as[Patient]
       val patient_num = pat.id
 
-      println("processing " + count.incrementAndGet + " " + patient_num)
+      println("processing " + resc_type + " " + count.incrementAndGet + " " + patient_num)
 
       val output_file = config.output_dir + "/" + patient_num
       val output_file_path = new Path(output_file)
