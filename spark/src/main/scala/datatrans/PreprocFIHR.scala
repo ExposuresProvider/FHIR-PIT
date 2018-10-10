@@ -11,19 +11,21 @@ import java.util.Base64
 import java.nio.charset.StandardCharsets
 
 case class PreprocFIHRConfig(
-                   input_dir : String = "",
-                   output_dir : String = "",
-                   resc_types : Seq[String] = Seq()
-                 )
+  input_dir : String = "",
+  output_dir : String = "",
+  resc_types : Seq[String] = Seq(),
+  skip_preproc : Seq[String] = Seq(),
+  replace_pat : Boolean = false
+)
 
 case class Patient(
-                  id : String,
-                  race : Seq[String],
-                  gender : String,
-                  birthDate : String,
-                  lat : Double,
-                  lon : Double
-                  )
+  id : String,
+  race : Seq[String],
+  gender : String,
+  birthDate : String,
+  lat : Double,
+  lon : Double
+)
 
 sealed trait Resource {
   val id : String
@@ -32,7 +34,7 @@ sealed trait Resource {
 
 case class Condition(override val id : String, override val subjectReference : String, contextReference : String, system : String, code : String, assertedDate : String) extends Resource
 case class Encounter(override val id : String, override val subjectReference : String, code : Option[String], startDate : Option[String], endDate : Option[String]) extends Resource
-case class Labs(override val id : String, override val subjectReference : String, contextReference : String, code : String, value : Double, unit : String) extends Resource
+case class Labs(override val id : String, override val subjectReference : String, contextReference : String, code : String, value : String) extends Resource
 case class Medication(override val id : String, override val subjectReference : String, contextReference : String, medication : String, authoredOn : String) extends Resource
 case class Procedure(override val id : String, override val subjectReference : String, contextReference : String, system : String, code : String, performedDateTime : String) extends Resource
 
@@ -92,9 +94,8 @@ object Implicits {
       assert(coding.size == 1)
       val code = (coding(0) \ "code").as[String]
       val valueQuantity = resource \ "valueQuantity"
-      val value = (valueQuantity \ "value").as[Double]
-      val unit = (valueQuantity \ "unit").as[String]
-      JsSuccess(Labs(id, subjectReference, contextReference, code, value, unit))
+      val value = (valueQuantity \ "value").as[String]
+      JsSuccess(Labs(id, subjectReference, contextReference, code, value))
     }
   }
   implicit val labsWrites: Writes[Labs] = Json.writes[Labs]
@@ -136,6 +137,8 @@ object PreprocFIHR {
       opt[String]("input_dir").required.action((x,c) => c.copy(input_dir = x))
       opt[String]("output_dir").required.action((x,c) => c.copy(output_dir = x))
       opt[Seq[String]]("resc_types").required.action((x,c) => c.copy(resc_types = x))
+      opt[Seq[String]]("skip_preproc").required.action((x,c) => c.copy(skip_preproc = x))
+      opt[Unit]("replace_pat").required.action((x,c) => c.copy(replace_pat = true))
     }
 
     val spark = SparkSession.builder().appName("datatrans preproc").getOrCreate()
@@ -200,50 +203,52 @@ object PreprocFIHR {
   }
 
   private def proc_resc(config: PreprocFIHRConfig, hc: Configuration, input_dir_file_system: FileSystem, resc_type: String, output_dir_file_system: FileSystem) {
-    import Implicits._
-    val count = new AtomicInteger(0)
+    if (!config.skip_preproc.contains(resc_type)) {
+      import Implicits._
+      val count = new AtomicInteger(0)
 
-    proc_gen(config, hc, input_dir_file_system, resc_type, output_dir_file_system, obj1 => {
-      val obj : Resource = resc_type match {
-        case "Condition" =>
-          obj1.as[Condition]
-        case "Encounter" =>
-          obj1.as[Encounter]
-        case "Labs" =>
-          obj1.as[Labs]
-        case "Medication" =>
-          obj1.as[Medication]
-        case "Procedure" =>
-          obj1.as[Procedure]
-      }
-
-      val id = obj.id
-      val patient_num = obj.subjectReference.split("/")(1)
-
-      println("processing " + resc_type + " " + count.incrementAndGet + " " + id)
-
-      val output_file = config.output_dir + "/" + resc_type + "/" + patient_num + "/" + encodePath(id)
-      val output_file_path = new Path(output_file)
-      if (output_dir_file_system.exists(output_file_path)) {
-        println(output_file + " exists")
-      } else {
-        val obj2 : JsValue = resc_type match {
+      proc_gen(config, hc, input_dir_file_system, resc_type, output_dir_file_system, obj1 => {
+        val obj : Resource = resc_type match {
           case "Condition" =>
-            Json.toJson(obj.asInstanceOf[Condition])
+            obj1.as[Condition]
           case "Encounter" =>
-            Json.toJson(obj.asInstanceOf[Encounter])
+            obj1.as[Encounter]
           case "Labs" =>
-            Json.toJson(obj.asInstanceOf[Labs])
+            obj1.as[Labs]
           case "Medication" =>
-            Json.toJson(obj.asInstanceOf[Medication])
+            obj1.as[Medication]
           case "Procedure" =>
-            Json.toJson(obj.asInstanceOf[Procedure])
+            obj1.as[Procedure]
         }
 
-        Utils.writeToFile(hc, output_file, Json.stringify(obj2))
-      }
+        val id = obj.id
+        val patient_num = obj.subjectReference.split("/")(1)
 
-    })
+        println("processing " + resc_type + " " + count.incrementAndGet + " " + id)
+
+        val output_file = config.output_dir + "/" + resc_type + "/" + patient_num + "/" + encodePath(id)
+        val output_file_path = new Path(output_file)
+        if (output_dir_file_system.exists(output_file_path)) {
+          println(output_file + " exists")
+        } else {
+          val obj2 : JsValue = resc_type match {
+            case "Condition" =>
+              Json.toJson(obj.asInstanceOf[Condition])
+            case "Encounter" =>
+              Json.toJson(obj.asInstanceOf[Encounter])
+            case "Labs" =>
+              Json.toJson(obj.asInstanceOf[Labs])
+            case "Medication" =>
+              Json.toJson(obj.asInstanceOf[Medication])
+            case "Procedure" =>
+              Json.toJson(obj.asInstanceOf[Procedure])
+          }
+
+          Utils.writeToFile(hc, output_file, Json.stringify(obj2))
+        }
+
+      })
+    }
   }
 
   private def combine_pat(config: PreprocFIHRConfig, hc: Configuration, input_dir_file_system: FileSystem, output_dir_file_system: FileSystem) {
@@ -261,7 +266,7 @@ object PreprocFIHR {
 
       val output_file = config.output_dir + "/" + patient_num
       val output_file_path = new Path(output_file)
-      if (output_dir_file_system.exists(output_file_path)) {
+      if (!config.replace_pat && output_dir_file_system.exists(output_file_path)) {
         println(output_file + " exists")
       } else {
         var obj_pat = Json.toJson(pat).as[JsObject]
