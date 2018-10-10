@@ -46,8 +46,8 @@ object Implicits {
   implicit val valueWrites: Writes[Value] = new Writes[Value] {
     override def writes(v : Value) =
       v match {
-        case vq : ValueQuantity => Json.toJson(vq)
-        case vs : ValueString => Json.toJson(vs)
+        case vq : ValueQuantity => Json.toJson(vq.asInstanceOf[ValueQuantity])
+        case vs : ValueString => Json.toJson(vs.asInstanceOf[ValueString])
       }
   }
   implicit val valueQuantityWrites: Writes[ValueQuantity] = Json.writes[ValueQuantity]
