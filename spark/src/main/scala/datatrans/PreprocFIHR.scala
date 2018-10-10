@@ -34,7 +34,7 @@ sealed trait Resource {
 
 case class Condition(override val id : String, override val subjectReference : String, contextReference : String, system : String, code : String, assertedDate : String) extends Resource
 case class Encounter(override val id : String, override val subjectReference : String, code : Option[String], startDate : Option[String], endDate : Option[String]) extends Resource
-case class Labs(override val id : String, override val subjectReference : String, contextReference : String, code : String, value : Double, unit : Option[String]) extends Resource
+case class Labs(override val id : String, override val subjectReference : String, contextReference : String, code : String, value : Option[Double], unit : Option[String], valueString: Option[String]) extends Resource
 case class Medication(override val id : String, override val subjectReference : String, contextReference : String, medication : String, authoredOn : String) extends Resource
 case class Procedure(override val id : String, override val subjectReference : String, contextReference : String, system : String, code : String, performedDateTime : String) extends Resource
 
@@ -94,9 +94,10 @@ object Implicits {
       assert(coding.size == 1)
       val code = (coding(0) \ "code").as[String]
       val valueQuantity = resource \ "valueQuantity"
-      val value = (valueQuantity \ "value").as[Double]
+      val value = (valueQuantity \ "value").asOpt[Double]
       val unit = (valueQuantity \ "code").asOpt[String]
-      JsSuccess(Labs(id, subjectReference, contextReference, code, value, unit))
+      val valueString = (resource \ "valueString").asOpt[String]
+      JsSuccess(Labs(id, subjectReference, contextReference, code, value, unit, valueString))
     }
   }
   implicit val labsWrites: Writes[Labs] = Json.writes[Labs]
