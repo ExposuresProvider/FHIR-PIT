@@ -7,6 +7,8 @@ import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.SparkSession
 import play.api.libs.json._
 import scopt._
+import java.util.Base64
+import java.nio.charset.StandardCharsets
 
 case class PreprocFIHRConfig(
                    input_dir : String = "",
@@ -166,10 +168,13 @@ object PreprocFIHR {
     }
 
 
-  spark.stop()
+    spark.stop()
 
 
   }
+
+  private def encodePath(a: String) : String =
+    Base64.getEncoder.encodeToString(a.getBytes(StandardCharsets.UTF_8))
 
   private def proc_gen(config: PreprocFIHRConfig, hc: Configuration, input_dir_file_system: FileSystem, resc_type: String, output_dir_file_system: FileSystem, proc : JsObject => Unit) : Unit = {
     val input_dir = config.input_dir + "/" + resc_type
@@ -217,7 +222,7 @@ object PreprocFIHR {
 
       println("processing " + resc_type + " " + count.incrementAndGet + " " + id)
 
-      val output_file = config.output_dir + "/" + resc_type + "/" + patient_num + "/" + id
+      val output_file = config.output_dir + "/" + resc_type + "/" + patient_num + "/" + encodePath(id)
       val output_file_path = new Path(output_file)
       if (output_dir_file_system.exists(output_file_path)) {
         println(output_file + " exists")
