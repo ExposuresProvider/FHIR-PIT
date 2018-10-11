@@ -198,8 +198,7 @@ object PreprocFIHR {
     val n = resc_count(config, hc, input_dir_file_system, resc_type)
 
     proc_gen(config, hc, input_dir_file_system, resc_type, output_dir_file_system, obj => {
-      var obj1 = obj
-      val pat = obj1.as[Patient]
+      val pat = obj.as[Patient]
       val patient_num = pat.id
 
       println("processing " + resc_type + " " + count.incrementAndGet + " / " + n + " " + patient_num)
