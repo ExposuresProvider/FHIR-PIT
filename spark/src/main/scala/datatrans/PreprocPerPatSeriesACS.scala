@@ -68,40 +68,25 @@ object PreprocPerPatSeriesACS {
         time {
 
           val hc = spark.sparkContext.hadoopConfiguration
-          val pddf0 = config.patient_dimension match {
-            case Some(pd) =>
-              println("loading patient_dimension from " + pd)
-          
-              spark.read.format("csv").option("header", value = true).load(pd)
-            case None =>
-              import spark.implicits._
-              val input_file = config.time_series
-              val input_file_path = new Path(input_file)
-              val input_file_file_system = input_file_path.getFileSystem(hc)
-              val files = input_file_file_system.listStatus(input_file_path, new PathFilter {
-                override def accept(path: Path) : Boolean = input_file_file_system.isFile(path)
-              }).map(fs => fs.getPath.getName)
-              files.toSeq.toDF("patient_num")
-
-          }
-          val patl = pddf0.select("patient_num").map(r => r.getString(0)).collect.toList
-
-          val count = new AtomicInteger(0)
-          val n = patl.size
           val output_file_path = new Path(config.output_file)
           val output_file_file_system = output_file_path.getFileSystem(hc)
 
           if(output_file_file_system.exists(output_file_path)) {
             println(config.output_file + " exists")
           } else {
+            val pddf0 = patientDimension(spark, hc, config.patient_dimension, config.time_series)
+            val patl = pddf0.select("patient_num").map(r => r.getString(0))
+
+            val count = new AtomicInteger(0)
+            val n = patl.count()
 
             val geoidFinder = new GeoidFinder(f"${config.geoid_data}", "15000US")
-            val rows = patl.par.flatMap(pid => {
+            val rows = patl.flatMap(pid => {
               println("processing " + count.incrementAndGet + " / " + n + " " + pid)
               proc_pid(config, spark, geoidFinder, pid)
             })
 
-            val df = rows.toList.toDF("patient_num", "GEOID")
+            val df = rows.toDF("patient_num", "GEOID")
 
             val acs_df = spark.read.format("csv").option("header", value = true).load(f"${config.acs_data}")
 
@@ -110,14 +95,11 @@ object PreprocPerPatSeriesACS {
             writeDataframe(hc, config.output_file, table)
           }
 
-
         }
       case None =>
     }
 
-
-  spark.stop()
-
+    spark.stop()
 
   }
 

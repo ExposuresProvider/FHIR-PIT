@@ -360,4 +360,23 @@ object Utils {
     }
   }
 
+  def patientDimension(spark: SparkSession, hc: Configuration, patient_dimension: Option[String], time_series: String) = {
+    patient_dimension match {
+      case Some(pd) =>
+        println("loading patient_dimension from " + pd)
+
+        spark.read.format("csv").option("header", value = true).load(pd)
+      case None =>
+        import spark.implicits._
+        val input_file = time_series
+        val input_file_path = new Path(input_file)
+        val input_file_file_system = input_file_path.getFileSystem(hc)
+        val files = input_file_file_system.listStatus(input_file_path, new PathFilter {
+          override def accept(path: Path) : Boolean = input_file_file_system.isFile(path)
+        }).map(fs => fs.getPath.getName)
+        files.toSeq.toDF("patient_num")
+    }
+  }
+
+
 }
