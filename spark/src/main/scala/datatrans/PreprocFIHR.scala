@@ -15,7 +15,8 @@ case class PreprocFIHRConfig(
   output_dir : String = "",
   resc_types : Seq[String] = Seq(),
   skip_preproc : Seq[String] = Seq(),
-  replace_pat : Boolean = false
+  replace_pat : Boolean = false,
+  verify_dups: Boolean = false
 )
 
 case class Patient(
@@ -159,7 +160,8 @@ object PreprocFIHR {
       opt[String]("output_dir").required.action((x,c) => c.copy(output_dir = x))
       opt[Seq[String]]("resc_types").required.action((x,c) => c.copy(resc_types = x))
       opt[Seq[String]]("skip_preproc").required.action((x,c) => c.copy(skip_preproc = x))
-      opt[Unit]("replace_pat").required.action((x,c) => c.copy(replace_pat = true))
+      opt[Unit]("replace_pat").action((x,c) => c.copy(replace_pat = true))
+      opt[Unit]("verify_dups").action((x,c) => c.copy(verify_dups = true))
     }
 
     val spark = SparkSession.builder().appName("datatrans preproc").getOrCreate()
@@ -250,10 +252,8 @@ object PreprocFIHR {
 
         val output_file = config.output_dir + "/" + resc_type + "/" + patient_num + "/" + encodePath(id)
         val output_file_path = new Path(output_file)
-        if (output_dir_file_system.exists(output_file_path)) {
-          println(output_file + " exists")
-        } else {
-          val obj2 : JsValue = resc_type match {
+        def parseFile : JsValue =
+          resc_type match {
             case "Condition" =>
               Json.toJson(obj.asInstanceOf[Condition])
             case "Encounter" =>
@@ -265,8 +265,22 @@ object PreprocFIHR {
             case "Procedure" =>
               Json.toJson(obj.asInstanceOf[Procedure])
           }
-
+        def writeFile(obj2 : JsValue) : Unit =
           Utils.writeToFile(hc, output_file, Json.stringify(obj2))
+        
+        if (output_dir_file_system.exists(output_file_path)) {
+          println(output_file + " exists")
+          if (config.verify_dups) {
+            val output_file_input_stream = output_dir_file_system.open(output_file_path)
+            val obj3 = Json.parse(output_file_input_stream)
+            val obj2 = parseFile
+            if(obj3 != obj2) {
+              throw new RuntimeException("differet objects share the same id " + obj3 + obj2)
+            }
+          }
+        } else {
+          val obj2 = parseFile
+          writeFile(obj2)
         }
 
       })
