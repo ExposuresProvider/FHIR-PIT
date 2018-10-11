@@ -271,11 +271,18 @@ object PreprocFIHR {
         if (output_dir_file_system.exists(output_file_path)) {
           println(output_file + " exists")
           if (config.verify_dups) {
-            val output_file_input_stream = output_dir_file_system.open(output_file_path)
-            val obj3 = Json.parse(output_file_input_stream)
-            val obj2 = parseFile
-            if(obj3 != obj2) {
-              throw new RuntimeException("differet objects share the same id " + obj3 + obj2)
+            try {
+              val output_file_input_stream = output_dir_file_system.open(output_file_path)
+              val obj3 = Json.parse(output_file_input_stream)
+              val obj2 = parseFile
+              if(obj3 != obj2) {
+                throw new RuntimeException("differet objects share the same id " + obj3 + obj2)
+              }
+            } catch {
+              case e: Exception =>
+                println("caught exception while verifying dups: " + e)
+                val obj2 = parseFile
+                writeFile(obj2)
             }
           }
         } else {
