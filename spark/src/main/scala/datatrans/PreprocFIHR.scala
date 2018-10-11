@@ -275,19 +275,17 @@ object PreprocFIHR {
           println(output_file + " exists")
           if (config.verify_dups) {
             var duplicate = false
-            var obj3 = null
-            var obj2 = null
+            var obj3 : JsValue = null
+            val obj2 = parseFile
             try {
               val output_file_input_stream = output_dir_file_system.open(output_file_path)
               obj3 = Json.parse(output_file_input_stream)
-              obj2 = parseFile
               if(obj3 != obj2) {
                 duplicate = true
               }
             } catch {
               case e: Exception =>
                 println("caught exception while verifying dups: " + e + ".\n overwriting file " + output_file)
-                val obj2 = parseFile
                 writeFile(obj2)
             }
             if(duplicate) {
