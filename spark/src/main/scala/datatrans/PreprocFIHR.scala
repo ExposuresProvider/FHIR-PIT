@@ -36,7 +36,7 @@ sealed trait Resource {
 case class Condition(override val id : String, override val subjectReference : String, contextReference : String, system : String, code : String, assertedDate : String) extends Resource
 case class Encounter(override val id : String, override val subjectReference : String, code : Option[String], startDate : Option[String], endDate : Option[String]) extends Resource
 case class Labs(override val id : String, override val subjectReference : String, contextReference : String, code : String, value : Value) extends Resource
-case class Medication(override val id : String, override val subjectReference : String, contextReference : String, medication : String, authoredOn : String) extends Resource
+case class Medication(override val id : String, override val subjectReference : String, contextReference : String, medication : String, authoredOn : String, start: String, end: Option[String]) extends Resource
 case class Procedure(override val id : String, override val subjectReference : String, contextReference : String, system : String, code : String, performedDateTime : String) extends Resource
 
 abstract class Value
@@ -129,7 +129,10 @@ object Implicits {
       val contextReference = (resource \ "context" \ "reference").as[String]
       val medication = (resource \ "medicationReference" \ "reference").as[String]
       val authoredOn = (resource \ "authoredOn").as[String]
-      JsSuccess(Medication(id, subjectReference, contextReference, medication, authoredOn))
+      val validityPeriod = resource \ "dispenseRequest" \ "validityPeriod"
+      val start = (validityPeriod \ "start").as[String]
+      val end = (validityPeriod \ "end").asOpt[String]
+      JsSuccess(Medication(id, subjectReference, contextReference, medication, authoredOn, start, end))
     }
   }
   implicit val medicationWrites: Writes[Medication] = Json.writes[Medication]
