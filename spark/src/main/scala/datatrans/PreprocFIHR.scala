@@ -279,8 +279,8 @@ object PreprocFIHR {
             var obj2 = null
             try {
               val output_file_input_stream = output_dir_file_system.open(output_file_path)
-              val obj3 = Json.parse(output_file_input_stream)
-              val obj2 = parseFile
+              obj3 = Json.parse(output_file_input_stream)
+              obj2 = parseFile
               if(obj3 != obj2) {
                 duplicate = true
               }
