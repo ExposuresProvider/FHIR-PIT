@@ -227,6 +227,7 @@ object PreprocFIHR {
     if (!config.skip_preproc.contains(resc_type)) {
       import Implicits._
       val count = new AtomicInteger(0)
+      val n = resc_count(config, hc, input_dir_file_system, resc_type)
 
       proc_gen(config, hc, input_dir_file_system, resc_type, output_dir_file_system, obj1 => {
         val obj : Resource = resc_type match {
@@ -245,7 +246,7 @@ object PreprocFIHR {
         val id = obj.id
         val patient_num = obj.subjectReference.split("/")(1)
 
-        println("processing " + resc_type + " " + count.incrementAndGet + " " + id)
+        println("processing " + resc_type + " " + count.incrementAndGet + " / " + n + " " + id)
 
         val output_file = config.output_dir + "/" + resc_type + "/" + patient_num + "/" + encodePath(id)
         val output_file_path = new Path(output_file)
@@ -272,18 +273,41 @@ object PreprocFIHR {
     }
   }
 
+  private def resc_count(config: PreprocFIHRConfig, hc: Configuration, input_dir_file_system: FileSystem, resc_type: String) : Int = {
+    val input_dir = config.input_dir + "/" + resc_type
+    val input_dir_path = new Path(input_dir)
+    val itr = input_dir_file_system.listFiles(input_dir_path, false)
+    var count = 0
+    while(itr.hasNext) {
+      val input_file_path = itr.next().getPath()
+      val input_file_input_stream = input_dir_file_system.open(input_file_path)
+
+      println("loading " + input_file_path.getName)
+
+      val obj = Json.parse(input_file_input_stream)
+
+      if (!(obj \ "resourceType").isDefined) {
+        count += 1
+      } else {
+        count += (obj \ "entry").get.as[JsArray].value.size
+      }
+    }
+    count
+  }
+
   private def combine_pat(config: PreprocFIHRConfig, hc: Configuration, input_dir_file_system: FileSystem, output_dir_file_system: FileSystem) {
     import Implicits._
+    val resc_type = "Patient"
     val count = new AtomicInteger(0)
 
-    val resc_type = "Patient"
+    val n = resc_count(config, hc, input_dir_file_system, resc_type)
 
     proc_gen(config, hc, input_dir_file_system, resc_type, output_dir_file_system, obj => {
       var obj1 = obj
       val pat = obj1.as[Patient]
       val patient_num = pat.id
 
-      println("processing " + resc_type + " " + count.incrementAndGet + " " + patient_num)
+      println("processing " + resc_type + " " + count.incrementAndGet + " / " + n + " " + patient_num)
 
       val output_file = config.output_dir + "/" + patient_num
       val output_file_path = new Path(output_file)
