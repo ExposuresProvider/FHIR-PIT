@@ -200,36 +200,41 @@ object PreprocFIHR {
     proc_gen(config, hc, input_dir_file_system, resc_type, output_dir_file_system, obj => {
       val pat = obj.as[Patient]
       val patient_num = pat.id
+      try {
 
-      println("processing " + resc_type + " " + count.incrementAndGet + " / " + n + " " + patient_num)
+        println("processing " + resc_type + " " + count.incrementAndGet + " / " + n + " " + patient_num)
 
-      val output_file = config.output_dir + "/" + patient_num
-      val output_file_path = new Path(output_file)
-      if (!config.replace_pat && output_dir_file_system.exists(output_file_path)) {
-        println(output_file + " exists")
-      } else {
-        var obj_pat = Json.toJson(pat).as[JsObject]
+        val output_file = config.output_dir + "/" + patient_num
+        val output_file_path = new Path(output_file)
+        if (!config.replace_pat && output_dir_file_system.exists(output_file_path)) {
+          println(output_file + " exists")
+        } else {
+          var obj_pat = Json.toJson(pat).as[JsObject]
 
-        config.resc_types.foreach(resc_type => {
-          var arr = Json.arr()
-          val input_resc_dir = config.output_dir + "/" + resc_type + "/" + patient_num
-          val input_resc_dir_path = new Path(input_resc_dir)
-          if(output_dir_file_system.exists(input_resc_dir_path)) {
-            val input_resc_file_iter = output_dir_file_system.listFiles(input_resc_dir_path, false)
-            while(input_resc_file_iter.hasNext) {
-              val input_resc_file_status = input_resc_file_iter.next()
-              val input_resc_file_path = input_resc_file_status.getPath
-              val input_resc_file_input_stream = output_dir_file_system.open(input_resc_file_path)
-              val obj_resc = Json.parse(input_resc_file_input_stream)
-              arr +:= obj_resc
+          config.resc_types.foreach(resc_type => {
+            var arr = Json.arr()
+            val input_resc_dir = config.output_dir + "/" + resc_type + "/" + patient_num
+            val input_resc_dir_path = new Path(input_resc_dir)
+            if(output_dir_file_system.exists(input_resc_dir_path)) {
+              val input_resc_file_iter = output_dir_file_system.listFiles(input_resc_dir_path, false)
+              while(input_resc_file_iter.hasNext) {
+                val input_resc_file_status = input_resc_file_iter.next()
+                val input_resc_file_path = input_resc_file_status.getPath
+                val input_resc_file_input_stream = output_dir_file_system.open(input_resc_file_path)
+                val obj_resc = Json.parse(input_resc_file_input_stream)
+                arr +:= obj_resc
+              }
+              obj_pat ++= Json.obj(
+                resc_type -> arr
+              )
             }
-            obj_pat ++= Json.obj(
-              resc_type -> arr
-            )
-          }
-        })
+          })
 
-        Utils.writeToFile(hc, output_file, Json.stringify(obj_pat))
+          Utils.writeToFile(hc, output_file, Json.stringify(obj_pat))
+        }
+      } catch {
+        case e : Exception =>
+          throw new Exception("error processing Patient " + patient_num, e)
       }
 
     })
