@@ -220,9 +220,14 @@ object PreprocFIHR {
               while(input_resc_file_iter.hasNext) {
                 val input_resc_file_status = input_resc_file_iter.next()
                 val input_resc_file_path = input_resc_file_status.getPath
-                val input_resc_file_input_stream = output_dir_file_system.open(input_resc_file_path)
-                val obj_resc = Json.parse(input_resc_file_input_stream)
-                arr +:= obj_resc
+                try {
+                  val input_resc_file_input_stream = output_dir_file_system.open(input_resc_file_path)
+                  val obj_resc = Json.parse(input_resc_file_input_stream)
+                  arr +:= obj_resc
+                } catch {
+                  case e : Exception =>
+                    throw new Exception("error processing " + resc_type + " " + input_resc_file_path, e)
+                }
               }
               obj_pat ++= Json.obj(
                 resc_type -> arr
