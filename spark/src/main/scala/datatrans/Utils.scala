@@ -378,5 +378,16 @@ object Utils {
     }
   }
 
+  class HDFSCollection(hc: Configuration, path : Path) extends Traversable[Path] {
+    override def foreach[U](f : Path => U) = {
+      val fs = path.getFileSystem(hc)
+      val file_iter = fs.listFiles(path, false)
+      while(file_iter.hasNext) {
+        val file_status = file_iter.next()
+        f(file_status.getPath)
+      }
+    }
+  }
+
 
 }

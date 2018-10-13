@@ -20,16 +20,18 @@ case class Patient(
   lon : Double
 )
 
+case class Encounter(id : String, subjectReference : String, code : Option[String], startDate : Option[String], endDate : Option[String])
+
 sealed trait Resource {
   val id : String
   val subjectReference : String
+  val contextReference : String
 }
 
-case class Condition(override val id : String, override val subjectReference : String, contextReference : String, system : String, code : String, assertedDate : String) extends Resource
-case class Encounter(override val id : String, override val subjectReference : String, code : Option[String], startDate : Option[String], endDate : Option[String]) extends Resource
-case class Labs(override val id : String, override val subjectReference : String, contextReference : String, code : String, value : Value) extends Resource
-case class Medication(override val id : String, override val subjectReference : String, contextReference : String, medication : String, authoredOn : String, start: String, end: Option[String]) extends Resource
-case class Procedure(override val id : String, override val subjectReference : String, contextReference : String, system : String, code : String, performedDateTime : String) extends Resource
+case class Condition(override val id : String, override val subjectReference : String, override val contextReference : String, system : String, code : String, assertedDate : String) extends Resource
+case class Labs(override val id : String, override val subjectReference : String, override val contextReference : String, code : String, value : Value) extends Resource
+case class Medication(override val id : String, override val subjectReference : String, override val contextReference : String, medication : String, authoredOn : String, start: String, end: Option[String]) extends Resource
+case class Procedure(override val id : String, override val subjectReference : String, override val contextReference : String, system : String, code : String, performedDateTime : String) extends Resource
 
 abstract class Value
 case class ValueQuantity(valueNumber : Double, unit : Option[String]) extends Value
