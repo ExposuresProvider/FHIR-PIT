@@ -389,5 +389,10 @@ object Utils {
     }
   }
 
-
+  def loadJson[U](hc: Configuration, path: Path)(implicit reads : Reads[U]) : U = {
+    val fs = path.getFileSystem(hc)
+    val is = fs.open(path)
+    val obj = try { Json.parse(is) } finally { is.close() }
+    obj.as[U]
+  }
 }

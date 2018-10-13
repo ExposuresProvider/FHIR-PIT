@@ -17,10 +17,11 @@ case class Patient(
   gender : String,
   birthDate : String,
   lat : Double,
-  lon : Double
+  lon : Double,
+  encounter : Seq[Encounter]
 )
 
-case class Encounter(id : String, subjectReference : String, code : Option[String], startDate : Option[String], endDate : Option[String])
+case class Encounter(id : String, subjectReference : String, code : Option[String], startDate : Option[String], endDate : Option[String], condition: Seq[Condition], labs: Seq[Labs], medication: Seq[Medication], procedure: Seq[Procedure])
 
 sealed trait Resource {
   val id : String
@@ -48,12 +49,12 @@ object Implicits0 {
   implicit val valueQuantityWrites: Writes[ValueQuantity] = Json.writes[ValueQuantity]
   implicit val valueStringWrites: Writes[ValueString] = Json.writes[ValueString]
 
-  implicit val patientWrites: Writes[Patient] = Json.writes[Patient]
   implicit val conditionWrites: Writes[Condition] = Json.writes[Condition]
-  implicit val encounterWrites: Writes[Encounter] = Json.writes[Encounter]
   implicit val labsWrites: Writes[Labs] = Json.writes[Labs]
   implicit val medicationWrites: Writes[Medication] = Json.writes[Medication]
   implicit val procedureWrites: Writes[Procedure] = Json.writes[Procedure]
+  implicit val encounterWrites: Writes[Encounter] = Json.writes[Encounter]
+  implicit val patientWrites: Writes[Patient] = Json.writes[Patient]
 }
 
 object Implicits2 {
@@ -62,12 +63,12 @@ object Implicits2 {
 
   implicit val valueReads: Reads[Value] = valueQuantityReads.map(a => a.asInstanceOf[Value]) orElse valueStringReads.map(a => a.asInstanceOf[Value])
 
-  implicit val patientReads: Reads[Patient] = Json.reads[Patient]
   implicit val conditionReads: Reads[Condition] = Json.reads[Condition]
-  implicit val encounterReads: Reads[Encounter] = Json.reads[Encounter]
   implicit val labsReads: Reads[Labs] = Json.reads[Labs]
   implicit val medicationReads: Reads[Medication] = Json.reads[Medication]
   implicit val procedureReads: Reads[Procedure] = Json.reads[Procedure]
+  implicit val encounterReads: Reads[Encounter] = Json.reads[Encounter]
+  implicit val patientReads: Reads[Patient] = Json.reads[Patient]
 }
 object Implicits1 {
   implicit val patientReads: Reads[Patient] = new Reads[Patient] {
@@ -83,7 +84,7 @@ object Implicits1 {
       val latlon = (geo(0) \ "extension").as[Seq[JsValue]]
       val lat = (latlon.filter(json => (json \ "url").as[String] == "latitude")(0) \ "valueDecimal").as[Double]
       val lon = (latlon.filter(json => (json \ "url").as[String] == "longitude")(0) \ "valueDecimal").as[Double]
-      JsSuccess(Patient(id, race, gender, birthDate, lat, lon))
+      JsSuccess(Patient(id, race, gender, birthDate, lat, lon, Seq()))
     }
   }
   implicit val conditionReads: Reads[Condition] = new Reads[Condition] {
@@ -109,7 +110,7 @@ object Implicits1 {
       val period = resource \ "period"
       val startDate = (period \ "start").asOpt[String]
       val endDate = (period \ "end").asOpt[String]
-      JsSuccess(Encounter(id, subjectReference, code, startDate, endDate))
+      JsSuccess(Encounter(id, subjectReference, code, startDate, endDate, Seq(), Seq(), Seq(), Seq()))
     }
   }
   implicit val labsReads: Reads[Labs] = new Reads[Labs] {

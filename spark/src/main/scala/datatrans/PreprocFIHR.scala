@@ -6,6 +6,7 @@ import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.SparkSession
 import play.api.libs.json._
+import scala.collection.mutable.ListBuffer
 import scopt._
 import java.util.Base64
 import java.nio.charset.StandardCharsets
@@ -54,9 +55,10 @@ object PreprocFIHR {
 
           println("processing Resources")
           config.resc_types.foreach(resc_type => proc_resc(config, hc, input_dir_file_system, resc_type, output_dir_file_system))
+          println("processing Encounter")
+          proc_enc(config, hc, input_dir_file_system, output_dir_file_system)
           println("combining Patient")
           combine_pat(config, hc, input_dir_file_system, output_dir_file_system)
-          combine_enc(config, hc, input_dir_file_system, output_dir_file_system)
 
         }
       case None =>
@@ -226,7 +228,7 @@ object PreprocFIHR {
     val n = resc_count(config, hc, input_dir_file_system, resc_type)
 
     proc_gen(config, hc, input_dir_file_system, resc_type, output_dir_file_system, obj => {
-      val pat = obj.as[Patient]
+      var pat = obj.as[Patient]
       val patient_num = pat.id
       try {
 
@@ -237,32 +239,46 @@ object PreprocFIHR {
         if (!config.replace_pat && output_dir_file_system.exists(output_file_path)) {
           println(output_file + " exists")
         } else {
-          var obj_pat = Json.toJson(pat).as[JsObject]
 
-          config.resc_types.foreach(resc_type => {
-            var arr = Json.arr()
-            val input_resc_dir = config.output_dir + "/" + resc_type + "/" + patient_num
-            val input_resc_dir_path = new Path(input_resc_dir)
-            if(output_dir_file_system.exists(input_resc_dir_path)) {
-              Utils.HDFSCollection(hc, input_resc_dir_path).foreach(encounter_dir =>
-                Utils.HDFSCollection(hc, encounter_dir).foreach(input_resc_file_path => {
-                  try {
-                    val input_resc_file_input_stream = output_dir_file_system.open(input_resc_file_path)
-                    val obj_resc = Json.parse(input_resc_file_input_stream)
-                    arr +:= obj_resc
-                  } catch {
+          val input_enc_dir = config.output_dir + "/Encounter/" + patient_num
+          val input_enc_dir_path = new Path(input_enc_dir)
+          val encs = ListBuffer[Encounter]()
+          Utils.HDFSCollection(hc, input_enc_dir_path).foreach(encounter_dir => {
+            var enc = Utils.loadJson[Encounter](hc, encounter_dir)
+            val encounter_id = enc.id
+            config.resc_types.foreach(resc_type => {
+              val input_resc_dir = config.output_dir + "/" + resc_type + "/" + patient_num + "/" + encounter_id
+              val input_resc_dir_path = new Path(input_resc_dir)
+              if(output_dir_file_system.exists(input_resc_dir_path)) {
+                Utils.HDFSCollection(hc, input_resc_dir_path).foreach(encounter_dir => {
+
+                  val objs = Utils.HDFSCollection(hc, encounter_dir).map(input_resc_file_path =>
+                    try {
+                      val input_resc_file_input_stream = output_dir_file_system.open(input_resc_file_path)
+                      Json.parse(input_resc_file_input_stream)
+                    } catch {
                     case e : Exception =>
                       throw new Exception("error processing " + resc_type + " " + input_resc_file_path, e)
-                  }
-                })
-              )
-              obj_pat ++= Json.obj(
-                resc_type -> arr
-              )
-            }
-          })
+                    }).toSeq
+                  resc_type match {
+                  case "Condition" =>
+                    enc = enc.copy(condition = objs.map(obj => obj.as[Condition]))
+                  case "Labs" =>
+                    enc = enc.copy(labs = objs.map(obj => obj.as[Labs]))
+                  case "Medication" =>
+                    enc = enc.copy(medication = objs.map(obj => obj.as[Medication]))
+                  case "Procedure" =>
+                    enc = enc.copy(procedure = objs.map(obj => obj.as[Procedure]))
 
-          Utils.writeToFile(hc, output_file, Json.stringify(obj_pat))
+                  }
+                 
+                })
+              }
+            })
+            encs += enc
+          })
+          pat = pat.copy(encounter = encs)
+          Utils.writeToFile(hc, output_file, Json.stringify(Json.toJson(pat)))
         }
       } catch {
         case e : Exception =>
@@ -273,66 +289,4 @@ object PreprocFIHR {
 
   }
 
-  private def combine_enc(config: PreprocFIHRConfig, hc: Configuration, input_dir_file_system: FileSystem, output_dir_file_system: FileSystem) {
-    import Implicits0._
-    import Implicits1._
-    val resc_type = "Patient"
-    val count = new AtomicInteger(0)
-
-    val n = resc_count(config, hc, input_dir_file_system, resc_type)
-
-    proc_gen(config, hc, input_dir_file_system, resc_type, output_dir_file_system, obj => {
-      val pat = obj.as[Patient]
-      val patient_num = pat.id
-      println("processing " + resc_type + " " + count.incrementAndGet + " / " + n + " " + patient_num)
-      try {
-
-        val pat_encounter_dir = config.output_dir + "/Encounter/" + patient_num
-        val pat_encounter_dir_path = new Path(pat_encounter_dir)
-
-        Utils.HDFSCollection(hc, pat_encounter_dir_path).foreach(pat_encounter_file_path => {
-          val encounter_id = pat_encounter_file_path.getName.split("/").last
-          try {
-            println("processing Encounter " + encounter_id)
-            val output_file = config.output_dir + "/PatientEncounter/" + patient_num + "/" + encounter_id
-            val output_file_path = new Path(output_file)
-            if (output_dir_file_system.exists(output_file_path)) {
-              println(output_file + " exists")
-            } else {
-              var obj_pat = Json.toJson(pat).as[JsObject]
-
-              config.resc_types.foreach(resc_type => {
-                var arr = Json.arr()
-                val input_resc_dir = config.output_dir + "/" + resc_type + "/" + patient_num + "/" + encounter_id
-                val input_resc_dir_path = new Path(input_resc_dir)
-                if(output_dir_file_system.exists(input_resc_dir_path)) {
-                  Utils.HDFSCollection(hc, input_resc_dir_path).foreach(input_resc_file_path =>
-                    try {
-                      val input_resc_file_input_stream = output_dir_file_system.open(input_resc_file_path)
-                      val obj_resc = Json.parse(input_resc_file_input_stream)
-                      arr +:= obj_resc
-                    } catch {
-                      case e : Exception =>
-                        throw new Exception("error processing " + resc_type + " " + input_resc_file_path, e)
-                    })
-                }
-                obj_pat ++= Json.obj(
-                  resc_type -> arr
-                )
-              })
-              Utils.writeToFile(hc, output_file, Json.stringify(obj_pat))
-            }
-          } catch {
-            case e : Exception =>
-              throw new Exception("error processing encounter " + encounter_id, e)
-          }
-        })
-      } catch {
-        case e : Exception =>
-          throw new Exception("error processing Patient " + patient_num, e)
-      }
-
-    })
-
-  }
 }
