@@ -243,8 +243,8 @@ object PreprocFIHR {
             val input_resc_dir = config.output_dir + "/" + resc_type + "/" + patient_num
             val input_resc_dir_path = new Path(input_resc_dir)
             if(output_dir_file_system.exists(input_resc_dir_path)) {
-              new Utils.HDFSCollection(hc, input_resc_dir_path).foreach(encounter_dir =>
-                new Utils.HDFSCollection(hc, encounter_dir).foreach(input_resc_file_path => {
+              Utils.HDFSCollection(hc, input_resc_dir_path).foreach(encounter_dir =>
+                Utils.HDFSCollection(hc, encounter_dir).foreach(input_resc_file_path => {
                   try {
                     val input_resc_file_input_stream = output_dir_file_system.open(input_resc_file_path)
                     val obj_resc = Json.parse(input_resc_file_input_stream)
@@ -289,7 +289,7 @@ object PreprocFIHR {
         val pat_encounter_dir = config.output_dir + "/Encounter/" + patient_num
         val pat_encounter_dir_path = new Path(pat_encounter_dir)
 
-        new Utils.HDFSCollection(hc, pat_encounter_dir_path).foreach(pat_encounter_file_path => {
+        Utils.HDFSCollection(hc, pat_encounter_dir_path).foreach(pat_encounter_file_path => {
           val encounter_id = pat_encounter_file_path.getName.split("/").last
           try {
             println("processing Encounter " + encounter_id)
@@ -305,7 +305,7 @@ object PreprocFIHR {
                 val input_resc_dir = config.output_dir + "/" + resc_type + "/" + patient_num + "/" + encounter_id
                 val input_resc_dir_path = new Path(input_resc_dir)
                 if(output_dir_file_system.exists(input_resc_dir_path)) {
-                  new Utils.HDFSCollection(hc, input_resc_dir_path).foreach(input_resc_file_path =>
+                  Utils.HDFSCollection(hc, input_resc_dir_path).foreach(input_resc_file_path =>
                     try {
                       val input_resc_file_input_stream = output_dir_file_system.open(input_resc_file_path)
                       val obj_resc = Json.parse(input_resc_file_input_stream)
