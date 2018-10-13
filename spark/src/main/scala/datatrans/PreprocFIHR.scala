@@ -56,6 +56,7 @@ object PreprocFIHR {
           config.resc_types.foreach(resc_type => proc_resc(config, hc, input_dir_file_system, resc_type, output_dir_file_system))
           println("combining Patient")
           combine_pat(config, hc, input_dir_file_system, output_dir_file_system)
+          combine_enc(config, hc, input_dir_file_system, output_dir_file_system)
 
         }
       case None =>
