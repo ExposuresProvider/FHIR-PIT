@@ -221,7 +221,8 @@ object PreprocFIHR {
 
   private def combine_pat(config: PreprocFIHRConfig, hc: Configuration, input_dir_file_system: FileSystem, output_dir_file_system: FileSystem) {
     import Implicits0._
-    import Implicits1._
+    import Implicits1.patientReads
+    import Implicits2.{encounterReads, conditionReads, labsReads, medicationReads, procedureReads}
     val resc_type = "Patient"
     val count = new AtomicInteger(0)
 
