@@ -55,7 +55,7 @@ class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
 
     val dfs2 = years.flatMap(year => {
       val filename = f"${config.environmental_data}/merged_cmaq_$year.csv"
-      val df = inputCache2((filename, fips, config.indices2))
+      inputCache2((filename, fips, config.indices2))
     })
 
 
