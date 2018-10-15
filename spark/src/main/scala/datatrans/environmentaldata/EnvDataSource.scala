@@ -118,7 +118,7 @@ class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
       val count = new AtomicInteger(0)
       val n = patl.size
 
-      patl.foreach{
+      patl.par.foreach{
         case (r, lat, lon) =>
           time {
             println("processing " + count.incrementAndGet + " / " + n + " " + r)
