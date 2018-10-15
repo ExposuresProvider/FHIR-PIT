@@ -25,7 +25,7 @@ case class EnvDataSourceConfig(
 
 
 class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
-  def loadEnvDataFrame(input: (String, Seq[String])) = {
+  def loadEnvDataFrame(input: (String, Seq[String])) : Option[DataFrame] = {
     val (filename, names) = input
     val df = spark.read.format("csv").option("header", value = true).load(filename)
     if (names.forall(x => df.columns.contains(x))) {
@@ -36,42 +36,51 @@ class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
     }
   }
 
-  def loadFIPSDataFrame(input: (String, String, Seq[String])) = {
-    val (filename, fips, names) = input
-    val df = inputCache((filename, config.indices2))
-    df.map(df => df.filter(df.col("FIPS") === fips))
-  }
-
-  def generateOutputDataFrame(key: (Seq[(Int, (Int, Int))], String, Seq[Int])) = {
-    val (coors, fips, years) = key
-
-
-    val dfs = coors.flatMap {
-      case (year, (row, col)) =>
-        val filename = f"${config.environmental_data}/cmaq$year/C$col%03dR$row%03dDaily.csv"
-        inputCache((filename, names))
-
-    }
-
+  def loadFIPSDataFrame(input: (String, Seq[Int])) : Option[DataFrame] = {
+    val (fips, years) = input
     val dfs2 = years.flatMap(year => {
       val filename = f"${config.environmental_data}/merged_cmaq_$year.csv"
-      inputCache2((filename, fips, config.indices2))
+      val df = inputCache((filename, config.indices2))
+      df.map(df => df.filter(df.col("FIPS") === fips))
     })
-
-
-    if (dfs.nonEmpty && dfs2.nonEmpty) {
-      val df = dfs.reduce((a, b) => a.union(b))
+    if(dfs2.nonEmpty) {
       val df2 = dfs2.reduce((a, b) => a.union(b))
       val df3 = df2.withColumn("start_date", to_date(df2.col("Date"),"yy/MM/dd"))
-      Some(df.join(df3, Seq("start_date"), "outer").select("start_date", names ++ config.indices2 : _*))
-
+      Some(df3)
     } else {
       None
     }
   }
 
+  def loadRowColDataFrame(coors: Seq[(Int, (Int, Int))]) : Option[DataFrame] = {
+    val dfs = coors.flatMap {
+      case (year, (row, col)) =>
+        val filename = f"${config.environmental_data}/cmaq$year/C$col%03dR$row%03dDaily.csv"
+        inputCache((filename, names))
+    }
+    if (dfs.nonEmpty) {
+      Some(dfs.reduce((a, b) => a.union(b)))
+    } else {
+      None
+    }
+  }
+
+  def generateOutputDataFrame(key: (Seq[(Int, (Int, Int))], String, Seq[Int])) = {
+    val (coors, fips, years) = key
+    val df = inputCache3(coors)
+    val df3 = inputCache2((fips, years))
+
+    (df, df3) match {
+      case (Some(df), Some(df3)) =>
+        Some(df.join(df3, Seq("start_date"), "outer").select("start_date", names ++ config.indices2 : _*))
+      case _ =>
+        None
+    }
+  }
+
   private val inputCache = new Cache(loadEnvDataFrame)
   private val inputCache2 = new Cache(loadFIPSDataFrame)
+  private val inputCache3 = new Cache(loadRowColDataFrame)
   private val outputCache = new Cache(generateOutputDataFrame)
   val names = for (i <- config.statistics; j <- config.indices) yield f"${j}_$i"
 
