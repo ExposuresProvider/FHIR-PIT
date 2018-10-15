@@ -3,7 +3,7 @@ package datatrans
 import java.util.concurrent.atomic.AtomicInteger
 
 import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.{FileSystem, Path}
+import org.apache.hadoop.fs.{ FileSystem, Path, PathFilter }
 import org.apache.spark.sql.SparkSession
 import play.api.libs.json._
 import scala.collection.mutable.ListBuffer
@@ -262,14 +262,14 @@ object PreprocFIHR {
                       throw new Exception("error processing " + resc_type + " " + input_resc_file_path, e)
                     }).toSeq
                   resc_type match {
-                  case "Condition" =>
-                    enc = enc.copy(condition = objs.map(obj => obj.as[Condition]))
-                  case "Labs" =>
-                    enc = enc.copy(labs = objs.map(obj => obj.as[Labs]))
-                  case "Medication" =>
-                    enc = enc.copy(medication = objs.map(obj => obj.as[Medication]))
-                  case "Procedure" =>
-                    enc = enc.copy(procedure = objs.map(obj => obj.as[Procedure]))
+                    case "Condition" =>
+                      enc = enc.copy(condition = objs.map(obj => obj.as[Condition]))
+                    case "Labs" =>
+                      enc = enc.copy(labs = objs.map(obj => obj.as[Labs]))
+                    case "Medication" =>
+                      enc = enc.copy(medication = objs.map(obj => obj.as[Medication]))
+                    case "Procedure" =>
+                      enc = enc.copy(procedure = objs.map(obj => obj.as[Procedure]))
 
                   }
                  
@@ -290,4 +290,32 @@ object PreprocFIHR {
 
   }
 
+  private def gen_geodata(spark: SparkSession, config: PreprocFIHRConfig, hc: Configuration, output_dir_file_system: FileSystem) {
+    import spark.implicits._
+    import Implicits2._
+
+    val resc_type = "Patient"
+    val pat_dir = config.output_dir + "/Patient"
+    val pat_dir_path = new Path(pat_dir)
+    val pat_dir_df = output_dir_file_system.listStatus(pat_dir_path, new PathFilter {
+      override def accept(path : Path): Boolean = output_dir_file_system.isFile(path)
+    }).map(fs => fs.getPath.getName.split("/").last).toSeq.toDF("patient_num")
+
+    val out_df = pat_dir_df.map(patient_num => {
+      println("processing " + patient_num)
+      try {
+        val output_file = config.output_dir + "/Patient/" + patient_num
+        val pat = Utils.loadJson[Patient](hc, new Path(output_file))
+        (patient_num, pat.lat, pat.lon)
+      } catch {
+        case e : Exception =>
+          throw new Exception("error processing Patient " + patient_num, e)
+      }
+    }).toDF("patient_num", "lat", "lon")
+
+    val out_file = config.output_dir + "/geo.csv"
+    Utils.writeDataframe(hc, out_file, out_df)
+
+
+  }
 }
