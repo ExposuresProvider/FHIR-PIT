@@ -36,6 +36,12 @@ class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
     }
   }
 
+  def loadFIPSDataFrame(input: (String, String, Seq[String])) = {
+    val (filename, fips, names) = input
+    val df = inputCache((filename, config.indices2))
+    df.map(df => df.filter(df.col("FIPS") === fips))
+  }
+
   def generateOutputDataFrame(key: (Seq[(Int, (Int, Int))], String, Seq[Int])) = {
     val (coors, fips, years) = key
 
@@ -49,8 +55,7 @@ class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
 
     val dfs2 = years.flatMap(year => {
       val filename = f"${config.environmental_data}/merged_cmaq_$year.csv"
-      val df = inputCache((filename, config.indices2))
-      df.map(df => df.filter(df.col("FIPS") === fips))
+      val df = inputCache2((filename, fips, config.indices2))
     })
 
 
@@ -66,6 +71,7 @@ class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
   }
 
   private val inputCache = new Cache(loadEnvDataFrame)
+  private val inputCache2 = new Cache(loadFIPSDataFrame)
   private val outputCache = new Cache(generateOutputDataFrame)
   val names = for (i <- config.statistics; j <- config.indices) yield f"${j}_$i"
 
