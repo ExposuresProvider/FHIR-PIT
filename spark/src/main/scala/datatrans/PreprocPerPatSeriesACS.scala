@@ -21,7 +21,7 @@ object PreprocPerPatSeriesACS {
   def main(args: Array[String]) {
     val parser = new OptionParser[PreprocPerPatSeriesACSConfig]("series_to_vector") {
       head("preproc acs")
-      opt[String]("input_data").required.action((x,c) => c.copy(time_series = x))
+      opt[String]("pat_geodata").required.action((x,c) => c.copy(time_series = x))
       opt[String]("acs_data").required.action((x,c) => c.copy(acs_data = x))
       opt[String]("geoid_data").required.action((x,c) => c.copy(geoid_data = x))
       opt[String]("output_file").required.action((x,c) => c.copy(output_file = x))
@@ -46,7 +46,7 @@ object PreprocPerPatSeriesACS {
           if(output_file_file_system.exists(output_file_path)) {
             println(config.output_file + " exists")
           } else {
-            val pddf0 = spark.read.format("csv").option("header", value = true).load(config.time_series + "/geo.csv")
+            val pddf0 = spark.read.format("csv").option("header", value = true).load(config.time_series)
 
             val geoidFinder = new GeoidFinder(config.geoid_data, "15000US")
             val df = pddf0.map(r => {
