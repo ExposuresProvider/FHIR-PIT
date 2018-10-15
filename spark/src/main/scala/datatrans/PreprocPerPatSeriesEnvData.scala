@@ -16,6 +16,7 @@ object PreprocPerPatSeriesEnvData {
     val parser = new OptionParser[EnvDataSourceConfig]("series_to_vector") {
       head("series_to_vector")
       opt[String]("patgeo_data").required.action((x,c) => c.copy(patgeo_data = x))
+      opt[String]("fips_data").required.action((x,c) => c.copy(fips_data = x))
       opt[String]("environmental_data").required.action((x,c) => c.copy(environmental_data = x))
       opt[String]("start_date").required.action((x,c) => c.copy(start_date = DateTime.parse(x)))
       opt[String]("end_date").required.action((x,c) => c.copy(end_date = DateTime.parse(x)))

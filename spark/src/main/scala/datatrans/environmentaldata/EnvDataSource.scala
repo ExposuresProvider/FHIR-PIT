@@ -22,7 +22,7 @@ case class EnvDataSourceConfig(
   end_date : DateTime = DateTime.now(),
   output_format : String = "csv",
   geo_coordinates : Boolean = false,
-  shpfilepath: String = "",
+  fips_data: String = "",
   sequential : Boolean = false,
   date_offsets : Seq[Int]= -7 to 7,
   indices : Seq[String] = Seq("o3", "pm25"),
@@ -32,7 +32,7 @@ case class EnvDataSourceConfig(
 
 class EnvDataSource(config: EnvDataSourceConfig) extends DataSource[SparkSession, LatLon, Seq[JsObject]] {
   private val cache = TrieMap[String, SoftReference[Seq[DataFrame]]]()
-  val geoidfinder = new GeoidFinder(config.shpfilepath, "")
+  val geoidfinder = new GeoidFinder(config.fips_data, "")
 
   def loadEnvData(spark: SparkSession, coors: Seq[(Int, (Int, Int))], fips: String, years: Seq[Int], names: Seq[String], fipsnames: Seq[String]): Map[String, Map[String, Double]] = {
 
