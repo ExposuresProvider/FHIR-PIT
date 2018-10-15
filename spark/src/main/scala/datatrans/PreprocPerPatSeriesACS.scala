@@ -10,7 +10,6 @@ import scopt._
 import org.apache.hadoop.fs.{FileStatus, FileSystem, Path, PathFilter}
 
 case class PreprocPerPatSeriesACSConfig(
-                   patient_dimension : Option[String] = None,
                    time_series : String = "",
                    acs_data : String = "",
                    geoid_data : String = "",
@@ -19,37 +18,10 @@ case class PreprocPerPatSeriesACSConfig(
 
 object PreprocPerPatSeriesACS {
 
-  def proc_pid(config : PreprocPerPatSeriesACSConfig, spark: SparkSession, nearestRoad: GeoidFinder, p:String): Option[(String, String)] =
-    time {
-
-      val hc = spark.sparkContext.hadoopConfiguration
-
-      val input_file = f"${config.time_series}/$p"
-      val input_file_path = new Path(input_file)
-      val input_file_file_system = input_file_path.getFileSystem(hc)
-
-      if(!input_file_file_system.exists(input_file_path)) {
-        println("json not found, skipped " + p)
-        None
-      } else {
-        import Implicits2._
-        println("loading json from " + input_file)
-        val input_file_input_stream = input_file_file_system.open(input_file_path)
-
-
-        val patient = Json.parse(input_file_input_stream).as[Patient]
-        input_file_input_stream.close()
-        val lat = patient.lat
-        val lon = patient.lon
-        Some((p, nearestRoad.getGeoidForLatLon(lat, lon)))
-      }
-    }
-
   def main(args: Array[String]) {
     val parser = new OptionParser[PreprocPerPatSeriesACSConfig]("series_to_vector") {
-      head("series_to_vector")
-      opt[String]("patient_dimension").required.action((x,c) => c.copy(patient_dimension = Some(x)))
-      opt[String]("time_series").required.action((x,c) => c.copy(time_series = x))
+      head("preproc acs")
+      opt[String]("clinical_data").required.action((x,c) => c.copy(time_series = x))
       opt[String]("acs_data").required.action((x,c) => c.copy(acs_data = x))
       opt[String]("geoid_data").required.action((x,c) => c.copy(geoid_data = x))
       opt[String]("output_file").required.action((x,c) => c.copy(output_file = x))
@@ -74,21 +46,15 @@ object PreprocPerPatSeriesACS {
           if(output_file_file_system.exists(output_file_path)) {
             println(config.output_file + " exists")
           } else {
-            val pddf0 = patientDimension(spark, hc, config.patient_dimension, config.time_series)
-            val patl = pddf0.select("patient_num").map(r => r.getString(0))
+            val pddf0 = spark.read.format("csv").option("header", value = true).load(config.time_series + "/geo.csv")
 
-            val count = new AtomicInteger(0)
-            val n = patl.count()
+            val geoidFinder = new GeoidFinder(config.geoid_data, "15000US")
+            val df = pddf0.map(r => {
+              val geoid = geoidFinder.getGeoidForLatLon(r.getDouble(1), r.getDouble(2))
+              (r.getString(0), geoid)
+            }).toDF("patient_num", "GEOID")
 
-            val geoidFinder = new GeoidFinder(f"${config.geoid_data}", "15000US")
-            val rows = patl.flatMap(pid => {
-              println("processing " + count.incrementAndGet + " / " + n + " " + pid)
-              proc_pid(config, spark, geoidFinder, pid)
-            })
-
-            val df = rows.toDF("patient_num", "GEOID")
-
-            val acs_df = spark.read.format("csv").option("header", value = true).load(f"${config.acs_data}")
+            val acs_df = spark.read.format("csv").option("header", value = true).load(config.acs_data)
 
             val table = df.join(acs_df, "GEOID")
 
