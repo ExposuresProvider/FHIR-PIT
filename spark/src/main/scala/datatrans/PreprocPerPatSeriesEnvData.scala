@@ -36,9 +36,9 @@ object PreprocPerPatSeriesEnvData {
     parser.parse(args, EnvDataSourceConfig()) match {
       case Some(config) =>
         time {
-          val hc = spark.sparkContext.hadoopConfiguration
-          val pdif = Utils.patientDimension(spark, hc, None, config.patgeo_data)
-          DataSourceSelectorRunnerSparkJsValue.run(spark, pdif, "patient_num", config.sequential, config.patgeo_data, MkDataSourceSelectorFormatter(new EnvSelector(), new EnvDataSource(config), new EnvFormatter(config.output_format match {
+          val filename = config.patgeo_data + "/geo.csv"
+
+          DataSourceSelectorRunnerSparkJsValue.run(spark, filename, "patient_num", config.sequential, config.patgeo_data, MkDataSourceSelectorFormatter(new EnvSelector(), new EnvDataSource(config), new EnvFormatter(config.output_format match {
             case "json" => JSON
             case "csv" => CSV(",")
           })), config.output_file)

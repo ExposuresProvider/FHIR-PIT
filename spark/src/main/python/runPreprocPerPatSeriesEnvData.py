@@ -3,20 +3,18 @@ from utils import submit
 
 cache_dir = sys.argv[1]
 host_name = sys.argv[2]
-patient_dimension = sys.argv[3]
-time_series = sys.argv[4]
-environmental_data = sys.argv[5]
-start_date = sys.argv[6]
-end_date = sys.argv[7]
-output_dir = sys.argv[8]
+time_series = sys.argv[3]
+environmental_data = sys.argv[4]
+start_date = sys.argv[5]
+end_date = sys.argv[6]
+output_dir = sys.argv[7]
 
 
 submit(host_name, cache_dir, "datatrans.PreprocPerPatSeriesEnvData",
-           "--patient_dimension={0}".format(patient_dimension),
-           "--time_series=" + time_series + "/%i",
+           "--patgeo_data=" + time_series",
            "--output_file=" + output_dir + "/%i",
            "--output_format=csv",
            "--environmental_data=" + environmental_data,
            "--start_date=" + start_date,
-           "--end_date=" + end_date, *sys.argv[9:])
+           "--end_date=" + end_date, *sys.argv[8:])
 
