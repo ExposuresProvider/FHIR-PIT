@@ -36,9 +36,7 @@ object PreprocPerPatSeriesEnvData {
     parser.parse(args, EnvDataSourceConfig()) match {
       case Some(config) =>
         time {
-          val filename = config.patgeo_data + "/geo.csv"
-
-          DataSourceSelectorRunnerSparkJsValue.run(spark, filename, "patient_num", config.sequential, config.patgeo_data, MkDataSourceSelectorFormatter(new EnvSelector(), new EnvDataSource(config), new EnvFormatter(config.output_format match {
+          DataSourceSelectorRunnerSparkJsValue.run(spark, config.patgeo_data, "patient_num", config.sequential, MkDataSourceSelectorFormatter(new EnvSelector(), new EnvDataSource(config), new EnvFormatter(config.output_format match {
             case "json" => JSON
             case "csv" => CSV(",")
           })), config.output_file)

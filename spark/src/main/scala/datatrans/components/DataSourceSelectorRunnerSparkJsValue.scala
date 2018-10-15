@@ -9,7 +9,7 @@ import play.api.libs.json.{JsValue, Json}
 
 object DataSourceSelectorRunnerSparkJsValue {
 
-  def run(spark: SparkSession, patient_dimension : String, patient_num : String, sequential : Boolean, input_format: String, dataSourceSelect : DataSourceSelectorFormatter[SparkSession,(String, JsValue)], output_format: String): Unit = {
+  def run(spark: SparkSession, patient_dimension : String, patient_num : String, sequential : Boolean, dataSourceSelect : DataSourceSelectorFormatter[SparkSession,(String, JsValue)], output_format: String): Unit = {
 
     import spark.implicits._
 
