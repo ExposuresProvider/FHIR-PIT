@@ -307,7 +307,7 @@ object PreprocFIHR {
       println("processing " + patient_num)
       try {
         val output_file = config.output_dir + "/Patient/" + patient_num
-        val pat = Utils.loadJson[Patient](hc, new Path(output_file))
+        val pat = Utils.loadJson[Patient](new Configuration(), new Path(output_file))
         (patient_num, pat.lat, pat.lon)
       } catch {
         case e : Exception =>
