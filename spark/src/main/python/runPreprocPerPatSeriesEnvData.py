@@ -11,7 +11,7 @@ output_dir = sys.argv[7]
 
 
 submit(host_name, cache_dir, "datatrans.PreprocPerPatSeriesEnvData",
-           "--time_series=" + time_series",
+           "--patgeo_data=" + time_series,
            "--output_file=" + output_dir + "/%i",
            "--output_format=csv",
            "--environmental_data=" + environmental_data,
