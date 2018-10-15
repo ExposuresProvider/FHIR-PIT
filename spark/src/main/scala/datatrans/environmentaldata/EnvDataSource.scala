@@ -36,7 +36,7 @@ class EnvDataSource(config: EnvDataSourceConfig) extends DataSource[SparkSession
 
   def loadEnvData(spark: SparkSession, coors: Seq[(Int, (Int, Int))], fips: String, years: Seq[Int], names: Seq[String], fipsnames: Seq[String]): Map[String, Map[String, Double]] = {
 
-    def loadEnvDataFrame2(filename: String) = {
+    def loadEnvDataFrame2(filename: String, names : Seq[String]) = {
       val df = spark.read.format("csv").option("header", value = true).load(filename)
       if (names.forall(x => df.columns.contains(x))) {
         cache(filename) = new SoftReference(Seq(df))
@@ -48,14 +48,14 @@ class EnvDataSource(config: EnvDataSourceConfig) extends DataSource[SparkSession
       }
     }
 
-    def loadEnvDataFrame(filename: String) = {
+    def loadEnvDataFrame(filename: String, names: Seq[String]) = {
       cache.get(filename) match {
         case None =>
-            loadEnvDataFrame2(filename)
+            loadEnvDataFrame2(filename, names)
         case Some(x) =>
           x.get.getOrElse {
             println("SoftReference has already be garbage collected " + filename)
-            loadEnvDataFrame2(filename)
+            loadEnvDataFrame2(filename, names)
           }
       }
     }
@@ -63,12 +63,12 @@ class EnvDataSource(config: EnvDataSourceConfig) extends DataSource[SparkSession
     val dfs = coors.flatMap {
       case (year, (row, col)) =>
         val filename = f"${config.environmental_data}/cmaq$year/C$col%03dR$row%03dDaily.csv"
-        loadEnvDataFrame(filename)
+        loadEnvDataFrame(filename, names)
     }
 
     val dfs2 = years.flatMap(year => {
       val filename = f"${config.environmental_data}/merged_cmaq_$year.csv"
-      val df = loadEnvDataFrame(filename)
+      val df = loadEnvDataFrame(filename, fipsnames)
       df.map(df => df.filter(df.col("FIPS") === fips))
     })
 
