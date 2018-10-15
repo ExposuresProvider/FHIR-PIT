@@ -51,7 +51,7 @@ object PreprocPerPatSeriesACS {
             val df = pddf0.mapPartitions(partition => {
               val geoidFinder = new GeoidFinder(config.geoid_data, "15000US")
               partition.map(r => {
-                val geoid = geoidFinder.getGeoidForLatLon(r.getDouble(1), r.getDouble(2))
+                val geoid = geoidFinder.getGeoidForLatLon(r.getString(1).toDouble, r.getString(2).toDouble)
                 (r.getString(0), geoid)
               })
             }).toDF("patient_num", "GEOID")
