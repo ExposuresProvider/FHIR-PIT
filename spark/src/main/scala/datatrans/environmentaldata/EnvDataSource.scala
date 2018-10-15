@@ -74,7 +74,7 @@ class EnvDataSource(config: EnvDataSourceConfig) {
       val df = dfs.reduce((a, b) => a.union(b))
       val df2 = dfs2.reduce((a, b) => a.union(b))
       val df3 = df2.withColumn("start_date", to_date(df2.col("Date"),"yy/MM/dd"))
-      Some(df.join(df2, Seq("start_date"), "outer"))
+      Some(df.join(df3, Seq("start_date"), "outer"))
 
     } else {
       None
