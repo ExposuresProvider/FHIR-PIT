@@ -11,7 +11,7 @@ output_dir = sys.argv[6]
 
 
 submit(host_name, cache_dir, "datatrans.PreprocPerPatSeriesACS",
-           "--clinical_data=" + time_series,
+           "--input_data=" + time_series,
            "--output_file=" + output_dir,
            "--geoid_data=" + environmental_data,
            "--acs_data=" + acs_data, *sys.argv[7:])
