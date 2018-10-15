@@ -86,22 +86,6 @@ class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
 
   val geoidfinder = new GeoidFinder(config.fips_data, "")
 
-  def get(lat: Double, lon: Double) : Option[DataFrame] = {
-    val yearseq = (config.start_date.year.get to config.end_date.minusDays(1).year.get)
-    val coors = yearseq.intersect(Seq(2010,2011)).flatMap(year => {
-      latlon2rowcol(lat, lon, year) match {
-        case Some((row, col)) =>
-          Seq((year, (row, col)))
-        case _ =>
-          Seq()
-      }
-    })
-    val fips = geoidfinder.getGeoidForLatLon(lat, lon)
-
-    outputCache((coors, fips, yearseq))
-
-  }
-
   def run(): Unit = {
 
     time {
@@ -120,22 +104,30 @@ class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
 
       patl.par.foreach{
         case (r, lat, lon) =>
-          time {
-            println("processing " + count.incrementAndGet + " / " + n + " " + r)
-
-            val output_file = config.output_file.replace("%i", r)
-            val output_file_path = new Path(output_file)
-            val output_file_file_system = output_file_path.getFileSystem(hc)
-            if(output_file_file_system.exists(output_file_path)) {
-              println(output_file + " exists")
-            } else {
-              get(lat, lon) match {
-                case Some(df) =>
-                  writeDataframe(hc, output_file, df)
-                case None =>
+          val output_file = config.output_file.replace("%i", r)
+          val output_file_path = new Path(output_file)
+          val output_file_file_system = output_file_path.getFileSystem(hc)
+          if(output_file_file_system.exists(output_file_path)) {
+            println(output_file + " exists")
+          } else {
+            val yearseq = (config.start_date.year.get to config.end_date.minusDays(1).year.get)
+            val coors = yearseq.intersect(Seq(2010,2011)).flatMap(year => {
+              latlon2rowcol(lat, lon, year) match {
+                case Some((row, col)) =>
+                  Seq((year, (row, col)))
+                case _ =>
+                  Seq()
               }
+            })
+            val fips = geoidfinder.getGeoidForLatLon(lat, lon)
+
+            outputCache((coors, fips, yearseq)) match {
+              case Some(df) =>
+                writeDataframe(hc, output_file, df)
+              case None =>
             }
           }
+
       }
     }
   }
