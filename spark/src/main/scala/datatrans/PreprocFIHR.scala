@@ -59,6 +59,8 @@ object PreprocFIHR {
           proc_enc(config, hc, input_dir_file_system, output_dir_file_system)
           println("combining Patient")
           combine_pat(config, hc, input_dir_file_system, output_dir_file_system)
+          println("generating geodata")
+          gen_geodata(spark, config, hc, output_dir_file_system)
 
         }
       case None =>
