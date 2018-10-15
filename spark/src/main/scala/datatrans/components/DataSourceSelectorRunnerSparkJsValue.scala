@@ -4,17 +4,14 @@ import java.util.concurrent.atomic.AtomicInteger
 
 import datatrans.Utils._
 import org.apache.hadoop.fs.Path
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{ SparkSession, DataFrame }
 import play.api.libs.json.{JsValue, Json}
 
 object DataSourceSelectorRunnerSparkJsValue {
 
-  def run(spark: SparkSession, patient_dimension : String, patient_num : String, sequential : Boolean, input_format: String, dataSourceSelect : DataSourceSelectorFormatter[SparkSession,(String, JsValue)], output_format: String): Unit = {
+  def run(spark: SparkSession, pddf0 : DataFrame, patient_num : String, sequential : Boolean, input_format: String, dataSourceSelect : DataSourceSelectorFormatter[SparkSession,(String, JsValue)], output_format: String): Unit = {
 
     import spark.implicits._
-
-    println("loading patient_dimension from " + patient_dimension)
-    val pddf0 = spark.read.format("csv").option("header", value = true).load(patient_dimension)
 
     val patl0 = pddf0.select("patient_num").map(r => r.getString(0)).collect.toList
 

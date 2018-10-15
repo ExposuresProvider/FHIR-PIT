@@ -15,8 +15,7 @@ object PreprocPerPatSeriesEnvData {
   def main(args: Array[String]) {
     val parser = new OptionParser[EnvDataSourceConfig]("series_to_vector") {
       head("series_to_vector")
-      opt[String]("patient_dimension").action((x,c) => c.copy(patient_dimension = x))
-      opt[String]("time_series").required.action((x,c) => c.copy(time_series = x))
+      opt[String]("patgeo_data").required.action((x,c) => c.copy(patgeo_data = x))
       opt[String]("environmental_data").required.action((x,c) => c.copy(environmental_data = x))
       opt[String]("start_date").required.action((x,c) => c.copy(start_date = DateTime.parse(x)))
       opt[String]("end_date").required.action((x,c) => c.copy(end_date = DateTime.parse(x)))
@@ -26,6 +25,7 @@ object PreprocPerPatSeriesEnvData {
       opt[Unit]("sequential").action((_,c) => c.copy(sequential = true))
       opt[Seq[Int]]("date_offsets").action((x,c) => c.copy(date_offsets = x))
       opt[Seq[String]]("query").action((x,c) => c.copy(indices = x))
+      opt[Seq[String]]("indices2").action((x,c) => c.copy(indices2 = x))
       opt[Seq[String]]("statistics").action((x,c) => c.copy(statistics = x))
     }
 
@@ -36,9 +36,9 @@ object PreprocPerPatSeriesEnvData {
     parser.parse(args, EnvDataSourceConfig()) match {
       case Some(config) =>
         time {
-          val pdif = config.patient_dimension
-
-          DataSourceSelectorRunnerSparkJsValue.run(spark, pdif, "patient_num", config.sequential, config.time_series, MkDataSourceSelectorFormatter(new EnvSelector(), new EnvDataSource(config), new EnvFormatter(config.output_format match {
+          val hc = spark.sparkContext.hadoopConfiguration
+          val pdif = Utils.patientDimension(spark, hc, None, config.patgeo_data)
+          DataSourceSelectorRunnerSparkJsValue.run(spark, pdif, "patient_num", config.sequential, config.patgeo_data, MkDataSourceSelectorFormatter(new EnvSelector(), new EnvDataSource(config), new EnvFormatter(config.output_format match {
             case "json" => JSON
             case "csv" => CSV(",")
           })), config.output_file)

@@ -15,21 +15,20 @@ import org.apache.spark.sql.functions._
 case class LatLon(lat:Double, long: Double)
 
 case class EnvDataSourceConfig(
-                                patient_dimension : String = "",
-                                time_series : String = "",
-                                environmental_data : String = "",
-                                output_file : String = "",
-                                start_date : DateTime = DateTime.now(),
-                                end_date : DateTime = DateTime.now(),
-                                output_format : String = "json",
+  patgeo_data : String = "",
+  environmental_data : String = "",
+  output_file : String = "",
+  start_date : DateTime = DateTime.now(),
+  end_date : DateTime = DateTime.now(),
+  output_format : String = "csv",
   geo_coordinates : Boolean = false,
   shpfilepath: String = "",
-                                sequential : Boolean = false,
-                                date_offsets : Seq[Int]= -7 to 7,
-                                indices : Seq[String] = Seq("o3", "pm25"),
+  sequential : Boolean = false,
+  date_offsets : Seq[Int]= -7 to 7,
+  indices : Seq[String] = Seq("o3", "pm25"),
   statistics : Seq[String] = Seq("avg", "max"),
-                                    indices2 : Seq[String] = Seq("ozone_daily_8hour_maximum", "pm25_daily_average")
-                 )
+  indices2 : Seq[String] = Seq("ozone_daily_8hour_maximum", "pm25_daily_average")
+)
 
 class EnvDataSource(config: EnvDataSourceConfig) extends DataSource[SparkSession, LatLon, Seq[JsObject]] {
   private val cache = TrieMap[String, SoftReference[Seq[DataFrame]]]()
