@@ -48,10 +48,12 @@ object PreprocPerPatSeriesACS {
           } else {
             val pddf0 = spark.read.format("csv").option("header", value = true).load(config.time_series)
 
-            val geoidFinder = new GeoidFinder(config.geoid_data, "15000US")
-            val df = pddf0.map(r => {
-              val geoid = geoidFinder.getGeoidForLatLon(r.getDouble(1), r.getDouble(2))
-              (r.getString(0), geoid)
+            val df = pddf0.mapPartitions(partition => {
+              val geoidFinder = new GeoidFinder(config.geoid_data, "15000US")
+              partition.map(r => {
+                val geoid = geoidFinder.getGeoidForLatLon(r.getDouble(1), r.getDouble(2))
+                (r.getString(0), geoid)
+              })
             }).toDF("patient_num", "GEOID")
 
             val acs_df = spark.read.format("csv").option("header", value = true).load(config.acs_data)
