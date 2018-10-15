@@ -16,7 +16,7 @@ submit(host_name, cache_dir, "datatrans.PreprocPerPatSeriesEnvData",
            "--output_file=" + output_dir + "/%i",
            "--output_format=csv",
            "--environmental_data=" + environmental_data,
-           "--geoid_data=" + geo_data,
+           "--geoid_data=" + geoid_data,
            "--start_date=" + start_date,
            "--end_date=" + end_date, *sys.argv[9:])
 
