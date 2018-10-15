@@ -73,7 +73,7 @@ class EnvDataSource(config: EnvDataSourceConfig) {
     if (dfs.nonEmpty && dfs2.nonEmpty) {
       val df = dfs.reduce((a, b) => a.union(b))
       val df2 = dfs2.reduce((a, b) => a.union(b))
-      Some(df.join(df2, to_date(df.col("start_date")) === to_date(df2.col("Date")), "outer"))
+      Some(df.join(df2, to_date(df.col("start_date")) === to_date(df2.col("Date"),"yy/MM/dd"), "outer"))
 
     } else {
       None
