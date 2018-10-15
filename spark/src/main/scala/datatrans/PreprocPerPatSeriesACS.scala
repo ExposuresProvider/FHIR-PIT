@@ -21,7 +21,7 @@ object PreprocPerPatSeriesACS {
   def main(args: Array[String]) {
     val parser = new OptionParser[PreprocPerPatSeriesACSConfig]("series_to_vector") {
       head("preproc acs")
-      opt[String]("pat_geo").required.action((x,c) => c.copy(time_series = x))
+      opt[String]("patgeo_data").required.action((x,c) => c.copy(time_series = x))
       opt[String]("acs_data").required.action((x,c) => c.copy(acs_data = x))
       opt[String]("geoid_data").required.action((x,c) => c.copy(geoid_data = x))
       opt[String]("output_file").required.action((x,c) => c.copy(output_file = x))
