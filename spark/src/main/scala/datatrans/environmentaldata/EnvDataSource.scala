@@ -49,14 +49,16 @@ class EnvDataSource(config: EnvDataSourceConfig) extends DataSource[SparkSession
     }
 
     def loadEnvDataFrame(filename: String, names: Seq[String]) = {
-      cache.get(filename) match {
-        case None =>
+      this.synchronized {
+        cache.get(filename) match {
+          case None =>
             loadEnvDataFrame2(filename, names)
-        case Some(x) =>
-          x.get.getOrElse {
-            println("SoftReference has already be garbage collected " + filename)
-            loadEnvDataFrame2(filename, names)
-          }
+          case Some(x) =>
+            x.get.getOrElse {
+              println("SoftReference has already be garbage collected " + filename)
+              loadEnvDataFrame2(filename, names)
+            }
+        }
       }
     }
 
