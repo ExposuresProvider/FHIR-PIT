@@ -2,14 +2,12 @@ package datatrans.environmentaldata
 
 import datatrans.GeoidFinder
 import java.util.concurrent.atomic.AtomicInteger
-import scala.ref.SoftReference
 import datatrans.Utils._
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import play.api.libs.json._
 import org.joda.time._
 import play.api.libs.json.Json.JsValueWrapper
 
-import scala.collection.concurrent.TrieMap
 import org.apache.spark.sql.functions._
 import org.apache.hadoop.fs._
 
@@ -25,47 +23,33 @@ case class EnvDataSourceConfig(
   indices2 : Seq[String] = Seq("ozone_daily_8hour_maximum", "pm25_daily_average")
 )
 
-class EnvDataSource(config: EnvDataSourceConfig) {
-  private val cache = TrieMap[String, SoftReference[Seq[DataFrame]]]()
-  val geoidfinder = new GeoidFinder(config.fips_data, "")
 
-  def loadEnvData(spark: SparkSession, coors: Seq[(Int, (Int, Int))], fips: String, years: Seq[Int], names: Seq[String], fipsnames: Seq[String]) = {
-
-    def loadEnvDataFrame2(filename: String, names : Seq[String]) = {
-      val df = spark.read.format("csv").option("header", value = true).load(filename)
-      if (names.forall(x => df.columns.contains(x))) {
-        cache(filename) = new SoftReference(Seq(df))
-        println("SoftReference created for " + filename)
-        Seq(df)
-      } else {
-        print(f"$filename doesn't contain all required columns")
-        Seq()
-      }
+class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
+  def loadEnvDataFrame(input: (String, Seq[String])) = {
+    val (filename, names) = input
+    val df = spark.read.format("csv").option("header", value = true).load(filename)
+    if (names.forall(x => df.columns.contains(x))) {
+      Some(df)
+    } else {
+      print(f"$filename doesn't contain all required columns")
+      None
     }
+  }
 
-    def loadEnvDataFrame(filename: String, names: Seq[String]) = {
-      this.synchronized {
-        cache.get(filename) match {
-          case None =>
-            loadEnvDataFrame2(filename, names)
-          case Some(x) =>
-            x.get.getOrElse {
-              println("SoftReference has already be garbage collected " + filename)
-              loadEnvDataFrame2(filename, names)
-            }
-        }
-      }
-    }
+  def generateOutputDataFrame(key: (Seq[(Int, (Int, Int))], String, Seq[Int])) = {
+    val (coors, fips, years) = key
+
 
     val dfs = coors.flatMap {
       case (year, (row, col)) =>
         val filename = f"${config.environmental_data}/cmaq$year/C$col%03dR$row%03dDaily.csv"
-        loadEnvDataFrame(filename, names)
+        inputCache((filename, names))
+
     }
 
     val dfs2 = years.flatMap(year => {
       val filename = f"${config.environmental_data}/merged_cmaq_$year.csv"
-      val df = loadEnvDataFrame(filename, fipsnames)
+      val df = inputCache((filename, config.indices2))
       df.map(df => df.filter(df.col("FIPS") === fips))
     })
 
@@ -74,16 +58,20 @@ class EnvDataSource(config: EnvDataSourceConfig) {
       val df = dfs.reduce((a, b) => a.union(b))
       val df2 = dfs2.reduce((a, b) => a.union(b))
       val df3 = df2.withColumn("start_date", to_date(df2.col("Date"),"yy/MM/dd"))
-      Some(df.join(df3, Seq("start_date"), "outer").select("start_date", names ++ fipsnames : _*))
+      Some(df.join(df3, Seq("start_date"), "outer").select("start_date", names ++ config.indices2 : _*))
 
     } else {
       None
     }
-
   }
 
+  private val inputCache = new Cache(loadEnvDataFrame)
+  private val outputCache = new Cache(generateOutputDataFrame)
+  val names = for (i <- config.statistics; j <- config.indices) yield f"${j}_$i"
 
-  def get(spark: SparkSession, lat: Double, lon: Double) : Option[DataFrame] = {
+  val geoidfinder = new GeoidFinder(config.fips_data, "")
+
+  def get(lat: Double, lon: Double) : Option[DataFrame] = {
     val yearseq = (config.start_date.year.get to config.end_date.minusDays(1).year.get)
     val coors = yearseq.intersect(Seq(2010,2011)).flatMap(year => {
       latlon2rowcol(lat, lon, year) match {
@@ -94,13 +82,12 @@ class EnvDataSource(config: EnvDataSourceConfig) {
       }
     })
     val fips = geoidfinder.getGeoidForLatLon(lat, lon)
-    val names = for (i <- config.statistics; j <- config.indices) yield f"${j}_$i"
 
-    loadEnvData(spark, coors, fips, yearseq, names, config.indices2)
+    outputCache((coors, fips, yearseq))
 
   }
 
-  def run(spark: SparkSession): Unit = {
+  def run(): Unit = {
 
     import spark.implicits._
 
@@ -125,15 +112,13 @@ class EnvDataSource(config: EnvDataSourceConfig) {
         if(output_file_file_system.exists(output_file_path)) {
           println(output_file + " exists")
         } else {
-          get(spark, lat, lon) match {
+          get(lat, lon) match {
             case Some(df) =>
               writeDataframe(hc, output_file, df)
             case None =>
           }
         }
     }
-
-
 
   }
 

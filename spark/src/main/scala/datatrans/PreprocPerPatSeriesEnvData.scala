@@ -32,8 +32,8 @@ object PreprocPerPatSeriesEnvData {
     parser.parse(args, EnvDataSourceConfig()) match {
       case Some(config) =>
         time {
-          val datasource = new EnvDataSource(config)
-          datasource.run(spark)
+          val datasource = new EnvDataSource(spark, config)
+          datasource.run()
         }
       case None =>
     }

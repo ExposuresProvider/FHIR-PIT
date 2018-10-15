@@ -12,6 +12,9 @@ import play.api.libs.json._
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
+import scala.ref.SoftReference
+
+import scala.collection.mutable.Map
 
 object Utils {
 
@@ -395,4 +398,31 @@ object Utils {
     val obj = try { Json.parse(is) } finally { is.close() }
     obj.as[U]
   }
+
+class Cache[K,V <: AnyRef](fun : K => V) {
+  private val cache = Map[K, SoftReference[V]]()
+  def apply(key: K) : V = {
+    this.synchronized {
+      def store = {
+        val df = fun(key)
+        cache(key) = new SoftReference(df)
+        println("SoftReference created for " + key)
+        df
+      }
+
+      cache.get(key) match {
+        case None =>
+          store
+        case Some(x) =>
+          x.get match {
+            case Some(df) => df
+            case None =>
+              println("SoftReference has already be garbage collected " + key)
+              store
+
+          }
+      }
+    }
+  }
+}
 }

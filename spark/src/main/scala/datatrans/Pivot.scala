@@ -4,6 +4,7 @@ import org.apache.spark.sql.expressions.UserDefinedAggregateFunction
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.types._
 import datatrans.Utils._
+import scala.collection.mutable.Map
 
 class Pivot(keycols : Seq[String], cols : Seq[String]) extends UserDefinedAggregateFunction {
 
@@ -50,7 +51,7 @@ class Pivot(keycols : Seq[String], cols : Seq[String]) extends UserDefinedAggreg
 
   // This is how to merge two objects with the bufferSchema type.
   override def merge(buffer1: MutableAggregationBuffer, buffer2: Row): Unit = {
-    buffer1(0) = mergeMap(buffer1.getAs[Map[String,Row]](0), buffer2.getAs[Map[String,Row]](0))
+    buffer1(0) = mergeMap(buffer1.getAs[Map[String,Any]](0), buffer2.getAs[Map[String,Any]](0))
   }
 
   // This is where you output the final value, given the final value of your bufferSchema.
