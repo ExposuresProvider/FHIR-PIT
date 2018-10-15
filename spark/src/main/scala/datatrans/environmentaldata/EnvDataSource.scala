@@ -1,9 +1,9 @@
 package datatrans.environmentaldata
 
 import datatrans.GeoidFinder
+import java.util.concurrent.atomic.AtomicInteger
 import scala.ref.SoftReference
 import datatrans.Utils._
-import datatrans.components.DataSource
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import play.api.libs.json._
 import org.joda.time._
@@ -11,8 +11,7 @@ import play.api.libs.json.Json.JsValueWrapper
 
 import scala.collection.concurrent.TrieMap
 import org.apache.spark.sql.functions._
-
-case class LatLon(lat:Double, long: Double)
+import org.apache.hadoop.fs._
 
 case class EnvDataSourceConfig(
   patgeo_data : String = "",
@@ -20,21 +19,17 @@ case class EnvDataSourceConfig(
   output_file : String = "",
   start_date : DateTime = DateTime.now(),
   end_date : DateTime = DateTime.now(),
-  output_format : String = "csv",
-  geo_coordinates : Boolean = false,
   fips_data: String = "",
-  sequential : Boolean = false,
-  date_offsets : Seq[Int]= -7 to 7,
   indices : Seq[String] = Seq("o3", "pm25"),
   statistics : Seq[String] = Seq("avg", "max"),
   indices2 : Seq[String] = Seq("ozone_daily_8hour_maximum", "pm25_daily_average")
 )
 
-class EnvDataSource(config: EnvDataSourceConfig) extends DataSource[SparkSession, LatLon, Seq[JsObject]] {
+class EnvDataSource(config: EnvDataSourceConfig) {
   private val cache = TrieMap[String, SoftReference[Seq[DataFrame]]]()
   val geoidfinder = new GeoidFinder(config.fips_data, "")
 
-  def loadEnvData(spark: SparkSession, coors: Seq[(Int, (Int, Int))], fips: String, years: Seq[Int], names: Seq[String], fipsnames: Seq[String]): Map[String, Map[String, Double]] = {
+  def loadEnvData(spark: SparkSession, coors: Seq[(Int, (Int, Int))], fips: String, years: Seq[Int], names: Seq[String], fipsnames: Seq[String]) = {
 
     def loadEnvDataFrame2(filename: String, names : Seq[String]) = {
       val df = spark.read.format("csv").option("header", value = true).load(filename)
@@ -78,81 +73,68 @@ class EnvDataSource(config: EnvDataSourceConfig) extends DataSource[SparkSession
     if (dfs.nonEmpty && dfs2.nonEmpty) {
       val df = dfs.reduce((a, b) => a.union(b))
       val df2 = dfs2.reduce((a, b) => a.union(b))
-      val dfjoined = df.join(df2, to_date(df.col("start_date")) <=> to_date(df2.col("Date")), "outer").drop("Date")
+      Some(df.join(df2, to_date(df.col("start_date")) <=> to_date(df2.col("Date")), "outer").drop("start_date"))
 
-      import spark.implicits._
-      dfjoined.map(row => (row.getString(0), row.getValuesMap[String](names).mapValues(x => x.toDouble))).collect.toMap
-
-    } else
-      Map.empty
-
-  }
-
-
-  def loadDailyEnvData(lat: Double, lon: Double, start_date: DateTime, env_data: Map[String, Map[String, Double]], coors: Map[Int, (Int, Int)], i: Int, names: Seq[String]): JsObject = {
-    var env = Json.obj()
-
-    for (ioff <- config.date_offsets) {
-      val curr_date = start_date.plusDays(ioff)
-      val str = curr_date.toString(DATE_FORMAT)
-
-      env_data.get(str) match {
-        case Some(data) =>
-          env ++= Json.obj("start_date" -> str)
-          env ++= Json.obj(names.flatMap(name => {
-            val num = data(name)
-            // println("num = " + num)
-            if (!num.isNaN)
-              Seq(name + "_day" + ioff -> (num: JsValueWrapper))
-            else
-              Seq()
-
-          }): _*)
-        case None =>
-      }
-
-      if (config.geo_coordinates) {
-        val year = curr_date.year.get
-        coors.get(year) match {
-          case Some((row, col)) =>
-            env ++= Json.obj("row_day" + ioff -> row, "col_day" + ioff -> col, "year_day" + ioff -> year)
-          case None =>
-        }
-      }
+    } else {
+      None
     }
 
-    if (config.geo_coordinates)
-      env ++= Json.obj(
-        "lat" -> lat,
-        "lon" -> lon
-      )
-    env ++= Json.obj("start_date" -> start_date.toString(DATE_FORMAT))
-
-    env
   }
 
-  def get(spark: SparkSession, latlon: LatLon) : Seq[JsObject] =
-    latlon match {
-      case LatLon(lat, lon) =>
-        val yearseq = (config.start_date.year.get to config.end_date.minusDays(1).year.get)
-        val coors = yearseq.intersect(Seq(2010,2011)).flatMap(year => {
-          latlon2rowcol(lat, lon, year) match {
-            case Some((row, col)) =>
-              Seq((year, (row, col)))
-            case _ =>
-              Seq()
+
+  def get(spark: SparkSession, lat: Double, lon: Double) : Option[DataFrame] = {
+    val yearseq = (config.start_date.year.get to config.end_date.minusDays(1).year.get)
+    val coors = yearseq.intersect(Seq(2010,2011)).flatMap(year => {
+      latlon2rowcol(lat, lon, year) match {
+        case Some((row, col)) =>
+          Seq((year, (row, col)))
+        case _ =>
+          Seq()
+      }
+    })
+    val fips = geoidfinder.getGeoidForLatLon(lat, lon)
+    val names = for (i <- config.statistics; j <- config.indices) yield f"${j}_$i"
+
+    loadEnvData(spark, coors, fips, yearseq, names, config.indices2)
+
+  }
+
+  def run(spark: SparkSession): Unit = {
+
+    import spark.implicits._
+
+    val patient_dimension = config.patgeo_data
+    println("loading patient_dimension from " + patient_dimension)
+    val pddf0 = spark.read.format("csv").option("header", value = true).load(patient_dimension)
+
+    val patl = pddf0.select("patient_num", "lat", "lon").map(r => (r.getString(0), r.getString(1).toDouble, r.getString(2).toDouble)).collect.toList
+
+    val hc = spark.sparkContext.hadoopConfiguration
+
+    val count = new AtomicInteger(0)
+    val n = patl.size
+
+    patl.foreach {
+      case (r, lat, lon) =>
+        println("processing " + count.incrementAndGet + " / " + n + " " + r)
+
+        val output_file = config.output_file.replace("%i", r)
+        val output_file_path = new Path(output_file)
+        val output_file_file_system = output_file_path.getFileSystem(hc)
+        if(output_file_file_system.exists(output_file_path)) {
+          println(output_file + " exists")
+        } else {
+          get(spark, lat, lon) match {
+            case Some(df) =>
+              writeDataframe(hc, output_file, df)
+            case None =>
           }
-        })
-        val fips = geoidfinder.getGeoidForLatLon(lat, lon)
-        val names = for (i <- config.statistics; j <- config.indices) yield f"${j}_$i"
-
-        val env_data = loadEnvData(spark, coors, fips, yearseq, names, config.indices2)
-
-        (0 until Days.daysBetween(config.start_date, config.end_date).getDays).map(i =>
-          loadDailyEnvData(lat, lon, config.start_date.plusDays(i), env_data, coors.toMap, i, names))
-
+        }
     }
 
+
+
+  }
 
 
 }
