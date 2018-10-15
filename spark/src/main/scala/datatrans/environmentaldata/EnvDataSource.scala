@@ -29,7 +29,7 @@ class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
     val (filename, names) = input
     val df = spark.read.format("csv").option("header", value = true).load(filename)
     if (names.forall(x => df.columns.contains(x))) {
-      Some(df)
+      Some(df.cache())
     } else {
       print(f"$filename doesn't contain all required columns")
       None
@@ -46,7 +46,7 @@ class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
     if(dfs2.nonEmpty) {
       val df2 = dfs2.reduce((a, b) => a.union(b))
       val df3 = df2.withColumn("start_date", to_date(df2.col("Date"),"yy/MM/dd"))
-      Some(df3)
+      Some(df3.cache())
     } else {
       None
     }
@@ -59,7 +59,7 @@ class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
         inputCache((filename, names))
     }
     if (dfs.nonEmpty) {
-      Some(dfs.reduce((a, b) => a.union(b)))
+      Some(dfs.reduce((a, b) => a.union(b)).cache())
     } else {
       None
     }
@@ -72,7 +72,7 @@ class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
 
     (df, df3) match {
       case (Some(df), Some(df3)) =>
-        Some(df.join(df3, Seq("start_date"), "outer").select("start_date", names ++ config.indices2 : _*))
+        Some(df.join(df3, Seq("start_date"), "outer").select("start_date", names ++ config.indices2 : _*).cache())
       case _ =>
         None
     }
@@ -104,38 +104,39 @@ class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
 
   def run(): Unit = {
 
-    import spark.implicits._
+    time {
+      import spark.implicits._
 
-    val patient_dimension = config.patgeo_data
-    println("loading patient_dimension from " + patient_dimension)
-    val pddf0 = spark.read.format("csv").option("header", value = true).load(patient_dimension)
+      val patient_dimension = config.patgeo_data
+      println("loading patient_dimension from " + patient_dimension)
+      val pddf0 = spark.read.format("csv").option("header", value = true).load(patient_dimension)
 
-    val patl = pddf0.select("patient_num", "lat", "lon").map(r => (r.getString(0), r.getString(1).toDouble, r.getString(2).toDouble)).collect.toList
+      val patl = pddf0.select("patient_num", "lat", "lon").map(r => (r.getString(0), r.getString(1).toDouble, r.getString(2).toDouble)).collect.toList
 
-    val hc = spark.sparkContext.hadoopConfiguration
+      val hc = spark.sparkContext.hadoopConfiguration
 
-    val count = new AtomicInteger(0)
-    val n = patl.size
+      val count = new AtomicInteger(0)
+      val n = patl.size
 
-    patl.foreach {
-      case (r, lat, lon) =>
-        println("processing " + count.incrementAndGet + " / " + n + " " + r)
+      patl.foreach{
+        case (r, lat, lon) =>
+          time {
+            println("processing " + count.incrementAndGet + " / " + n + " " + r)
 
-        val output_file = config.output_file.replace("%i", r)
-        val output_file_path = new Path(output_file)
-        val output_file_file_system = output_file_path.getFileSystem(hc)
-        if(output_file_file_system.exists(output_file_path)) {
-          println(output_file + " exists")
-        } else {
-          get(lat, lon) match {
-            case Some(df) =>
-              writeDataframe(hc, output_file, df)
-            case None =>
+            val output_file = config.output_file.replace("%i", r)
+            val output_file_path = new Path(output_file)
+            val output_file_file_system = output_file_path.getFileSystem(hc)
+            if(output_file_file_system.exists(output_file_path)) {
+              println(output_file + " exists")
+            } else {
+              get(lat, lon) match {
+                case Some(df) =>
+                  writeDataframe(hc, output_file, df)
+                case None =>
+              }
+            }
           }
-        }
+      }
     }
-
   }
-
-
 }
