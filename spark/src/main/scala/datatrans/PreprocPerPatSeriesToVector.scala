@@ -57,8 +57,8 @@ object PreprocPerPatSeriesToVector {
           val birth_date_joda = DateTime.parse(pat.birthDate, ISODateTimeFormat.dateParser())
           val sex = pat.gender
           val race = pat.race(0)
-          val demographic = Map[String, String]("patient_num" -> pat.id, "birth_date" -> birth_date_joda.toString("yyyy-MM-dd"), "sex" -> sex, "race" -> race)
-          val inter = new Interval(start_date, end_date)
+          val demographic = Map("patient_num" -> pat.id, "birth_date" -> birth_date_joda.toString("yyyy-MM-dd"), "sex" -> sex, "race" -> race)
+          val intv = new Interval(start_date, end_date)
           encounter.foreach(enc =>{
             var rec = demographic
             val med = enc.medication
@@ -67,7 +67,7 @@ object PreprocPerPatSeriesToVector {
             enc.startDate match {
               case Some(s) =>
                 val encounter_start_date_joda = DateTime.parse(s, ISODateTimeFormat.dateTimeParser())
-                if (inter.contains(encounter_start_date_joda)) {
+                if (intv.contains(encounter_start_date_joda)) {
                   val age = Years.yearsBetween (birth_date_joda, encounter_start_date_joda).getYears
                   rec += ("start_date" -> encounter_start_date_joda.toString("yyyy-MM-dd"), "age" -> age.toString())
 
