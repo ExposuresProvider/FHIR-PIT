@@ -136,7 +136,7 @@ object PreprocPerPatSeriesToVector {
           val end_date_joda = config.end_date
           val count = new AtomicInteger(0)
           val input_directory_path = new Path(config.input_directory)
-          new HDFSCollection(hc, input_directory_path).par.foreach(f => {
+          new HDFSCollection(hc, input_directory_path).foreach(f => {
             val p = f.getName.split("/")(0)
             println("processing " + count.incrementAndGet + " " + p)
             proc_pid(config, spark, p, start_date_joda, end_date_joda)
