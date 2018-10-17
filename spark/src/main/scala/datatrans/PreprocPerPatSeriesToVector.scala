@@ -54,7 +54,7 @@ object PreprocPerPatSeriesToVector {
           import spark.implicits._
           val pat = loadJson[Patient](hc, new Path(input_file))
 
-          val recs = new ListBuffer[Map[String, String]]() // a list of encounters, start_time
+          val recs = new ListBuffer[Map[String, Any]]() // a list of encounters, start_time
 
           val encounter = pat.encounter
           val birth_date_joda = DateTime.parse(pat.birthDate, ISODateTimeFormat.dateParser())
