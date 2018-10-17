@@ -60,7 +60,7 @@ object PreprocPerPatSeriesToVector {
           val birth_date_joda = DateTime.parse(pat.birthDate, ISODateTimeFormat.dateParser())
           val sex = pat.gender
           val race = pat.race(0)
-          val demographic = Map("patient_num" -> pat.id, "birth_date" -> birth_date_joda.toString("yyyy-MM-dd"), "sex" -> sex, "race" -> race)
+          val demographic = Map[String, Any]("patient_num" -> pat.id, "birth_date" -> birth_date_joda.toString("yyyy-MM-dd"), "sex" -> sex, "race" -> race)
           val intv = new Interval(start_date, end_date)
           encounter.foreach(enc =>{
             var rec = demographic
