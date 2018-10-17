@@ -66,7 +66,7 @@ object PreprocPerPatSeriesToVector {
             val lab = enc.labs
             enc.startDate match {
               case Some(s) =>
-                val encounter_start_date_joda = DateTime.parse(s, ISODateTimeFormat.timeParser())
+                val encounter_start_date_joda = DateTime.parse(s, ISODateTimeFormat.dateTimeParser())
                 if (inter.contains(encounter_start_date_joda)) {
                   val age = Years.yearsBetween (birth_date_joda, encounter_start_date_joda).getYears
                   rec += ("start_date" -> encounter_start_date_joda, "age" -> age)
