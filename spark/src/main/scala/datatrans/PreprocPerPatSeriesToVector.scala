@@ -95,7 +95,7 @@ object PreprocPerPatSeriesToVector {
           })
           val colnames = recs.map(m => m.keySet).fold(Set())((s, s2) => s.union(s2)).toSeq
 
-          val rows = recs.map(m => Row(colnames.map(colname => m.get(colname))))
+          val rows = recs.map(m => Row(colnames.map(colname => m.get(colname).getOrElse(null))))
 
           val schema = StructType(
             colnames.map(colname => StructField(colname, StringType, false))
