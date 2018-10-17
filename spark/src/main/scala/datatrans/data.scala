@@ -34,7 +34,7 @@ case class Labs(override val id : String, override val subjectReference : String
 case class Medication(override val id : String, override val subjectReference : String, override val contextReference : String, medication : String, authoredOn : String, start: String, end: Option[String]) extends Resource
 case class Procedure(override val id : String, override val subjectReference : String, override val contextReference : String, system : String, code : String, performedDateTime : String) extends Resource
 
-abstract class Value
+abstract class Value extends Serializable
 case class ValueQuantity(valueNumber : Double, unit : Option[String]) extends Value
 case class ValueString(valueText: String) extends Value
 
