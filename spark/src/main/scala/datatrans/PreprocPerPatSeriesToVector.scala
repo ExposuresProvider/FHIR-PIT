@@ -51,13 +51,13 @@ object PreprocPerPatSeriesToVector {
           import spark.implicits._
           val pat = loadJson[Patient](hc, new Path(input_file))
 
-          val recs = new ListBuffer[Map[String, Any]]() // a list of encounters, start_time
+          val recs = new ListBuffer[Map[String, String]]() // a list of encounters, start_time
 
           val encounter = pat.encounter
           val birth_date_joda = DateTime.parse(pat.birthDate, ISODateTimeFormat.dateParser())
           val sex = pat.gender
           val race = pat.race(0)
-          val demographic = Map("patient_num" -> pat, "birth_date" -> birth_date_joda, "sex" -> sex, "race" -> race)
+          val demographic = Map[String, String]("patient_num" -> pat.id, "birth_date" -> birth_date_joda.toString("yyyy-MM-dd"), "sex" -> sex, "race" -> race)
           val inter = new Interval(start_date, end_date)
           encounter.foreach(enc =>{
             var rec = demographic
@@ -69,21 +69,21 @@ object PreprocPerPatSeriesToVector {
                 val encounter_start_date_joda = DateTime.parse(s, ISODateTimeFormat.dateTimeParser())
                 if (inter.contains(encounter_start_date_joda)) {
                   val age = Years.yearsBetween (birth_date_joda, encounter_start_date_joda).getYears
-                  rec += ("start_date" -> encounter_start_date_joda, "age" -> age)
+                  rec += ("start_date" -> encounter_start_date_joda.toString("yyyy-MM-dd"), "age" -> age.toString())
 
                   med.foreach(m => {
                     if(m.medication.matches(config.regex_medication)) {
-                      rec += (m.medication -> 1)
+                      rec += (m.medication -> "1")
                     }
                   })
                   cond.foreach(m => {
                     if(m.code.matches(config.regex_condition)) {
-                      rec += (m.code -> 1)
+                      rec += (m.code -> "1")
                     }
                   })
                   lab.foreach(m => {
                     if(m.code.matches(config.regex_labs)) {
-                      rec += (m.code -> m.value)
+                      rec += (m.code -> m.value.toString())
                     }
                   })
                 }
