@@ -1,5 +1,6 @@
 package datatrans
 
+import java.io._
 import java.util.concurrent.atomic.AtomicInteger
 
 import datatrans.Utils._
@@ -75,16 +76,22 @@ object PreprocPerPatSeriesToVector {
                   med.foreach(m => {
                     if(m.medication.matches(config.regex_medication)) {
                       rec += (m.medication -> "1")
+                    } else {
+                      println(m.medication + " doesn't match " + config.regex_medication)
                     }
                   })
                   cond.foreach(m => {
                     if(m.code.matches(config.regex_condition)) {
                       rec += (m.code -> "1")
+                    } else {
+                      println(m.code + " doesn't match " + config.regex_condition)
                     }
                   })
                   lab.foreach(m => {
                     if(m.code.matches(config.regex_labs)) {
                       rec += (m.code -> m.value.toString())
+                    } else {
+                      println(m.code + " doesn't match " + config.regex_labs)
                     }
                   })
                 }
@@ -94,14 +101,13 @@ object PreprocPerPatSeriesToVector {
             }
           })
           val colnames = recs.map(m => m.keySet).fold(Set())((s, s2) => s.union(s2)).toSeq
-
-          val rows = recs.map(m => Row(colnames.map(colname => m.get(colname).getOrElse(null))))
-
-          val schema = StructType(
-            colnames.map(colname => StructField(colname, StringType, false))
-          )
-          val df = spark.createDataFrame(rows.asJava, schema)
-          Utils.writeDataframe(hc, output_file, df) 
+          val output_file_writer = new PrintWriter( new OutputStreamWriter(output_file_file_system.create(output_file_path), "UTF-8" ) )
+          output_file_writer.println(colnames.mkString(","))
+          
+          recs.foreach(m => {
+            output_file_writer.println(colnames.map(colname => m.get(colname).getOrElse("")))
+          })
+          output_file_writer.close()
 
         }
       }
