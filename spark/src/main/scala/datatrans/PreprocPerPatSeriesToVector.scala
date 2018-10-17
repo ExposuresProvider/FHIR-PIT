@@ -89,7 +89,7 @@ object PreprocPerPatSeriesToVector {
                 }
                 recs.append(rec)
               case None =>
-                print("no start_date, skipped " + enc.id)
+                println("no start_date, skipped " + enc.id)
             }
           })
           val colnames = recs.map(m => m.keySet).fold(Set())((s, s2) => s.union(s2)).toSeq
