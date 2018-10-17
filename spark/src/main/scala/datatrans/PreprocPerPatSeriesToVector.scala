@@ -4,8 +4,8 @@ import java.util.concurrent.atomic.AtomicInteger
 
 import datatrans.Utils._
 import org.apache.hadoop.fs.Path
-import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.Column
+import org.apache.spark.sql.types.{ StringType, StructField, StructType }
+import org.apache.spark.sql.{ SparkSession, Column, Row }
 import org.joda.time.format.ISODateTimeFormat
 import play.api.libs.json._
 import org.joda.time._
@@ -13,6 +13,7 @@ import org.joda.time.format.DateTimeFormat
 import scala.collection.mutable.{ ListBuffer, MultiMap }
 import scopt._
 import datatrans._
+import scala.collection.JavaConverters._
 
 case class Config(
   input_directory : String = "",
@@ -94,9 +95,12 @@ object PreprocPerPatSeriesToVector {
           })
           val colnames = recs.map(m => m.keySet).fold(Set())((s, s2) => s.union(s2)).toSeq
 
-          val rows = recs.map(m => colnames.map(colname => m.get(colname)))
+          val rows = recs.map(m => Row(colnames.map(colname => m.get(colname))))
 
-          val df = rows.toDF(colnames : _*)
+          val schema = StructType(
+            colnames.map(colname => StructField(colname, StringType, false))
+          )
+          val df = spark.createDataFrame(rows.asJava, schema)
           Utils.writeDataframe(hc, output_file, df) 
 
         }
