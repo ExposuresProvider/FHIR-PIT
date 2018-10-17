@@ -72,25 +72,25 @@ object PreprocPerPatSeriesToVector {
                 val encounter_start_date_joda = DateTime.parse(s, ISODateTimeFormat.dateTimeParser())
                 if (intv.contains(encounter_start_date_joda)) {
                   val age = Years.yearsBetween (birth_date_joda, encounter_start_date_joda).getYears
-                  rec += ("start_date" -> encounter_start_date_joda.toString("yyyy-MM-dd"), "age" -> age.toString())
+                  rec += ("start_date" -> encounter_start_date_joda.toString("yyyy-MM-dd"), "age" -> age)
 
                   med.foreach(m => {
                     if(m.medication.matches(config.regex_medication)) {
-                      rec += (m.medication -> "1")
+                      rec += (m.medication -> 1)
                     } else {
                       // println(m.medication + " doesn't match " + config.regex_medication)
                     }
                   })
                   cond.foreach(m => {
                     if(m.code.matches(config.regex_condition)) {
-                      rec += (m.code -> "1")
+                      rec += (m.code -> 1)
                     } else {
                       // println(m.code + " doesn't match " + config.regex_condition)
                     }
                   })
                   lab.foreach(m => {
                     if(m.code.matches(config.regex_labs)) {
-                      rec += (m.code -> m.value.toString())
+                      rec += (m.code -> m.value)
                     } else {
                       // println(m.code + " doesn't match " + config.regex_labs)
                     }
