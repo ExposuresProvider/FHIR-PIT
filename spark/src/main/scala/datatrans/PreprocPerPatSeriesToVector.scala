@@ -17,8 +17,8 @@ import datatrans._
 case class Config(
   input_directory : String = "",
   output_prefix : String = "",
-  start_date : DateTime = DateTime.parse("2010-01-01", ISODateTimeFormat.basicDate()),
-  end_date : DateTime = DateTime.parse("2015-01-01", ISODateTimeFormat.basicDate()),
+  start_date : DateTime = DateTime.parse("2010-01-01", ISODateTimeFormat.dateParser()),
+  end_date : DateTime = DateTime.parse("2015-01-01", ISODateTimeFormat.dateParser()),
   regex_labs : String = ".*",
   regex_medication : String = ".*",
   regex_condition : String = ".*"
@@ -53,7 +53,7 @@ object PreprocPerPatSeriesToVector {
           val recs = new ListBuffer[Map[String, Any]]() // a list of encounters, start_time
 
           val encounter = pat.encounter
-          val birth_date_joda = DateTime.parse(pat.birthDate, ISODateTimeFormat.basicDate())
+          val birth_date_joda = DateTime.parse(pat.birthDate, ISODateTimeFormat.dateParser())
           val sex = pat.gender
           val race = pat.race(0)
           val demographic = Map("patient_num" -> pat, "birth_date" -> birth_date_joda, "sex" -> sex, "race" -> race)
@@ -65,7 +65,7 @@ object PreprocPerPatSeriesToVector {
             val lab = enc.labs
             enc.startDate match {
               case Some(s) =>
-                val encounter_start_date_joda = DateTime.parse(s, ISODateTimeFormat.basicDateTimeNoMillis)
+                val encounter_start_date_joda = DateTime.parse(s, ISODateTimeFormat.timeParser())
                 if (inter.contains(encounter_start_date_joda)) {
                   val age = Years.yearsBetween (birth_date_joda, encounter_start_date_joda).getYears
                   rec += ("start_date" -> encounter_start_date_joda, "age" -> age)
@@ -109,8 +109,8 @@ object PreprocPerPatSeriesToVector {
       head("series_to_vector")
       opt[String]("input_directory").required.action((x,c) => c.copy(input_directory = x))
       opt[String]("output_prefix").required.action((x,c) => c.copy(output_prefix = x))
-      opt[String]("start_date").action((x,c) => c.copy(start_date = DateTime.parse(x, ISODateTimeFormat.basicDate())))
-      opt[String]("end_date").action((x,c) => c.copy(end_date = DateTime.parse(x, ISODateTimeFormat.basicDate())))
+      opt[String]("start_date").action((x,c) => c.copy(start_date = DateTime.parse(x, ISODateTimeFormat.dateParser())))
+      opt[String]("end_date").action((x,c) => c.copy(end_date = DateTime.parse(x, ISODateTimeFormat.dateParser())))
       opt[String]("regex_medication").action((x,c) => c.copy(regex_medication = x))
       opt[String]("regex_condition").action((x,c) => c.copy(regex_condition = x))
       opt[String]("regex_labs").action((x,c) => c.copy(regex_labs = x))
