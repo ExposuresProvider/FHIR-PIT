@@ -105,7 +105,7 @@ object PreprocPerPatSeriesToVector {
           output_file_writer.println(colnames.mkString(","))
           
           recs.foreach(m => {
-            output_file_writer.println(colnames.map(colname => m.get(colname).getOrElse("")))
+            output_file_writer.println(colnames.map(colname => m.get(colname).getOrElse("")).mkString(","))
           })
           output_file_writer.close()
 
