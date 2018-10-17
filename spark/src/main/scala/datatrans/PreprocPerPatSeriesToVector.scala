@@ -1,5 +1,6 @@
 package datatrans
 
+import com.opencsv.CSVWriter
 import java.io._
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -101,13 +102,13 @@ object PreprocPerPatSeriesToVector {
             }
           })
           val colnames = recs.map(m => m.keySet).fold(Set())((s, s2) => s.union(s2)).toSeq
-          val output_file_writer = new PrintWriter( new OutputStreamWriter(output_file_file_system.create(output_file_path), "UTF-8" ) )
-          output_file_writer.println(colnames.mkString(","))
+          val output_file_csv_writer = new CSVWriter( new OutputStreamWriter(output_file_file_system.create(output_file_path), "UTF-8" ) )
+          output_file_csv_writer.writeNext(colnames.toArray)
           
           recs.foreach(m => {
-            output_file_writer.println(colnames.map(colname => m.get(colname).getOrElse("")).mkString(","))
+            output_file_csv_writer.writeNext(colnames.map(colname => m.get(colname).getOrElse("")).toArray)
           })
-          output_file_writer.close()
+          output_file_csv_writer.close()
 
         }
       }
