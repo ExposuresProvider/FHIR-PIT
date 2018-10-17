@@ -47,7 +47,8 @@ object PreprocPerPatSeriesToVector {
           println("json not found, skipped " + p)
         } else {
           println("loading json from " + input_file)
-          import datatrans.Implicits1._
+          import datatrans.Implicits2._
+          import spark.implicits._
           val pat = loadJson[Patient](hc, new Path(input_file))
 
           val recs = new ListBuffer[Map[String, Any]]() // a list of encounters, start_time
@@ -95,7 +96,6 @@ object PreprocPerPatSeriesToVector {
 
           val rows = recs.map(m => colnames.map(colname => m.get(colname)))
 
-          import spark.implicits._
           val df = rows.toDF(colnames : _*)
           Utils.writeDataframe(hc, output_file, df) 
 
