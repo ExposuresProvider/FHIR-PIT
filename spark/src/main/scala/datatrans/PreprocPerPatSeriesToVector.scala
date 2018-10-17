@@ -1,6 +1,6 @@
 package datatrans
 
-import com.opencsv.CSVWriter
+import org.apache.commons.csv._
 import java.io._
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -78,35 +78,34 @@ object PreprocPerPatSeriesToVector {
                     if(m.medication.matches(config.regex_medication)) {
                       rec += (m.medication -> "1")
                     } else {
-                      println(m.medication + " doesn't match " + config.regex_medication)
+                      // println(m.medication + " doesn't match " + config.regex_medication)
                     }
                   })
                   cond.foreach(m => {
                     if(m.code.matches(config.regex_condition)) {
                       rec += (m.code -> "1")
                     } else {
-                      println(m.code + " doesn't match " + config.regex_condition)
+                      // println(m.code + " doesn't match " + config.regex_condition)
                     }
                   })
                   lab.foreach(m => {
                     if(m.code.matches(config.regex_labs)) {
                       rec += (m.code -> m.value.toString())
                     } else {
-                      println(m.code + " doesn't match " + config.regex_labs)
+                      // println(m.code + " doesn't match " + config.regex_labs)
                     }
                   })
                 }
                 recs.append(rec)
               case None =>
-                println("no start_date, skipped " + enc.id)
+                // println("no start_date, skipped " + enc.id)
             }
           })
           val colnames = recs.map(m => m.keySet).fold(Set())((s, s2) => s.union(s2)).toSeq
-          val output_file_csv_writer = new CSVWriter( new OutputStreamWriter(output_file_file_system.create(output_file_path), "UTF-8" ) )
-          output_file_csv_writer.writeNext(colnames.toArray)
+          val output_file_csv_writer = new CSVPrinter( new OutputStreamWriter(output_file_file_system.create(output_file_path), "UTF-8" ) , CSVFormat.DEFAULT.withHeader(colnames:_*))
           
           recs.foreach(m => {
-            output_file_csv_writer.writeNext(colnames.map(colname => m.get(colname).getOrElse("")).toArray)
+            output_file_csv_writer.printRecord(colnames.map(colname => m.get(colname).getOrElse("")).asJava)
           })
           output_file_csv_writer.close()
 
