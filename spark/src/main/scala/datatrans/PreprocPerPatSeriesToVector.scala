@@ -95,8 +95,8 @@ object PreprocPerPatSeriesToVector {
                       // println(m.code + " doesn't match " + config.regex_labs)
                     }
                   })
+                  recs.append(rec)
                 }
-                recs.append(rec)
               case None =>
                 // println("no start_date, skipped " + enc.id)
             }
