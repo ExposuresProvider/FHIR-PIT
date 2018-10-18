@@ -97,12 +97,17 @@ object PreprocPerPatSeriesToVector {
     }
   }
 
-  def map_medication(medmap : Option[Map[String, String]], code : String) : Option[String] = {
+  def map_medication(medmap : Option[Map[String, String]], code : String) : Seq[String] = {
     medmap match {
       case Some(mm) =>
-        mm.get(code.stripPrefix("Medication/"))
+        mm.get(code.stripPrefix("Medication/")) match {
+          case Some(ms) =>
+            ms.split(";").map(m => m.stripSuffix("[IN]").trim()).filter(m => m.nonEmpty)
+          case None =>
+            Seq()
+        }
       case None =>
-        Some(code.replace("[/|-:]", "_"))
+        Seq(code.replace("[/|-:]", "_"))
     }
   }
 
@@ -153,12 +158,9 @@ object PreprocPerPatSeriesToVector {
                   rec += ("start_date" -> encounter_start_date_joda.toString("yyyy-MM-dd"), "age" -> age, "encounter_num" -> enc.id, "encounter_code" -> enc.code.getOrElse(""))
 
                   med.foreach(m => {
-                    map_medication(medmap, m.medication) match {
-                      case Some(n) =>
-                        rec += (n -> 1)
-                      case _ =>
-                        // println(m.medication + " doesn't match " + config.regex_medication)
-                    }
+                    map_medication(medmap, m.medication).foreach(n => {
+                      rec += (n -> 1)
+                    })
                   })
                   cond.foreach(m => {
                     map_condition(m.code) match {
