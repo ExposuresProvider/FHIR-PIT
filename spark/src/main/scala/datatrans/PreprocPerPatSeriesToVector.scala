@@ -59,7 +59,7 @@ object PreprocPerPatSeriesToVector {
         Seq()
     }
   }
-  def map_procedure(system : String, code : String) : Seq[String] = {
+  def map_procedure(system : String, code : String) : Seq[String] = Seq() /* {
     system match {
       case "http://www.ama-assn.org/go/cpt/" =>
         code match {
@@ -95,7 +95,7 @@ object PreprocPerPatSeriesToVector {
       case _ =>
         Seq()
     }
-  }
+  } */
 
   def map_medication(medmap : Option[Map[String, String]], code : String) : Seq[String] = {
     medmap match {
