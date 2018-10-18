@@ -22,13 +22,48 @@ case class Config(
   input_directory : String = "",
   output_directory : String = "",
   start_date : DateTime = DateTime.parse("2010-01-01", ISODateTimeFormat.dateParser()),
-  end_date : DateTime = DateTime.parse("2015-01-01", ISODateTimeFormat.dateParser()),
-  regex_labs : String = ".*",
-  regex_medication : String = ".*",
-  regex_condition : String = ".*"
+  end_date : DateTime = DateTime.parse("2015-01-01", ISODateTimeFormat.dateParser())
 )
 
 object PreprocPerPatSeriesToVector {
+  val asthmare = "(493[.]|J45[.]).*".r
+  val croupre = "(464[.]|J05[.]).*".r
+  val reactiveAirwayRe = "(496[.]|J44[.]|J66[.]).*".r
+  val coughRe = "(786[.]|R05[.]).*".r
+  val pneumoniaRe = "(48[1-6][.]|J1[2-8].).*".r
+  val obesityRe = "(278[.]|E66.[^3]).*".r
+  def map_condition(code : String) : Option[String] = {
+    code match {
+      case asthmare(_*) =>
+        Some("AsthmaDx")
+      case croupre(_*) =>
+        Some("CroupDx")
+      case reactiveAirwayRe(_*) =>
+        Some("ReactiveAirwayDx")
+      case coughRe(_*) =>
+        Some("CoughDx")
+      case pneumoniaRe(_*) =>
+        Some("PneumoniaDx")
+      case obesityRe(_*) =>
+        Some("ObesityDx")
+      case _ =>
+        None
+    }
+  }
+
+  def map_labs(code : String) : Option[String] = {
+    code match {
+      case _ =>
+        None
+    }
+  }
+  def map_medication(code : String) : Option[String] = {
+    code match {
+      case _ =>
+        None
+    }
+  }
+
 
   def proc_pid(config : Config, spark: SparkSession, p:String, start_date : DateTime, end_date : DateTime): Unit =
     time {
@@ -76,24 +111,27 @@ object PreprocPerPatSeriesToVector {
                   rec += ("start_date" -> encounter_start_date_joda.toString("yyyy-MM-dd"), "age" -> age, "encounter_num" -> enc.id, "encounter_code" -> enc.code.getOrElse(""))
 
                   med.foreach(m => {
-                    if(m.medication.matches(config.regex_medication)) {
-                      rec += (m.medication.replaceAll("[/.-]", "_") -> 1)
-                    } else {
-                      // println(m.medication + " doesn't match " + config.regex_medication)
+                    map_medication(m.medication) match {
+                      case Some(n) =>
+                        rec += (n -> 1)
+                      case _ =>
+                        // println(m.medication + " doesn't match " + config.regex_medication)
                     }
                   })
                   cond.foreach(m => {
-                    if(m.code.matches(config.regex_condition)) {
-                      rec += ("condition_" + m.code.replaceAll("[/.-]", "_") -> 1)
-                    } else {
-                      // println(m.code + " doesn't match " + config.regex_condition)
+                    map_condition(m.code) match {
+                      case Some(n) =>
+                        rec += (n -> 1)
+                      case _ =>
+                        // println(m.code + " doesn't match " + config.regex_condition)
                     }
                   })
                   lab.foreach(m => {
-                    if(m.code.matches(config.regex_labs)) {
-                      rec += ("lab_" + m.code.replaceAll("[/.-]", "_") -> m.value)
-                    } else {
-                      // println(m.code + " doesn't match " + config.regex_labs)
+                    map_labs(m.code) match {
+                      case Some(a) =>
+                        rec += (a -> m.value)
+                      case _ =>
+                        // println(m.code + " doesn't match " + config.regex_labs)
                     }
                   })
                   recs.append(rec)
@@ -129,9 +167,6 @@ object PreprocPerPatSeriesToVector {
       opt[String]("output_directory").required.action((x,c) => c.copy(output_directory = x))
       opt[String]("start_date").action((x,c) => c.copy(start_date = DateTime.parse(x, ISODateTimeFormat.dateParser())))
       opt[String]("end_date").action((x,c) => c.copy(end_date = DateTime.parse(x, ISODateTimeFormat.dateParser())))
-      opt[String]("regex_medication").action((x,c) => c.copy(regex_medication = x))
-      opt[String]("regex_condition").action((x,c) => c.copy(regex_condition = x))
-      opt[String]("regex_labs").action((x,c) => c.copy(regex_labs = x))
     }
 
     val spark = SparkSession.builder().appName("datatrans preproc").getOrCreate()
