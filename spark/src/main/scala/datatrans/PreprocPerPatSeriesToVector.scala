@@ -144,44 +144,56 @@ object PreprocPerPatSeriesToVector {
           val race = pat.race(0)
           val demographic = Map[String, Any]("patient_num" -> pat.id, "birth_date" -> birth_date_joda.toString("yyyy-MM-dd"), "sex" -> sex, "race" -> race)
           val intv = new Interval(start_date, end_date)
-          encounter.foreach(enc =>{
-            var rec = demographic
-            val med = enc.medication
-            val cond = enc.condition
-            val lab = enc.labs
-            val proc = enc.procedure
+
+          val encounter_map = new scala.collection.mutable.HashMap[DateTime, scala.collection.mutable.Set[Encounter]] with MultiMap[DateTime, Encounter]
+          encounter.foreach(enc => {
             enc.startDate match {
               case Some(s) =>
                 val encounter_start_date_joda = DateTime.parse(s, ISODateTimeFormat.dateTimeParser())
                 if (intv.contains(encounter_start_date_joda)) {
-                  val age = Years.yearsBetween (birth_date_joda, encounter_start_date_joda).getYears
-                  rec += ("start_date" -> encounter_start_date_joda.toString("yyyy-MM-dd"), "age" -> age, "encounter_num" -> enc.id, "encounter_code" -> enc.code.getOrElse(""))
-
-                  med.foreach(m => {
-                    map_medication(medmap, m.medication).foreach(n => {
-                      rec += (n -> 1)
-                    })
-                  })
-                  cond.foreach(m => {
-                    map_condition(m.code).foreach(n => {
-                      rec += (n -> 1)
-                    })
-                  })
-                  lab.foreach(m => {
-                    map_labs(m.code).foreach(n => {
-                      rec += (n -> m.value)
-                    })
-                  })
-                  proc.foreach(m => {
-                    map_procedure(m.system, m.code).foreach(n => {
-                      rec += (n -> 1)
-                    })
-                  })
-                  recs.append(rec)
+                  encounter_map.addBinding(encounter_start_date_joda, enc)
                 }
               case None =>
             }
           })
+
+          encounter_map.foreach {
+            case (encounter_start_date_joda, encset) =>
+              var rec0 = demographic
+              val age = Years.yearsBetween (birth_date_joda, encounter_start_date_joda).getYears
+              rec0 += ("start_date" -> encounter_start_date_joda.toString("yyyy-MM-dd"), "age" -> age) 
+
+              encset.foreach(enc => {
+                var rec = rec0 + ("encounter_num" -> enc.id, "encounter_code" -> enc.code.getOrElse(""))
+                val med = enc.medication
+                val cond = enc.condition
+                val lab = enc.labs
+                val proc = enc.procedure
+
+                med.foreach(m => {
+                  map_medication(medmap, m.medication).foreach(n => {
+                    rec += (n -> 1)
+                  })
+                })
+                cond.foreach(m => {
+                  map_condition(m.code).foreach(n => {
+                    rec += (n -> 1)
+                  })
+                })
+                lab.foreach(m => {
+                  map_labs(m.code).foreach(n => {
+                    rec += (n -> m.value)
+                  })
+                })
+                proc.foreach(m => {
+                  map_procedure(m.system, m.code).foreach(n => {
+                    rec += (n -> 1)
+                  })
+                })
+                recs.append(rec)
+              })
+
+          }
 
           val colnames = recs.map(m => m.keySet).fold(Set())((s, s2) => s.union(s2)).toSeq
           val output_file_csv_writer = new CSVPrinter( new OutputStreamWriter(output_file_file_system.create(output_file_path), "UTF-8" ) , CSVFormat.DEFAULT.withHeader(colnames:_*))
