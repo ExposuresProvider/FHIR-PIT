@@ -206,7 +206,7 @@ object PreprocPerPatSeriesToVector {
                 csvParser.asScala.foreach(rec => {
                   val rec2 = colnames.map(co => 
                     hdrmap.get(co) match {
-                      case Some(x) => x
+                      case Some(x) => rec.get(x)
                       case None => ""
                     }
                   ).asJava
