@@ -10,6 +10,6 @@ output_dir = sys.argv[4]
 
 submit(host_name, cache_dir, "datatrans.PreprocPerPatSeriesToVector",
            "--input_directory=" + input_dir + "/",
-           "--output_prefix=" + output_dir + "/",
+           "--output_directory=" + output_dir + "/",
        *sys.argv[5:])
 
