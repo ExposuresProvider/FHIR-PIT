@@ -175,16 +175,12 @@ object PreprocPerPatSeriesToVector {
               })
             }
 
-            val dfs2 = dfs.map(df => {
-              df.select(expr(df.columns, total):_*)
-            })
+            val dfs2 = dfs.map(df => df.select(expr(df.columns, total):_*))
 
             println("combine dataframes")
             val df = dfs2.reduce((df1, df2) => df1.unionAll(df2))
             writeDataframe(hc, config.output_directory + "/all", df)
           }
-          
-
 
         }
       case None =>
