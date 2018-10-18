@@ -77,21 +77,21 @@ object PreprocPerPatSeriesToVector {
 
                   med.foreach(m => {
                     if(m.medication.matches(config.regex_medication)) {
-                      rec += (m.medication -> 1)
+                      rec += (m.medication.replaceAll("[/.-]", "_") -> 1)
                     } else {
                       // println(m.medication + " doesn't match " + config.regex_medication)
                     }
                   })
                   cond.foreach(m => {
                     if(m.code.matches(config.regex_condition)) {
-                      rec += (m.code -> 1)
+                      rec += ("condition_" + m.code.replaceAll("[/.-]", "_") -> 1)
                     } else {
                       // println(m.code + " doesn't match " + config.regex_condition)
                     }
                   })
                   lab.foreach(m => {
                     if(m.code.matches(config.regex_labs)) {
-                      rec += (m.code -> m.value)
+                      rec += ("lab_" + m.code.replaceAll("[/.-]", "_") -> m.value)
                     } else {
                       // println(m.code + " doesn't match " + config.regex_labs)
                     }
@@ -120,11 +120,10 @@ object PreprocPerPatSeriesToVector {
     val cols2 = df2.columns.toSet
     val total = cols1 ++ cols2 // union
 
-    def quote(x:String) = if(x(0) != '`') {"`" + x + "`"} else {x}
     def expr(myCols: Set[String], allCols: Set[String]) = {
       allCols.toList.map(x => x match {
-        case x if myCols.contains(x) => col(quote(x))
-        case _ => lit(null).as(quote(x))
+        case x if myCols.contains(x) => col(x)
+        case _ => lit(null).as(x)
       })
     }
 
