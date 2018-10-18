@@ -122,8 +122,8 @@ object PreprocPerPatSeriesToVector {
 
     def expr(myCols: Set[String], allCols: Set[String]) = {
       allCols.toList.map(x => x match {
-        case x if myCols.contains(x) => col(x)
-        case _ => lit(null).as(x)
+        case x if myCols.contains(x) => col("`" + x + "`")
+        case _ => lit(null).as("`" + x + "`")
       })
     }
 
