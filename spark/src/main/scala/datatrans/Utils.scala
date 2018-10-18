@@ -425,4 +425,10 @@ class Cache[K,V <: AnyRef](fun : K => V) {
     }
   }
 }
+  def withCounter[U](a: AtomicInteger => U) : U = {
+    val count = new AtomicInteger(0)
+    a(count)
+  }
+
+
 }

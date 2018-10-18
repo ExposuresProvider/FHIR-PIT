@@ -148,27 +148,33 @@ object PreprocPerPatSeriesToVector {
           val hc = spark.sparkContext.hadoopConfiguration
           val start_date_joda = config.start_date
           val end_date_joda = config.end_date
-          val count = new AtomicInteger(0)
+
           val input_directory_path = new Path(config.input_directory)
-          new HDFSCollection(hc, input_directory_path).foreach(f => {
-            val p = f.getName
-            println("processing " + count.incrementAndGet + " " + p)
-            proc_pid(config, spark, p, start_date_joda, end_date_joda)
-          })
+
+          withCounter(count =>
+            new HDFSCollection(hc, input_directory_path).foreach(f => {
+              val p = f.getName
+              println("processing " + count.incrementAndGet + " " + p)
+              proc_pid(config, spark, p, start_date_joda, end_date_joda)
+            })
+          )
+
           println("combining output")
           val output_directory_path = new Path(config.output_directory)
           import spark.implicits._
-          val dfs = new HDFSCollection(hc, output_directory_path).map(f => {
-            println("loading " + f)
-            spark.read.format("csv").option("header", value = true).load(f.toString())
-          })
+
+          val dfs = withCounter(count =>
+            new HDFSCollection(hc, output_directory_path).map(f => {
+              println("loading " + count.incrementAndGet + " " + f)
+              spark.read.format("csv").option("header", value = true).load(f.toString())
+            })
+          )
 
           if (!dfs.isEmpty) {
             println("find columns")
             val total = dfs.map(df => df.columns.toSet).reduce((df1, df2) => df1 ++ df2)
 
             println("extend dataframes")
-            val count = new AtomicInteger(0)
 
             def expr(myCols: Seq[String], allCols: Set[String]) = {
               allCols.toList.map(x => x match {
@@ -177,12 +183,15 @@ object PreprocPerPatSeriesToVector {
               })
             }
 
-            val dfs2 = dfs.par.map(df => {
-              println("processing " + count.incrementAndGet)
-              df.select(expr(df.columns, total):_*)
-            })
+            val dfs2 = withCounter(count =>
+             dfs.par.map(df => {
+                println("processing " + count.incrementAndGet)
+                df.select(expr(df.columns, total):_*)
+              })
+            )
 
             println("combine dataframes")
+
             val df = dfs2.reduce((df1, df2) => df1.unionAll(df2))
             writeDataframe(hc, config.output_directory + "/all", df)
           }
@@ -192,7 +201,7 @@ object PreprocPerPatSeriesToVector {
     }
 
 
-  spark.stop()
+    spark.stop()
 
 
   }
