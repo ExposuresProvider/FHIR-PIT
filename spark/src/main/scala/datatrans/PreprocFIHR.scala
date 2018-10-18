@@ -301,7 +301,7 @@ object PreprocFIHR {
     val pat_dir_path = new Path(pat_dir)
     val pat_dir_df = output_dir_file_system.listStatus(pat_dir_path, new PathFilter {
       override def accept(path : Path): Boolean = output_dir_file_system.isFile(path)
-    }).map(fs => fs.getPath.getName.split("/").last).toSeq.toDS
+    }).map(fs => fs.getPath.getName).toSeq.toDS
 
     val out_df = pat_dir_df.map(patient_num => {
       println("processing " + patient_num)
