@@ -6,16 +6,10 @@ host_name = sys.argv[2]
 input_dir = sys.argv[3]
 resc_types = sys.argv[4]
 skip_preproc = sys.argv[5]
-replace_pat = bool(sys.argv[6])
-verify_dups = bool(sys.argv[7])
-output_dir = sys.argv[8]
+output_dir = sys.argv[6]
 
 args = []
-if replace_pat:
-    args.append("--replace_pat")
-if verify_dups:
-    args.append("--verify_dups")
-args.extend(sys.argv[9:])
+args.extend(sys.argv[7:])
 
 submit(host_name, cache_dir, "datatrans.PreprocFIHR",
            "--input_dir=" + input_dir,

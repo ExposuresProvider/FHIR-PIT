@@ -57,6 +57,43 @@ object PreprocPerPatSeriesToVector {
         None
     }
   }
+  def map_procedure(system : String, code : String) : Option[String] = {
+    system match {
+      case "http://www.ama-assn.org/go/cpt/" =>
+        code match {
+          case "94010" =>
+            Some("spirometry")
+          case "94070" =>
+            Some("multiple spirometry")
+          case "95070" =>
+            Some("methacholine challenge test")
+          case "94620" =>
+            Some("simple exercise stress test")
+          case "94621" =>
+            Some("complex exercise stress test")
+          case "31624" =>
+            Some("bronchoscopy")
+          case "94375" =>
+            Some("flow-volume loop")
+          case "94060" =>
+            Some("spirometry (pre/post bronchodilator test)")
+          case "94070" =>
+            Some("bronchospasm provocation")
+          case "95070" =>
+            Some("inhalation bronchial challenge")
+          case "94664" =>
+            Some("bronchodilator administration")
+          case "94620" =>
+            Some("pulmonary stress test")
+          case "95027" =>
+            Some("airborne allergen panel")
+          case _ =>
+            None
+        }
+      case _ =>
+        None
+    }
+  }
   def map_medication(code : String) : Option[String] = {
     code match {
       case _ =>
@@ -74,7 +111,7 @@ object PreprocPerPatSeriesToVector {
       val input_file_path = new Path(input_file)
       val input_file_file_system = input_file_path.getFileSystem(hc)
 
-      val output_file = config.output_directory + "/" + p
+      val output_file = config.output_directory + "/per_patient/" + p
       val output_file_path = new Path(output_file)
       val output_file_file_system = output_file_path.getFileSystem(hc)
 
@@ -103,6 +140,7 @@ object PreprocPerPatSeriesToVector {
             val med = enc.medication
             val cond = enc.condition
             val lab = enc.labs
+            val proc = enc.procedure
             enc.startDate match {
               case Some(s) =>
                 val encounter_start_date_joda = DateTime.parse(s, ISODateTimeFormat.dateTimeParser())
@@ -130,6 +168,14 @@ object PreprocPerPatSeriesToVector {
                     map_labs(m.code) match {
                       case Some(a) =>
                         rec += (a -> m.value)
+                      case _ =>
+                        // println(m.code + " doesn't match " + config.regex_labs)
+                    }
+                  })
+                  proc.foreach(m => {
+                    map_procedure(m.system, m.code) match {
+                      case Some(a) =>
+                        rec += (a -> 1)
                       case _ =>
                         // println(m.code + " doesn't match " + config.regex_labs)
                     }
@@ -195,7 +241,7 @@ object PreprocPerPatSeriesToVector {
           )
 
           println("combining output")
-          val output_directory_path = new Path(config.output_directory)
+          val output_directory_path = new Path(config.output_directory + "/per_patient")
           val output_directory_file_system = output_directory_path.getFileSystem(hc)
           import spark.implicits._
 

@@ -15,9 +15,7 @@ case class PreprocFIHRConfig(
   input_dir : String = "",
   output_dir : String = "",
   resc_types : Seq[String] = Seq(),
-  skip_preproc : Seq[String] = Seq(),
-  replace_pat : Boolean = false,
-  verify_dups: Boolean = false
+  skip_preproc : Seq[String] = Seq()
 )
 
 object PreprocFIHR {
@@ -29,8 +27,6 @@ object PreprocFIHR {
       opt[String]("output_dir").required.action((x,c) => c.copy(output_dir = x))
       opt[Seq[String]]("resc_types").required.action((x,c) => c.copy(resc_types = x))
       opt[Seq[String]]("skip_preproc").required.action((x,c) => c.copy(skip_preproc = x))
-      opt[Unit]("replace_pat").action((x,c) => c.copy(replace_pat = true))
-      opt[Unit]("verify_dups").action((x,c) => c.copy(verify_dups = true))
     }
 
     val spark = SparkSession.builder().appName("datatrans preproc").getOrCreate()
@@ -141,25 +137,6 @@ object PreprocFIHR {
         
         if (output_dir_file_system.exists(output_file_path)) {
           println(output_file + " exists")
-          if (config.verify_dups) {
-            var duplicate = false
-            var obj3 : JsValue = null
-            val obj2 = parseFile
-            try {
-              val output_file_input_stream = output_dir_file_system.open(output_file_path)
-              obj3 = Json.parse(output_file_input_stream)
-              if(obj3 != obj2) {
-                duplicate = true
-              }
-            } catch {
-              case e: Exception =>
-                println("caught exception while verifying dups: " + e + ".\n overwriting file " + output_file)
-                writeFile(obj2)
-            }
-            if(duplicate) {
-              throw new RuntimeException("differet objects share the same id " + obj3 + obj2)
-            }
-          }
         } else {
           val obj2 = parseFile
           writeFile(obj2)
@@ -239,7 +216,7 @@ object PreprocFIHR {
 
         val output_file = config.output_dir + "/Patient/" + patient_num
         val output_file_path = new Path(output_file)
-        if (!config.replace_pat && output_dir_file_system.exists(output_file_path)) {
+        if (output_dir_file_system.exists(output_file_path)) {
           println(output_file + " exists")
         } else {
 
