@@ -169,7 +169,7 @@ object PreprocPerPatSeriesToVector {
                   })
                   lab.foreach(m => {
                     map_labs(m.code).foreach(n => {
-                      rec += (a -> m.value)
+                      rec += (n -> m.value)
                     })
                   })
                   proc.foreach(m => {
