@@ -116,24 +116,18 @@ object PreprocPerPatSeriesToVector {
 
   // https://stackoverflow.com/questions/39758045/how-to-perform-union-on-two-dataframes-with-different-amounts-of-columns-in-spar
   def unionDf(df1:org.apache.spark.sql.DataFrame, df2:org.apache.spark.sql.DataFrame) = {
-    if(df1 == null) {
-      df2
-    } else if (df2 == null) {
-      df1
-    } else {
-      val cols1 = df1.columns.toSet
-      val cols2 = df2.columns.toSet
-      val total = cols1 ++ cols2 // union
+    val cols1 = df1.columns.toSet
+    val cols2 = df2.columns.toSet
+    val total = cols1 ++ cols2 // union
 
-      def expr(myCols: Set[String], allCols: Set[String]) = {
-        allCols.toList.map(x => x match {
-          case x if myCols.contains(x) => col(x)
-          case _ => lit(null).as(x)
-        })
-      }
-
-      df1.select(expr(cols1, total):_*).unionAll(df2.select(expr(cols2, total):_*))
+    def expr(myCols: Set[String], allCols: Set[String]) = {
+      allCols.toList.map(x => x match {
+        case x if myCols.contains(x) => col(x)
+        case _ => lit(null).as(x)
+      })
     }
+
+    df1.select(expr(cols1, total):_*).unionAll(df2.select(expr(cols2, total):_*))
   }
 
   def main(args: Array[String]) {
@@ -172,11 +166,15 @@ object PreprocPerPatSeriesToVector {
           println("combining output")
           val output_directory_path = new Path(config.output_directory)
           import spark.implicits._
-          new HDFSCollection(hc, output_directory_path).map(f => {
+          val dfs = new HDFSCollection(hc, output_directory_path).map(f => {
             val p = f.getName.split("/")(0)
             println("loading " + count.incrementAndGet + " " + p)
             spark.read.format("csv").option("header", value = true).load(f.getName)
-          }).fold(null)(unionDf)
+          })
+          if (!dfs.isEmpty) {
+            val df = dfs.reduce(unionDf)
+            writeDataframe(hc, config.output_directory + "/all", df)
+          }
           
 
 
