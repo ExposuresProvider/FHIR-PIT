@@ -167,7 +167,7 @@ object PreprocPerPatSeriesToVector {
           val output_directory_path = new Path(config.output_directory)
           import spark.implicits._
           val dfs = new HDFSCollection(hc, output_directory_path).map(f => {
-            println("loading " + count.incrementAndGet + " " + f)
+            println("loading " + f)
             spark.read.format("csv").option("header", value = true).load(f.toString())
           })
           if (!dfs.isEmpty) {
