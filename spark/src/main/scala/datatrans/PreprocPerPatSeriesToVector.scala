@@ -120,14 +120,6 @@ object PreprocPerPatSeriesToVector {
     val cols2 = df2.columns.toSet
     val total = cols1 ++ cols2 // union
 
-    def expr(myCols: Set[String], allCols: Set[String]) = {
-      allCols.toList.map(x => x match {
-        case x if myCols.contains(x) => col(x)
-        case _ => lit(null).as(x)
-      })
-    }
-
-    df1.select(expr(cols1, total):_*).unionAll(df2.select(expr(cols2, total):_*))
   }
 
   def main(args: Array[String]) {
@@ -170,8 +162,25 @@ object PreprocPerPatSeriesToVector {
             println("loading " + f)
             spark.read.format("csv").option("header", value = true).load(f.toString())
           })
+
           if (!dfs.isEmpty) {
-            val df = dfs.reduce(unionDf)
+            val total = dfs.map(df => df.columns.toSet).reduce((df1, df2) => df1 ++ df2)
+
+            println("find columns")
+            def expr(myCols: Seq[String], allCols: Set[String]) = {
+              allCols.toList.map(x => x match {
+                case x if myCols.contains(x) => col(x)
+                case _ => lit(null).as(x)
+              })
+            }
+
+            println("extend dataframes")
+            val dfs2 = dfs.map(df => {
+              df.select(expr(df.columns, total):_*)
+            })
+
+            println("combine dataframes")
+            val df = dfs2.reduce((df1, df2) => df1.unionAll(df2))
             writeDataframe(hc, config.output_directory + "/all", df)
           }
           
