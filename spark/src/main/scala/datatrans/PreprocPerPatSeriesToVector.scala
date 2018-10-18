@@ -34,66 +34,66 @@ object PreprocPerPatSeriesToVector {
   val coughRe = "(786[.]|R05[.]).*".r
   val pneumoniaRe = "(48[1-6][.]|J1[2-8].).*".r
   val obesityRe = "(278[.]|E66.[^3]).*".r
-  def map_condition(code : String) : Option[String] = {
+  def map_condition(code : String) : Seq[String] = {
     code match {
       case asthmare(_*) =>
-        Some("AsthmaDx")
+        Seq("AsthmaDx")
       case croupre(_*) =>
-        Some("CroupDx")
+        Seq("CroupDx")
       case reactiveAirwayRe(_*) =>
-        Some("ReactiveAirwayDx")
+        Seq("ReactiveAirwayDx")
       case coughRe(_*) =>
-        Some("CoughDx")
+        Seq("CoughDx")
       case pneumoniaRe(_*) =>
-        Some("PneumoniaDx")
+        Seq("PneumoniaDx")
       case obesityRe(_*) =>
-        Some("ObesityDx")
+        Seq("ObesityDx")
       case _ =>
-        None
+        Seq()
     }
   }
 
-  def map_labs(code : String) : Option[String] = {
+  def map_labs(code : String) : Seq[String] = {
     code match {
       case _ =>
-        None
+        Seq()
     }
   }
-  def map_procedure(system : String, code : String) : Option[String] = {
+  def map_procedure(system : String, code : String) : Seq[String] = {
     system match {
       case "http://www.ama-assn.org/go/cpt/" =>
         code match {
           case "94010" =>
-            Some("spirometry")
+            Seq("spirometry")
           case "94070" =>
-            Some("multiple spirometry")
+            Seq("multiple spirometry")
           case "95070" =>
-            Some("methacholine challenge test")
+            Seq("methacholine challenge test")
           case "94620" =>
-            Some("simple exercise stress test")
+            Seq("simple exercise stress test")
           case "94621" =>
-            Some("complex exercise stress test")
+            Seq("complex exercise stress test")
           case "31624" =>
-            Some("bronchoscopy")
+            Seq("bronchoscopy")
           case "94375" =>
-            Some("flow-volume loop")
+            Seq("flow-volume loop")
           case "94060" =>
-            Some("spirometry (pre/post bronchodilator test)")
+            Seq("spirometry (pre/post bronchodilator test)")
           case "94070" =>
-            Some("bronchospasm provocation")
+            Seq("bronchospasm provocation")
           case "95070" =>
-            Some("inhalation bronchial challenge")
+            Seq("inhalation bronchial challenge")
           case "94664" =>
-            Some("bronchodilator administration")
+            Seq("bronchodilator administration")
           case "94620" =>
-            Some("pulmonary stress test")
+            Seq("pulmonary stress test")
           case "95027" =>
-            Some("airborne allergen panel")
+            Seq("airborne allergen panel")
           case _ =>
-            None
+            Seq()
         }
       case _ =>
-        None
+        Seq()
     }
   }
 
@@ -163,31 +163,26 @@ object PreprocPerPatSeriesToVector {
                     })
                   })
                   cond.foreach(m => {
-                    map_condition(m.code) match {
-                      case Some(n) =>
-                        rec += (n -> 1)
-                      case _ =>
-                    }
+                    map_condition(m.code).foreach(n => {
+                      rec += (n -> 1)
+                    })
                   })
                   lab.foreach(m => {
-                    map_labs(m.code) match {
-                      case Some(a) =>
-                        rec += (a -> m.value)
-                      case _ =>
-                    }
+                    map_labs(m.code).foreach(n => {
+                      rec += (a -> m.value)
+                    })
                   })
                   proc.foreach(m => {
-                    map_procedure(m.system, m.code) match {
-                      case Some(a) =>
-                        rec += (a -> 1)
-                      case _ =>
-                    }
+                    map_procedure(m.system, m.code).foreach(n => {
+                      rec += (a -> 1)
+                    })
                   })
                   recs.append(rec)
                 }
               case None =>
             }
           })
+
           val colnames = recs.map(m => m.keySet).fold(Set())((s, s2) => s.union(s2)).toSeq
           val output_file_csv_writer = new CSVPrinter( new OutputStreamWriter(output_file_file_system.create(output_file_path), "UTF-8" ) , CSVFormat.DEFAULT.withHeader(colnames:_*))
           
