@@ -5,6 +5,7 @@ import java.io._
 import java.util.concurrent.atomic.AtomicInteger
 
 import datatrans.Utils._
+import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
 import org.apache.spark.sql.types.{ StringType, StructField, StructType }
 import org.apache.spark.sql.{ SparkSession, Column, Row }
@@ -106,10 +107,10 @@ object PreprocPerPatSeriesToVector {
   }
 
 
-  def proc_pid(config : Config, spark: SparkSession, p:String, start_date : DateTime, end_date : DateTime, medmap : Option[Map[String, String]]): Unit =
+  def proc_pid(config : Config, hc : Configuration, p:String, start_date : DateTime, end_date : DateTime, medmap : Option[Map[String, String]]): Unit =
     time {
 
-      val hc = spark.sparkContext.hadoopConfiguration
+
 
       val input_file = f"${config.input_directory}/$p"
       val input_file_path = new Path(input_file)
@@ -128,7 +129,6 @@ object PreprocPerPatSeriesToVector {
         } else {
           println("loading json from " + input_file)
           import datatrans.Implicits2._
-          import spark.implicits._
           val pat = loadJson[Patient](hc, new Path(input_file))
 
           val recs = new ListBuffer[Map[String, Any]]() // a list of encounters, start_time
@@ -202,14 +202,22 @@ object PreprocPerPatSeriesToVector {
       }
     }
 
-  // https://stackoverflow.com/questions/39758045/how-to-perform-union-on-two-dataframes-with-different-amounts-of-columns-in-spar
-  def unionDf(df1:org.apache.spark.sql.DataFrame, df2:org.apache.spark.sql.DataFrame) = {
-    val cols1 = df1.columns.toSet
-    val cols2 = df2.columns.toSet
-    val total = cols1 ++ cols2 // union
+  def loadMedMap(hc : Configuration, med_map : String) : Map[String, String] = {
+    val med_map_path = new Path(med_map)
+    val input_directory_file_system = med_map_path.getFileSystem(hc)
 
+    val csvParser = new CSVParser(new InputStreamReader(input_directory_file_system.open(med_map_path), "UTF-8"), CSVFormat.DEFAULT
+      .withDelimiter("\t")
+      .withTrim())
+
+    try {
+      Map(csvParser.asScala.map(rec => (rec.get(0).stripPrefix("MDCTN:"), rec.get(3).stripSuffix(";"))).toSeq : _*)
+    } finally {
+      csvParser.close()
+    }
+   
   }
-
+  
   def main(args: Array[String]) {
     val parser = new OptionParser[Config]("series_to_vector") {
       head("series_to_vector")
@@ -238,25 +246,14 @@ object PreprocPerPatSeriesToVector {
           val input_directory_path = new Path(config.input_directory)
           val input_directory_file_system = input_directory_path.getFileSystem(hc)
 
-          val medmap = config.med_map.map(med_map => {
-            val med_map_path = new Path(med_map)
-
-            val csvParser = new CSVParser(new InputStreamReader(input_directory_file_system.open(med_map_path), "UTF-8"), CSVFormat.DEFAULT.withTrim())
-
-            try {
-              Map(csvParser.asScala.map(rec => (rec.get(0).stripPrefix("MDCTN:"), rec.get(3).stripSuffix(";"))).toSeq : _*)
-            } finally {
-              csvParser.close()
-            }
-
-          })
+          val medmap = config.med_map.map(med_map => loadMedMap(hc, med_map))
 
 
           withCounter(count =>
             new HDFSCollection(hc, input_directory_path).foreach(f => {
               val p = f.getName
               println("processing " + count.incrementAndGet + " " + p)
-              proc_pid(config, spark, p, start_date_joda, end_date_joda, medmap)
+              proc_pid(config, hc, p, start_date_joda, end_date_joda, medmap)
             })
           )
 
