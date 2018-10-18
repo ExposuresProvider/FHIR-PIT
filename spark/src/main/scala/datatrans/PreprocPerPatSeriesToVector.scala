@@ -167,6 +167,7 @@ object PreprocPerPatSeriesToVector {
             println("find columns")
             val total = dfs.map(df => df.columns.toSet).reduce((df1, df2) => df1 ++ df2)
 
+            println("extend dataframes")
             def expr(myCols: Seq[String], allCols: Set[String]) = {
               allCols.toList.map(x => x match {
                 case x if myCols.contains(x) => col(x)
@@ -174,7 +175,6 @@ object PreprocPerPatSeriesToVector {
               })
             }
 
-            println("extend dataframes")
             val dfs2 = dfs.map(df => {
               df.select(expr(df.columns, total):_*)
             })
