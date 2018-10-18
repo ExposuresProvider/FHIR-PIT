@@ -174,7 +174,7 @@ object PreprocPerPatSeriesToVector {
                   })
                   proc.foreach(m => {
                     map_procedure(m.system, m.code).foreach(n => {
-                      rec += (a -> 1)
+                      rec += (n -> 1)
                     })
                   })
                   recs.append(rec)
