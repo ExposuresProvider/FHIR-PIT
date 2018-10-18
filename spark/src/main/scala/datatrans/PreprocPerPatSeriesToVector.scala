@@ -211,7 +211,7 @@ object PreprocPerPatSeriesToVector {
       .withTrim())
 
     try {
-      Map(csvParser.asScala.map(rec => (rec.get(0).stripPrefix("MDCTN:"), rec.get(3).stripSuffix(";"))).toSeq : _*)
+      Map(csvParser.asScala.map(rec => (rec.get(0).stripPrefix("MDCTN:"), rec.get(2).stripSuffix(";"))).toSeq : _*)
     } finally {
       csvParser.close()
     }
