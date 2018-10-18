@@ -217,6 +217,7 @@ object PreprocPerPatSeriesToVector {
       opt[String]("output_directory").required.action((x,c) => c.copy(output_directory = x))
       opt[String]("start_date").action((x,c) => c.copy(start_date = DateTime.parse(x, ISODateTimeFormat.dateParser())))
       opt[String]("end_date").action((x,c) => c.copy(end_date = DateTime.parse(x, ISODateTimeFormat.dateParser())))
+      opt[String]("mdctn_rxnorm").action((x,c) => c.copy(med_map = Some(x)))
     }
 
     val spark = SparkSession.builder().appName("datatrans preproc").getOrCreate()
