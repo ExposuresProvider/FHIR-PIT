@@ -168,7 +168,7 @@ object PreprocPerPatSeriesToVector {
           import spark.implicits._
           val dfs = new HDFSCollection(hc, output_directory_path).map(f => {
             println("loading " + count.incrementAndGet + " " + f)
-            spark.read.format("csv").option("header", value = true).load(f.getName)
+            spark.read.format("csv").option("header", value = true).load(f.toString())
           })
           if (!dfs.isEmpty) {
             val df = dfs.reduce(unionDf)
