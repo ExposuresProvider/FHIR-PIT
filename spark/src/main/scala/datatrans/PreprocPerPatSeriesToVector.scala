@@ -120,10 +120,11 @@ object PreprocPerPatSeriesToVector {
     val cols2 = df2.columns.toSet
     val total = cols1 ++ cols2 // union
 
+    def quote(x:String) = if(x(0) != '`') {"`" + x + "`"} else {x}
     def expr(myCols: Set[String], allCols: Set[String]) = {
       allCols.toList.map(x => x match {
-        case x if myCols.contains(x) => col("`" + x + "`")
-        case _ => lit(null).as("`" + x + "`")
+        case x if myCols.contains(x) => col(quote(x))
+        case _ => lit(null).as(quote(x))
       })
     }
 
