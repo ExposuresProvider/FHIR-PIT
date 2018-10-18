@@ -102,7 +102,7 @@ object PreprocPerPatSeriesToVector {
       case Some(mm) =>
         mm.get(code.stripPrefix("Medication/")) match {
           case Some(ms) =>
-            ms.split(";").map(m => m.stripSuffix("[IN]").trim()).filter(m => m.nonEmpty)
+            ms.split(";").map(m => m.stripSuffix("[IN]").trim().capitalize).filter(m => m.nonEmpty)
           case None =>
             Seq()
         }
