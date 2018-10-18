@@ -167,7 +167,6 @@ object PreprocPerPatSeriesToVector {
                       case Some(n) =>
                         rec += (n -> 1)
                       case _ =>
-                        // println(m.code + " doesn't match " + config.regex_condition)
                     }
                   })
                   lab.foreach(m => {
@@ -175,7 +174,6 @@ object PreprocPerPatSeriesToVector {
                       case Some(a) =>
                         rec += (a -> m.value)
                       case _ =>
-                        // println(m.code + " doesn't match " + config.regex_labs)
                     }
                   })
                   proc.foreach(m => {
@@ -183,7 +181,6 @@ object PreprocPerPatSeriesToVector {
                       case Some(a) =>
                         rec += (a -> 1)
                       case _ =>
-                        // println(m.code + " doesn't match " + config.regex_labs)
                     }
                   })
                   recs.append(rec)
