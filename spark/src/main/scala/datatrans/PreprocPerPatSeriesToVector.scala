@@ -102,7 +102,7 @@ object PreprocPerPatSeriesToVector {
       case Some(mm) =>
         mm.get(code.stripPrefix("Medication/"))
       case None =>
-        Some(code)
+        Some(code.replace("[/|-:]", "_"))
     }
   }
 
