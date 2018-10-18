@@ -100,7 +100,7 @@ object PreprocPerPatSeriesToVector {
   def map_medication(medmap : Option[Map[String, String]], code : String) : Option[String] = {
     medmap match {
       case Some(mm) =>
-        mm.get(code)
+        mm.get(code.stripPrefix("Medication/"))
       case None =>
         Some(code)
     }
