@@ -168,6 +168,8 @@ object PreprocPerPatSeriesToVector {
             val total = dfs.map(df => df.columns.toSet).reduce((df1, df2) => df1 ++ df2)
 
             println("extend dataframes")
+            val count = new AtomicInteger(0)
+
             def expr(myCols: Seq[String], allCols: Set[String]) = {
               allCols.toList.map(x => x match {
                 case x if myCols.contains(x) => col(x)
@@ -175,7 +177,10 @@ object PreprocPerPatSeriesToVector {
               })
             }
 
-            val dfs2 = dfs.map(df => df.select(expr(df.columns, total):_*))
+            val dfs2 = dfs.par.map(df => {
+              println("processing " + count.incrementAndGet)
+              df.select(expr(df.columns, total):_*)
+            })
 
             println("combine dataframes")
             val df = dfs2.reduce((df1, df2) => df1.unionAll(df2))
