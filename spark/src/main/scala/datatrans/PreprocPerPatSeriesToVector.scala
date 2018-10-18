@@ -161,40 +161,63 @@ object PreprocPerPatSeriesToVector {
 
           println("combining output")
           val output_directory_path = new Path(config.output_directory)
+          val output_directory_file_system = output_directory_path.getFileSystem(hc)
           import spark.implicits._
 
-          val dfs = withCounter(count =>
-            new HDFSCollection(hc, output_directory_path).map(f => {
-              println("loading " + count.incrementAndGet + " " + f)
-              spark.read.format("csv").option("header", value = true).load(f.toString())
-            })
-          )
-
-          if (!dfs.isEmpty) {
+          val files = new HDFSCollection(hc, output_directory_path).toSeq
+          if (!files.isEmpty) {
             println("find columns")
-            val total = dfs.map(df => df.columns.toSet).reduce((df1, df2) => df1 ++ df2)
+            val total = withCounter(count =>
+              files.map(f => {
+                println("loading " + count.incrementAndGet + " " + f)
+                val csvParser = new CSVParser(new InputStreamReader(output_directory_file_system.open(f), "UTF-8"), CSVFormat.DEFAULT
+                  .withFirstRecordAsHeader()
+                  .withIgnoreHeaderCase()
+                  .withTrim())
+                csvParser.getHeaderMap().keySet().asScala
+              })
+            ).reduce((df1, df2) => df1 ++ df2).toSeq
 
             println("extend dataframes")
 
-            def expr(myCols: Seq[String], allCols: Set[String]) = {
-              allCols.toList.map(x => x match {
-                case x if myCols.contains(x) => col(x)
-                case _ => lit(null).as(x)
+            val colnames = withCounter(count =>
+              files.map(f => {
+                println("loading " + count.incrementAndGet + " " + f)
+                val csvParser = new CSVParser(new InputStreamReader(output_directory_file_system.open(f), "UTF-8"), CSVFormat.DEFAULT
+                  .withFirstRecordAsHeader()
+                  .withIgnoreHeaderCase()
+                  .withTrim())
+                csvParser.getHeaderMap().keySet().asScala
               })
-            }
+            ).reduce((df1, df2) => df1 ++ df2).toSeq
 
-            val dfs2 = withCounter(count =>
-             dfs.par.map(df => {
-                println("processing " + count.incrementAndGet)
-                df.select(expr(df.columns, total):_*)
+            val output_file_path = new Path(config.output_directory + "/all")
+            val output_file_csv_writer = new CSVPrinter( new OutputStreamWriter(output_directory_file_system.create(output_file_path), "UTF-8" ) , CSVFormat.DEFAULT.withHeader(colnames:_*))
+          
+            withCounter(count =>
+              files.foreach(f => {
+                println("loading " + count.incrementAndGet + " " + f)
+                val csvParser = new CSVParser(new InputStreamReader(output_directory_file_system.open(f), "UTF-8"), CSVFormat.DEFAULT
+                  .withFirstRecordAsHeader()
+                  .withIgnoreHeaderCase()
+                  .withTrim())
+                val hdrmap = csvParser.getHeaderMap().asScala
+                val buf = Array(colnames.size)
+                csvParser.asScala.foreach(rec => {
+                  val rec2 = colnames.map(co => 
+                    hdrmap.get(co) match {
+                      case Some(x) => x
+                      case None => ""
+                    }
+                  ).asJava
+                  output_file_csv_writer.printRecord(rec2)
+                })
               })
             )
 
-            println("combine dataframes")
-
-            val df = dfs2.reduce((df1, df2) => df1.unionAll(df2))
-            writeDataframe(hc, config.output_directory + "/all", df)
+            output_file_csv_writer.close()
           }
+
 
         }
       case None =>
