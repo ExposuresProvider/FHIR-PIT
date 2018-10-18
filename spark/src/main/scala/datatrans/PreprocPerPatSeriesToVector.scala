@@ -174,7 +174,9 @@ object PreprocPerPatSeriesToVector {
                   .withFirstRecordAsHeader()
                   .withIgnoreHeaderCase()
                   .withTrim())
-                csvParser.getHeaderMap().keySet().asScala
+                val cos = csvParser.getHeaderMap().keySet().asScala
+                csvParser.close()
+                cos
               })
             ).reduce((df1, df2) => df1 ++ df2).toSeq
 
@@ -187,7 +189,9 @@ object PreprocPerPatSeriesToVector {
                   .withFirstRecordAsHeader()
                   .withIgnoreHeaderCase()
                   .withTrim())
-                csvParser.getHeaderMap().keySet().asScala
+                val keyset = csvParser.getHeaderMap().keySet().asScala
+                csvParser.close()
+                keyset
               })
             ).reduce((df1, df2) => df1 ++ df2).toSeq
 
@@ -212,6 +216,7 @@ object PreprocPerPatSeriesToVector {
                   ).asJava
                   output_file_csv_writer.printRecord(rec2)
                 })
+                csvParser.close()
               })
             )
 
