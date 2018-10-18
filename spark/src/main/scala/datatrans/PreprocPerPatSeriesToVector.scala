@@ -16,10 +16,11 @@ import scala.collection.mutable.{ ListBuffer, MultiMap }
 import scopt._
 import datatrans._
 import scala.collection.JavaConverters._
+import org.apache.spark.sql.functions._
 
 case class Config(
   input_directory : String = "",
-  output_prefix : String = "",
+  output_directory : String = "",
   start_date : DateTime = DateTime.parse("2010-01-01", ISODateTimeFormat.dateParser()),
   end_date : DateTime = DateTime.parse("2015-01-01", ISODateTimeFormat.dateParser()),
   regex_labs : String = ".*",
@@ -38,7 +39,7 @@ object PreprocPerPatSeriesToVector {
       val input_file_path = new Path(input_file)
       val input_file_file_system = input_file_path.getFileSystem(hc)
 
-      val output_file = config.output_prefix + p
+      val output_file = config.output_directory + "/" + p
       val output_file_path = new Path(output_file)
       val output_file_file_system = output_file_path.getFileSystem(hc)
 
@@ -113,12 +114,33 @@ object PreprocPerPatSeriesToVector {
       }
     }
 
+  // https://stackoverflow.com/questions/39758045/how-to-perform-union-on-two-dataframes-with-different-amounts-of-columns-in-spar
+  def unionDf(df1:org.apache.spark.sql.DataFrame, df2:org.apache.spark.sql.DataFrame) = {
+    if(df1 == null) {
+      df2
+    } else if (df2 == null) {
+      df1
+    } else {
+      val cols1 = df1.columns.toSet
+      val cols2 = df2.columns.toSet
+      val total = cols1 ++ cols2 // union
+
+      def expr(myCols: Set[String], allCols: Set[String]) = {
+        allCols.toList.map(x => x match {
+          case x if myCols.contains(x) => col(x)
+          case _ => lit(null).as(x)
+        })
+      }
+
+      df1.select(expr(cols1, total):_*).unionAll(df2.select(expr(cols2, total):_*))
+    }
+  }
 
   def main(args: Array[String]) {
     val parser = new OptionParser[Config]("series_to_vector") {
       head("series_to_vector")
       opt[String]("input_directory").required.action((x,c) => c.copy(input_directory = x))
-      opt[String]("output_prefix").required.action((x,c) => c.copy(output_prefix = x))
+      opt[String]("output_directory").required.action((x,c) => c.copy(output_directory = x))
       opt[String]("start_date").action((x,c) => c.copy(start_date = DateTime.parse(x, ISODateTimeFormat.dateParser())))
       opt[String]("end_date").action((x,c) => c.copy(end_date = DateTime.parse(x, ISODateTimeFormat.dateParser())))
       opt[String]("regex_medication").action((x,c) => c.copy(regex_medication = x))
@@ -147,7 +169,15 @@ object PreprocPerPatSeriesToVector {
             println("processing " + count.incrementAndGet + " " + p)
             proc_pid(config, spark, p, start_date_joda, end_date_joda)
           })
-
+          println("combining output")
+          val output_directory_path = new Path(config.output_directory)
+          import spark.implicits._
+          new HDFSCollection(hc, output_directory_path).map(f => {
+            val p = f.getName.split("/")(0)
+            println("loading " + count.incrementAndGet + " " + p)
+            spark.read.format("csv").option("header", value = true).load(f.getName)
+          }).fold(null)(unionDf)
+          
 
 
         }
