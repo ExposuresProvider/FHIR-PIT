@@ -163,7 +163,7 @@ object PreprocPerPatSeriesToVector {
               val age = Years.yearsBetween (birth_date_joda, encounter_start_date_joda).getYears
               rec0 += ("start_date" -> encounter_start_date_joda.toString("yyyy-MM-dd"), "age" -> age) 
 
-              encset.foreach(enc => {
+              def toVector(enc : Encounter) = {
                 var rec = rec0 + ("encounter_num" -> enc.id, "encounter_code" -> enc.code.getOrElse(""))
                 val med = enc.medication
                 val cond = enc.condition
@@ -191,8 +191,9 @@ object PreprocPerPatSeriesToVector {
                   })
                 })
                 recs.append(rec)
-              })
+              }
 
+              encset.foreach(toVector)
           }
 
           val colnames = recs.map(m => m.keySet).fold(Set())((s, s2) => s.union(s2)).toSeq
