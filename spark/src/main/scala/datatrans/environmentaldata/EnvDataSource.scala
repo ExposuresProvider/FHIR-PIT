@@ -99,11 +99,13 @@ class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
 
       val hc = spark.sparkContext.hadoopConfiguration
 
-      val count = new AtomicInteger(0)
       val n = patl.size
+
+      withCounter(count => 
 
       patl.par.foreach{
         case (r, lat, lon) =>
+            println("processing patient " + count.incrementAndGet() + " / " + n + " " + r)
           val output_file = config.output_file.replace("%i", r)
           val output_file_path = new Path(output_file)
           val output_file_file_system = output_file_path.getFileSystem(hc)
@@ -128,7 +130,7 @@ class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
             }
           }
 
-      }
+      })
     }
   }
 }
