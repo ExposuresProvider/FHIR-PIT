@@ -213,10 +213,7 @@ object PreprocPerPatSeriesToVector {
                 recs.append(rec)
               }
 
-              var mergeCount = 0
-
               def mergeEncounter(a: Encounter, b: Encounter): Encounter = {
-                mergeCount += 1
                 val code = a.code match {
                   case Some(ac) =>
                     b.code match {
@@ -245,9 +242,11 @@ object PreprocPerPatSeriesToVector {
 
               }
 
+              if(encset.size > 1) {
+                println("merge " + encset.size + " encounters")
+              }
               toVector(encset.reduce(mergeEncounter))
 
-              println("merged " + mergeCount + " encounters")
           }
 
           val colnames = recs.map(m => m.keySet).fold(Set())((s, s2) => s.union(s2)).toSeq
