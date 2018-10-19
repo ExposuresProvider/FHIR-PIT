@@ -246,6 +246,7 @@ object PreprocPerPatSeriesToVector {
               }
 
               toVector(encset.reduce(mergeEncounter))
+
               println("merged " + mergeCount + " encounters")
           }
 
