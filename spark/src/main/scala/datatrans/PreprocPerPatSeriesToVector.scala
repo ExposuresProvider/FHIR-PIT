@@ -213,7 +213,36 @@ object PreprocPerPatSeriesToVector {
                 recs.append(rec)
               }
 
-              encset.foreach(toVector)
+              def mergeEncounter(a: Encounter, b: Encounter): Encounter = {
+                val code = a.code match {
+                  case Some(ac) =>
+                    b.code match {
+                      case Some(bc) =>
+                        Some((ac.split("|").toSet ++ bc.split("|").toSet).mkString("|"))
+                      case None =>
+                        a.code
+                    }
+                  case None =>
+                    b.code
+                }
+                val startDate = a.startDate match {
+                  case Some(ac) =>
+                    a.startDate
+                  case None =>
+                    b.startDate
+                }
+                val endDate = a.endDate match {
+                  case Some(ac) =>
+                    a.endDate
+                  case None =>
+                    b.endDate
+                }
+
+                Encounter(a.id + "|" + b.id, a.subjectReference, code, startDate, endDate, a.condition ++ b.condition, a.labs ++ b.labs, a.medication ++ b.medication, a.procedure ++ b.procedure)
+
+              }
+
+              toVector(encset.reduce(mergeEncounter)) // .foreach(toVector)
           }
 
           val colnames = recs.map(m => m.keySet).fold(Set())((s, s2) => s.union(s2)).toSeq
