@@ -154,6 +154,13 @@ object PreprocPerPatSeriesToVector {
                   encounter_map.addBinding(encounter_start_date_joda, enc)
                 }
               case None =>
+                val med = enc.medication
+                val cond = enc.condition
+                val lab = enc.labs
+                val proc = enc.procedure
+                if(!med.isEmpty || !cond.isEmpty || !lab.isEmpty || !proc.isEmpty) {
+                  println("non empty encountner has no start date " + enc.id)
+                }
             }
           })
 
