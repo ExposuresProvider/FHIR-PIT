@@ -245,8 +245,8 @@ object PreprocPerPatSeriesToVector {
 
               }
 
-              toVector(encset.reduce(mergeEncounter)) // .foreach(toVector)
-                println("merged " + mergeCount + " encounters")
+              toVector(encset.reduce(mergeEncounter))
+              println("merged " + mergeCount + " encounters")
           }
 
           val colnames = recs.map(m => m.keySet).fold(Set())((s, s2) => s.union(s2)).toSeq
