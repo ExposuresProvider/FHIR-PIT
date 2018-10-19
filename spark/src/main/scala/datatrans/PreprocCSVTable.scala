@@ -65,7 +65,7 @@ object PreprocCSVTable {
           withCounter(count =>
             new HDFSCollection(hc, new Path(config.patient_file)).foreach(f => {
               val p = f.getName()
-              println("processing patient " + count.incrementAndGet() + " " + p)
+              println("processing patient " + count.incrementAndGet() + " " + p + " " + f.toString())
               val pat_df = spark.read.format("csv").option("header", value = true).load(f.toString())
               val env_df = spark.read.format("csv").option("header", value = true).load(config.environment_file + "/" + p)
               val env_df2 = env_df.withColumn("next_date", plusOneDayDate(env_df.col("start_date"))).drop("start_date").withColumnRenamed("next_date", "start_date")
