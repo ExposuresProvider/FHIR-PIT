@@ -218,7 +218,7 @@ object PreprocPerPatSeriesToVector {
                   case Some(ac) =>
                     b.code match {
                       case Some(bc) =>
-                        Some((ac.split("|").toSet ++ bc.split("|").toSet).mkString("|"))
+                        Some((ac.split("[|]").toSet ++ bc.split("[|]").toSet).mkString("|"))
                       case None =>
                         a.code
                     }
