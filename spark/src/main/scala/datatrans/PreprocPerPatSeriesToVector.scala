@@ -243,7 +243,7 @@ object PreprocPerPatSeriesToVector {
               }
 
               if(encset.size > 1) {
-                println("merge " + encset.size + " encounters")
+                println("merge encounters" + p + " " + encset.map(e => e.id))
               }
               toVector(encset.reduce(mergeEncounter))
 
