@@ -147,21 +147,28 @@ object PreprocPerPatSeriesToVector {
 
           val encounter_map = new scala.collection.mutable.HashMap[DateTime, scala.collection.mutable.Set[Encounter]] with MultiMap[DateTime, Encounter]
           encounter.foreach(enc => {
-            enc.startDate match {
+            (enc.startDate match {
               case Some(s) =>
-                val encounter_start_date_joda = DateTime.parse(s, ISODateTimeFormat.dateTimeParser())
-                if (intv.contains(encounter_start_date_joda)) {
-                  encounter_map.addBinding(encounter_start_date_joda, enc)
-                }
+                Some(DateTime.parse(s, ISODateTimeFormat.dateTimeParser()))
               case None =>
                 val med = enc.medication
                 val cond = enc.condition
                 val lab = enc.labs
                 val proc = enc.procedure
-                if(!med.isEmpty || !cond.isEmpty || !lab.isEmpty || !proc.isEmpty) {
-                  println("non empty encountner has no start date " + enc.id)
+                if(!med.isEmpty && cond.isEmpty && lab.isEmpty && proc.isEmpty) {
+                  // med only encounter use authorized on date
+                  Some(DateTime.parse(med(0).authoredOn, ISODateTimeFormat.dateTimeParser()))
+                } else {
+                  if(!med.isEmpty || !cond.isEmpty || !lab.isEmpty || !proc.isEmpty) {
+                    println("non empty encountner has no start date " + enc.id)
+                  }
+                  None
                 }
-            }
+            }).foreach(encounter_start_date_joda => {
+              if (intv.contains(encounter_start_date_joda)) {
+                encounter_map.addBinding(encounter_start_date_joda, enc)
+              }
+            })
           })
 
           encounter_map.foreach {
