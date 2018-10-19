@@ -155,11 +155,11 @@ object PreprocPerPatSeriesToVector {
                 val cond = enc.condition
                 val lab = enc.labs
                 val proc = enc.procedure
-                if(!med.isEmpty && cond.isEmpty && lab.isEmpty && proc.isEmpty) {
-                  // med only encounter use authorized on date
+                if(!med.isEmpty) {
+                  // med encounter use authorized on date
                   Some(DateTime.parse(med(0).authoredOn, ISODateTimeFormat.dateTimeParser()))
-                } else if(med.isEmpty && !cond.isEmpty && lab.isEmpty && proc.isEmpty) {
-                  // cond only encounter use asserted date
+                } else if(!cond.isEmpty) {
+                  // cond encounter use asserted date
                   Some(DateTime.parse(cond(0).assertedDate, ISODateTimeFormat.dateTimeParser()))
                 } else {
                   if(!med.isEmpty || !cond.isEmpty || !lab.isEmpty || !proc.isEmpty) {
