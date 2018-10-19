@@ -1,24 +1,21 @@
 package datatrans
 
 import java.io._
-import java.util.concurrent.atomic.AtomicInteger
 
 import datatrans.Utils._
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
-import org.apache.spark.sql.types.{ StringType, StructField, StructType }
 import org.apache.spark.sql.{ SparkSession, Column, Row }
 import org.joda.time.format.ISODateTimeFormat
-import play.api.libs.json._
 import org.joda.time._
 import org.joda.time.format.DateTimeFormat
-import scala.collection.mutable.{ ListBuffer, MultiMap }
 import scopt._
 import datatrans._
-import scala.collection.JavaConverters._
 import org.apache.spark.sql.functions._
 
-case class CSVTableConfig(
+case class PreprocCSVTableConfig(
+  patient_file : String = "",
+  environment_file : String = "",
   input_files : Seq[String] = Seq(),
   output_file : String = "",
   start_date : DateTime = new DateTime(0),
@@ -28,10 +25,12 @@ case class CSVTableConfig(
 object PreprocCSVTable {
   
   def main(args: Array[String]) {
-    val parser = new OptionParser[CSVTableConfig]("series_to_vector") {
+    val parser = new OptionParser[PreprocCSVTableConfig]("series_to_vector") {
       head("series_to_vector")
+      opt[String]("patient_directory").required.action((x,c) => c.copy(patient_file = x))
+      opt[String]("environment_directory").required.action((x,c) => c.copy(environment_file = x))
       opt[String]("input_files").required.action((x,c) => c.copy(input_files = x.split(",")))
-      opt[String]("output_file").required.action((x,c) => c.copy(output_file = x))
+      opt[String]("output_directory").required.action((x,c) => c.copy(output_file = x))
       opt[String]("start_date").action((x,c) => c.copy(start_date = DateTime.parse(x, ISODateTimeFormat.dateParser())))
       opt[String]("end_date").action((x,c) => c.copy(end_date = DateTime.parse(x, ISODateTimeFormat.dateParser())))
     }
@@ -43,7 +42,7 @@ object PreprocCSVTable {
     // For implicit conversions like converting RDDs to DataFrames
     import spark.implicits._
 
-    parser.parse(args, CSVTableConfig()) match {
+    parser.parse(args, PreprocCSVTableConfig()) match {
       case Some(config) =>
 
         time {
@@ -55,9 +54,35 @@ object PreprocCSVTable {
             spark.read.format("csv").option("header", value = true).load(input_file)
           })
 
-          val df = dfs.reduce(_.join(_, "patient_num")).drop("patient_num", "encounter_num")
+          val df = dfs.reduce(_.join(_, "patient_num"))
 
-          writeDataframe(hc, config.output_file, df)
+          spark.sparkContext.broadcast(df)
+
+          val plusOneDayDate = udf((x : String) =>
+            DateTime.parse(x, ISODateTimeFormat.dateParser()).plusDays(1).toString("yyyy-MM-dd")
+          )
+
+          withCounter(count =>
+            new HDFSCollection(hc, new Path(config.patient_file)).foreach(f => {
+              val p = f.getName()
+              println("processing patient " + count.incrementAndGet() + " " + p)
+              val pat_df = spark.read.format("csv").option("header", value = true).load(f.toString())
+              val env_df = spark.read.format("csv").option("header", value = true).load(config.environment_file + "/" + p)
+              val env_df2 = env_df.withColumn("next_date", plusOneDayDate(env_df.col("start_date"))).drop("start_date").withColumnRenamed("next_date", "start_date")
+
+              val patenv_df = pat_df.join(env_df, "start_date").join(df, "patient_num")
+              writeDataframe(hc, config.output_file + "/" + p, patenv_df)
+
+            })
+            
+
+          )
+
+
+
+
+          // .drop("patient_num", "encounter_num")
+
 
 
         }
