@@ -161,9 +161,12 @@ object PreprocPerPatSeriesToVector {
                 } else if(!cond.isEmpty) {
                   // cond encounter use asserted date
                   Some(DateTime.parse(cond(0).assertedDate, ISODateTimeFormat.dateTimeParser()))
+                } else if(!proc.isEmpty) {
+                  // cond encounter use asserted date
+                  Some(DateTime.parse(proc(0).performedDateTime, ISODateTimeFormat.dateTimeParser()))
                 } else {
                   if(!med.isEmpty || !cond.isEmpty || !lab.isEmpty || !proc.isEmpty) {
-                    println("non empty encountner has no start date " + enc.id)
+                    throw new RuntimeException("non empty encountner has no start date " + p + " " + enc.id)
                   }
                   None
                 }
