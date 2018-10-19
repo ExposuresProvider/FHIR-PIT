@@ -70,7 +70,7 @@ object PreprocCSVTable {
               val env_df = spark.read.format("csv").option("header", value = true).load(config.environment_file + "/" + p)
               val env_df2 = env_df.withColumn("next_date", plusOneDayDate(env_df.col("start_date"))).drop("start_date").withColumnRenamed("next_date", "start_date")
 
-              val patenv_df = pat_df.join(env_df, "start_date").join(df, "patient_num")
+              val patenv_df = pat_df.join(env_df2, "start_date").join(df, "patient_num")
               writeDataframe(hc, config.output_file + "/" + p, patenv_df)
 
             })
