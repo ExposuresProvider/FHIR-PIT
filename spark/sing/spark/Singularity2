@@ -9,54 +9,83 @@ From: spark.img
   Hadoop_Version 2.7
 
 %help
-  preproc FIHR:
-  singularity run spark.img --app preprocFIHR -B <data dir>:/data <spark master host> <input file> <resource types> <output directory>
+  The data directory should have the following subdirectories
+  input
+    FHIR
+      Patient
+      Encounter
+      ...
+    cmaq2010.csv
+    cmaq2011
+    merged_cmaq_2010.csv
+    ...
+    merged_cmaq_2014.csv
+    US_Census_Tracts_LCC.shp
+    acs.csv
+    tl_2016_37_bg_lcc.shp
+    tl_2015_allstates_prisecroads_lcc.shp
+    map.MDCTN-genRxCUIs-genNames-subRxCUIs-subNames
+  output
+    icees
+      all
+
+  preproc FHIR:
+    singularity run spark.img --app preprocFIHR -B <data dir>:/data <spark master host>
   preproc CMAQ:
-  singularity run spark.img --app preprocCMAQ -B <data dir>:/data <spark master host> <input file> <output directory>
+    singularity run spark.img --app preprocCMAQ -B <data dir>:/data <spark master host>
   preproc CMAQ2:
-  singularity run spark.img --app preprocCMAQ2 -B <data dir>:/data <input directory> <output directory>
+    singularity run spark.img --app preprocCMAQ2 -B <data dir>:/data <spark master host>
+  preproc CMAQ3:
+    singularity run spark.img --app preprocCMAQ3 -B <data dir>:/data
   preproc Daily Env Data:
-  singularity run spark.img --app preprocDailyEnvData -B <data dir>:/data <spark master host> <input directory> <year>
+    singularity run spark.img --app preprocDailyEnvData -B <data dir>:/data <spark master host>
   preproc Per Patient Series Env Data:
-  singularity run spark.img --app preprocPerPatSeriesEnvData -B <data dir>:/data <spark master host> <patient ids file> <patient directory> <environmental directory> <start date> <end data> <output directory>
+    singularity run spark.img --app preprocPerPatSeriesEnvData -B <data dir>:/data <spark master host>
   preproc Per Patient Series Nearest Road Data:
-  singularity run spark.img --app preprocPerPatSeriesNearestRoad -B <data dir>:/data <spark master host> <patient ids file> <patient files> <nearest road file> <output directory>
+    singularity run spark.img --app preprocPerPatSeriesNearestRoad -B <data dir>:/data <spark master host>
   preproc Per Patient Series ACS Data:
-  singularity run spark.img --app preprocPerPatSeriesACS -B <data dir>:/data <spark master host> <patient ids file> <patient files> <geoid file> <acs file> <output directory>
-  preproc Combine Data:
-  singularity run spark.img --app preprocCombineData -B <data dir>:/data <spark master host> <patient ids file> <patient files> <resource dir> <resources> <output directory>
+    singularity run spark.img --app preprocPerPatSeriesACS -B <data dir>:/data <spark master host>
+  preproc Per Patient to Vector:
+    singularity run spark.img --app preprocPerPatSeriesToVector -B <data dir>:/data <spark master host>
+  preproc ICESS Data:
+    singularity run spark.img --app preprocICEES -B <data dir>:/data <spark master host>
 
 %apprun preprocFIHR
   cd /opt/datatrans/spark
-  exec python3 src/main/python/runPreprocFIHR.py /opt/datatrans "$@"
+  exec python3 src/main/python/runPreprocFIHR.py /opt/datatrans "$@" /data/input/FHIR "Condition,Medication,Labs,Procedure" "" /data/output/FHIR
 
 %apprun preprocCMAQ
   cd /opt/datatrans/spark
-  exec python3 src/main/python/runPreprocCMAQ.py /opt/datatrans "$@"
-
+  exec python3 src/main/python/runPreprocCMAQ.py /opt/datatrans "$@" /data/input/cmaq2010.csv /data/output/env/cmaq2010
+  exec python3 src/main/python/runPreprocDailyEnvData.py /opt/datatrans "$@" /data/output/env/1 2010
+  
 %apprun preprocCMAQ2
   cd /opt/datatrans/spark
-  exec python3 src/main/python/preproc_cmaq_2011.py "$@"
-
-%apprun preprocDailyEnvData
-  cd /opt/datatrans/spark
-  exec python3 src/main/python/runPreprocDailyEnvData.py /opt/datatrans "$@"
+  exec python3 src/main/python/preproc_cmaq_2011.py /data/input/cmaq2011 /data/output/env/cmaq2011
+  exec python3 src/main/python/runPreprocDailyEnvData.py /opt/datatrans "$@" /data/output/env/1 2011
+  
+%apprun preprocCMAQ3
+  cp /data/input/environment/merged*.csv /data/output/env/
 
 %apprun preprocPerPatSeriesEnvData
   cd /opt/datatrans/spark
-  exec python3 src/main/python/runPreprocPerPatSeriesEnvData.py /opt/datatrans "$@"
+  exec python3 src/main/python/runPreprocPerPatSeriesEnvData.py /opt/datatrans "$@" /data/output/FHIR/geo.csv /data/input/US_Census_Tracts_LCC.shp /data/output/env 2010-1-1 2015-1-1 /data/output/env/vector
 
 %apprun preprocPerPatSeriesNearestRoad
   cd /opt/datatrans/spark
-  exec python3 src/main/python/runPreprocPerPatSeriesNearestRoad.py /opt/datatrans "$@"
+  exec python3 src/main/python/runPreprocPerPatSeriesNearestRoad.py /opt/datatrans "$@" /data/output/FHIR/geo.csv /data/input/tl_2015_allstates_prisecroads_lcc.shp /data/output/nearestroad.csv
 
 %apprun preprocPerPatSeriesACS
   cd /opt/datatrans/spark
-  exec python3 src/main/python/runPreprocPerPatSeriesACS.py /opt/datatrans "$@"
+  exec python3 src/main/python/runPreprocPerPatSeriesACS.py /opt/datatrans "$@" /data/output/FHIR/geo.csv /data/input/tl_2016_37_bg_lcc.shp /data/input/acs.csv /data/output/acs.csv
 
-%apprun preprocCombineData
+%apprun preprocPerPatSeriesToVector
   cd /opt/datatrans/spark
-  exec python3 src/main/python/runPreprocCombineData.py /opt/datatrans "$@"
+  exec python3 src/main/python/runPreprocCSVTable.py /opt/datatrans "$@" /data/output/FHIR/Patient /data/input/map.MDCTN-genRxCUIs-genNames-subRxCUIs-subNames /data/output/PatVec
+
+%apprun preprocICEES
+  cd /opt/datatrans/spark
+  exec python3 src/main/python/runPreprocCSVTable.py /opt/datatrans "$@" /data/output/FHIR/PatVec/all /data/output/env/vector /data/output/acs.csv,/data/output/nearestroad.csv /data/output/icees
 
 %apprun preprocPerPatSeriesRowCol
   cd /opt/datatrans/spark
