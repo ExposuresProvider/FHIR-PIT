@@ -62,11 +62,12 @@ object PreprocCSVTable {
             DateTime.parse(x, ISODateTimeFormat.dateParser()).plusDays(1).toString("yyyy-MM-dd")
           )
 
+          val perpatoutputdir = config.output_file + "/per_patient/"
           withCounter(count =>
             new HDFSCollection(hc, new Path(config.patient_file)).foreach(f => {
               val p = f.getName()
               println("processing patient " + count.incrementAndGet() + " " + p)
-              val output_file = config.output_file + "/per_patient/" + p
+              val output_file =  + p
               if(fileExists(hc, output_file)) {
                 println("file exists " + output_file)
               } else {
@@ -81,14 +82,13 @@ object PreprocCSVTable {
               }
 
             })
-            
 
           )
 
 
 
           println("combining output")
-          combineCSVs(hc, config.output_file + "/per_patient", config.output_file + "/all")
+          combineCSVs(hc, perpatoutputdir, config.output_file + "/all")
 
 
           // .drop("patient_num", "encounter_num")
