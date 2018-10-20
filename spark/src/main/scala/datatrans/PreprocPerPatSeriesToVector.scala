@@ -47,7 +47,7 @@ object PreprocPerPatSeriesToVector {
       case pneumoniaRe(_*) =>
         Seq("PneumoniaDx")
       case obesityRe(_*) =>
-        Seq("ObesityDx")
+        Seq("ObesityICD")
       case _ =>
         Seq()
     }
