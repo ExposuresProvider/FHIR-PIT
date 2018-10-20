@@ -1,5 +1,7 @@
 package datatrans
 
+import java.io._
+import scala.collection.JavaConverters._
 import java.util.concurrent.atomic.AtomicInteger
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs._
@@ -10,6 +12,7 @@ import geotrellis.proj4._
 import org.apache.commons.lang.StringEscapeUtils
 import org.joda.time.DateTime
 import play.api.libs.json._
+import org.apache.commons.csv._
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -432,4 +435,61 @@ class Cache[K,V <: AnyRef](fun : K => V) {
   }
 
 
+  def combineCSVs(hc: Configuration, input_directory: String, output_file: String) : Unit = {
+          val output_directory_path = new Path(input_directory)
+          val output_directory_file_system = output_directory_path.getFileSystem(hc)
+
+          val files = new HDFSCollection(hc, output_directory_path).toSeq
+          if (!files.isEmpty) {
+            println("find columns")
+
+            val colnames = withCounter(count =>
+              files.map(f => {
+                println("loading " + count.incrementAndGet + " " + f)
+                val csvParser = new CSVParser(new InputStreamReader(output_directory_file_system.open(f), "UTF-8"), CSVFormat.DEFAULT
+                  .withFirstRecordAsHeader()
+                  .withIgnoreHeaderCase()
+                  .withTrim())
+                try {
+                  csvParser.getHeaderMap().keySet().asScala
+                } finally {
+                  csvParser.close()
+                }
+              })
+            ).reduce((df1, df2) => df1 ++ df2).toSeq
+
+            println("extend dataframes")
+            val output_file_path = new Path(output_file)
+            val output_file_csv_writer = new CSVPrinter( new OutputStreamWriter(output_directory_file_system.create(output_file_path), "UTF-8" ) , CSVFormat.DEFAULT.withHeader(colnames:_*))
+
+            try {
+              withCounter(count =>
+                files.foreach(f => {
+                  println("loading " + count.incrementAndGet + " " + f)
+                  val csvParser = new CSVParser(new InputStreamReader(output_directory_file_system.open(f), "UTF-8"), CSVFormat.DEFAULT
+                    .withFirstRecordAsHeader()
+                    .withIgnoreHeaderCase()
+                    .withTrim())
+                  try {
+                    val hdrmap = csvParser.getHeaderMap().asScala
+                    val buf = Array(colnames.size)
+                    csvParser.asScala.foreach(rec => {
+                      val rec2 = colnames.map(co =>
+                        hdrmap.get(co) match {
+                          case Some(x) => rec.get(x)
+                          case None => ""
+                        }
+                      ).asJava
+                      output_file_csv_writer.printRecord(rec2)
+                    })
+                  } finally {
+                    csvParser.close()
+                  }
+                })
+              )
+            } finally {
+              output_file_csv_writer.close()
+            }
+          }
+  }
 }

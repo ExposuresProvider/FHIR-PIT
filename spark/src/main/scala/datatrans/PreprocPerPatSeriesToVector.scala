@@ -316,65 +316,6 @@ object PreprocPerPatSeriesToVector {
             })
           )
 
-          println("combining output")
-          val output_directory_path = new Path(config.output_directory + "/per_patient")
-          val output_directory_file_system = output_directory_path.getFileSystem(hc)
-          import spark.implicits._
-
-          val files = new HDFSCollection(hc, output_directory_path).toSeq
-          if (!files.isEmpty) {
-            println("find columns")
-
-            val colnames = withCounter(count =>
-              files.map(f => {
-                println("loading " + count.incrementAndGet + " " + f)
-                val csvParser = new CSVParser(new InputStreamReader(output_directory_file_system.open(f), "UTF-8"), CSVFormat.DEFAULT
-                  .withFirstRecordAsHeader()
-                  .withIgnoreHeaderCase()
-                  .withTrim())
-                try {
-                  csvParser.getHeaderMap().keySet().asScala
-                } finally {
-                  csvParser.close()
-                }
-              })
-            ).reduce((df1, df2) => df1 ++ df2).toSeq
-
-            println("extend dataframes")
-            val output_file_path = new Path(config.output_directory + "/all")
-            val output_file_csv_writer = new CSVPrinter( new OutputStreamWriter(output_directory_file_system.create(output_file_path), "UTF-8" ) , CSVFormat.DEFAULT.withHeader(colnames:_*))
-
-            try {
-              withCounter(count =>
-                files.foreach(f => {
-                  println("loading " + count.incrementAndGet + " " + f)
-                  val csvParser = new CSVParser(new InputStreamReader(output_directory_file_system.open(f), "UTF-8"), CSVFormat.DEFAULT
-                    .withFirstRecordAsHeader()
-                    .withIgnoreHeaderCase()
-                    .withTrim())
-                  try {
-                    val hdrmap = csvParser.getHeaderMap().asScala
-                    val buf = Array(colnames.size)
-                    csvParser.asScala.foreach(rec => {
-                      val rec2 = colnames.map(co =>
-                        hdrmap.get(co) match {
-                          case Some(x) => rec.get(x)
-                          case None => ""
-                        }
-                      ).asJava
-                      output_file_csv_writer.printRecord(rec2)
-                    })
-                  } finally {
-                    csvParser.close()
-                  }
-                })
-              )
-            } finally {
-              output_file_csv_writer.close()
-            }
-          }
-
-
         }
       case None =>
     }

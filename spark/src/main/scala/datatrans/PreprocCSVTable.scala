@@ -65,7 +65,7 @@ object PreprocCSVTable {
           withCounter(count =>
             new HDFSCollection(hc, new Path(config.patient_file)).foreach(f => {
               val p = f.getName()
-              println("processing patient " + count.incrementAndGet() + " " + p + " " + f.toString())
+              println("processing patient " + count.incrementAndGet() + " " + p)
               val pat_df = spark.read.format("csv").option("header", value = true).load(f.toString())
 
               if(!pat_df.head(1).isEmpty) {
@@ -81,6 +81,9 @@ object PreprocCSVTable {
           )
 
 
+
+          println("combining output")
+          combineCSVs(hc, config.output_file, config.output_file + "/all")
 
 
           // .drop("patient_num", "encounter_num")
