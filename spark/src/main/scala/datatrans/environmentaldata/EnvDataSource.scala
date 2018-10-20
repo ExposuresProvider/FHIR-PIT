@@ -107,9 +107,7 @@ class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
         case (r, lat, lon) =>
             println("processing patient " + count.incrementAndGet() + " / " + n + " " + r)
           val output_file = config.output_file.replace("%i", r)
-          val output_file_path = new Path(output_file)
-          val output_file_file_system = output_file_path.getFileSystem(hc)
-          if(output_file_file_system.exists(output_file_path)) {
+          if(fileExists(hc, output_file)) {
             println(output_file + " exists")
           } else {
             val yearseq = (config.start_date.year.get to config.end_date.minusDays(1).year.get)

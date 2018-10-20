@@ -492,4 +492,11 @@ class Cache[K,V <: AnyRef](fun : K => V) {
             }
           }
   }
+
+  def fileExists(hc: Configuration, file : String) : Boolean = {
+    val output_file_path = new Path(file)
+    val output_file_file_system = output_file_path.getFileSystem(hc)
+    output_file_file_system.exists(output_file_path)
+
+  }
 }

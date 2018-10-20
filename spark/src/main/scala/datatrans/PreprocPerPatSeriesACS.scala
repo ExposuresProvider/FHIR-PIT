@@ -40,10 +40,8 @@ object PreprocPerPatSeriesACS {
         time {
 
           val hc = spark.sparkContext.hadoopConfiguration
-          val output_file_path = new Path(config.output_file)
-          val output_file_file_system = output_file_path.getFileSystem(hc)
 
-          if(output_file_file_system.exists(output_file_path)) {
+          if(fileExists(hc, config.output_file)) {
             println(config.output_file + " exists")
           } else {
             val pddf0 = spark.read.format("csv").option("header", value = true).load(config.time_series)

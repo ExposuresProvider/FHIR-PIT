@@ -66,13 +66,18 @@ object PreprocCSVTable {
             new HDFSCollection(hc, new Path(config.patient_file)).foreach(f => {
               val p = f.getName()
               println("processing patient " + count.incrementAndGet() + " " + p)
-              val pat_df = spark.read.format("csv").option("header", value = true).load(f.toString())
+              val output_file = config.output_file + "/" + p
+              if(fileExists(hc, output_file)) {
+                println("file exists " + output_file)
+              } else {
+                val pat_df = spark.read.format("csv").option("header", value = true).load(f.toString())
 
-              if(!pat_df.head(1).isEmpty) {
-                val env_df = spark.read.format("csv").option("header", value = true).load(config.environment_file + "/" + p)
-                val env_df2 = env_df.withColumn("next_date", plusOneDayDate(env_df.col("start_date"))).drop("start_date").withColumnRenamed("next_date", "start_date")
-                val patenv_df = pat_df.join(env_df2, "start_date").join(df, "patient_num")
-                writeDataframe(hc, config.output_file + "/" + p, patenv_df)
+                if(!pat_df.head(1).isEmpty) {
+                  val env_df = spark.read.format("csv").option("header", value = true).load(config.environment_file + "/" + p)
+                  val env_df2 = env_df.withColumn("next_date", plusOneDayDate(env_df.col("start_date"))).drop("start_date").withColumnRenamed("next_date", "start_date")
+                  val patenv_df = pat_df.join(env_df2, "start_date").join(df, "patient_num")
+                  writeDataframe(hc, output_file, patenv_df)
+                }
               }
 
             })
