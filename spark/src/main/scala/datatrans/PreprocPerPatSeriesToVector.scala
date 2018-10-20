@@ -35,6 +35,7 @@ object PreprocPerPatSeriesToVector {
   val pneumoniaRe = "(48[1-6][.]|J1[2-8].).*".r
   val obesityRe = "(278[.]|E66.[^3]).*".r
   def map_condition(code : String) : Seq[String] = {
+    println("mapping condition code " + code)
     code match {
       case asthmare(_*) =>
         Seq("AsthmaDx")
