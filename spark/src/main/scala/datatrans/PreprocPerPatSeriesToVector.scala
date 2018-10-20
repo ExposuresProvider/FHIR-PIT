@@ -35,7 +35,6 @@ object PreprocPerPatSeriesToVector {
   val pneumoniaRe = "(48[1-6][.]|J1[2-8].).*".r
   val obesityRe = "(278[.]|E66.[^3]).*".r
   def map_condition(code : String) : Seq[String] = {
-    println("mapping condition code " + code)
     code match {
       case asthmare(_*) =>
         Seq("AsthmaDx")
@@ -122,7 +121,7 @@ object PreprocPerPatSeriesToVector {
       val input_file_path = new Path(input_file)
       val input_file_file_system = input_file_path.getFileSystem(hc)
 
-      val output_file = config.output_directory + "/per_patient/" + p
+      val output_file = config.output_directory + "/" + p
       val output_file_path = new Path(output_file)
       val output_file_file_system = output_file_path.getFileSystem(hc)
 
