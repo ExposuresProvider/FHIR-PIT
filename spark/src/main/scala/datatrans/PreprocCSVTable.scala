@@ -66,7 +66,7 @@ object PreprocCSVTable {
             new HDFSCollection(hc, new Path(config.patient_file)).foreach(f => {
               val p = f.getName()
               println("processing patient " + count.incrementAndGet() + " " + p)
-              val output_file = config.output_file + "/" + p
+              val output_file = config.output_file + "/per_patient/" + p
               if(fileExists(hc, output_file)) {
                 println("file exists " + output_file)
               } else {
@@ -88,7 +88,7 @@ object PreprocCSVTable {
 
 
           println("combining output")
-          combineCSVs(hc, config.output_file, config.output_file + "/all")
+          combineCSVs(hc, config.output_file + "/per_patient", config.output_file + "/all")
 
 
           // .drop("patient_num", "encounter_num")
