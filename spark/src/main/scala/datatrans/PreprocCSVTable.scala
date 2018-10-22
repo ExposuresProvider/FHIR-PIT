@@ -33,11 +33,11 @@ object PreprocCSVTable {
       head("series_to_vector")
       opt[String]("patient_directory").required.action((x,c) => c.copy(patient_file = x))
       opt[String]("environment_directory").required.action((x,c) => c.copy(environment_file = x))
-      opt[String]("input_files").required.action((x,c) => c.copy(input_files = x.split(",")))
+      opt[String]("input_files").required.action((x,c) => c.copy(input_files = x.split(",").filter(_.nonEmpty))
       opt[String]("output_directory").required.action((x,c) => c.copy(output_file = x))
       opt[String]("start_date").action((x,c) => c.copy(start_date = DateTime.parse(x, ISODateTimeFormat.dateParser())))
       opt[String]("end_date").action((x,c) => c.copy(end_date = DateTime.parse(x, ISODateTimeFormat.dateParser())))
-      opt[String]("deidentify").action((x,c) => c.copy(deidentify = x.split(",")))
+      opt[String]("deidentify").action((x,c) => c.copy(deidentify = x.split(",").filter(_.nonEmpty)))
     }
 
     val spark = SparkSession.builder().appName("datatrans preproc").getOrCreate()
