@@ -142,7 +142,7 @@ object PreprocPerPatSeriesToVector {
           val birth_date_joda = DateTime.parse(pat.birthDate, ISODateTimeFormat.dateParser())
           val sex = pat.gender
           val race = pat.race.filter(r => r != "UNMAPPED").mkString("|")
-          val demographic = Map[String, Any]("patient_num" -> pat.id, "birth_date" -> birth_date_joda.toString("yyyy-MM-dd"), "sex" -> sex, "race" -> race)
+          val demographic = Map[String, Any]("patient_num" -> pat.id, "birth_date" -> birth_date_joda.toString("yyyy-MM-dd"), "Sex" -> sex, "Race" -> race, "Ethnicity" -> "")
           val intv = new Interval(start_date, end_date)
 
           val encounter_map = new scala.collection.mutable.HashMap[DateTime, scala.collection.mutable.Set[Encounter]] with MultiMap[DateTime, Encounter]
@@ -181,10 +181,10 @@ object PreprocPerPatSeriesToVector {
             case (encounter_start_date_joda, encset) =>
               var rec0 = demographic
               val age = Years.yearsBetween (birth_date_joda, encounter_start_date_joda).getYears
-              rec0 += ("start_date" -> encounter_start_date_joda.toString("yyyy-MM-dd"), "age" -> age) 
+              rec0 += ("start_date" -> encounter_start_date_joda.toString("yyyy-MM-dd"), "AgeVisit" -> age) 
 
               def toVector(enc : Encounter) = {
-                var rec = rec0 + ("encounter_num" -> enc.id, "encounter_code" -> enc.code.getOrElse(""))
+                var rec = rec0 + ("encounter_num" -> enc.id, "VisitType" -> enc.code.getOrElse(""))
                 val med = enc.medication
                 val cond = enc.condition
                 val lab = enc.labs

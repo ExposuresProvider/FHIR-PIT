@@ -53,7 +53,7 @@ object PreprocPerPatSeriesNearestRoad {
               })
             })
 
-            val df = rows.toDF("patient_num", "distant_to_nearest_road")
+            val df = rows.toDF("patient_num", "MajorRoadwayHighwayExposure")
 
             writeDataframe(hc, config.output_file, df)
           }

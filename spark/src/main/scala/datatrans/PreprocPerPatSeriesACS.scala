@@ -57,6 +57,13 @@ object PreprocPerPatSeriesACS {
             val acs_df = spark.read.format("csv").option("header", value = true).load(config.acs_data)
 
             val table = df.join(acs_df, "GEOID")
+              .withColumnRenamed("EstPropPersons5PlusNoEnglish", "EstProbabilityESL")
+              .withColumnRenamed("median_HH_inc", "EstHouseholdIncome")
+              .withColumnRenamed("nHwtindiv", "EstProbabilityNonHispWhite")
+              .withColumnRenamed("prp_HSminus", "EstProbabilityHighSchoolMaxEducation")
+              .withColumnRenamed("prp_nHwHHs", "EstProbabilityHouseholdNonHispWhite")
+              .withColumnRenamed("prp_no_auto", "EstProbabilityNoAuto")
+              .withColumnRenamed("prp_not_insured", "EstProbabilityNoHealthIns")
 
             writeDataframe(hc, config.output_file, table)
           }
