@@ -99,7 +99,7 @@ object PreprocCSVTable {
 
           println("aggregation")
 
-          val year = udf((date : String) => DateTime.parse(date, ISODateTimeFormat.dateParser()).year)
+          val year = udf((date : String) => DateTime.parse(date, ISODateTimeFormat.dateParser()).year.get)
           val ageYear = udf((birthDate : String, year: Int) => {
             val birth_date_joda = DateTime.parse(birthDate, ISODateTimeFormat.dateParser())
             val study_start_joda = new DateTime(year, 1, 1)
