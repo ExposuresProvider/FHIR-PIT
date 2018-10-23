@@ -181,6 +181,25 @@ object PreprocCSVTable {
               "Theophylline",
               "Omalizumab",
               "Mepolizumab")
+
+            val acs = Seq(
+              "EstResidentialDensity",
+              "EstResidentialDensity25Plus",
+              "EstProbabilityNonHispWhite",
+              "EstProbabilityHouseholdNonHispWhite",
+              "EstProbabilityHighSchoolMaxEducation",
+              "EstProbabilityNoAuto",
+              "EstProbabilityNoHealthIns",
+              "EstProbabilityESL",
+              "EstHouseholdIncome",
+              "MajorRoadwayHighwayExposure")
+
+            val demograph = Seq(
+              "AgeStudyStart",
+              "Sex",
+              "Race",
+              "Ethnicity")
+
             var df_all = spark.read.format("csv").option("header", value = true).load(output_file_all)
             df_all = df_all.withColumn("year", year(df_all.col("start_date")))
             df_all = df_all.withColumn("AgeStudyStart", ageYear(df_all.col("birth_date"), df_all.col("year")))
@@ -213,29 +232,15 @@ object PreprocCSVTable {
             writeDataframe(hc, output_all_visit, df_all_visit)
 
             val patient_aggs = Seq(
-                first(df_all.col("AgeStudyStart")).alias("AgeStudyStart"),
-                first(df_all.col("Sex")).alias("Sex"),
-                first(df_all.col("Race")).alias("Race"),
-                first(df_all.col("Ethnicity")).alias("Ethnicity"),
                 avg(df_all.col("`AvgDailyPM2.5Exposure`")).alias("AvgDailyPM2.5Exposure"),
                 avg(df_all.col("`MaxDailyPM2.5Exposure`")).alias("MaxDailyPM2.5Exposure"),
                 avg(df_all.col("AvgDailyOzoneExposure")).alias("AvgDailyOzoneExposure"),
                 avg(df_all.col("MaxDailyOzoneExposure")).alias("MaxDailyOzoneExposure"),
                 avg(df_all.col("`AvgDailyPM2.5Exposure_2`")).alias("AvgDailyPM2.5Exposure_2"),
                 avg(df_all.col("MaxDailyOzoneExposure_2")).alias("MaxDailyOzoneExposure_2"),
-                first(df_all.col("EstResidentialDensity")).alias("EstResidentialDensity"),
-                first(df_all.col("EstResidentialDensity25Plus")).alias("EstResidentialDensity25Plus"),
-                first(df_all.col("EstProbabilityNonHispWhite")).alias("EstProbabilityNonHispWhite"),
-                first(df_all.col("EstProbabilityHouseholdNonHispWhite")).alias("EstProbabilityHouseholdNonHispWhite"),
-                first(df_all.col("EstProbabilityHighSchoolMaxEducation")).alias("EstProbabilityHighSchoolMaxEducation"),
-                first(df_all.col("EstProbabilityNoAuto")).alias("EstProbabilityNoAuto"),
-                first(df_all.col("EstProbabilityNoHealthIns")).alias("EstProbabilityNoHealthIns"),
-                first(df_all.col("EstProbabilityESL")).alias("EstProbabilityESL"),
-                first(df_all.col("EstHouseholdIncome")).alias("EstHouseholdIncome"),
-                first(df_all.col("MajorRoadwayHighwayExposure")).alias("MajorRoadwayHighwayExposure"),
-                new TotalEDInpatientVisits()(df_all.col("VisitType")).alias("TotalEDInpatientVisits")) ++ visit.map(v => max(df_all.col(v)).alias(v)
+                new TotalEDInpatientVisits()(df_all.col("VisitType")).alias("TotalEDInpatientVisits")) ++ demograph.map(v => first(df_all.col(v)).alias(v)) ++ acs.map(v => first(df_all.col(v)).alias(v)) ++ visit.map(v => max(df_all.col(v)).alias(v))
 
-            val df_all2 = df_all.groupBy("patient_num", "year").agg(patient_aggs : _*)
+            val df_all2 = df_all.groupBy("patient_num", "year").agg(patient_aggs.head, patient_aggs.tail:_*)
             val deidentify2 = df_all2.columns.intersect(config.deidentify)
             val df_all_patient = df_all2.drop(deidentify2 : _*)
             writeDataframe(hc, output_all_patient, df_all_patient)
