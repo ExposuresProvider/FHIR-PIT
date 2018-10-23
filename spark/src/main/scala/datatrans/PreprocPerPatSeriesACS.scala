@@ -64,6 +64,7 @@ object PreprocPerPatSeriesACS {
               .withColumnRenamed("prp_nHwHHs", "EstProbabilityHouseholdNonHispWhite")
               .withColumnRenamed("prp_no_auto", "EstProbabilityNoAuto")
               .withColumnRenamed("prp_not_insured", "EstProbabilityNoHealthIns")
+              .withColumnRenamed("total_pop2016", "EstResidentialDensity")
 
             writeDataframe(hc, config.output_file, table)
           }
