@@ -109,7 +109,7 @@ object PreprocCSVTable {
             val year = udf((date : String) => DateTime.parse(date, ISODateTimeFormat.dateParser()).year.get)
             val ageYear = udf((birthDate : String, year: Int) => {
               val birth_date_joda = DateTime.parse(birthDate, ISODateTimeFormat.dateParser())
-              val study_start_joda = new DateTime(year, 1, 1)
+              val study_start_joda = new DateTime(year, 1, 1, 0, 0, 0)
               Years.yearsBetween(study_start_joda, birth_date_joda).getYears
             })
 
