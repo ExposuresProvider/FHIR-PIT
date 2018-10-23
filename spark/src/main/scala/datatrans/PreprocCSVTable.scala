@@ -188,6 +188,14 @@ object PreprocCSVTable {
                 df_all_3 = df_all_3.withColumn(col, lit(0))
               })
 
+            df_all_3 = df_all_3
+              .withColumnRenamed("pm25_avg", "AvgDailyPM2.5Exposure")
+              .withColumnRenamed("pm25_max", "MaxDailyPM2.5Exposure")
+              .withColumnRenamed("o3_avg", "AvgDailyOzoneExposure")
+              .withColumnRenamed("o3_max", "MaxDailyOzoneExposure")
+              .withColumnRenamed("pm25_daily_average", "AvgDailyPM2.5Exposure2")
+              .withColumnRenamed("ozone_daily_8hour_maximum", "MaxDailyOzoneExposure2")
+
             val df_all_patient = df_all_3.groupBy("patient_num", "year").agg(
               first(df_all_3.col("AgeStudyStart")),
               first(df_all_3.col("Sex")),
@@ -204,8 +212,8 @@ object PreprocCSVTable {
               avg(df_all_3.col("MaxDailyPM2.5Exposure")),
               avg(df_all_3.col("AvgDailyOzoneExposure")),
               avg(df_all_3.col("MaxDailyOzoneExposure")),
-              avg(df_all_3.col("MaxDailyPM2.5Exposure2")),
-              avg(df_all_3.col("AvgDailyOzoneExposure2")),
+              avg(df_all_3.col("AvgDailyPM2.5Exposure2")),
+              avg(df_all_3.col("MaxDailyOzoneExposure2")),
               first(df_all_3.col("EstResidentialDensity")),
               first(df_all_3.col("EstResidentialDensity25Plus")),
               first(df_all_3.col("EstResidentialDensity25Plus")),
