@@ -199,37 +199,37 @@ object PreprocCSVTable {
             val df_all_visit0 = df_all.drop(deidentify : _*)
             val df_all_visit = df_all_visit0
               .withColumnRenamed("AsthmaDx", "AsthmaDxVisit")
-              .withColumnRenamed("CroupDx","CroupDxVisit"),
-              .withColumnRenamed("ReactiveAirwayDx","ReactiveAirwayDxVisit"),
-              .withColumnRenamed("CoughDx","CoughDxVisit"),
-              .withColumnRenamed("PneumoniaDx","PneumoniaDxVisit"),
-              .withColumnRenamed("ObesityDx","ObesityDxVisit"),
-              .withColumnRenamed("ObesityBMI", "ObesityBMIVisit"),
-              .withColumnRenamed("`AvgDailyPM2.5Exposure`","Avg24hPM2.5Exposure"),
-              .withColumnRenamed("`MaxDailyPM2.5Exposure`","Max24hPM2.5Exposure"),
-              .withColumnRenamed("AvgDailyOzoneExposure","Avg24hOzoneExposure"),
-              .withColumnRenamed("MaxDailyOzoneExposure","Max24hOzoneExposure"),
-              .withColumnRenamed("`AvgDailyPM2.5Exposure_2`","Avg24hPM2.5Exposure_2"),
-              .withColumnRenamed("MaxDailyOzoneExposure_2","Max24hOzoneExposure_2"),
-              .withColumnRenamed("Prednisone","PrednisoneVisit"),
-              .withColumnRenamed("Fluticasone","FluticasoneVisit"),
-              .withColumnRenamed("Mometasone","MometasoneVisit"),
-              .withColumnRenamed("Budesonide","BudesonideVisit"),
-              .withColumnRenamed("Beclomethasone","BeclomethasoneVisit"),
-              .withColumnRenamed("Ciclesonide","CiclesonideVisit"),
-              .withColumnRenamed("Flunisolide","FlunisolideVisit"),
-              .withColumnRenamed("Albuterol","AlbuterolVisit"),
-              .withColumnRenamed("Metaproterenol","MetaproterenolVisit"),
-              .withColumnRenamed("Diphenhydramine","DiphenhydramineVisit"),
-              .withColumnRenamed("Fexofenadine","FexofenadineVisit"),
-              .withColumnRenamed("Cetirizine","CetirizineVisit"),
-              .withColumnRenamed("Ipratropium","IpratropiumVisit"),
-              .withColumnRenamed("Salmeterol","SalmeterolVisit"),
-              .withColumnRenamed("Arformoterol","ArformoterolVisit"),
-              .withColumnRenamed("Formoterol","FormoterolVisit"),
-              .withColumnRenamed("Indacaterol","IndacaterolVisit"),
-              .withColumnRenamed("Theophylline","TheophyllineVisit"),
-              .withColumnRenamed("Omalizumab","OmalizumabVisit"),
+              .withColumnRenamed("CroupDx","CroupDxVisit")
+              .withColumnRenamed("ReactiveAirwayDx","ReactiveAirwayDxVisit")
+              .withColumnRenamed("CoughDx","CoughDxVisit")
+              .withColumnRenamed("PneumoniaDx","PneumoniaDxVisit")
+              .withColumnRenamed("ObesityDx","ObesityDxVisit")
+              .withColumnRenamed("ObesityBMI", "ObesityBMIVisit")
+              .withColumnRenamed("`AvgDailyPM2.5Exposure`","Avg24hPM2.5Exposure")
+              .withColumnRenamed("`MaxDailyPM2.5Exposure`","Max24hPM2.5Exposure")
+              .withColumnRenamed("AvgDailyOzoneExposure","Avg24hOzoneExposure")
+              .withColumnRenamed("MaxDailyOzoneExposure","Max24hOzoneExposure")
+              .withColumnRenamed("`AvgDailyPM2.5Exposure_2`","Avg24hPM2.5Exposure_2")
+              .withColumnRenamed("MaxDailyOzoneExposure_2","Max24hOzoneExposure_2")
+              .withColumnRenamed("Prednisone","PrednisoneVisit")
+              .withColumnRenamed("Fluticasone","FluticasoneVisit")
+              .withColumnRenamed("Mometasone","MometasoneVisit")
+              .withColumnRenamed("Budesonide","BudesonideVisit")
+              .withColumnRenamed("Beclomethasone","BeclomethasoneVisit")
+              .withColumnRenamed("Ciclesonide","CiclesonideVisit")
+              .withColumnRenamed("Flunisolide","FlunisolideVisit")
+              .withColumnRenamed("Albuterol","AlbuterolVisit")
+              .withColumnRenamed("Metaproterenol","MetaproterenolVisit")
+              .withColumnRenamed("Diphenhydramine","DiphenhydramineVisit")
+              .withColumnRenamed("Fexofenadine","FexofenadineVisit")
+              .withColumnRenamed("Cetirizine","CetirizineVisit")
+              .withColumnRenamed("Ipratropium","IpratropiumVisit")
+              .withColumnRenamed("Salmeterol","SalmeterolVisit")
+              .withColumnRenamed("Arformoterol","ArformoterolVisit")
+              .withColumnRenamed("Formoterol","FormoterolVisit")
+              .withColumnRenamed("Indacaterol","IndacaterolVisit")
+              .withColumnRenamed("Theophylline","TheophyllineVisit")
+              .withColumnRenamed("Omalizumab","OmalizumabVisit")
               .withColumnRenamed("Mepolizumab","MepolizumabVisit")
 
 
