@@ -220,7 +220,6 @@ object PreprocCSVTable {
               avg(df_all.col("MaxDailyOzoneExposure2")),
               first(df_all.col("EstResidentialDensity")),
               first(df_all.col("EstResidentialDensity25Plus")),
-              first(df_all.col("EstResidentialDensity25Plus")),
               first(df_all.col("EstProbabilityNonHispWhite")),
               first(df_all.col("EstProbabilityHouseholdNonHispWhite")),
               first(df_all.col("EstProbabilityHighSchoolMaxEducation")),
