@@ -164,7 +164,7 @@ object PreprocCSVTable {
               first(df_all_3.col("Ethnicity")),
               max(df_all_3.col("AsthmaDx")),
               max(df_all_3.col("CroupDx")),
-              max(df_all_3.col("ReactiveAirwayDx")),
+//              max(df_all_3.col("ReactiveAirwayDx")),
               max(df_all_3.col("CoughDx")),
               max(df_all_3.col("PneumoniaDx")),
               max(df_all_3.col("ObesityDx")),
