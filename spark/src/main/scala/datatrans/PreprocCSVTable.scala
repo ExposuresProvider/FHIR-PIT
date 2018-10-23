@@ -156,7 +156,38 @@ object PreprocCSVTable {
 
             val df_all = spark.read.format("csv").option("header", value = true).load(output_file_all)
             val df_all_2 = df_all.withColumn("year", year(df_all.col("start_date")))
-            val df_all_3 = df_all_2.withColumn("AgeStudyStart", ageYear(df_all_2.col("birth_date"), df_all_2.col("year")))
+            var df_all_3 = df_all_2.withColumn("AgeStudyStart", ageYear(df_all_2.col("birth_date"), df_all_2.col("year")))
+            Seq(
+              "AsthmaDx",
+              "CroupDx",
+              "ReactiveAirwayDx",
+              "CoughDx",
+              "PneumoniaDx",
+              "ObesityDx",
+              "ObesityBMI",
+              "Prednisone",
+              "Fluticasone",
+              "Mometasone",
+              "Budesonide",
+              "Beclomethasone",
+              "Ciclesonide",
+              "Flunisolide",
+              "Albuterol",
+              "Metaproterenol",
+              "Diphenhydramine",
+              "Fexofenadine",
+              "Cetirizine",
+              "Ipratropium",
+              "Salmeterol",
+              "Arformoterol",
+              "Formoterol",
+              "Indacaterol",
+              "Theophylline",
+              "Omalizumab",
+              "Mepolizumab").diff(df_all_3.columns).foreach(col => {
+                df_all_3 = df_all_3.withColumn(col, lit(0))
+              })
+
             val df_all_patient = df_all_3.groupBy("patient_num", "year").agg(
               first(df_all_3.col("AgeStudyStart")),
               first(df_all_3.col("Sex")),
@@ -164,7 +195,7 @@ object PreprocCSVTable {
               first(df_all_3.col("Ethnicity")),
               max(df_all_3.col("AsthmaDx")),
               max(df_all_3.col("CroupDx")),
-//              max(df_all_3.col("ReactiveAirwayDx")),
+              max(df_all_3.col("ReactiveAirwayDx")),
               max(df_all_3.col("CoughDx")),
               max(df_all_3.col("PneumoniaDx")),
               max(df_all_3.col("ObesityDx")),
