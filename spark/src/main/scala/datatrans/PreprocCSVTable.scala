@@ -83,9 +83,7 @@ object PreprocCSVTable {
                   val env_df2 = env_df.withColumn("next_date", plusOneDayDate(env_df.col("start_date"))).drop("start_date").withColumnRenamed("next_date", "start_date")
                   
                   val patenv_df = pat_df.join(env_df2, "start_date").join(df, "patient_num")
-                  val deidentify = patenv_df.columns.intersect(config.deidentify)
-                  val patenv_df2 = patenv_df.drop(deidentify : _*)
-                  writeDataframe(hc, output_file, patenv_df2)
+                  writeDataframe(hc, output_file, patenv_df)
                 }
               }
 
@@ -103,6 +101,7 @@ object PreprocCSVTable {
 
           println("aggregation")
 
+          val output_all_visit = config.output_file + "/all_visit"
           val output_all_patient = config.output_file + "/all_patient"
           if(fileExists(hc, output_all_patient)) {
             println(output_all_patient + " exists")
@@ -154,9 +153,9 @@ object PreprocCSVTable {
               }
             }
 
-            val df_all = spark.read.format("csv").option("header", value = true).load(output_file_all)
-            val df_all_2 = df_all.withColumn("year", year(df_all.col("start_date")))
-            var df_all_3 = df_all_2.withColumn("AgeStudyStart", ageYear(df_all_2.col("birth_date"), df_all_2.col("year")))
+            var df_all = spark.read.format("csv").option("header", value = true).load(output_file_all)
+            df_all = df_all.withColumn("year", year(df_all.col("start_date")))
+            df_all = df_all.withColumn("AgeStudyStart", ageYear(df_all.col("birth_date"), df_all.col("year")))
             Seq(
               "AsthmaDx",
               "CroupDx",
@@ -184,11 +183,11 @@ object PreprocCSVTable {
               "Indacaterol",
               "Theophylline",
               "Omalizumab",
-              "Mepolizumab").diff(df_all_3.columns).foreach(col => {
-                df_all_3 = df_all_3.withColumn(col, lit(0))
+              "Mepolizumab").diff(df_all.columns).foreach(col => {
+                df_all = df_all.withColumn(col, lit(0))
               })
 
-            df_all_3 = df_all_3
+            df_all = df_all
               .withColumnRenamed("pm25_avg", "AvgDailyPM2.5Exposure")
               .withColumnRenamed("pm25_max", "MaxDailyPM2.5Exposure")
               .withColumnRenamed("o3_avg", "AvgDailyOzoneExposure")
@@ -196,57 +195,64 @@ object PreprocCSVTable {
               .withColumnRenamed("pm25_daily_average", "AvgDailyPM2.5Exposure2")
               .withColumnRenamed("ozone_daily_8hour_maximum", "MaxDailyOzoneExposure2")
 
-            val df_all_patient = df_all_3.groupBy("patient_num", "year").agg(
-              first(df_all_3.col("AgeStudyStart")),
-              first(df_all_3.col("Sex")),
-              first(df_all_3.col("Race")),
-              first(df_all_3.col("Ethnicity")),
-              max(df_all_3.col("AsthmaDx")),
-              max(df_all_3.col("CroupDx")),
-              max(df_all_3.col("ReactiveAirwayDx")),
-              max(df_all_3.col("CoughDx")),
-              max(df_all_3.col("PneumoniaDx")),
-              max(df_all_3.col("ObesityDx")),
-              max(df_all_3.col("ObesityBMI")),
-              avg(df_all_3.col("AvgDailyPM2.5Exposure")),
-              avg(df_all_3.col("MaxDailyPM2.5Exposure")),
-              avg(df_all_3.col("AvgDailyOzoneExposure")),
-              avg(df_all_3.col("MaxDailyOzoneExposure")),
-              avg(df_all_3.col("AvgDailyPM2.5Exposure2")),
-              avg(df_all_3.col("MaxDailyOzoneExposure2")),
-              first(df_all_3.col("EstResidentialDensity")),
-              first(df_all_3.col("EstResidentialDensity25Plus")),
-              first(df_all_3.col("EstResidentialDensity25Plus")),
-              first(df_all_3.col("EstProbabilityNonHispWhite")),
-              first(df_all_3.col("EstProbabilityHouseholdNonHispWhite")),
-              first(df_all_3.col("EstProbabilityHighSchoolMaxEducation")),
-              first(df_all_3.col("EstProbabilityNoAuto")),
-              first(df_all_3.col("EstProbabilityNoHealthIns")),
-              first(df_all_3.col("EstProbabilityESL")),
-              first(df_all_3.col("EstHouseholdIncome")),
-              first(df_all_3.col("MajorRoadwayHighwayExposure")),
-              new TotalEDInpatientVisits()(df_all_3.col("VisitType")).alias("TotalEDInpatientVisits"),
-              max(df_all_3.col("Prednisone")),
-              max(df_all_3.col("Fluticasone")),
-              max(df_all_3.col("Mometasone")),
-              max(df_all_3.col("Budesonide")),
-              max(df_all_3.col("Beclomethasone")),
-              max(df_all_3.col("Ciclesonide")),
-              max(df_all_3.col("Flunisolide")),
-              max(df_all_3.col("Albuterol")),
-              max(df_all_3.col("Metaproterenol")),
-              max(df_all_3.col("Diphenhydramine")),
-              max(df_all_3.col("Fexofenadine")),
-              max(df_all_3.col("Cetirizine")),
-              max(df_all_3.col("Ipratropium")),
-              max(df_all_3.col("Salmeterol")),
-              max(df_all_3.col("Arformoterol")),
-              max(df_all_3.col("Formoterol")),
-              max(df_all_3.col("Indacaterol")),
-              max(df_all_3.col("Theophylline")),
-              max(df_all_3.col("Omalizumab")),
-              max(df_all_3.col("Mepolizumab"))
+            val deidentify = df_all.columns.intersect(config.deidentify)
+            val df_all_visit = df_all.drop(deidentify : _*)
+
+            writeDataframe(hc, output_all_visit, df_all_visit)
+
+            val df_all2 = df_all.groupBy("patient_num", "year").agg(
+              first(df_all.col("AgeStudyStart")),
+              first(df_all.col("Sex")),
+              first(df_all.col("Race")),
+              first(df_all.col("Ethnicity")),
+              max(df_all.col("AsthmaDx")),
+              max(df_all.col("CroupDx")),
+              max(df_all.col("ReactiveAirwayDx")),
+              max(df_all.col("CoughDx")),
+              max(df_all.col("PneumoniaDx")),
+              max(df_all.col("ObesityDx")),
+              max(df_all.col("ObesityBMI")),
+              avg(df_all.col("`AvgDailyPM2.5Exposure`")),
+              avg(df_all.col("`MaxDailyPM2.5Exposure`")),
+              avg(df_all.col("AvgDailyOzoneExposure")),
+              avg(df_all.col("MaxDailyOzoneExposure")),
+              avg(df_all.col("`AvgDailyPM2.5Exposure2`")),
+              avg(df_all.col("MaxDailyOzoneExposure2")),
+              first(df_all.col("EstResidentialDensity")),
+              first(df_all.col("EstResidentialDensity25Plus")),
+              first(df_all.col("EstResidentialDensity25Plus")),
+              first(df_all.col("EstProbabilityNonHispWhite")),
+              first(df_all.col("EstProbabilityHouseholdNonHispWhite")),
+              first(df_all.col("EstProbabilityHighSchoolMaxEducation")),
+              first(df_all.col("EstProbabilityNoAuto")),
+              first(df_all.col("EstProbabilityNoHealthIns")),
+              first(df_all.col("EstProbabilityESL")),
+              first(df_all.col("EstHouseholdIncome")),
+              first(df_all.col("MajorRoadwayHighwayExposure")),
+              new TotalEDInpatientVisits()(df_all.col("VisitType")).alias("TotalEDInpatientVisits"),
+              max(df_all.col("Prednisone")),
+              max(df_all.col("Fluticasone")),
+              max(df_all.col("Mometasone")),
+              max(df_all.col("Budesonide")),
+              max(df_all.col("Beclomethasone")),
+              max(df_all.col("Ciclesonide")),
+              max(df_all.col("Flunisolide")),
+              max(df_all.col("Albuterol")),
+              max(df_all.col("Metaproterenol")),
+              max(df_all.col("Diphenhydramine")),
+              max(df_all.col("Fexofenadine")),
+              max(df_all.col("Cetirizine")),
+              max(df_all.col("Ipratropium")),
+              max(df_all.col("Salmeterol")),
+              max(df_all.col("Arformoterol")),
+              max(df_all.col("Formoterol")),
+              max(df_all.col("Indacaterol")),
+              max(df_all.col("Theophylline")),
+              max(df_all.col("Omalizumab")),
+              max(df_all.col("Mepolizumab"))
             )
+            val deidentify2 = df_all2.columns.intersect(config.deidentify)
+            val df_all_patient = df_all2.drop(deidentify2 : _*)
             writeDataframe(hc, output_all_patient, df_all_patient)
           }
 
