@@ -153,10 +153,7 @@ object PreprocCSVTable {
               }
             }
 
-            var df_all = spark.read.format("csv").option("header", value = true).load(output_file_all)
-            df_all = df_all.withColumn("year", year(df_all.col("start_date")))
-            df_all = df_all.withColumn("AgeStudyStart", ageYear(df_all.col("birth_date"), df_all.col("year")))
-            Seq(
+            val visit = Seq(
               "AsthmaDx",
               "CroupDx",
               "ReactiveAirwayDx",
@@ -183,7 +180,11 @@ object PreprocCSVTable {
               "Indacaterol",
               "Theophylline",
               "Omalizumab",
-              "Mepolizumab").diff(df_all.columns).foreach(col => {
+              "Mepolizumab")
+            var df_all = spark.read.format("csv").option("header", value = true).load(output_file_all)
+            df_all = df_all.withColumn("year", year(df_all.col("start_date")))
+            df_all = df_all.withColumn("AgeStudyStart", ageYear(df_all.col("birth_date"), df_all.col("year")))
+            visit.diff(df_all.columns).foreach(col => {
                 df_all = df_all.withColumn(col, lit(0))
               })
 
@@ -196,95 +197,45 @@ object PreprocCSVTable {
               .withColumnRenamed("ozone_daily_8hour_maximum", "MaxDailyOzoneExposure_2")
 
             val deidentify = df_all.columns.intersect(config.deidentify)
-            val df_all_visit0 = df_all.drop(deidentify : _*)
-            val df_all_visit = df_all_visit0
-              .withColumnRenamed("AsthmaDx", "AsthmaDxVisit")
-              .withColumnRenamed("CroupDx","CroupDxVisit")
-              .withColumnRenamed("ReactiveAirwayDx","ReactiveAirwayDxVisit")
-              .withColumnRenamed("CoughDx","CoughDxVisit")
-              .withColumnRenamed("PneumoniaDx","PneumoniaDxVisit")
-              .withColumnRenamed("ObesityDx","ObesityDxVisit")
-              .withColumnRenamed("ObesityBMI", "ObesityBMIVisit")
+            var df_all_visit = df_all.drop(deidentify : _*)
+            df_all_visit = df_all_visit
               .withColumnRenamed("`AvgDailyPM2.5Exposure`","Avg24hPM2.5Exposure")
               .withColumnRenamed("`MaxDailyPM2.5Exposure`","Max24hPM2.5Exposure")
               .withColumnRenamed("AvgDailyOzoneExposure","Avg24hOzoneExposure")
               .withColumnRenamed("MaxDailyOzoneExposure","Max24hOzoneExposure")
               .withColumnRenamed("`AvgDailyPM2.5Exposure_2`","Avg24hPM2.5Exposure_2")
               .withColumnRenamed("MaxDailyOzoneExposure_2","Max24hOzoneExposure_2")
-              .withColumnRenamed("Prednisone","PrednisoneVisit")
-              .withColumnRenamed("Fluticasone","FluticasoneVisit")
-              .withColumnRenamed("Mometasone","MometasoneVisit")
-              .withColumnRenamed("Budesonide","BudesonideVisit")
-              .withColumnRenamed("Beclomethasone","BeclomethasoneVisit")
-              .withColumnRenamed("Ciclesonide","CiclesonideVisit")
-              .withColumnRenamed("Flunisolide","FlunisolideVisit")
-              .withColumnRenamed("Albuterol","AlbuterolVisit")
-              .withColumnRenamed("Metaproterenol","MetaproterenolVisit")
-              .withColumnRenamed("Diphenhydramine","DiphenhydramineVisit")
-              .withColumnRenamed("Fexofenadine","FexofenadineVisit")
-              .withColumnRenamed("Cetirizine","CetirizineVisit")
-              .withColumnRenamed("Ipratropium","IpratropiumVisit")
-              .withColumnRenamed("Salmeterol","SalmeterolVisit")
-              .withColumnRenamed("Arformoterol","ArformoterolVisit")
-              .withColumnRenamed("Formoterol","FormoterolVisit")
-              .withColumnRenamed("Indacaterol","IndacaterolVisit")
-              .withColumnRenamed("Theophylline","TheophyllineVisit")
-              .withColumnRenamed("Omalizumab","OmalizumabVisit")
-              .withColumnRenamed("Mepolizumab","MepolizumabVisit")
-
+            
+            visit.foreach(v => {
+              df_all_visit = df_all_visit.withColumnRenamed(v,v + "Visit")
+            })
 
             writeDataframe(hc, output_all_visit, df_all_visit)
 
-            val df_all2 = df_all.groupBy("patient_num", "year").agg(
-              first(df_all.col("AgeStudyStart")).alias("AgeStudyStart"),
-              first(df_all.col("Sex")).alias("Sex"),
-              first(df_all.col("Race")).alias("Race"),
-              first(df_all.col("Ethnicity")).alias("Ethnicity"),
-              max(df_all.col("AsthmaDx")).alias("AsthmaDx"),
-              max(df_all.col("CroupDx")).alias("CroupDx"),
-              max(df_all.col("ReactiveAirwayDx")).alias("ReactiveAirwayDx"),
-              max(df_all.col("CoughDx")).alias("CoughDx"),
-              max(df_all.col("PneumoniaDx")).alias("PneumoniaDx"),
-              max(df_all.col("ObesityDx")).alias("ObesityDx"),
-              max(df_all.col("ObesityBMI")).alias("ObesityBMI"),
-              avg(df_all.col("`AvgDailyPM2.5Exposure`")).alias("AvgDailyPM2.5Exposure"),
-              avg(df_all.col("`MaxDailyPM2.5Exposure`")).alias("MaxDailyPM2.5Exposure"),
-              avg(df_all.col("AvgDailyOzoneExposure")).alias("AvgDailyOzoneExposure"),
-              avg(df_all.col("MaxDailyOzoneExposure")).alias("MaxDailyOzoneExposure"),
-              avg(df_all.col("`AvgDailyPM2.5Exposure_2`")).alias("AvgDailyPM2.5Exposure_2"),
-              avg(df_all.col("MaxDailyOzoneExposure_2")).alias("MaxDailyOzoneExposure_2"),
-              first(df_all.col("EstResidentialDensity")).alias("EstResidentialDensity"),
-              first(df_all.col("EstResidentialDensity25Plus")).alias("EstResidentialDensity25Plus"),
-              first(df_all.col("EstProbabilityNonHispWhite")).alias("EstProbabilityNonHispWhite"),
-              first(df_all.col("EstProbabilityHouseholdNonHispWhite")).alias("EstProbabilityHouseholdNonHispWhite"),
-              first(df_all.col("EstProbabilityHighSchoolMaxEducation")).alias("EstProbabilityHighSchoolMaxEducation"),
-              first(df_all.col("EstProbabilityNoAuto")).alias("EstProbabilityNoAuto"),
-              first(df_all.col("EstProbabilityNoHealthIns")).alias("EstProbabilityNoHealthIns"),
-              first(df_all.col("EstProbabilityESL")).alias("EstProbabilityESL"),
-              first(df_all.col("EstHouseholdIncome")).alias("EstHouseholdIncome"),
-              first(df_all.col("MajorRoadwayHighwayExposure")).alias("MajorRoadwayHighwayExposure"),
-              new TotalEDInpatientVisits()(df_all.col("VisitType")).alias("TotalEDInpatientVisits"),
-              max(df_all.col("Prednisone")).alias("Prednisone"),
-              max(df_all.col("Fluticasone")).alias("Fluticasone"),
-              max(df_all.col("Mometasone")).alias("Mometasone"),
-              max(df_all.col("Budesonide")).alias("Budesonide"),
-              max(df_all.col("Beclomethasone")).alias("Beclomethasone"),
-              max(df_all.col("Ciclesonide")).alias("Ciclesonide"),
-              max(df_all.col("Flunisolide")).alias("Flunisolide"),
-              max(df_all.col("Albuterol")).alias("Albuterol"),
-              max(df_all.col("Metaproterenol")).alias("Metaproterenol"),
-              max(df_all.col("Diphenhydramine")).alias("Diphenhydramine"),
-              max(df_all.col("Fexofenadine")).alias("Fexofenadine"),
-              max(df_all.col("Cetirizine")).alias("Cetirizine"),
-              max(df_all.col("Ipratropium")).alias("Ipratropium"),
-              max(df_all.col("Salmeterol")).alias("Salmeterol"),
-              max(df_all.col("Arformoterol")).alias("Arformoterol"),
-              max(df_all.col("Formoterol")).alias("Formoterol"),
-              max(df_all.col("Indacaterol")).alias("Indacaterol"),
-              max(df_all.col("Theophylline")).alias("Theophylline"),
-              max(df_all.col("Omalizumab")).alias("Omalizumab"),
-              max(df_all.col("Mepolizumab")).alias("Mepolizumab")
-            )
+            val patient_aggs = Seq(
+                first(df_all.col("AgeStudyStart")).alias("AgeStudyStart"),
+                first(df_all.col("Sex")).alias("Sex"),
+                first(df_all.col("Race")).alias("Race"),
+                first(df_all.col("Ethnicity")).alias("Ethnicity"),
+                avg(df_all.col("`AvgDailyPM2.5Exposure`")).alias("AvgDailyPM2.5Exposure"),
+                avg(df_all.col("`MaxDailyPM2.5Exposure`")).alias("MaxDailyPM2.5Exposure"),
+                avg(df_all.col("AvgDailyOzoneExposure")).alias("AvgDailyOzoneExposure"),
+                avg(df_all.col("MaxDailyOzoneExposure")).alias("MaxDailyOzoneExposure"),
+                avg(df_all.col("`AvgDailyPM2.5Exposure_2`")).alias("AvgDailyPM2.5Exposure_2"),
+                avg(df_all.col("MaxDailyOzoneExposure_2")).alias("MaxDailyOzoneExposure_2"),
+                first(df_all.col("EstResidentialDensity")).alias("EstResidentialDensity"),
+                first(df_all.col("EstResidentialDensity25Plus")).alias("EstResidentialDensity25Plus"),
+                first(df_all.col("EstProbabilityNonHispWhite")).alias("EstProbabilityNonHispWhite"),
+                first(df_all.col("EstProbabilityHouseholdNonHispWhite")).alias("EstProbabilityHouseholdNonHispWhite"),
+                first(df_all.col("EstProbabilityHighSchoolMaxEducation")).alias("EstProbabilityHighSchoolMaxEducation"),
+                first(df_all.col("EstProbabilityNoAuto")).alias("EstProbabilityNoAuto"),
+                first(df_all.col("EstProbabilityNoHealthIns")).alias("EstProbabilityNoHealthIns"),
+                first(df_all.col("EstProbabilityESL")).alias("EstProbabilityESL"),
+                first(df_all.col("EstHouseholdIncome")).alias("EstHouseholdIncome"),
+                first(df_all.col("MajorRoadwayHighwayExposure")).alias("MajorRoadwayHighwayExposure"),
+                new TotalEDInpatientVisits()(df_all.col("VisitType")).alias("TotalEDInpatientVisits")) ++ visit.map(v => max(df_all.col(v)).alias(v)
+
+            val df_all2 = df_all.groupBy("patient_num", "year").agg(patient_aggs : _*)
             val deidentify2 = df_all2.columns.intersect(config.deidentify)
             val df_all_patient = df_all2.drop(deidentify2 : _*)
             writeDataframe(hc, output_all_patient, df_all_patient)
