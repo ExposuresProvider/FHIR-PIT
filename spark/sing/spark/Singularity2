@@ -81,7 +81,7 @@ From: spark.img
 
 %apprun preprocPerPatSeriesToVector
   cd /opt/datatrans/spark
-  exec python3 src/main/python/runPreprocCSVTable.py /opt/datatrans "$@" /data/output/FHIR/Patient /data/input/map.MDCTN-genRxCUIs-genNames-subRxCUIs-subNames /data/output/PatVec
+  exec python3 src/main/python/runPreprocPerPatToVector.py /opt/datatrans "$@" /data/output/FHIR/Patient /data/input/map.MDCTN-genRxCUIs-genNames-subRxCUIs-subNames /data/output/PatVec
 
 %apprun preprocICEES
   cd /opt/datatrans/spark
