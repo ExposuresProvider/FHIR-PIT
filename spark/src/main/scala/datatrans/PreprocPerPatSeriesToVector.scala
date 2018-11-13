@@ -111,7 +111,6 @@ object PreprocPerPatSeriesToVector {
     }
   }
 
-
   def proc_pid(config : Config, hc : Configuration, p:String, start_date : DateTime, end_date : DateTime, medmap : Option[Map[String, String]]): Unit =
     time {
 
@@ -155,6 +154,7 @@ object PreprocPerPatSeriesToVector {
                 val cond = enc.condition
                 val lab = enc.labs
                 val proc = enc.procedure
+                val bmi = enc.bmi
                 if(!med.isEmpty) {
                   // med encounter use authorized on date
                   Some(DateTime.parse(med(0).authoredOn, ISODateTimeFormat.dateTimeParser()))
@@ -165,8 +165,8 @@ object PreprocPerPatSeriesToVector {
                   // cond encounter use asserted date
                   Some(DateTime.parse(proc(0).performedDateTime, ISODateTimeFormat.dateTimeParser()))
                 } else {
-                  if(!med.isEmpty || !cond.isEmpty || !lab.isEmpty || !proc.isEmpty) {
-                    // throw new RuntimeException("non empty encountner has no start date " + p + " " + enc.id)
+                  if(!med.isEmpty || !cond.isEmpty || !lab.isEmpty || !proc.isEmpty || !bmi.isEmpty) {
+                    println("non empty encountner has no start date " + p + " " + enc.id)
                   }
                   None
                 }
@@ -189,6 +189,7 @@ object PreprocPerPatSeriesToVector {
                 val cond = enc.condition
                 val lab = enc.labs
                 val proc = enc.procedure
+                val bmi = enc.bmi
 
                 med.foreach(m => {
                   map_medication(medmap, m.medication).foreach(n => {
@@ -204,6 +205,9 @@ object PreprocPerPatSeriesToVector {
                   map_labs(m.code).foreach(n => {
                     rec += (n -> m.value)
                   })
+                })
+                bmi.foreach(m => {
+                  rec += ("ObesityBMIVisit" -> m.value.asInstanceOf[ValueQuantity].valueNumber)
                 })
                 proc.foreach(m => {
                   map_procedure(m.system, m.code).foreach(n => {
@@ -238,7 +242,7 @@ object PreprocPerPatSeriesToVector {
                     b.endDate
                 }
 
-                Encounter(a.id + "|" + b.id, a.subjectReference, code, startDate, endDate, a.condition ++ b.condition, a.labs ++ b.labs, a.medication ++ b.medication, a.procedure ++ b.procedure)
+                Encounter(a.id + "|" + b.id, a.subjectReference, code, startDate, endDate, a.condition ++ b.condition, a.labs ++ b.labs, a.medication ++ b.medication, a.procedure ++ b.procedure, a.bmi ++ b.bmi)
 
               }
 

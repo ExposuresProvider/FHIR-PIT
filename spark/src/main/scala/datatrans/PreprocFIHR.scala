@@ -111,6 +111,8 @@ object PreprocFIHR {
             obj1.as[Medication]
           case "Procedure" =>
             obj1.as[Procedure]
+          case "BMI" =>
+            obj1.as[BMI]
         }
 
         val id = obj.id
@@ -131,6 +133,8 @@ object PreprocFIHR {
               Json.toJson(obj.asInstanceOf[Medication])
             case "Procedure" =>
               Json.toJson(obj.asInstanceOf[Procedure])
+            case "BMI" =>
+              Json.toJson(obj.asInstanceOf[BMI])
           }
         def writeFile(obj2 : JsValue) : Unit =
           Utils.writeToFile(hc, output_file, Json.stringify(obj2))
@@ -201,7 +205,7 @@ object PreprocFIHR {
   private def combine_pat(config: PreprocFIHRConfig, hc: Configuration, input_dir_file_system: FileSystem, output_dir_file_system: FileSystem) {
     import Implicits0._
     import Implicits1.patientReads
-    import Implicits2.{encounterReads, conditionReads, labsReads, medicationReads, procedureReads}
+    import Implicits2.{encounterReads, conditionReads, labsReads, bmiReads, medicationReads, procedureReads}
     val resc_type = "Patient"
     val count = new AtomicInteger(0)
 
@@ -245,6 +249,8 @@ object PreprocFIHR {
                       enc = enc.copy(condition = objs.map(obj => obj.as[Condition]))
                     case "Labs" =>
                       enc = enc.copy(labs = objs.map(obj => obj.as[Labs]))
+                    case "BMI" =>
+                      enc = enc.copy(bmi = objs.map(obj => obj.as[BMI]))
                     case "Medication" =>
                       enc = enc.copy(medication = objs.map(obj => obj.as[Medication]))
                     case "Procedure" =>

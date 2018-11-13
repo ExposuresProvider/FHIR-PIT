@@ -237,7 +237,8 @@ object PreprocCSVTable {
                 avg(df_all.col("AvgDailyOzoneExposure")).alias("AvgDailyOzoneExposure"),
                 avg(df_all.col("MaxDailyOzoneExposure")).alias("MaxDailyOzoneExposure"),
                 avg(df_all.col("`AvgDailyPM2.5Exposure_2`")).alias("AvgDailyPM2.5Exposure_2"),
-                avg(df_all.col("MaxDailyOzoneExposure_2")).alias("MaxDailyOzoneExposure_2"),
+              avg(df_all.col("MaxDailyOzoneExposure_2")).alias("MaxDailyOzoneExposure_2"),
+              max(df_all.col("ObesityBMIVisit")).alias("ObesicityBMI"),
                 new TotalEDInpatientVisits()(df_all.col("VisitType")).alias("TotalEDInpatientVisits")) ++ demograph.map(v => first(df_all.col(v)).alias(v)) ++ acs.map(v => first(df_all.col(v)).alias(v)) ++ visit.map(v => max(df_all.col(v)).alias(v))
 
             val df_all2 = df_all.groupBy("patient_num", "year").agg(patient_aggs.head, patient_aggs.tail:_*)

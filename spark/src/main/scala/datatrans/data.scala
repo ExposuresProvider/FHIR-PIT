@@ -21,7 +21,7 @@ case class Patient(
   encounter : Seq[Encounter]
 )
 
-case class Encounter(id : String, subjectReference : String, code : Option[String], startDate : Option[String], endDate : Option[String], condition: Seq[Condition], labs: Seq[Labs], medication: Seq[Medication], procedure: Seq[Procedure])
+case class Encounter(id : String, subjectReference : String, code : Option[String], startDate : Option[String], endDate : Option[String], condition: Seq[Condition], labs: Seq[Labs], medication: Seq[Medication], procedure: Seq[Procedure], bmi: Seq[BMI])
 
 sealed trait Resource {
   val id : String
@@ -33,6 +33,7 @@ case class Condition(override val id : String, override val subjectReference : S
 case class Labs(override val id : String, override val subjectReference : String, override val contextReference : String, code : String, value : Value) extends Resource
 case class Medication(override val id : String, override val subjectReference : String, override val contextReference : String, medication : String, authoredOn : String, start: String, end: Option[String]) extends Resource
 case class Procedure(override val id : String, override val subjectReference : String, override val contextReference : String, system : String, code : String, performedDateTime : String) extends Resource
+case class BMI(override val id : String, override val subjectReference : String, override val contextReference : String, value : Value) extends Resource
 
 abstract class Value extends Serializable
 case class ValueQuantity(valueNumber : Double, unit : Option[String]) extends Value
@@ -51,6 +52,7 @@ object Implicits0 {
 
   implicit val conditionWrites: Writes[Condition] = Json.writes[Condition]
   implicit val labsWrites: Writes[Labs] = Json.writes[Labs]
+  implicit val bmiWrites: Writes[BMI] = Json.writes[BMI]
   implicit val medicationWrites: Writes[Medication] = Json.writes[Medication]
   implicit val procedureWrites: Writes[Procedure] = Json.writes[Procedure]
   implicit val encounterWrites: Writes[Encounter] = Json.writes[Encounter]
@@ -65,6 +67,7 @@ object Implicits2 {
 
   implicit val conditionReads: Reads[Condition] = Json.reads[Condition]
   implicit val labsReads: Reads[Labs] = Json.reads[Labs]
+  implicit val bmiReads: Reads[BMI] = Json.reads[BMI]
   implicit val medicationReads: Reads[Medication] = Json.reads[Medication]
   implicit val procedureReads: Reads[Procedure] = Json.reads[Procedure]
   implicit val encounterReads: Reads[Encounter] = Json.reads[Encounter]
@@ -110,7 +113,7 @@ object Implicits1 {
       val period = resource \ "period"
       val startDate = (period \ "start").asOpt[String]
       val endDate = (period \ "end").asOpt[String]
-      JsSuccess(Encounter(id, subjectReference, code, startDate, endDate, Seq(), Seq(), Seq(), Seq()))
+      JsSuccess(Encounter(id, subjectReference, code, startDate, endDate, Seq(), Seq(), Seq(), Seq(), Seq()))
     }
   }
   implicit val labsReads: Reads[Labs] = new Reads[Labs] {
@@ -132,6 +135,24 @@ object Implicits1 {
           ValueString((resource \ "valueString").as[String])
       }
       JsSuccess(Labs(id, subjectReference, contextReference, code, value))
+    }
+  }
+  implicit val bmiReads: Reads[BMI] = new Reads[BMI] {
+    override def reads(json: JsValue): JsResult[BMI] = {
+      val resource = json \ "resource"
+      val id = (resource \ "id").as[String]
+      val subjectReference = (resource \ "subject" \ "reference").as[String]
+      val contextReference = (resource \ "context" \ "reference").as[String]
+      val valueQuantity = resource \ "valueQuantity"
+      val value = valueQuantity match {
+        case JsDefined(vq) =>
+          val value = (vq \ "value").as[Double]
+          val unit = (vq \ "code").asOpt[String]
+          ValueQuantity(value, unit)
+        case JsUndefined() =>
+          ValueString((resource \ "valueString").as[String])
+      }
+      JsSuccess(BMI(id, subjectReference, contextReference, value))
     }
   }
   implicit val medicationReads: Reads[Medication] = new Reads[Medication] {
