@@ -128,6 +128,13 @@ object PreprocPerPatSeriesToVector {
       case _ => "Unknown"
     }
 
+  def map_sex(sex : String) : String =
+    sex match {
+      case "male" => "Male"
+      case "female" => "Female"
+      case _ => "Unknown"
+    }
+
   def proc_pid(config : Config, hc : Configuration, p:String, start_date : DateTime, end_date : DateTime, medmap : Option[Map[String, String]]): Unit =
     time {
 
@@ -159,7 +166,7 @@ object PreprocPerPatSeriesToVector {
           val sex = pat.gender
           val race = pat.race
           val ethnicity = pat.ethnicity
-          val demographic = Map[String, Any]("patient_num" -> pat.id, "birth_date" -> birth_date_joda.toString("yyyy-MM-dd"), "Sex" -> sex, "Race" -> race.map(map_race).head, "Ethnicity" -> map_ethnicity(ethnicity))
+          val demographic = Map[String, Any]("patient_num" -> pat.id, "birth_date" -> birth_date_joda.toString("yyyy-MM-dd"), "Sex" -> map_sex(sex), "Race" -> race.map(map_race).head, "Ethnicity" -> map_ethnicity(ethnicity))
           val intv = new Interval(start_date, end_date)
 
           val encounter_map = new scala.collection.mutable.HashMap[DateTime, scala.collection.mutable.Set[Encounter]] with MultiMap[DateTime, Encounter]
