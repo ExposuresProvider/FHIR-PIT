@@ -68,10 +68,7 @@ object PreprocFIHR {
 
   }
 
-  private def encodePath(obj: Any) : String =
-    Base64.getEncoder.encodeToString(Utils.md5(obj.toString()))
-
-  private def proc_gen(config: PreprocFIHRConfig, hc: Configuration, input_dir_file_system: FileSystem, resc_type: String, output_dir_file_system: FileSystem, proc : JsObject => Unit) : Unit = {
+  private def proc_gen(config: PreprocFIHRConfig, hc: Configuration, input_dir_file_system: FileSystem, resc_type: String, output_dir_file_system: FileSystem, proc : ((JsObject, String, Int)) => Unit) : Unit = {
     val input_dir = config.input_dir + "/" + resc_type
     val input_dir_path = new Path(input_dir)
     val itr = input_dir_file_system.listFiles(input_dir_path, false)
@@ -84,12 +81,12 @@ object PreprocFIHR {
       val obj = Json.parse(input_file_input_stream)
 
       if (!(obj \ "resourceType").isDefined) {
-        proc(obj.as[JsObject])
+        proc((obj.as[JsObject], input_file_path.getName, 0))
       } else {
         val entry = (obj \ "entry").get.as[List[JsObject]]
         val n = entry.size
 
-        entry.par.foreach(proc)
+        entry.par.zipWithIndex.map({case (o,i) => (o,input_file_path.getName,i)}).foreach(proc)
       }
     }
   }
@@ -101,50 +98,51 @@ object PreprocFIHR {
       val count = new AtomicInteger(0)
       val n = resc_count(config, hc, input_dir_file_system, resc_type)
 
-      proc_gen(config, hc, input_dir_file_system, resc_type, output_dir_file_system, obj1 => {
-        val obj : Resource = resc_type match {
-          case "Condition" =>
-            obj1.as[Condition]
-          case "Labs" =>
-            obj1.as[Labs]
-          case "Medication" =>
-            obj1.as[Medication]
-          case "Procedure" =>
-            obj1.as[Procedure]
-          case "BMI" =>
-            obj1.as[BMI]
-        }
-
-        val id = obj.id
-        val patient_num = obj.subjectReference.split("/")(1)
-        val encounter_id = obj.contextReference.split("/")(1)
-
-        println("processing " + resc_type + " " + count.incrementAndGet + " / " + n + " " + id)
-
-        val output_file = config.output_dir + "/" + resc_type + "/" + patient_num + "/" + encounter_id + "/" + encodePath(obj)
-        val output_file_path = new Path(output_file)
-        def parseFile : JsValue =
-          resc_type match {
+      proc_gen(config, hc, input_dir_file_system, resc_type, output_dir_file_system, {
+        case (obj1, f, i) =>
+          val obj : Resource = resc_type match {
             case "Condition" =>
-              Json.toJson(obj.asInstanceOf[Condition])
+              obj1.as[Condition]
             case "Labs" =>
-              Json.toJson(obj.asInstanceOf[Labs])
+              obj1.as[Labs]
             case "Medication" =>
-              Json.toJson(obj.asInstanceOf[Medication])
+              obj1.as[Medication]
             case "Procedure" =>
-              Json.toJson(obj.asInstanceOf[Procedure])
+              obj1.as[Procedure]
             case "BMI" =>
-              Json.toJson(obj.asInstanceOf[BMI])
+              obj1.as[BMI]
           }
-        def writeFile(obj2 : JsValue) : Unit =
-          Utils.writeToFile(hc, output_file, Json.stringify(obj2))
-        
-        if (output_dir_file_system.exists(output_file_path)) {
-          println(id ++ " file " ++ output_file + " exists")
-        } else {
-          val obj2 = parseFile
-          writeFile(obj2)
-        }
+
+          val id = obj.id
+          val patient_num = obj.subjectReference.split("/")(1)
+          val encounter_id = obj.contextReference.split("/")(1)
+
+          println("processing " + resc_type + " " + count.incrementAndGet + " / " + n + " " + id)
+
+          val output_file = config.output_dir + "/" + resc_type + "/" + patient_num + "/" + encounter_id + "/" + f + "@" + i
+          val output_file_path = new Path(output_file)
+          def parseFile : JsValue =
+            resc_type match {
+              case "Condition" =>
+                Json.toJson(obj.asInstanceOf[Condition])
+              case "Labs" =>
+                Json.toJson(obj.asInstanceOf[Labs])
+              case "Medication" =>
+                Json.toJson(obj.asInstanceOf[Medication])
+              case "Procedure" =>
+                Json.toJson(obj.asInstanceOf[Procedure])
+              case "BMI" =>
+                Json.toJson(obj.asInstanceOf[BMI])
+            }
+          def writeFile(obj2 : JsValue) : Unit =
+            Utils.writeToFile(hc, output_file, Json.stringify(obj2))
+          
+          if (output_dir_file_system.exists(output_file_path)) {
+            println(id ++ " file " ++ output_file + " exists")
+          } else {
+            val obj2 = parseFile
+            writeFile(obj2)
+          }
 
       })
     }
@@ -158,23 +156,24 @@ object PreprocFIHR {
       val count = new AtomicInteger(0)
       val n = resc_count(config, hc, input_dir_file_system, resc_type)
 
-      proc_gen(config, hc, input_dir_file_system, resc_type, output_dir_file_system, obj1 => {
-        val obj = obj1.as[Encounter]
+      proc_gen(config, hc, input_dir_file_system, resc_type, output_dir_file_system, {
+        case (obj1, f, i) =>
+          val obj = obj1.as[Encounter]
 
-        val id = obj.id
-        val patient_num = obj.subjectReference.split("/")(1)
+          val id = obj.id
+          val patient_num = obj.subjectReference.split("/")(1)
 
-        println("processing " + resc_type + " " + count.incrementAndGet + " / " + n + " " + id)
+          println("processing " + resc_type + " " + count.incrementAndGet + " / " + n + " " + id)
 
-        val output_file = config.output_dir + "/" + resc_type + "/" + patient_num + "/" + id
-        val output_file_path = new Path(output_file)
+          val output_file = config.output_dir + "/" + resc_type + "/" + patient_num + "/" + f + "@" + i
+          val output_file_path = new Path(output_file)
 
-        if (output_dir_file_system.exists(output_file_path)) {
-          println(output_file + " exists")
-        } else {
-          val obj2 = Json.toJson(obj)
-          Utils.writeToFile(hc, output_file, Json.stringify(obj2))
-        }
+          if (output_dir_file_system.exists(output_file_path)) {
+            println(output_file + " exists")
+          } else {
+            val obj2 = Json.toJson(obj)
+            Utils.writeToFile(hc, output_file, Json.stringify(obj2))
+          }
 
       })
     }
@@ -211,65 +210,66 @@ object PreprocFIHR {
 
     val n = resc_count(config, hc, input_dir_file_system, resc_type)
 
-    proc_gen(config, hc, input_dir_file_system, resc_type, output_dir_file_system, obj => {
-      var pat = obj.as[Patient]
-      val patient_num = pat.id
-      try {
+    proc_gen(config, hc, input_dir_file_system, resc_type, output_dir_file_system, {
+      case (obj, f, i) =>
+        var pat = obj.as[Patient]
+        val patient_num = pat.id
+        try {
 
-        println("processing " + resc_type + " " + count.incrementAndGet + " / " + n + " " + patient_num)
+          println("processing " + resc_type + " " + count.incrementAndGet + " / " + n + " " + patient_num)
 
-        val output_file = config.output_dir + "/Patient/" + patient_num
-        val output_file_path = new Path(output_file)
-        if (output_dir_file_system.exists(output_file_path)) {
-          println(output_file + " exists")
-        } else {
+          val output_file = config.output_dir + "/Patient/" + patient_num
+          val output_file_path = new Path(output_file)
+          if (output_dir_file_system.exists(output_file_path)) {
+            println(output_file + " exists")
+          } else {
 
-          val input_enc_dir = config.output_dir + "/Encounter/" + patient_num
-          val input_enc_dir_path = new Path(input_enc_dir)
-          val encs = ListBuffer[Encounter]()
-          Utils.HDFSCollection(hc, input_enc_dir_path).foreach(encounter_dir => {
-            var enc = Utils.loadJson[Encounter](hc, encounter_dir)
-            val encounter_id = enc.id
-            config.resc_types.foreach(resc_type => {
-              val input_resc_dir = config.output_dir + "/" + resc_type + "/" + patient_num + "/" + encounter_id
-              val input_resc_dir_path = new Path(input_resc_dir)
-              if(output_dir_file_system.exists(input_resc_dir_path)) {
-                Utils.HDFSCollection(hc, input_resc_dir_path).foreach(encounter_dir => {
+            val input_enc_dir = config.output_dir + "/Encounter/" + patient_num
+            val input_enc_dir_path = new Path(input_enc_dir)
+            val encs = ListBuffer[Encounter]()
+            Utils.HDFSCollection(hc, input_enc_dir_path).foreach(encounter_dir => {
+              var enc = Utils.loadJson[Encounter](hc, encounter_dir)
+              val encounter_id = enc.id
+              config.resc_types.foreach(resc_type => {
+                val input_resc_dir = config.output_dir + "/" + resc_type + "/" + patient_num + "/" + encounter_id
+                val input_resc_dir_path = new Path(input_resc_dir)
+                if(output_dir_file_system.exists(input_resc_dir_path)) {
+                  Utils.HDFSCollection(hc, input_resc_dir_path).foreach(encounter_dir => {
 
-                  val objs = Utils.HDFSCollection(hc, encounter_dir).map(input_resc_file_path =>
-                    try {
-                      val input_resc_file_input_stream = output_dir_file_system.open(input_resc_file_path)
-                      Json.parse(input_resc_file_input_stream)
-                    } catch {
-                    case e : Exception =>
-                      throw new Exception("error processing " + resc_type + " " + input_resc_file_path, e)
-                    }).toSeq
-                  resc_type match {
-                    case "Condition" =>
-                      enc = enc.copy(condition = objs.map(obj => obj.as[Condition]))
-                    case "Labs" =>
-                      enc = enc.copy(labs = objs.map(obj => obj.as[Labs]))
-                    case "BMI" =>
-                      enc = enc.copy(bmi = objs.map(obj => obj.as[BMI]))
-                    case "Medication" =>
-                      enc = enc.copy(medication = objs.map(obj => obj.as[Medication]))
-                    case "Procedure" =>
-                      enc = enc.copy(procedure = objs.map(obj => obj.as[Procedure]))
+                    val objs = Utils.HDFSCollection(hc, encounter_dir).map(input_resc_file_path =>
+                      try {
+                        val input_resc_file_input_stream = output_dir_file_system.open(input_resc_file_path)
+                        Json.parse(input_resc_file_input_stream)
+                      } catch {
+                        case e : Exception =>
+                          throw new Exception("error processing " + resc_type + " " + input_resc_file_path, e)
+                      }).toSeq
+                    resc_type match {
+                      case "Condition" =>
+                        enc = enc.copy(condition = objs.map(obj => obj.as[Condition]))
+                      case "Labs" =>
+                        enc = enc.copy(labs = objs.map(obj => obj.as[Labs]))
+                      case "BMI" =>
+                        enc = enc.copy(bmi = objs.map(obj => obj.as[BMI]))
+                      case "Medication" =>
+                        enc = enc.copy(medication = objs.map(obj => obj.as[Medication]))
+                      case "Procedure" =>
+                        enc = enc.copy(procedure = objs.map(obj => obj.as[Procedure]))
 
-                  }
-                 
-                })
-              }
+                    }
+                    
+                  })
+                }
+              })
+              encs += enc
             })
-            encs += enc
-          })
-          pat = pat.copy(encounter = encs)
-          Utils.writeToFile(hc, output_file, Json.stringify(Json.toJson(pat)))
+            pat = pat.copy(encounter = encs)
+            Utils.writeToFile(hc, output_file, Json.stringify(Json.toJson(pat)))
+          }
+        } catch {
+          case e : Exception =>
+            throw new Exception("error processing Patient " + patient_num, e)
         }
-      } catch {
-        case e : Exception =>
-          throw new Exception("error processing Patient " + patient_num, e)
-      }
 
     })
 
