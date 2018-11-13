@@ -140,7 +140,7 @@ object PreprocFIHR {
           Utils.writeToFile(hc, output_file, Json.stringify(obj2))
         
         if (output_dir_file_system.exists(output_file_path)) {
-          println(output_file + " exists")
+          println(id ++ " file " ++ output_file + " exists")
         } else {
           val obj2 = parseFile
           writeFile(obj2)
