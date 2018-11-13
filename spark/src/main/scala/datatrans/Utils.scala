@@ -19,6 +19,7 @@ import scala.collection.mutable.ListBuffer
 import scala.ref.SoftReference
 
 import scala.collection.mutable.Map
+import java.security.MessageDigest
 
 object Utils {
 
@@ -498,5 +499,10 @@ class Cache[K,V <: AnyRef](fun : K => V) {
     val output_file_file_system = output_file_path.getFileSystem(hc)
     output_file_file_system.exists(output_file_path)
 
+  }
+
+
+  def md5(s: String) = {
+    MessageDigest.getInstance("MD5").digest(s.getBytes)
   }
 }

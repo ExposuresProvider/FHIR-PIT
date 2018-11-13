@@ -68,8 +68,8 @@ object PreprocFIHR {
 
   }
 
-  private def encodePath(a: String) : String =
-    Base64.getEncoder.encodeToString(a.getBytes(StandardCharsets.UTF_8))
+  private def encodePath(obj: Any) : String =
+    Base64.getEncoder.encodeToString(Utils.md5(obj.toString()))
 
   private def proc_gen(config: PreprocFIHRConfig, hc: Configuration, input_dir_file_system: FileSystem, resc_type: String, output_dir_file_system: FileSystem, proc : JsObject => Unit) : Unit = {
     val input_dir = config.input_dir + "/" + resc_type
@@ -121,7 +121,7 @@ object PreprocFIHR {
 
         println("processing " + resc_type + " " + count.incrementAndGet + " / " + n + " " + id)
 
-        val output_file = config.output_dir + "/" + resc_type + "/" + patient_num + "/" + encounter_id + "/" + encodePath(id)
+        val output_file = config.output_dir + "/" + resc_type + "/" + patient_num + "/" + encounter_id + "/" + encodePath(obj)
         val output_file_path = new Path(output_file)
         def parseFile : JsValue =
           resc_type match {
@@ -140,7 +140,7 @@ object PreprocFIHR {
           Utils.writeToFile(hc, output_file, Json.stringify(obj2))
         
         if (output_dir_file_system.exists(output_file_path)) {
-          println(id ++ " file " ++ output_file + " exists")
+          throw new RuntimeException(id ++ " file " ++ output_file + " exists")
         } else {
           val obj2 = parseFile
           writeFile(obj2)
