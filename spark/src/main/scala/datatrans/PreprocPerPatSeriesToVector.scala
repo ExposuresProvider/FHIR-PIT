@@ -3,23 +3,18 @@ package datatrans
 import org.apache.commons.csv._
 import java.io._
 import java.util.concurrent.atomic.AtomicInteger
-
 import datatrans.Utils._
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
-import org.apache.spark.sql.types.{ StringType, StructField, StructType }
-import org.apache.spark.sql.{ SparkSession, Column, Row }
-import org.joda.time.format.ISODateTimeFormat
-import play.api.libs.json._
+import org.apache.spark.sql.SparkSession
 import org.joda.time._
-import squants.mass.{Kilograms, Grams, Pounds}
-import squants.space.{Centimeters, Inches}
-import org.joda.time.format.DateTimeFormat
+import org.joda.time.format.{DateTimeFormat, ISODateTimeFormat}
+import play.api.libs.json._
 import scala.collection.mutable.{ ListBuffer, MultiMap }
 import scopt._
-import datatrans._
 import scala.collection.JavaConverters._
-import org.apache.spark.sql.functions._
+import squants.mass.{Kilograms, Grams, Pounds}
+import squants.space.{Centimeters, Inches}
 
 case class Config(
   input_directory : String = "",
