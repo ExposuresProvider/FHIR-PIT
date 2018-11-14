@@ -12,6 +12,8 @@ import org.apache.spark.sql.{ SparkSession, Column, Row }
 import org.joda.time.format.ISODateTimeFormat
 import play.api.libs.json._
 import org.joda.time._
+import squants.mass.{Kilograms, Grams, Pounds}
+import squants.space.{Centimeters, Inches}
 import org.joda.time.format.DateTimeFormat
 import scala.collection.mutable.{ ListBuffer, MultiMap }
 import scopt._
@@ -136,37 +138,34 @@ object PreprocPerPatSeriesToVector {
     }
 
   def map_bmi(bmi : Seq[BMI]) : Double = {
-    val bmiQuas = bmi.filter(m => m.code == "39156-5")
+    val bmiQuas = bmi.filter(m => m.code == LOINC.BMI)
     bmiQuas match {
       case Seq() =>
-        val heightQua = bmi.filter(m => m.code == "8302-2").head.value.asInstanceOf[ValueQuantity]
+        val heightQua = bmi.filter(m => m.code == LOINC.BODY_HEIGHT).head.value.asInstanceOf[ValueQuantity]
         val heightVal = heightQua.valueNumber
         val heightUnit = heightQua.unit
-        val weightQua = bmi.filter(m => m.code == "29463-7").head.value.asInstanceOf[ValueQuantity]
+        val weightQua = bmi.filter(m => m.code == LOINC.BODY_WEIGHT).head.value.asInstanceOf[ValueQuantity]
         val weightVal = weightQua.valueNumber
         val weightUnit = weightQua.unit
-
-        val heightInches = heightUnit match {
+        val height = (heightUnit match {
           case Some("[in_i]") =>
-            heightVal
+            Inches
           case Some("cm") =>
-            heightVal / 2.54
+            Centimeters
           case _ =>
             throw new RuntimeException("unsupported unit " + heightUnit)
-        }
-
-        val weightLbs = weightUnit match {
+        })(heightVal) to Inches
+        val weight = (weightUnit match {
           case Some("[lb_av]") =>
-            weightVal
+            Pounds
           case Some("kg") =>
-            weightVal * 2.205
+            Kilograms
           case Some("g") =>
-            weightVal * 0.002205
+            Grams
           case _ =>
             throw new RuntimeException("unsupported unit " + weightUnit)
-        }
-
-        weightLbs / math.pow(heightInches, 2) * 703
+        })(weightVal) to Pounds
+        weight / math.pow(height, 2) * 703
       case bmiQua :: _ =>
         bmiQua.value.asInstanceOf[ValueQuantity].valueNumber
     }
@@ -392,3 +391,10 @@ object PreprocPerPatSeriesToVector {
 
   }
 }
+
+object LOINC {
+  val BMI = "39156-5"
+  val BODY_HEIGHT = "8302-2"
+  val BODY_WEIGHT = "29463-7"
+}
+
