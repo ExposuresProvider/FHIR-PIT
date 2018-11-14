@@ -22,7 +22,7 @@ libraryDependencies += "com.vividsolutions" % "jts" % "1.13"
 libraryDependencies += "junit" % "junit" % "4.11" % Test
 libraryDependencies += "javax.media" % "jai_core" % "1.1.3" from "http://download.osgeo.org/webdav/geotools/javax/media/jai_core/1.1.3/jai_core-1.1.3.jar"
 libraryDependencies += "org.apache.commons" % "commons-csv" % "1.6"
-libraryDependencies += "org.typelevel"  %% "squants"  % "1.3.0"
+libraryDependencies += "org.typelevel"  %% "squants"  % "1.4.0"
 
 maxErrors := 1
 
