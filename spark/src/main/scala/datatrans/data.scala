@@ -34,7 +34,7 @@ case class Condition(override val id : String, override val subjectReference : S
 case class Labs(override val id : String, override val subjectReference : String, override val contextReference : String, code : String, value : Value) extends Resource
 case class Medication(override val id : String, override val subjectReference : String, override val contextReference : String, medication : String, authoredOn : String, start: String, end: Option[String]) extends Resource
 case class Procedure(override val id : String, override val subjectReference : String, override val contextReference : String, system : String, code : String, performedDateTime : String) extends Resource
-case class BMI(override val id : String, override val subjectReference : String, override val contextReference : String, value : Value) extends Resource
+case class BMI(override val id : String, override val subjectReference : String, override val contextReference : String, code : String, value : Value) extends Resource
 
 abstract class Value extends Serializable
 case class ValueQuantity(valueNumber : Double, unit : Option[String]) extends Value
@@ -85,7 +85,7 @@ object Implicits1 {
       val gender = (resource \ "gender").as[String]
       val birthDate = (resource \ "birthDate").as[String]
       val geo = extension.filter(json => (json \ "url").as[String] == "http://hl7.org/fhir/StructureDefinition/geolocation")
-      assert(geo.size == 1)
+      assert(geo.size == 1, id)
       val latlon = (geo(0) \ "extension").as[Seq[JsValue]]
       val lat = (latlon.filter(json => (json \ "url").as[String] == "latitude")(0) \ "valueDecimal").as[Double]
       val lon = (latlon.filter(json => (json \ "url").as[String] == "longitude")(0) \ "valueDecimal").as[Double]
@@ -145,6 +145,9 @@ object Implicits1 {
       val id = (resource \ "id").as[String]
       val subjectReference = (resource \ "subject" \ "reference").as[String]
       val contextReference = (resource \ "context" \ "reference").as[String]
+      val coding = (resource \ "code" \ "coding").as[Seq[JsValue]]
+      assert(coding.size == 1)
+      val code = (coding(0) \ "code").as[String]
       val valueQuantity = resource \ "valueQuantity"
       val value = valueQuantity match {
         case JsDefined(vq) =>
@@ -154,7 +157,7 @@ object Implicits1 {
         case JsUndefined() =>
           ValueString((resource \ "valueString").as[String])
       }
-      JsSuccess(BMI(id, subjectReference, contextReference, value))
+      JsSuccess(BMI(id, subjectReference, contextReference, code, value))
     }
   }
   implicit val medicationReads: Reads[Medication] = new Reads[Medication] {

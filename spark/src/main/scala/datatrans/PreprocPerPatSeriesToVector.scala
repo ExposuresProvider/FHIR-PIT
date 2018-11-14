@@ -231,9 +231,17 @@ object PreprocPerPatSeriesToVector {
                     rec += (n -> m.value)
                   })
                 })
-                bmi.foreach(m => {
-                  rec += ("ObesityBMIVisit" -> m.value.asInstanceOf[ValueQuantity].valueNumber)
-                })
+                val heightQua = bmi.filter(m => m.code == "8302-2").head.value.asInstanceOf[ValueQuantity]
+                val heightVal = heightQua.valueNumber
+                val heightUnit = heightQua.unit
+                val weightQua = bmi.filter(m => m.code == "29463-7").head.value.asInstanceOf[ValueQuantity]
+                val weightVal = weightQua.valueNumber
+                val weightUnit = weightQua.unit
+                assert(heightUnit == "[in_i]")
+                assert(weightUnit == "[lb_av]")
+                val bmival = weightVal / math.pow(heightVal, 2) * 703
+                rec += ("ObesityBMIVisit" -> bmival)
+
                 proc.foreach(m => {
                   map_procedure(m.system, m.code).foreach(n => {
                     rec += (n -> 1)
