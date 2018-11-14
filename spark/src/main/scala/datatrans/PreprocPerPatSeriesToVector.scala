@@ -135,6 +135,43 @@ object PreprocPerPatSeriesToVector {
       case _ => "Unknown"
     }
 
+  def map_bmi(bmi : Seq[BMI]) : Double = {
+    val bmiQuas = bmi.filter(m => m.code == "39156-5")
+    bmiQuas match {
+      case Seq() =>
+        val heightQua = bmi.filter(m => m.code == "8302-2").head.value.asInstanceOf[ValueQuantity]
+        val heightVal = heightQua.valueNumber
+        val heightUnit = heightQua.unit
+        val weightQua = bmi.filter(m => m.code == "29463-7").head.value.asInstanceOf[ValueQuantity]
+        val weightVal = weightQua.valueNumber
+        val weightUnit = weightQua.unit
+
+        val heightInches = heightUnit match {
+          case Some("[in_i]") =>
+            heightVal
+          case Some("cm") =>
+            heightVal / 2.54
+          case _ =>
+            throw new RuntimeException("unsupported unit " + heightUnit)
+        }
+
+        val weightLbs = weightUnit match {
+          case Some("[lb_av]") =>
+            weightVal
+          case Some("kg") =>
+            weightVal * 2.205
+          case Some("g") =>
+            weightVal * 0.002205
+          case _ =>
+            throw new RuntimeException("unsupported unit " + weightUnit)
+        }
+
+        weightLbs / math.pow(heightInches, 2) * 703
+      case bmiQua :: _ =>
+        bmiQua.value.asInstanceOf[ValueQuantity].valueNumber
+    }
+  }
+
   def proc_pid(config : Config, hc : Configuration, p:String, start_date : DateTime, end_date : DateTime, medmap : Option[Map[String, String]]): Unit =
     time {
 
@@ -231,16 +268,8 @@ object PreprocPerPatSeriesToVector {
                     rec += (n -> m.value)
                   })
                 })
-                val heightQua = bmi.filter(m => m.code == "8302-2").head.value.asInstanceOf[ValueQuantity]
-                val heightVal = heightQua.valueNumber
-                val heightUnit = heightQua.unit
-                val weightQua = bmi.filter(m => m.code == "29463-7").head.value.asInstanceOf[ValueQuantity]
-                val weightVal = weightQua.valueNumber
-                val weightUnit = weightQua.unit
-                assert(heightUnit == "[in_i]")
-                assert(weightUnit == "[lb_av]")
-                val bmival = weightVal / math.pow(heightVal, 2) * 703
-                rec += ("ObesityBMIVisit" -> bmival)
+
+                rec += ("ObesityBMIVisit" -> map_bmi(bmi))
 
                 proc.foreach(m => {
                   map_procedure(m.system, m.code).foreach(n => {
