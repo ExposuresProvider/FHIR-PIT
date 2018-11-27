@@ -14,7 +14,7 @@ import java.nio.charset.StandardCharsets
 case class Patient(
   id : String,
   race : Seq[String],
-  ethnicity : String,
+  ethnicity : Seq[String],
   gender : String,
   birthDate : String,
   lat : Double,
@@ -81,7 +81,7 @@ object Implicits1 {
       val id = (resource \ "id").as[String]
       val extension = (resource \ "extension").as[Seq[JsValue]]
       val race = extension.filter(json => (json \ "url").as[String] == "http://hl7.org/fhir/v3/Race").map(json => (json \ "valueString").as[String])
-      val ethnicity = (extension.filter(json => (json \ "url").as[String] == "http://hl7.org/fhir/v3/Ethnicity").head \ "valueString").as[String]
+      val ethnicity = extension.filter(json => (json \ "url").as[String] == "http://hl7.org/fhir/v3/Ethnicity").map(json => (json \ "valueString").as[String])
       val gender = (resource \ "gender").as[String]
       val birthDate = (resource \ "birthDate").as[String]
       val geo = extension.filter(json => (json \ "url").as[String] == "http://hl7.org/fhir/StructureDefinition/geolocation")

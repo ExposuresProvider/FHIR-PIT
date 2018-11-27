@@ -108,21 +108,29 @@ object PreprocPerPatSeriesToVector {
     }
   }
 
-  def map_race(race : String) : String =
-    race match {
-      case "2016-3" => "White"
-      case "2054-5" => "Black"
-      case "2028-9" => "Asian"
-      case "2076-8" => "Native Hawaiian/Pacific Islander"
-      case "1002-5" => "American/Alaskan Native"
-      case _ => "Other"
+  def map_race(race : Seq[String]) : String =
+    if(race.isEmpty) {
+      "Unknown"
+    } else {
+      race.head match {
+        case "2016-3" => "White"
+        case "2054-5" => "Black"
+        case "2028-9" => "Asian"
+        case "2076-8" => "Native Hawaiian/Pacific Islander"
+        case "1002-5" => "American/Alaskan Native"
+        case _ => "Other"
+      }
     }
 
-  def map_ethnicity(ethnicity : String) : String =
-    ethnicity match {
-      case "2135-2" => "Hispanic"
-      case "2186-5" => "Not Hispanic"
-      case _ => "Unknown"
+  def map_ethnicity(ethnicity : Seq[String]) : String =
+    if(ethnicity.isEmpty) {
+      "Unknown"
+    } else {
+      ethnicity.head match {
+        case "2135-2" => "Hispanic"
+        case "2186-5" => "Not Hispanic"
+        case _ => "Unknown"
+      }
     }
 
   def map_sex(sex : String) : String =
@@ -197,7 +205,7 @@ object PreprocPerPatSeriesToVector {
           val sex = pat.gender
           val race = pat.race
           val ethnicity = pat.ethnicity
-          val demographic = Map[String, Any]("patient_num" -> pat.id, "birth_date" -> birth_date_joda.toString("yyyy-MM-dd"), "Sex" -> map_sex(sex), "Race" -> race.map(map_race).head, "Ethnicity" -> map_ethnicity(ethnicity))
+          val demographic = Map[String, Any]("patient_num" -> pat.id, "birth_date" -> birth_date_joda.toString("yyyy-MM-dd"), "Sex" -> map_sex(sex), "Race" -> map_race(race), "Ethnicity" -> map_ethnicity(ethnicity))
           val intv = new Interval(start_date, end_date)
 
           val encounter_map = new scala.collection.mutable.HashMap[DateTime, scala.collection.mutable.Set[Encounter]] with MultiMap[DateTime, Encounter]
