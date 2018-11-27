@@ -227,42 +227,44 @@ object PreprocFIHR {
             val input_enc_dir = config.output_dir + "/Encounter/" + patient_num
             val input_enc_dir_path = new Path(input_enc_dir)
             val encs = ListBuffer[Encounter]()
-            Utils.HDFSCollection(hc, input_enc_dir_path).foreach(encounter_dir => {
-              var enc = Utils.loadJson[Encounter](hc, encounter_dir)
-              val encounter_id = enc.id
-              config.resc_types.foreach(resc_type => {
-                val input_resc_dir = config.output_dir + "/" + resc_type + "/" + patient_num + "/" + encounter_id
-                val input_resc_dir_path = new Path(input_resc_dir)
-                if(output_dir_file_system.exists(input_resc_dir_path)) {
-                  Utils.HDFSCollection(hc, input_resc_dir_path).foreach(encounter_dir => {
+            if(output_dir_file_system.exists(input_enc_dir_path)) {
+              Utils.HDFSCollection(hc, input_enc_dir_path).foreach(encounter_dir => {
+                var enc = Utils.loadJson[Encounter](hc, encounter_dir)
+                val encounter_id = enc.id
+                config.resc_types.foreach(resc_type => {
+                  val input_resc_dir = config.output_dir + "/" + resc_type + "/" + patient_num + "/" + encounter_id
+                  val input_resc_dir_path = new Path(input_resc_dir)
+                  if(output_dir_file_system.exists(input_resc_dir_path)) {
+                    Utils.HDFSCollection(hc, input_resc_dir_path).foreach(encounter_dir => {
 
-                    val objs = Utils.HDFSCollection(hc, encounter_dir).map(input_resc_file_path =>
-                      try {
-                        val input_resc_file_input_stream = output_dir_file_system.open(input_resc_file_path)
-                        Json.parse(input_resc_file_input_stream)
-                      } catch {
-                        case e : Exception =>
-                          throw new Exception("error processing " + resc_type + " " + input_resc_file_path, e)
-                      }).toSeq
-                    resc_type match {
-                      case "Condition" =>
-                        enc = enc.copy(condition = objs.map(obj => obj.as[Condition]))
-                      case "Labs" =>
-                        enc = enc.copy(labs = objs.map(obj => obj.as[Labs]))
-                      case "BMI" =>
-                        enc = enc.copy(bmi = objs.map(obj => obj.as[BMI]))
-                      case "Medication" =>
-                        enc = enc.copy(medication = objs.map(obj => obj.as[Medication]))
-                      case "Procedure" =>
-                        enc = enc.copy(procedure = objs.map(obj => obj.as[Procedure]))
+                      val objs = Utils.HDFSCollection(hc, encounter_dir).map(input_resc_file_path =>
+                        try {
+                          val input_resc_file_input_stream = output_dir_file_system.open(input_resc_file_path)
+                          Json.parse(input_resc_file_input_stream)
+                        } catch {
+                          case e : Exception =>
+                            throw new Exception("error processing " + resc_type + " " + input_resc_file_path, e)
+                        }).toSeq
+                      resc_type match {
+                        case "Condition" =>
+                          enc = enc.copy(condition = objs.map(obj => obj.as[Condition]))
+                        case "Labs" =>
+                          enc = enc.copy(labs = objs.map(obj => obj.as[Labs]))
+                        case "BMI" =>
+                          enc = enc.copy(bmi = objs.map(obj => obj.as[BMI]))
+                        case "Medication" =>
+                          enc = enc.copy(medication = objs.map(obj => obj.as[Medication]))
+                        case "Procedure" =>
+                          enc = enc.copy(procedure = objs.map(obj => obj.as[Procedure]))
 
-                    }
-                    
-                  })
-                }
+                      }
+                      
+                    })
+                  }
+                })
+                encs += enc
               })
-              encs += enc
-            })
+            }
             pat = pat.copy(encounter = encs)
             Utils.writeToFile(hc, output_file, Json.stringify(Json.toJson(pat)))
           }
