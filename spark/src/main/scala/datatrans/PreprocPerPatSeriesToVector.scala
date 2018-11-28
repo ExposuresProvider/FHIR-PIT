@@ -140,37 +140,44 @@ object PreprocPerPatSeriesToVector {
       case _ => "Unknown"
     }
 
-  def map_bmi(bmi : Seq[BMI]) : Double = {
+  def map_bmi(bmi : Seq[BMI]) : Option[Double] = {
     val bmiQuas = bmi.filter(m => m.code == LOINC.BMI)
+    val heightQuas = bmi.filter(m => m.code == LOINC.BODY_HEIGHT)
+    val weightQuas = bmi.filter(m => m.code == LOINC.BODY_WEIGHT)
     bmiQuas match {
       case Seq() =>
-        val heightQua = bmi.filter(m => m.code == LOINC.BODY_HEIGHT).head.value.asInstanceOf[ValueQuantity]
-        val heightVal = heightQua.valueNumber
-        val heightUnit = heightQua.unit
-        val weightQua = bmi.filter(m => m.code == LOINC.BODY_WEIGHT).head.value.asInstanceOf[ValueQuantity]
-        val weightVal = weightQua.valueNumber
-        val weightUnit = weightQua.unit
-        val height = (heightUnit match {
-          case Some("[in_i]") =>
-            Inches
-          case Some("cm") =>
-            Centimeters
+        (heightQuas, weightQuas) match {
+          case (heightQ :: _ , weightQ :: _) =>
+            val heightQua = heightQ.value.asInstanceOf[ValueQuantity]
+            val weightQua = weightQ.value.asInstanceOf[ValueQuantity]
+            val heightVal = heightQua.valueNumber
+            val heightUnit = heightQua.unit
+            val weightVal = weightQua.valueNumber
+            val weightUnit = weightQua.unit
+            val height = (heightUnit match {
+              case Some("[in_i]") =>
+                Inches
+              case Some("cm") =>
+                Centimeters
+              case _ =>
+                throw new RuntimeException("unsupported unit " + heightUnit)
+            })(heightVal) to Inches
+            val weight = (weightUnit match {
+              case Some("[lb_av]") =>
+                Pounds
+              case Some("kg") =>
+                Kilograms
+              case Some("g") =>
+                Grams
+              case _ =>
+                throw new RuntimeException("unsupported unit " + weightUnit)
+            })(weightVal) to Pounds
+            Some(weight / math.pow(height, 2) * 703)
           case _ =>
-            throw new RuntimeException("unsupported unit " + heightUnit)
-        })(heightVal) to Inches
-        val weight = (weightUnit match {
-          case Some("[lb_av]") =>
-            Pounds
-          case Some("kg") =>
-            Kilograms
-          case Some("g") =>
-            Grams
-          case _ =>
-            throw new RuntimeException("unsupported unit " + weightUnit)
-        })(weightVal) to Pounds
-        weight / math.pow(height, 2) * 703
+            None
+        }
       case bmiQua :: _ =>
-        bmiQua.value.asInstanceOf[ValueQuantity].valueNumber
+        Some(bmiQua.value.asInstanceOf[ValueQuantity].valueNumber)
     }
   }
 
@@ -271,7 +278,10 @@ object PreprocPerPatSeriesToVector {
                   })
                 })
 
-                rec += ("ObesityBMIVisit" -> map_bmi(bmi))
+                rec += ("ObesityBMIVisit" -> (map_bmi(bmi) match {
+                  case Some(x) => x
+                  case None => -1
+                }))
 
                 proc.foreach(m => {
                   map_procedure(m.system, m.code).foreach(n => {
