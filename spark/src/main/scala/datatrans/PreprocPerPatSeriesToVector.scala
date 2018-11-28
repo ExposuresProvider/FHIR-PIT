@@ -155,6 +155,8 @@ object PreprocPerPatSeriesToVector {
             val weightVal = weightQua.valueNumber
             val weightUnit = weightQua.unit
             val height = (heightUnit match {
+              case Some("in") =>
+                Inches
               case Some("[in_i]") =>
                 Inches
               case Some("cm") =>
@@ -163,6 +165,8 @@ object PreprocPerPatSeriesToVector {
                 throw new RuntimeException("unsupported unit " + heightUnit)
             })(heightVal) to Inches
             val weight = (weightUnit match {
+              case Some("lbs") =>
+                Pounds
               case Some("[lb_av]") =>
                 Pounds
               case Some("kg") =>
