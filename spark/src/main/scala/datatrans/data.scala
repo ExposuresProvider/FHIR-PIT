@@ -82,7 +82,10 @@ object Implicits1 {
       val extension = (resource \ "extension").as[Seq[JsValue]]
       val race = extension.filter(json => (json \ "url").as[String] == "http://hl7.org/fhir/v3/Race").map(json => (json \ "valueString").as[String])
       val ethnicity = extension.filter(json => (json \ "url").as[String] == "http://hl7.org/fhir/v3/Ethnicity").map(json => (json \ "valueString").as[String])
-      val gender = (resource \ "gender").as[String]
+      val gender = resource \ "gender" match {
+        case JsDefined(x) => x.as[String]
+        case JsUndefined() => "Unknown"
+      }
       val birthDate = (resource \ "birthDate").as[String]
       val geo = extension.filter(json => (json \ "url").as[String] == "http://hl7.org/fhir/StructureDefinition/geolocation")
       assert(geo.size == 1, id)
