@@ -86,9 +86,10 @@ object PreprocCSVTable {
                   if(fileExists(hc, env_file)) {
                     val env_df = spark.read.format("csv").option("header", value = true).schema(env_schema).load()
                     val env_df2 = env_df.withColumn("next_date", plusOneDayDate(env_df.col("start_date"))).drop("start_date").withColumnRenamed("next_date", "start_date")
-                    
-                    val patenv_df = pat_df.join(env_df2, "start_date").join(df, "patient_num")
-                    println("number of rows " + patenv_df.count)
+
+                    val patenv_df0 = pat_df.join(env_df2, "start_date")
+                    val patenv_df = patenv_df.join(df, "patient_num")
+                    println("number of rows " + patenv_df0.count + ", " + patenv_df.count)
                     writeDataframe(hc, output_file, patenv_df)
                   } else {
                     println("warning: no record is contructed because env file does not exist for " + p)
