@@ -81,11 +81,16 @@ object PreprocCSVTable {
                 if(!pat_df.head(1).isEmpty) {
                   val env_file = config.environment_file + "/" + p
                   if(fileExists(hc, env_file)) {
-                    val env_df = spark.read.format("csv").option("header", value = true).load()
-                    val env_df2 = env_df.withColumn("next_date", plusOneDayDate(env_df.col("start_date"))).drop("start_date").withColumnRenamed("next_date", "start_date")
+                    try {
+                      val env_df = spark.read.format("csv").option("header", value = true).load()
+                      val env_df2 = env_df.withColumn("next_date", plusOneDayDate(env_df.col("start_date"))).drop("start_date").withColumnRenamed("next_date", "start_date")
                   
-                    val patenv_df = pat_df.join(env_df2, "start_date").join(df, "patient_num")
-                    writeDataframe(hc, output_file, patenv_df)
+                      val patenv_df = pat_df.join(env_df2, "start_date").join(df, "patient_num")
+                      writeDataframe(hc, output_file, patenv_df)
+                    } catch {
+                      case e : Exception =>
+                        println("warning: no record is contructed because exception during joining env file for " + p + "\nexception is " + e)
+                    }
                   } else {
                     println("warning: no record is contructed because env file does not exist for " + p)
                   }
