@@ -6,7 +6,7 @@ import datatrans.Utils._
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
 import org.apache.spark.sql.expressions.{ MutableAggregationBuffer, UserDefinedAggregateFunction }
-import org.apache.spark.sql.types.{ StringType, StructField, StructType, IntegerType, DataType }
+import org.apache.spark.sql.types.{ StringType, StructField, StructType, IntegerType, DataType, DateType, DoubleType }
 import org.apache.spark.sql.{ SparkSession, Column, Row }
 import org.joda.time.Years
 import org.joda.time.format.ISODateTimeFormat
@@ -47,6 +47,9 @@ object PreprocCSVTable {
     // For implicit conversions like converting RDDs to DataFrames
     import spark.implicits._
 
+    val env_schema = StructType(
+      StructField("start_date", DateType, true) :: List("o3_avg", "pm25_avg", "o3_max", "pm25_max", "ozone_daily_8hour_maximum", "pm25_daily_average").map(x => StructField(x, DoubleType, true)))
+
     parser.parse(args, PreprocCSVTableConfig()) match {
       case Some(config) =>
 
@@ -81,16 +84,11 @@ object PreprocCSVTable {
                 if(!pat_df.head(1).isEmpty) {
                   val env_file = config.environment_file + "/" + p
                   if(fileExists(hc, env_file)) {
-                    try {
-                      val env_df = spark.read.format("csv").option("header", value = true).load()
-                      val env_df2 = env_df.withColumn("next_date", plusOneDayDate(env_df.col("start_date"))).drop("start_date").withColumnRenamed("next_date", "start_date")
-                  
-                      val patenv_df = pat_df.join(env_df2, "start_date").join(df, "patient_num")
-                      writeDataframe(hc, output_file, patenv_df)
-                    } catch {
-                      case e : Exception =>
-                        println("warning: no record is contructed because exception during joining env file for " + p + "\nexception is " + e)
-                    }
+                    val env_df = spark.read.format("csv").option("header", value = true).schema(env_schema).load()
+                    val env_df2 = env_df.withColumn("next_date", plusOneDayDate(env_df.col("start_date"))).drop("start_date").withColumnRenamed("next_date", "start_date")
+                    
+                    val patenv_df = pat_df.join(env_df2, "start_date").join(df, "patient_num")
+                    writeDataframe(hc, output_file, patenv_df)
                   } else {
                     println("warning: no record is contructed because env file does not exist for " + p)
                   }
