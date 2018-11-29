@@ -88,7 +88,7 @@ object PreprocCSVTable {
                     val env_df2 = env_df.withColumn("next_date", plusOneDayDate(env_df.col("start_date"))).drop("start_date").withColumnRenamed("next_date", "start_date")
 
                     val patenv_df0 = pat_df.join(env_df2, "start_date")
-                    val patenv_df = patenv_df.join(df, "patient_num")
+                    val patenv_df = patenv_df0.join(df, "patient_num")
                     println("number of rows " + patenv_df0.count + ", " + patenv_df.count)
                     writeDataframe(hc, output_file, patenv_df)
                   } else {
