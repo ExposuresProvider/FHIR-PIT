@@ -48,7 +48,7 @@ object PreprocCSVTable {
     import spark.implicits._
 
     val env_schema = StructType(
-      StructField("start_date", DateType, true) :: List("o3_avg", "pm25_avg", "o3_max", "pm25_max", "ozone_daily_8hour_maximum", "pm25_daily_average").map(x => StructField(x, DoubleType, true)))
+      StructField("start_date", DateType, true) :: List("o3_avg", "pm25_avg", "o3_max", "pm25_max", "ozone_daily_8hour_maximum", "pm25_daily_average").map(x => StructField(x, DoubleType, false)))
 
     parser.parse(args, PreprocCSVTableConfig()) match {
       case Some(config) =>
