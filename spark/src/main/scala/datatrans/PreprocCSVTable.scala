@@ -89,7 +89,7 @@ object PreprocCSVTable {
 
                     val patenv_df0 = pat_df.join(env_df2, "start_date")
                     val patenv_df = patenv_df0.join(df, "patient_num")
-                    println("number of rows env_df2.count = " + env_df2.count + ", patenv_df0.count = " + patenv_df0.count + ", patenv_df.count = " + patenv_df.count)
+                    println("number of rows env_df.count = " + env_df.count + ", env_df2.count = " + env_df2.count + ", patenv_df0.count = " + patenv_df0.count + ", patenv_df.count = " + patenv_df.count)
                     writeDataframe(hc, output_file, patenv_df)
                   } else {
                     println("warning: no record is contructed because env file does not exist for " + p)
