@@ -209,8 +209,6 @@ object PreprocCSVTable {
               "Ethnicity")
 
             var df_all = spark.read.format("csv").option("header", value = true).load(output_file_all)
-            df_all = df_all.withColumn("year", year(df_all.col("start_date")))
-            df_all = df_all.withColumn("AgeStudyStart", ageYear(df_all.col("birth_date"), df_all.col("year")))
             visit.diff(df_all.columns).foreach(col => {
                 df_all = df_all.withColumn(col, lit(0))
               })
@@ -225,9 +223,8 @@ object PreprocCSVTable {
 
             val procObesityBMI = udf((x : Double) => if(x >= 30) 1 else 0)
 
-            val deidentify = df_all.columns.intersect(config.deidentify)
-            var df_all_visit = df_all.drop(deidentify : _*)
-            df_all_visit = df_all_visit
+            var df_all_visit = df_all
+              .withColumn("AgeVisit", ageYear($"birth_date", $"start_date"))
               .withColumnRenamed("`AvgDailyPM2.5Exposure`","Avg24hPM2.5Exposure")
               .withColumnRenamed("`MaxDailyPM2.5Exposure`","Max24hPM2.5Exposure")
               .withColumnRenamed("AvgDailyOzoneExposure","Avg24hOzoneExposure")
@@ -244,6 +241,10 @@ object PreprocCSVTable {
               .withColumn("ObesityBMIVisit", procObesityBMI($"ObesityBMIVisit0"))
               .drop("ObesityBMIVisit0")
 
+            val deidentify = df_all.columns.intersect(config.deidentify)
+            df_all_visit = df_all_visit
+              .drop(deidentify : _*)
+
             writeDataframe(hc, output_all_visit, df_all_visit)
 
             val patient_aggs = Seq(
@@ -257,12 +258,14 @@ object PreprocCSVTable {
               new TotalEDInpatientVisits()(df_all.col("VisitType")).alias("TotalEDInpatientVisits")) ++ demograph.map(v => first(df_all.col(v)).alias(v)) ++ acs.map(v => first(df_all.col(v)).alias(v)) ++ visit.map(v => max(df_all.col(v)).alias(v))
 
             val df_all2 = df_all.groupBy("patient_num", "year").agg(patient_aggs.head, patient_aggs.tail:_*)
-            val deidentify2 = df_all2.columns.intersect(config.deidentify)
-            var df_all_patient = df_all2.drop(deidentify2 : _*)
             df_all_patient = df_all_patient
+              .withColumn("year", year($"start_date"))
+              .withColumn("AgeStudyStart", ageYear($"birth_date", $"year"))
               .withColumnRenamed("ObesityBMI", "ObesityBMI0")
               .withColumn("ObesityBMI", procObesityBMI($"ObesityBMI0"))
               .drop("ObesityBMI0")
+            val deidentify2 = df_all2.columns.intersect(config.deidentify)
+            var df_all_patient = df_all2.drop(deidentify2 : _*)
             writeDataframe(hc, output_all_patient, df_all_patient)
           }
 
