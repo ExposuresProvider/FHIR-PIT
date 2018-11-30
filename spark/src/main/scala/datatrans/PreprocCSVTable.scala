@@ -257,9 +257,10 @@ object PreprocCSVTable {
               max(df_all.col("ObesityBMIVisit")).alias("ObesityBMI"),
               new TotalEDInpatientVisits()(df_all.col("VisitType")).alias("TotalEDInpatientVisits")) ++ demograph.map(v => first(df_all.col(v)).alias(v)) ++ acs.map(v => first(df_all.col(v)).alias(v)) ++ visit.map(v => max(df_all.col(v)).alias(v))
 
-            val df_all2 = df_all.groupBy("patient_num", "year").agg(patient_aggs.head, patient_aggs.tail:_*)
-            var df_all_patient = df_all_patient
+            val df_all2 = df_all
               .withColumn("year", year($"start_date"))
+              .groupBy("patient_num", "year").agg(patient_aggs.head, patient_aggs.tail:_*)
+            var df_all_patient = df_all2
               .withColumn("AgeStudyStart", ageYear($"birth_date", $"year"))
               .withColumnRenamed("ObesityBMI", "ObesityBMI0")
               .withColumn("ObesityBMI", procObesityBMI($"ObesityBMI0"))
