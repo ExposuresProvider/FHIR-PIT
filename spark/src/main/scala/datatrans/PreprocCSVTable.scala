@@ -169,7 +169,6 @@ object PreprocCSVTable {
               "CoughDx",
               "PneumoniaDx",
               "ObesityDx",
-              "ObesityBMI",
               "Prednisone",
               "Fluticasone",
               "Mometasone",
