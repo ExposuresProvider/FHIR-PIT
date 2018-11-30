@@ -234,14 +234,15 @@ object PreprocCSVTable {
               .withColumnRenamed("MaxDailyOzoneExposure","Max24hOzoneExposure")
               .withColumnRenamed("`AvgDailyPM2.5Exposure_2`","Avg24hPM2.5Exposure_2")
               .withColumnRenamed("MaxDailyOzoneExposure_2","Max24hOzoneExposure_2")
-              .withColumnRenamed("ObesityBMIVisit", "ObesityBMIVisit0")
-            df_all_visit = df_all_visit
-              .withColumn("ObesityBMIVisit", procObesityBMI(df.col("ObesityBMIVisit0")))
-              .drop("ObesityBMIVisit0")
             
             visit.foreach(v => {
               df_all_visit = df_all_visit.withColumnRenamed(v,v + "Visit")
             })
+
+            df_all_visit = df_all_visit
+              .withColumnRenamed("ObesityBMIVisit", "ObesityBMIVisit0")
+              .withColumn("ObesityBMIVisit", procObesityBMI(df.col("ObesityBMIVisit0")))
+              .drop("ObesityBMIVisit0")
 
             writeDataframe(hc, output_all_visit, df_all_visit)
 
@@ -260,7 +261,6 @@ object PreprocCSVTable {
             var df_all_patient = df_all2.drop(deidentify2 : _*)
             df_all_patient = df_all_patient
               .withColumnRenamed("ObesityBMI", "ObesityBMI0")
-            df_all_patient = df_all_patient
               .withColumn("ObesityBMI", procObesityBMI(df.col("ObesityBMI0")))
               .drop("ObesityBMI0")
             writeDataframe(hc, output_all_patient, df_all_patient)
