@@ -220,6 +220,7 @@ object PreprocCSVTable {
               .withColumnRenamed("o3_max", "MaxDailyOzoneExposure")
               .withColumnRenamed("pm25_daily_average", "AvgDailyPM2.5Exposure_2")
               .withColumnRenamed("ozone_daily_8hour_maximum", "MaxDailyOzoneExposure_2")
+              .withColumn("year", year($"start_date"))
 
             val procObesityBMI = udf((x : Double) => if(x >= 30) 1 else 0)
 
@@ -258,7 +259,6 @@ object PreprocCSVTable {
               new TotalEDInpatientVisits()(df_all.col("VisitType")).alias("TotalEDInpatientVisits")) ++ demograph.map(v => first(df_all.col(v)).alias(v)) ++ acs.map(v => first(df_all.col(v)).alias(v)) ++ visit.map(v => max(df_all.col(v)).alias(v))
 
             val df_all2 = df_all
-              .withColumn("year", year($"start_date"))
               .groupBy("patient_num", "year").agg(patient_aggs.head, patient_aggs.tail:_*)
             var df_all_patient = df_all2
               .withColumn("AgeStudyStart", ageYear($"birth_date", $"year"))
