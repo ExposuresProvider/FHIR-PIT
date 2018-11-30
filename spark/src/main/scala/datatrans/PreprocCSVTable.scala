@@ -119,7 +119,7 @@ object PreprocCSVTable {
             val ageYear = udf((birthDate : String, year: Int) => {
               val birth_date_joda = DateTime.parse(birthDate, ISODateTimeFormat.dateParser())
               val study_start_joda = new DateTime(year, 1, 1, 0, 0, 0)
-              Years.yearsBetween(study_start_joda, birth_date_joda).getYears
+              Years.yearsBetween(birth_date_joda, study_start_joda).getYears
             })
 
             class TotalEDInpatientVisits extends UserDefinedAggregateFunction {
