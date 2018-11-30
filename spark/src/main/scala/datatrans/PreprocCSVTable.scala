@@ -223,6 +223,8 @@ object PreprocCSVTable {
               .withColumnRenamed("pm25_daily_average", "AvgDailyPM2.5Exposure_2")
               .withColumnRenamed("ozone_daily_8hour_maximum", "MaxDailyOzoneExposure_2")
 
+            val procObesityBMI = udf((x : Double) => if(x >= 30) 1 else 0)
+
             val deidentify = df_all.columns.intersect(config.deidentify)
             var df_all_visit = df_all.drop(deidentify : _*)
             df_all_visit = df_all_visit
@@ -232,6 +234,9 @@ object PreprocCSVTable {
               .withColumnRenamed("MaxDailyOzoneExposure","Max24hOzoneExposure")
               .withColumnRenamed("`AvgDailyPM2.5Exposure_2`","Avg24hPM2.5Exposure_2")
               .withColumnRenamed("MaxDailyOzoneExposure_2","Max24hOzoneExposure_2")
+              .withColumnRenamed("ObesityBMIVisit", "ObesityBMIVisit0")
+              .withColumn("ObesityBMIVisit", procObesityBMI(df.col("ObesityBMIVisit0")))
+              .drop("ObesityBMIVisit0")
             
             visit.foreach(v => {
               df_all_visit = df_all_visit.withColumnRenamed(v,v + "Visit")
@@ -251,7 +256,11 @@ object PreprocCSVTable {
 
             val df_all2 = df_all.groupBy("patient_num", "year").agg(patient_aggs.head, patient_aggs.tail:_*)
             val deidentify2 = df_all2.columns.intersect(config.deidentify)
-            val df_all_patient = df_all2.drop(deidentify2 : _*)
+            var df_all_patient = df_all2.drop(deidentify2 : _*)
+            df_all_patient = df_all_patient
+              .withColumnRenamed("ObesityBMI", "ObesityBMI0")
+              .withColumn("ObesityBMI", procObesityBMI(df.col("ObesityBMI0")))
+              .drop("ObesityBMI0")
             writeDataframe(hc, output_all_patient, df_all_patient)
           }
 
