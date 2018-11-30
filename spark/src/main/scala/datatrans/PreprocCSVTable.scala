@@ -242,7 +242,7 @@ object PreprocCSVTable {
               .withColumn("ObesityBMIVisit", procObesityBMI($"ObesityBMIVisit0"))
               .drop("ObesityBMIVisit0")
 
-            val deidentify = df_all.columns.intersect(config.deidentify)
+            val deidentify = df_all_visit.columns.intersect(config.deidentify)
             df_all_visit = df_all_visit
               .drop(deidentify : _*)
 
@@ -265,8 +265,8 @@ object PreprocCSVTable {
               .withColumnRenamed("ObesityBMI", "ObesityBMI0")
               .withColumn("ObesityBMI", procObesityBMI($"ObesityBMI0"))
               .drop("ObesityBMI0")
-            val deidentify2 = df_all2.columns.intersect(config.deidentify)
-            df_all_patient = df_all2.drop(deidentify2 : _*)
+            val deidentify2 = df_all_patient.columns.intersect(config.deidentify)
+            df_all_patient = df_all_patient.drop(deidentify2 : _*)
             writeDataframe(hc, output_all_patient, df_all_patient)
           }
 
