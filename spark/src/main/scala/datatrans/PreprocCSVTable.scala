@@ -203,7 +203,6 @@ object PreprocCSVTable {
               "MajorRoadwayHighwayExposure")
 
             val demograph = Seq(
-              "AgeStudyStart",
               "Sex",
               "Race",
               "Ethnicity")
