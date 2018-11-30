@@ -122,6 +122,11 @@ object PreprocCSVTable {
               Years.yearsBetween(birth_date_joda, study_start_joda).getYears
             })
 
+            val ageDiff = udf((birthDate : String, start_date: String) => {
+              val birth_date_joda = DateTime.parse(birthDate, ISODateTimeFormat.dateParser())
+              val study_start_joda = DateTime.parse(start_date, ISODateTimeFormat.dateParser())
+              Years.yearsBetween(birth_date_joda, study_start_joda).getYears
+            })
             class TotalEDInpatientVisits extends UserDefinedAggregateFunction {
               // This is the input fields for your aggregate function.
               override def inputSchema: org.apache.spark.sql.types.StructType =
@@ -225,7 +230,7 @@ object PreprocCSVTable {
             val procObesityBMI = udf((x : Double) => if(x >= 30) 1 else 0)
 
             var df_all_visit = df_all
-              .withColumn("AgeVisit", ageYear($"birth_date", $"start_date"))
+              .withColumn("AgeVisit", ageDiff($"birth_date", $"start_date"))
               .withColumnRenamed("`AvgDailyPM2.5Exposure`","Avg24hPM2.5Exposure")
               .withColumnRenamed("`MaxDailyPM2.5Exposure`","Max24hPM2.5Exposure")
               .withColumnRenamed("AvgDailyOzoneExposure","Avg24hOzoneExposure")
