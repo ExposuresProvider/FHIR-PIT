@@ -235,14 +235,18 @@ object PreprocCSVTable {
               .withColumnRenamed("`AvgDailyPM2.5Exposure_2`","Avg24hPM2.5Exposure_2")
               .withColumnRenamed("MaxDailyOzoneExposure_2","Max24hOzoneExposure_2")
 
+            println("***************")
             df_all_visit.columns.seq.foreach(println)
             visit.foreach(v => {
               df_all_visit = df_all_visit.withColumnRenamed(v,v + "Visit")
             })
 
+            println("***************")
             df_all_visit.columns.seq.foreach(println)
             df_all_visit = df_all_visit
               .withColumnRenamed("ObesityBMIVisit", "ObesityBMIVisit0")
+            println("***************")
+            df_all_visit.columns.seq.foreach(println)
             df_all_visit = df_all_visit
               .withColumn("ObesityBMIVisit", procObesityBMI(df.col("ObesityBMIVisit0")))
               .drop("ObesityBMIVisit0")
