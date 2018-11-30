@@ -258,14 +258,14 @@ object PreprocCSVTable {
               new TotalEDInpatientVisits()(df_all.col("VisitType")).alias("TotalEDInpatientVisits")) ++ demograph.map(v => first(df_all.col(v)).alias(v)) ++ acs.map(v => first(df_all.col(v)).alias(v)) ++ visit.map(v => max(df_all.col(v)).alias(v))
 
             val df_all2 = df_all.groupBy("patient_num", "year").agg(patient_aggs.head, patient_aggs.tail:_*)
-            df_all_patient = df_all_patient
+            var df_all_patient = df_all_patient
               .withColumn("year", year($"start_date"))
               .withColumn("AgeStudyStart", ageYear($"birth_date", $"year"))
               .withColumnRenamed("ObesityBMI", "ObesityBMI0")
               .withColumn("ObesityBMI", procObesityBMI($"ObesityBMI0"))
               .drop("ObesityBMI0")
             val deidentify2 = df_all2.columns.intersect(config.deidentify)
-            var df_all_patient = df_all2.drop(deidentify2 : _*)
+            df_all_patient = df_all2.drop(deidentify2 : _*)
             writeDataframe(hc, output_all_patient, df_all_patient)
           }
 
