@@ -235,18 +235,18 @@ object PreprocCSVTable {
               .withColumnRenamed("`AvgDailyPM2.5Exposure_2`","Avg24hPM2.5Exposure_2")
               .withColumnRenamed("MaxDailyOzoneExposure_2","Max24hOzoneExposure_2")
 
-            df_all_visit.seq.forEach(println)
+            df_all_visit.columns.seq.forEach(println)
             visit.foreach(v => {
               df_all_visit = df_all_visit.withColumnRenamed(v,v + "Visit")
             })
 
-            df_all_visit.seq.forEach(println)
+            df_all_visit.columns.seq.forEach(println)
             df_all_visit = df_all_visit
               .withColumnRenamed("ObesityBMIVisit", "ObesityBMIVisit0")
               .withColumn("ObesityBMIVisit", procObesityBMI(df.col("ObesityBMIVisit0")))
               .drop("ObesityBMIVisit0")
 
-            df_all_visit.seq.forEach(println)
+            df_all_visit.columns.seq.forEach(println)
             writeDataframe(hc, output_all_visit, df_all_visit)
 
             val patient_aggs = Seq(
