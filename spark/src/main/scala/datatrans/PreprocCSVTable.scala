@@ -244,7 +244,6 @@ object PreprocCSVTable {
               .withColumn("ObesityBMIVisit", procObesityBMI($"ObesityBMIVisit0"))
               .drop("ObesityBMIVisit0")
 
-            df_all_visit.columns.seq.foreach(println)
             writeDataframe(hc, output_all_visit, df_all_visit)
 
             val patient_aggs = Seq(
