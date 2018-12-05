@@ -50,12 +50,58 @@ object PreprocPerPatSeriesToVector {
     }
   }
 
-  def map_labs(code : String) : Seq[String] = {
-    code match {
-      case _ =>
+  def sort_by_effectiveDateTime(labs : Seq[Labs]) : Seq[Labs] =
+    labs.sortWith((a, b) => {
+      val at = DateTime.parse(a.effectiveDateTime, ISODateTimeFormat.dateTimeParser())
+      val bt = DateTime.parse(b.effectiveDateTime, ISODateTimeFormat.dateTimeParser())
+      if(at == bt) {
+        println("warning: two labs in one encounter has same effectiveDateTime")
+      }
+      at.isBefore(bt)
+    })
+
+  def map_labs(labs : Seq[Labs]) : Seq[(String, JsValue)] = {
+    val wbc = sort_by_effectiveDateTime(labs.filter(lab => lab.code == "6690-2")) // 26464-8
+    val hct = sort_by_effectiveDateTime(labs.filter(lab => lab.code == "20570-8")) // 24360-0
+    val plt = sort_by_effectiveDateTime(labs.filter(lab => lab.code == "26515-7")) // 7773
+    val fev1 = sort_by_effectiveDateTime(labs.filter(lab => lab.code == "20150-9")) // 52485-0
+    val fvc = sort_by_effectiveDateTime(labs.filter(lab => lab.code == "19870-5")) // 52485-0
+    val fev1fvc = sort_by_effectiveDateTime(labs.filter(lab => lab.code == "19926-5")) // 52485-0
+    val listBuf = new ListBuffer[(String, JsValue)]()
+
+    def extractColumns(labs: Seq[Labs], prefix: String) = {
+      if(!labs.isEmpty) {
+        Seq(
+          (f"${prefix}_FirstValue", JsNumber(labs.head.value.asInstanceOf[ValueQuantity].valueNumber)),
+          (f"${prefix}_FirstFlag", JsString(labs.head.flag.getOrElse(""))),
+          (f"${prefix}_LastValue", JsNumber(labs.last.value.asInstanceOf[ValueQuantity].valueNumber)),
+          (f"${prefix}_LastFlag", JsString(labs.last.flag.getOrElse("")))
+        )
+      } else {
         Seq()
+      }
     }
+
+    def extractColumns2(labs: Seq[Labs], prefix: String) = {
+      if(!labs.isEmpty) {
+        Seq(
+          (f"${prefix}_FirstValue", JsNumber(labs.head.value.asInstanceOf[ValueQuantity].valueNumber)),
+          (f"${prefix}_LastValue", JsNumber(labs.last.value.asInstanceOf[ValueQuantity].valueNumber))
+        )
+      } else {
+        Seq()
+      }
+    }
+
+    extractColumns(wbc, "WBC") ++
+    extractColumns(hct, "HCT") ++
+    extractColumns(plt, "PLT") ++
+    extractColumns(fev1fvc, "FEV1FVC") ++
+    extractColumns2(fev1, "FEV1") ++
+    extractColumns2(fvc, "FVC")
+
   }
+
   def map_procedure(system : String, code : String) : Seq[String] = Seq() /* {
     system match {
       case "http://www.ama-assn.org/go/cpt/" =>
@@ -276,11 +322,7 @@ object PreprocPerPatSeriesToVector {
                     rec += (n -> 1)
                   })
                 })
-                lab.foreach(m => {
-                  map_labs(m.code).foreach(n => {
-                    rec += (n -> m.value)
-                  })
-                })
+                map_labs(lab).foreach(rec += _)
 
                 rec += ("ObesityBMIVisit" -> (map_bmi(bmi) match {
                   case Some(x) => x
