@@ -252,6 +252,7 @@ object PreprocFIHR {
                         enc = enc.copy(bmi = objs.map(obj => obj.as[BMI]))
                       case "Medication" =>
                         enc = enc.copy(medication = objs.map(obj => obj.as[Medication]))
+                        println("medication " + patient_num + " " + objs)
                       case "Procedure" =>
                         enc = enc.copy(procedure = objs.map(obj => obj.as[Procedure]))
                     }
