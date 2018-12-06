@@ -54,8 +54,8 @@ object PreprocPerPatSeriesToVector {
     labs.sortWith((a, b) => {
       val at = DateTime.parse(a.effectiveDateTime, ISODateTimeFormat.dateTimeParser())
       val bt = DateTime.parse(b.effectiveDateTime, ISODateTimeFormat.dateTimeParser())
-      if(at == bt) {
-        println("warning: two labs in one encounter has same effectiveDateTime")
+      if(at == bt && a.value != b.value) {
+        println("warning: two labs in one encounter has same effectiveDateTime but different values")
       }
       at.isBefore(bt)
     })
