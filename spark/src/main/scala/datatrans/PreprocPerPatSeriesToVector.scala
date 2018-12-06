@@ -153,7 +153,11 @@ object PreprocPerPatSeriesToVector {
             Seq()
         }
       case None =>
+
         println("medication")
+
+
+
         Seq()
     }
   }
