@@ -257,7 +257,7 @@ object PreprocFIHR {
                         enc = enc.copy(procedure = objs.map(obj => obj.as[Procedure]))
                     }
                   } else {
-                    println("cannot find resource " + resc_type)
+                    println("cannot find resource " + resc_type + "/" + patient_num + "/" + encounter_id)
                   }
                 })
                 encs += enc
