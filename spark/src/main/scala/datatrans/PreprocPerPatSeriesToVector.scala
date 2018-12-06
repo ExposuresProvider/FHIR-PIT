@@ -146,13 +146,14 @@ object PreprocPerPatSeriesToVector {
         mm.get(code.stripPrefix("Medication/").stripSuffix("|ADS")) match {
           case Some(ms) =>
             val medfiltered = meds.filter(med => ms.toLowerCase.contains(med.toLowerCase))
-            println(ms + " " + meds + " " + medfiltered)
+            println("medication " + ms + " " + meds + " " + medfiltered)
             medfiltered
           case None =>
             println("cannot find medication name for code " + code)
             Seq()
         }
       case None =>
+        println("medication")
         Seq()
     }
   }
