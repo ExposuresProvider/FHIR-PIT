@@ -256,6 +256,8 @@ object PreprocFIHR {
                       case "Procedure" =>
                         enc = enc.copy(procedure = objs.map(obj => obj.as[Procedure]))
                     }
+                  } else {
+                    println("cannot find resource " + resc_type)
                   }
                 })
                 encs += enc
