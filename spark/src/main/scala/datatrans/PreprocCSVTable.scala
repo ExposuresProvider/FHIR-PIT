@@ -167,51 +167,7 @@ object PreprocCSVTable {
               }
             }
 
-            val visit = Seq(
-              "AsthmaDx",
-              "CroupDx",
-              "ReactiveAirwayDx",
-              "CoughDx",
-              "PneumoniaDx",
-              "ObesityDx",
-              "Prednisone",
-              "Fluticasone",
-              "Mometasone",
-              "Budesonide",
-              "Beclomethasone",
-              "Ciclesonide",
-              "Flunisolide",
-              "Albuterol",
-              "Metaproterenol",
-              "Diphenhydramine",
-              "Fexofenadine",
-              "Cetirizine",
-              "Ipratropium",
-              "Salmeterol",
-              "Arformoterol",
-              "Formoterol",
-              "Indacaterol",
-              "Theophylline",
-              "Omalizumab",
-              "Mepolizumab")
-
-            val acs = Seq(
-              "EstResidentialDensity",
-              "EstResidentialDensity25Plus",
-              "EstProbabilityNonHispWhite",
-              "EstProbabilityHouseholdNonHispWhite",
-              "EstProbabilityHighSchoolMaxEducation",
-              "EstProbabilityNoAuto",
-              "EstProbabilityNoHealthIns",
-              "EstProbabilityESL",
-              "EstHouseholdIncome",
-              "MajorRoadwayHighwayExposure")
-
-            val demograph = Seq(
-              "birth_date",
-              "Sex",
-              "Race",
-              "Ethnicity")
+            val visit = dx ++ meds
 
             var df_all = spark.read.format("csv").option("header", value = true).load(output_file_all)
             visit.diff(df_all.columns).foreach(col => {

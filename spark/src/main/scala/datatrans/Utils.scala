@@ -505,4 +505,54 @@ class Cache[K,V <: AnyRef](fun : K => V) {
   def md5(s: String) = {
     MessageDigest.getInstance("MD5").digest(s.getBytes)
   }
+
+  val meds = Seq(
+    "Prednisone",
+    "Fluticasone",
+    "Mometasone",
+    "Budesonide",
+    "Beclomethasone",
+    "Ciclesonide",
+    "Flunisolide",
+    "Albuterol",
+    "Metaproterenol",
+    "Diphenhydramine",
+    "Fexofenadine",
+    "Cetirizine",
+    "Ipratropium",
+    "Salmeterol",
+    "Arformoterol",
+    "Formoterol",
+    "Indacaterol",
+    "Theophylline",
+    "Omalizumab",
+    "Mepolizumab"
+  )
+
+  val dx = Seq(
+    "AsthmaDx",
+    "CroupDx",
+    "ReactiveAirwayDx",
+    "CoughDx",
+    "PneumoniaDx",
+    "ObesityDx")
+
+  val acs = Seq(
+    "EstResidentialDensity",
+    "EstResidentialDensity25Plus",
+    "EstProbabilityNonHispWhite",
+    "EstProbabilityHouseholdNonHispWhite",
+    "EstProbabilityHighSchoolMaxEducation",
+    "EstProbabilityNoAuto",
+    "EstProbabilityNoHealthIns",
+    "EstProbabilityESL",
+    "EstHouseholdIncome",
+    "MajorRoadwayHighwayExposure")
+
+  val demograph = Seq(
+    "birth_date",
+    "Sex",
+    "Race",
+    "Ethnicity")
+
 }

@@ -143,14 +143,14 @@ object PreprocPerPatSeriesToVector {
   def map_medication(medmap : Option[Map[String, String]], code : String) : Seq[String] = {
     medmap match {
       case Some(mm) =>
-        mm.get(code.stripPrefix("Medication/")) match {
+        mm.get(code.stripPrefix("Medication/").stripSuffix("|ADS")) match {
           case Some(ms) =>
-            ms.split(";").map(m => m.stripSuffix("[IN]").trim().capitalize).filter(m => m.nonEmpty)
+            meds.filter(med => ms.toLowerCase.contains(med.toLowerCase))
           case None =>
             Seq()
         }
       case None =>
-        Seq(code.replace("[/|-:]", "_"))
+        Seq()
     }
   }
 
@@ -390,11 +390,12 @@ object PreprocPerPatSeriesToVector {
     val input_directory_file_system = med_map_path.getFileSystem(hc)
 
     val csvParser = new CSVParser(new InputStreamReader(input_directory_file_system.open(med_map_path), "UTF-8"), CSVFormat.DEFAULT
-      .withDelimiter('\t')
-      .withTrim())
+      .withDelimiter('|')
+      .withTrim()
+      .withFirstRecordAsHeader())
 
     try {
-      Map(csvParser.asScala.map(rec => (rec.get(0).stripPrefix("MDCTN:"), rec.get(2).stripSuffix(";"))).toSeq : _*)
+      Map(csvParser.asScala.map(rec => (rec.get(0), rec.get(1))).toSeq : _*)
     } finally {
       csvParser.close()
     }
