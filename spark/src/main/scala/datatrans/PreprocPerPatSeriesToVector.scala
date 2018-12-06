@@ -150,6 +150,7 @@ object PreprocPerPatSeriesToVector {
             Seq()
         }
       case None =>
+        println("cannot find medication name for code " + code)
         Seq()
     }
   }
