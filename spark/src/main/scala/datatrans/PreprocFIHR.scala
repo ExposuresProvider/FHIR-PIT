@@ -235,6 +235,7 @@ object PreprocFIHR {
                   val input_resc_dir = config.output_dir + "/" + resc_type + "/" + patient_num + "/" + encounter_id
                   val input_resc_dir_path = new Path(input_resc_dir)
                   if(output_dir_file_system.exists(input_resc_dir_path)) {
+                    println("found resource " + resc_type + "/" + patient_num + "/" + encounter_id)
                     val objs = Utils.HDFSCollection(hc, input_resc_dir_path).map(input_resc_file_path =>
                       try {
                         val input_resc_file_input_stream = output_dir_file_system.open(input_resc_file_path)
@@ -252,7 +253,6 @@ object PreprocFIHR {
                         enc = enc.copy(bmi = objs.map(obj => obj.as[BMI]))
                       case "Medication" =>
                         enc = enc.copy(medication = objs.map(obj => obj.as[Medication]))
-                        println("medication " + patient_num + " " + objs)
                       case "Procedure" =>
                         enc = enc.copy(procedure = objs.map(obj => obj.as[Procedure]))
                     }
