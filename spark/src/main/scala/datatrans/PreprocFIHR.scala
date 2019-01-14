@@ -119,7 +119,11 @@ object PreprocFIHR {
 
           println("processing " + resc_type + " " + count.incrementAndGet + " / " + n + " " + id)
 
-          val output_file = config.output_dir + "/" + resc_type + "/" + patient_num + "/" + encounter_id + "/" + f + "@" + i
+          val output_file =
+            resc_type match {
+              case "Medication" => config.output_dir + "/" + resc_type + "/" + patient_num + "/" + f + "@" + i // medication doesn't have valid encounter id
+              case _ => config.output_dir + "/" + resc_type + "/" + patient_num + "/" + encounter_id + "/" + f + "@" + i
+            }
           val output_file_path = new Path(output_file)
           def parseFile : JsValue =
             resc_type match {
@@ -223,7 +227,7 @@ object PreprocFIHR {
           if (output_dir_file_system.exists(output_file_path)) {
             println(output_file + " exists")
           } else {
-
+            // encounter 
             val input_enc_dir = config.output_dir + "/Encounter/" + patient_num
             val input_enc_dir_path = new Path(input_enc_dir)
             val encs = ListBuffer[Encounter]()
@@ -264,6 +268,17 @@ object PreprocFIHR {
               })
             }
             pat = pat.copy(encounter = encs)
+            // medication
+            val input_med_dir = config.output_dir + "/Medication/" + patient_num
+            val input_med_dir_path = new Path(input_med_dir)
+            val meds = ListBuffer[Medication]()
+            if(output_dir_file_system.exists(input_med_dir_path)) {
+              Utils.HDFSCollection(hc, input_med_dir_path).foreach(med_dir => {
+                val med = Utils.loadJson[Medication](hc, med_dir)
+                meds += med
+              })
+            }
+            pat = pat.copy(medication = meds)
             Utils.writeToFile(hc, output_file, Json.stringify(Json.toJson(pat)))
           }
         } catch {

@@ -19,7 +19,8 @@ case class Patient(
   birthDate : String,
   lat : Double,
   lon : Double,
-  encounter : Seq[Encounter]
+  encounter : Seq[Encounter],
+  medication : Seq[Medication] // some medications doesn't have valid encounter id, add them here
 )
 
 case class Encounter(id : String, subjectReference : String, code : Option[String], startDate : Option[String], endDate : Option[String], condition: Seq[Condition], labs: Seq[Labs], medication: Seq[Medication], procedure: Seq[Procedure], bmi: Seq[BMI])
@@ -92,7 +93,7 @@ object Implicits1 {
       val latlon = (geo(0) \ "extension").as[Seq[JsValue]]
       val lat = (latlon.filter(json => (json \ "url").as[String] == "latitude")(0) \ "valueDecimal").as[Double]
       val lon = (latlon.filter(json => (json \ "url").as[String] == "longitude")(0) \ "valueDecimal").as[Double]
-      JsSuccess(Patient(id, race, ethnicity, gender, birthDate, lat, lon, Seq()))
+      JsSuccess(Patient(id, race, ethnicity, gender, birthDate, lat, lon, Seq(), Seq()))
     }
   }
   implicit val conditionReads: Reads[Condition] = new Reads[Condition] {
