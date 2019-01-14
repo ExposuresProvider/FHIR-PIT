@@ -266,6 +266,7 @@ object PreprocPerPatSeriesToVector {
           val recs = new ListBuffer[Map[String, Any]]() // a list of encounters, start_time
 
           val encounter = pat.encounter
+          val medication = pat.medication
           val birth_date_joda = DateTime.parse(pat.birthDate, ISODateTimeFormat.dateParser())
           val sex = pat.gender
           val race = pat.race
@@ -304,6 +305,13 @@ object PreprocPerPatSeriesToVector {
                 encounter_map.addBinding(encounter_start_date_joda, enc)
               }
             })
+          })
+
+          medication.foreach(med => {
+            val medication_authoredOn_joda = DateTime.parse(med.authoredOn, ISODateTimeFormat.dateTimeParser())
+            if (intv.contains(medication_authoredOn_joda)) {
+              encounter_map.addBinding(medication_authoredOn_joda, Encounter("", "", None, None, None, Seq(), Seq(), Seq(med), Seq(), Seq()))
+            }
           })
 
           encounter_map.foreach {
