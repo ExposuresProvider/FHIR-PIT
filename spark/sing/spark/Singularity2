@@ -85,7 +85,7 @@ From: spark.img
 
 %apprun preprocICEES
   cd /opt/datatrans/spark
-  exec python3 src/main/python/runPreprocCSVTable.py /opt/datatrans "$@" /data/output/FHIR/PatVec/all /data/output/env/vector /data/output/acs.csv,/data/output/nearestroad.csv /data/output/icees
+  exec python3 src/main/python/runPreprocCSVTable.py /opt/datatrans "$@" /data/output/FHIR/PatVec/all /data/output/env/vector /data/output/acs.csv,/data/output/nearestroad.csv "patient_num,birth_date,encounter_num,esri_id,esri_idn,GEOID,start_date,stcnty" /data/output/icees
 
 %apprun preprocPerPatSeriesRowCol
   cd /opt/datatrans/spark
