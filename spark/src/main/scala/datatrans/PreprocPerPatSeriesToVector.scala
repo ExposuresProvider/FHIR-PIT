@@ -394,7 +394,9 @@ object PreprocPerPatSeriesToVector {
           val output_file_csv_writer = new CSVPrinter( new OutputStreamWriter(output_file_file_system.create(output_file_path), "UTF-8" ) , CSVFormat.DEFAULT.withHeader(colnames:_*))
           
           recs.foreach(m => {
-            output_file_csv_writer.printRecord(colnames.map(colname => m.get(colname).getOrElse("")).asJava)
+            val row = colnames.map(colname => m.get(colname).getOrElse(""))
+            println("row: " + colnames.zip(row))
+            output_file_csv_writer.printRecord(row.asJava)
           })
           output_file_csv_writer.close()
 
