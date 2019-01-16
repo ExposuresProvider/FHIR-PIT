@@ -71,6 +71,7 @@ object PreprocPerPatSeriesToVector {
 
     def extractColumns(labs: Seq[Labs], prefix: String) = {
       if(!labs.isEmpty) {
+        println("flag: " + labs.head.flag.getOrElse(""))
         Seq(
           (f"${prefix}_FirstValue", JsNumber(labs.head.value.asInstanceOf[ValueQuantity].valueNumber)),
           (f"${prefix}_FirstFlag", JsString(labs.head.flag.getOrElse(""))),
