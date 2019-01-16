@@ -397,6 +397,7 @@ object PreprocPerPatSeriesToVector {
             val row = colnames.map(colname => m.get(colname).map({
               case JsString(s) => s
               case JsNumber(n) => n
+              case default => default
             }).getOrElse(""))
             println("row: " + colnames.zip(row))
             output_file_csv_writer.printRecord(row.asJava)
