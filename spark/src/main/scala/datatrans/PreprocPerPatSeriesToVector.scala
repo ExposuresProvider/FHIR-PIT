@@ -71,7 +71,6 @@ object PreprocPerPatSeriesToVector {
 
     def extractColumns(labs: Seq[Labs], prefix: String) = {
       if(!labs.isEmpty) {
-        println("flag: " + labs.head.flag.getOrElse(""))
         Seq(
           (f"${prefix}_FirstValue", JsNumber(labs.head.value.asInstanceOf[ValueQuantity].valueNumber)),
           (f"${prefix}_FirstFlag", JsString(labs.head.flag.getOrElse(""))),
@@ -399,7 +398,6 @@ object PreprocPerPatSeriesToVector {
               case JsNumber(n) => n
               case default => default
             }).getOrElse(""))
-            println("row: " + colnames.zip(row))
             output_file_csv_writer.printRecord(row.asJava)
           })
           output_file_csv_writer.close()
