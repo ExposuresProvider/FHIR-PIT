@@ -391,10 +391,10 @@ object PreprocPerPatSeriesToVector {
           }
 
           val colnames = recs.map(m => m.keySet).fold(Set())((s, s2) => s.union(s2)).toSeq
-          val output_file_csv_writer = new CSVPrinter( new OutputStreamWriter(output_file_file_system.create(output_file_path), "UTF-8" ) , CSVFormat.DEFAULT.withHeader(colnames:_*))
+          val output_file_csv_writer = new CSVPrinter( new OutputStreamWriter(output_file_file_system.create(output_file_path), "UTF-8" ) , CSVFormat.DEFAULT.withHeader(colnames:_*).withNullString(""))
           
           recs.foreach(m => {
-            val row = colnames.map(colname => m.get(colname).getOrElse(""))
+            val row = colnames.map(colname => m.get(colname).getOrElse(null)).map(s => if (s == "") null else s)
             println("row: " + colnames.zip(row))
             output_file_csv_writer.printRecord(row.asJava)
           })
