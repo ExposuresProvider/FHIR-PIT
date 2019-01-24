@@ -166,13 +166,13 @@ object PreprocPerPatSeriesToVector {
     if(race.isEmpty) {
       "Unknown"
     } else {
-      race.head match {
-        case "2016-3" => "White"
+      race.head.trim match {
+        case "2106-3" => "White"
         case "2054-5" => "Black"
         case "2028-9" => "Asian"
         case "2076-8" => "Native Hawaiian/Pacific Islander"
         case "1002-5" => "American/Alaskan Native"
-        case _ => "Other"
+        case _ => "Other\"" + race.head + "\""
       }
     }
 
