@@ -172,7 +172,7 @@ object PreprocPerPatSeriesToVector {
         case "2028-9" => "Asian"
         case "2076-8" => "Native Hawaiian/Pacific Islander"
         case "1002-5" => "American/Alaskan Native"
-        case _ => "Other\"" + race.head + "\""
+        case _ => "Other(" + race.head + ")"
       }
     }
 
