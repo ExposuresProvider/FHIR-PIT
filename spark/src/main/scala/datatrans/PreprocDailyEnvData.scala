@@ -28,15 +28,9 @@ object PreprocDailyEnvData {
 
       val hc = spark.sparkContext.hadoopConfiguration
       val name = new Path(filename).getName.split("[.]")(0)
-      val output_dir = f"${config.output_prefix}${name}Daily"
-      val output_dir_path = new Path(output_dir)
-      val output_dir_fs = output_dir_path.getFileSystem(hc)
-
-      if (output_dir_fs.exists(output_dir_path)) {
-        output_dir_fs.delete(output_dir_path, true)
-      }
 
       val output_filename = f"${config.output_prefix}${name}Daily.csv"
+      val output_filename_yearly = f"${config.output_prefix}${name}Yearly.csv"
       val output_file_path = new Path(output_filename)
       val output_file_fs = output_file_path.getFileSystem(hc)
       if(!output_file_fs.exists(output_file_path)) {
@@ -53,18 +47,7 @@ object PreprocDailyEnvData {
           stddev("pm25").alias("pm25_stddev")
         )
 
-        aggregate.write.csv(output_dir)
-
-        val header = aggregate.columns.mkString(",") + "\n"
-        val header_filename = f"${config.output_prefix}$name.header"
-
-        writeToFile(hc, header_filename, header)
-
-        val header_path = new Path(header_filename)
-
-        copyMerge(hc, output_dir_fs, overwrite = true, output_filename, header_path, output_dir_path)
-
-        output_dir_fs.delete(header_path, false)
+        writeDataframe(hc, output_filename, aggregate)
 
       } else
         println(output_filename + " exists")
