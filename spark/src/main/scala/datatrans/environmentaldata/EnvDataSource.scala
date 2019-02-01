@@ -89,7 +89,7 @@ class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
         val names2 = names ++ config.indices2
         val names3 = for ((_, i) <- yearlyStatsToCompute; j <- names2) yield f"${j}_$i"
 
-        Some(df.join(df3, Seq("start_date"), "outer").select("start_date",  names2 ++ names3: _*).cache())
+        Some(dfyear.join(df3year, Seq("start_date"), "outer").select("start_date",  names2 ++ names3: _*).cache())
       case _ =>
         None
     }
