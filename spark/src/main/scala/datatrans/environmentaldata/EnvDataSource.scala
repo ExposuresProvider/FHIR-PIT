@@ -3,7 +3,7 @@ package datatrans.environmentaldata
 import datatrans.GeoidFinder
 import java.util.concurrent.atomic.AtomicInteger
 import datatrans.Utils._
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.{DataFrame, SparkSession, Column}
 import play.api.libs.json._
 import org.joda.time._
 import play.api.libs.json.Json.JsValueWrapper
@@ -65,6 +65,18 @@ class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
     }
   }
 
+  val yearlyStatsToCompute : Seq[(String => Column, String)] = Seq((avg, "avg"), (max, "max"), (min, "min"), (stddev, "stddev"))
+
+  def aggregateByYear(df: DataFrame, names: Seq[String]) = {
+    val df2 = df.withColumn("year", year(df.col("start_date")))
+    val exprs = for(name <- names; (func, suffix) <- yearlyStatsToCompute) yield func(name).alias(name + "_" + suffix)
+    
+    val aggregate = df2.groupBy("year").agg(
+      exprs.head, exprs.tail : _*
+    )
+    df2.join(aggregate, Seq("year"))
+  }
+
   def generateOutputDataFrame(key: (Seq[(Int, (Int, Int))], String, Seq[Int])) = {
     val (coors, fips, years) = key
     val df = inputCache3(coors)
@@ -72,7 +84,12 @@ class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
 
     (df, df3) match {
       case (Some(df), Some(df3)) =>
-        Some(df.join(df3, Seq("start_date"), "outer").select("start_date", names ++ config.indices2 : _*).cache())
+        val dfyear = aggregateByYear(df, names)
+        val df3year = aggregateByYear(df3.withColumn("year", year(df3.col("start_date"))), config.indices2)
+        val names2 = names ++ config.indices2
+        val names3 = for ((_, i) <- yearlyStatsToCompute; j <- names2) yield f"${j}_$i"
+
+        Some(df.join(df3, Seq("start_date"), "outer").select("start_date",  names2 ++ names3: _*).cache())
       case _ =>
         None
     }
