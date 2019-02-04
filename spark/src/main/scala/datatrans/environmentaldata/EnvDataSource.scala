@@ -65,7 +65,7 @@ class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
     }
   }
 
-  val yearlyStatsToCompute : Seq[(String => Column, String)] = Seq((avg, "avg"), (max, "max"), (min, "min"), (stddev, "stddev"))
+  val yearlyStatsToCompute : Seq[(String => Column, String)] = Seq((avg, "avg")/*, (max, "max"), (min, "min"), (stddev, "stddev")*/)
 
   def aggregateByYear(df: DataFrame, names: Seq[String]) = {
     val df2 = df.withColumn("year", year(df.col("start_date")))
