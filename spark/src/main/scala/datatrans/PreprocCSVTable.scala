@@ -48,7 +48,7 @@ object PreprocCSVTable {
     import spark.implicits._
 
     val env_schema = StructType(
-      StructField("start_date", DateType, true) :: List("o3_avg", "pm25_avg", "o3_max", "pm25_max", "ozone_daily_8hour_maximum", "pm25_daily_average").map(x => StructField(x, DoubleType, false)))
+      StructField("start_date", DateType, true) :: List("o3_avg", "pm25_avg", "o3_max", "pm25_max", "ozone_daily_8hour_maximum", "pm25_daily_average", "o3_avg_avg", "pm25_avg_avg", "o3_max_avg", "pm25_max_avg", "ozone_daily_8hour_maximum_avg", "pm25_daily_average_avg").map(x => StructField(x, DoubleType, false)))
 
     parser.parse(args, PreprocCSVTableConfig()) match {
       case Some(config) =>
@@ -178,7 +178,7 @@ object PreprocCSVTable {
               .withColumnRenamed("pm25_avg", "AvgDailyPM2.5Exposure")
               .withColumnRenamed("pm25_max", "MaxDailyPM2.5Exposure")
               .withColumnRenamed("o3_avg", "AvgDailyOzoneExposure")
-              .withColumnRenamed("o3_max", "MaxDailyOzoneExposure")
+              .withColumnRenamed("", "MaxDailyOzoneExposure")
               .withColumnRenamed("pm25_daily_average", "AvgDailyPM2.5Exposure_2")
               .withColumnRenamed("ozone_daily_8hour_maximum", "MaxDailyOzoneExposure_2")
               .withColumn("year", year($"start_date"))
@@ -187,12 +187,6 @@ object PreprocCSVTable {
 
             var df_all_visit = df_all
               .withColumn("AgeVisit", ageDiff($"birth_date", $"start_date"))
-              .withColumnRenamed("`AvgDailyPM2.5Exposure`","Avg24hPM2.5Exposure")
-              .withColumnRenamed("`MaxDailyPM2.5Exposure`","Max24hPM2.5Exposure")
-              .withColumnRenamed("AvgDailyOzoneExposure","Avg24hOzoneExposure")
-              .withColumnRenamed("MaxDailyOzoneExposure","Max24hOzoneExposure")
-              .withColumnRenamed("`AvgDailyPM2.5Exposure_2`","Avg24hPM2.5Exposure_2")
-              .withColumnRenamed("MaxDailyOzoneExposure_2","Max24hOzoneExposure_2")
 
             visit.foreach(v => {
               df_all_visit = df_all_visit.withColumnRenamed(v,v + "Visit")
@@ -210,12 +204,12 @@ object PreprocCSVTable {
             writeDataframe(hc, output_all_visit, df_all_visit)
 
             val patient_aggs = Seq(
-              avg(df_all.col("`AvgDailyPM2.5Exposure`")).alias("AvgDailyPM2.5Exposure"),
-              avg(df_all.col("`MaxDailyPM2.5Exposure`")).alias("MaxDailyPM2.5Exposure"),
-              avg(df_all.col("AvgDailyOzoneExposure")).alias("AvgDailyOzoneExposure"),
-              avg(df_all.col("MaxDailyOzoneExposure")).alias("MaxDailyOzoneExposure"),
-              avg(df_all.col("`AvgDailyPM2.5Exposure_2`")).alias("AvgDailyPM2.5Exposure_2"),
-              avg(df_all.col("MaxDailyOzoneExposure_2")).alias("MaxDailyOzoneExposure_2"),
+              first(df_all.col("pm25_avg_avg")).alias("AvgDailyPM2.5Exposure"),
+              first(df_all.col("pm25_max_avg")).alias("MaxDailyPM2.5Exposure"),
+              first(df_all.col("o3_avg_avg")).alias("AvgDailyOzoneExposure"),
+              first(df_all.col("o3_max_avg")).alias("MaxDailyOzoneExposure"),
+              first(df_all.col("pm25_daily_average_avg")).alias("AvgDailyPM2.5Exposure_2"),
+              first(df_all.col("ozone_daily_8hour_maximum_avg")).alias("MaxDailyOzoneExposure_2"),
               max(df_all.col("ObesityBMIVisit")).alias("ObesityBMI"),
               new TotalEDInpatientVisits()(df_all.col("VisitType")).alias("TotalEDInpatientVisits")) ++ demograph.map(v => first(df_all.col(v)).alias(v)) ++ acs.map(v => first(df_all.col(v)).alias(v)) ++ visit.map(v => max(df_all.col(v)).alias(v))
 
