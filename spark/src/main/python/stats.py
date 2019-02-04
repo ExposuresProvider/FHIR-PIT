@@ -10,5 +10,9 @@ columns = list(df.columns.values)
 
 for column in columns:
     vc = df[column].value_counts().sort_index()
-    with pd.option_context('display.max_rows', None, 'display.max_columns', None):
-      print(df)
+    if vc.count() <= 10:
+        with pd.option_context('display.max_rows', None, 'display.max_columns', None):
+            print(vc)
+    else:
+        print(df[column].describe())
+
