@@ -48,7 +48,7 @@ object PreprocCSVTable {
     import spark.implicits._
 
     val env_schema = StructType(
-      StructField("start_date", DateType, true) :: List("o3_avg", "pm25_avg", "o3_max", "pm25_max", "ozone_daily_8hour_maximum", "pm25_daily_average", "o3_avg_avg", "pm25_avg_avg", "o3_max_avg", "pm25_max_avg", "ozone_daily_8hour_maximum_avg", "pm25_daily_average_avg").map(x => StructField(x, DoubleType, false)))
+      StructField("start_date", DateType, true) :: List("o3_avg", "pm25_avg", "o3_max", "pm25_max", "ozone_daily_8hour_maximum", "pm25_daily_average", "o3_avg_avg", "pm25_avg_avg", "o3_max_avg", "pm25_max_avg", "o3_max_max", "pm25_max_max", "ozone_daily_8hour_maximum_avg", "pm25_daily_average_avg").map(x => StructField(x, DoubleType, false)))
 
     parser.parse(args, PreprocCSVTableConfig()) match {
       case Some(config) =>
@@ -206,8 +206,10 @@ object PreprocCSVTable {
             val patient_aggs = Seq(
               first(df_all.col("pm25_avg_avg")).alias("AvgDailyPM2.5Exposure"),
               first(df_all.col("pm25_max_avg")).alias("MaxDailyPM2.5Exposure"),
+              first(df_all.col("pm25_max_max")).alias("MaxDailyPM2.5Exposure_max"),
               first(df_all.col("o3_avg_avg")).alias("AvgDailyOzoneExposure"),
               first(df_all.col("o3_max_avg")).alias("MaxDailyOzoneExposure"),
+              first(df_all.col("o3_max_max")).alias("MaxDailyOzoneExposure_max"),
               first(df_all.col("pm25_daily_average_avg")).alias("AvgDailyPM2.5Exposure_2"),
               first(df_all.col("ozone_daily_8hour_maximum_avg")).alias("MaxDailyOzoneExposure_2"),
               max(df_all.col("ObesityBMIVisit")).alias("ObesityBMI"),
