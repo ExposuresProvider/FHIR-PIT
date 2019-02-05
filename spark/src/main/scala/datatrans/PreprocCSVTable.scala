@@ -175,12 +175,6 @@ object PreprocCSVTable {
               })
 
             df_all = df_all
-              .withColumnRenamed("pm25_avg", "AvgDailyPM2.5Exposure")
-              .withColumnRenamed("pm25_max", "MaxDailyPM2.5Exposure")
-              .withColumnRenamed("o3_avg", "AvgDailyOzoneExposure")
-              .withColumnRenamed("", "MaxDailyOzoneExposure")
-              .withColumnRenamed("pm25_daily_average", "AvgDailyPM2.5Exposure_2")
-              .withColumnRenamed("ozone_daily_8hour_maximum", "MaxDailyOzoneExposure_2")
               .withColumn("year", year($"start_date"))
 
             val procObesityBMI = udf((x : Double) => if(x >= 30) 1 else 0)
