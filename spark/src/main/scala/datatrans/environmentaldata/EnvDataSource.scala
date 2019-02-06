@@ -4,6 +4,7 @@ import datatrans.GeoidFinder
 import java.util.concurrent.atomic.AtomicInteger
 import datatrans.Utils._
 import org.apache.spark.sql.{DataFrame, SparkSession, Column}
+import org.apache.spark.sql.types._
 import play.api.libs.json._
 import org.joda.time._
 import play.api.libs.json.Json.JsValueWrapper
@@ -25,9 +26,27 @@ case class EnvDataSourceConfig(
 
 
 class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
-  def loadEnvDataFrame(input: (String, Seq[String])) : Option[DataFrame] = {
-    val (filename, names) = input
-    val df = spark.read.format("csv").option("header", value = true).load(filename)
+  val envSchema = StructType(
+    StructField("start_date", TimestampType) ::
+      (for(j <- Seq("avg", "max", "min", "stddev"); i <- Seq("o3", "pm25")) yield i + "_" + j).map(i => StructField(i, DoubleType)).toList
+  )
+
+  val FIPSSchema = StructType(
+    List(
+      StructField("Date", StringType),
+      StructField("FIPS", StringType),
+      StructField("Longitude", StringType),
+      StructField("Latitude", StringType),
+      StructField("pm25_daily_average", DoubleType),
+      StructField("pm25_daily_average_stderr", DoubleType),
+      StructField("ozone_daily_8hour_maximum", DoubleType),
+      StructField("ozone_daily_8hour_maximum_stderr", DoubleType)
+    )
+  )
+
+  def loadEnvDataFrame(input: (String, Seq[String], StructType)) : Option[DataFrame] = {
+    val (filename, names, schema) = input
+    val df = spark.read.format("csv").option("header", value = true).schema(schema).load(filename)
     if (names.forall(x => df.columns.contains(x))) {
       Some(df.cache())
     } else {
@@ -36,11 +55,14 @@ class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
     }
   }
 
+
+
+
   def loadFIPSDataFrame(input: (String, Seq[Int])) : Option[DataFrame] = {
     val (fips, years) = input
     val dfs2 = years.flatMap(year => {
       val filename = f"${config.environmental_data}/merged_cmaq_$year.csv"
-      val df = inputCache((filename, config.indices2))
+      val df = inputCache((filename, config.indices2, FIPSSchema))
       df.map(df => df.filter(df.col("FIPS") === fips))
     })
     if(dfs2.nonEmpty) {
@@ -56,7 +78,7 @@ class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
     val dfs = coors.flatMap {
       case (year, (row, col)) =>
         val filename = f"${config.environmental_data}/cmaq$year/C$col%03dR$row%03dDaily.csv"
-        inputCache((filename, names))
+        inputCache((filename, names, envSchema))
     }
     if (dfs.nonEmpty) {
       Some(dfs.reduce((a, b) => a.union(b)).cache())
