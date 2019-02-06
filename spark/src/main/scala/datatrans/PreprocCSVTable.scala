@@ -50,9 +50,11 @@ object PreprocCSVTable {
     val env_schema = StructType(
       StructField("start_date", DateType, true) ::
         (for(
-          generator <- Seq((i:String) => i, (i:String) => i + "_avg", (i:String) => i + "_max");
+          generator <- Seq((i:String) => i, (i:String) => i + "_avg", (i:String) => i + "_max", (i:String) => i + "_min", (i:String) => i + "_stddev");
           name <- Seq("o3_avg", "pm25_avg", "o3_max", "pm25_max", "ozone_daily_8hour_maximum", "pm25_daily_average")
         ) yield StructField(generator(name), DoubleType, false)).toList)
+
+    println(env_schema)
 
     parser.parse(args, PreprocCSVTableConfig()) match {
       case Some(config) =>
