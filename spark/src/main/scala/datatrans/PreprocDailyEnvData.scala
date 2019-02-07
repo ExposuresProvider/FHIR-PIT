@@ -17,7 +17,7 @@ case class PreprocDailyEnvDataConfig(
 object PreprocDailyEnvData {
   val schema = StructType(
     Seq(
-      StructField("start_date", TimestampType, nullable = true),
+      StructField("start_date", DateType, nullable = true),
       StructField("o3", DoubleType, nullable = true),
       StructField("pm25", DoubleType, nullable = true)
     ))

@@ -27,7 +27,7 @@ case class EnvDataSourceConfig(
 
 class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
   val envSchema = StructType(
-    StructField("start_date", TimestampType) ::
+    StructField("start_date", DateType) ::
       (for(j <- Seq("avg", "max", "min", "stddev"); i <- Seq("o3", "pm25")) yield i + "_" + j).map(i => StructField(i, DoubleType)).toList
   )
 
