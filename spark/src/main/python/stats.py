@@ -20,12 +20,15 @@ print("columns not in first file in second file:", columnSet2 - columnSet)
 
 for column in [column for column in columns if column in columns2]:
     print("column:", column)
-    vc = df[column].value_counts().sort_index()
-    vc2 = df2[column].value_counts().sort_index()
+    dfc = df[column]
+    dfc2 = df2[column]
+    vc = dfc.value_counts().sort_index()
+    vc2 = dfc2.value_counts().sort_index()
 
-    if vc.count() > 10:
-        vc = vc.describe()
-        vc2 = vc2.describe()
+    if vc.count() > 10 and vc2.count() > 10:
+        vc = dfc.describe()
+        vc2 = dfc2.describe()
+        
 
     indices = list(vc.index.values)
     indices2 = list(vc2.index.values)
