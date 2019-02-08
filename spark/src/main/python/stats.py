@@ -3,20 +3,20 @@ import pandas as pd
 import sys
 from tabulate import tabulate
 
-filename = sys.argv[1]
-filename2 = sys.argv[2]
+filenames = sys.argv[1:]
 
-df = pd.read_csv(filename)
-df2 = pd.read_csv(filename2)
+dfs = [pd.read_csv(filename) for filename in filenames]
 
-columns = list(df.columns.values)
-columns2 = list(df2.columns.values)
+columnss = [list(df.columns.values) for df in dfs]
 
-columnSet = set(columns)
-columnSet2 = set(columns2)
+columnSets = [set(columns) for columns in columnss]
 
-print("columns in first file not in second file:", columnSet - columnSet2)
-print("columns not in first file in second file:", columnSet2 - columnSet)
+n = len(filenames)
+
+for i in range(n):
+    for j in range( n):
+        if i != j:
+            print("columns in file " + str(i) + " not in file " + str(j) + ": " + str(columnSets[i] - columnSets[j]))
 
 def merge(index):
     n = len(index)
@@ -32,22 +32,25 @@ def merge(index):
             i[j] += 1
 
     return merged
+
+def union(lists, ret=[]):
+    if len(lists) == 0:
+        return ret
+    else:
+        head, *tail = lists
+        return union(tail, ret + [column for column in head if column not in ret])
     
-for column in [column for column in columns if column in columns2]:
+for column in union(columnss):
     print("column:", column)
-    dfc = df[column]
-    dfc2 = df2[column]
-    vc = dfc.value_counts().sort_index()
-    vc2 = dfc2.value_counts().sort_index()
+    dfcs = [df[column] if column in df else None for df in dfs]
 
-    if vc.count() > 10 and vc2.count() > 10:
-        vc = dfc.describe()
-        vc2 = dfc2.describe()
-        
+    vcs = [dfc.value_counts().sort_index() if dfc is not None else None for dfc in dfcs]
 
-    indices = list(vc.index.values)
-    indices2 = list(vc2.index.values)
+    if any((vc.count() > 10 if vc is not None else False for vc in vcs)):
+        vcs = [dfc.describe() if dfc is not None else None for dfc in dfcs]
 
-    print(tabulate([[index, vc.get(index, default=0), vc2.get(index, default=0), vc.get(index, default=0) - vc2.get(index, default=0)] for index in merge([indices, indices2])]))
+    indicess = [list(vc.index.values) for vc in vcs if vc is not None]
+
+    print(tabulate([[index] + [vc.get(index) if vc is not None else None for vc in vcs] for index in merge(indicess)]))
             
 
