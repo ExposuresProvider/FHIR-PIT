@@ -33,6 +33,6 @@ for column in [column for column in columns if column in columns2]:
     indices = list(vc.index.values)
     indices2 = list(vc2.index.values)
 
-    print(tabulate([[index, vc.get(index, default=0), vc2.get(index, default=0, vc.get(index, default=0) - vc2.get(index, default=0))] for index in indices + [index for index in indices2 if index not in indices]]))
+    print(tabulate([[index, vc.get(index, default=0), vc2.get(index, default=0), vc.get(index, default=0) - vc2.get(index, default=0)] for index in indices + [index for index in indices2 if index not in indices]]))
             
 
