@@ -24,7 +24,7 @@ def merge(index):
     merged = []
 
     while any((i[j] < len(index[j]) for j in range(n))):
-        nextVal = (index[j][i[j]] if i[j] < len(index[j]) else None for j in range(n))
+        nextVal = [index[j][i[j]] if i[j] < len(index[j]) else None for j in range(n)]
         val, inx = min(((val, inx) for (inx, val) in enumerate(nextVal) if val is not None))
         moveForward = (inx for (inx, val2) in enumerate(nextVal) if val2 == val)
         merged.append(val)
