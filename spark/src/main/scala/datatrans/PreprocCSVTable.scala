@@ -158,7 +158,7 @@ object PreprocCSVTable {
               override def update(buffer: MutableAggregationBuffer, input: Row): Unit = {
                 val visitType = input.getAs[String](0)
                 val respiratoryDx = input.getAs[Boolean](1)
-                if(respiratoryDx && (visitType == "IMP" || visitType == "EMER")) {
+                if(respiratoryDx && (visitType.contains("IMP") || visitType.contains("EMER"))) {
                   buffer(0) = buffer.getAs[Int](0) + 1
                 }
               }
