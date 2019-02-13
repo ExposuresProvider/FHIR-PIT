@@ -224,7 +224,7 @@ object PreprocCSVTable {
                 $"RespiratoryDx")) ++ demograph.map(v => first(df_all.col(v)).alias(v)) ++ acs.map(v => first(df_all.col(v)).alias(v)) ++ visit.map(v => max(df_all.col(v)).alias(v))
 
             val df_all2 = df_all
-              .withColumn("RespiratoryDx", $"AsthmaDx".cast(BooleanType) || $"CroupDx".cast(BooleanType) || $"ReactiveAirwayDx".cast(BooleanType) || $"CoughDx".cast(BooleanType) || $"PneumoniaDx".cast(BooleanType))
+              .withColumn("RespiratoryDx", $"AsthmaDx" === "1" || $"CroupDx" === "1" || $"ReactiveAirwayDx" === "1" || $"CoughDx" === "1" || $"PneumoniaDx" === "1")
               .groupBy("patient_num", "year").agg(patient_aggs.head, patient_aggs.tail:_*)
             var df_all_patient = df_all2
               .withColumn("AgeStudyStart", ageYear($"birth_date", $"year"))
