@@ -136,7 +136,7 @@ object PreprocCSVTable {
             class TotalEDInpatientVisits extends UserDefinedAggregateFunction {
               // This is the input fields for your aggregate function.
               override def inputSchema: org.apache.spark.sql.types.StructType =
-                StructType(StructField("VisitType", StringType) :: Nil)
+                StructType(StructField("VisitType", StringType) :: StructField("RespiratoryDx", BooleanType) :: Nil)
 
               // This is the internal fields you keep for computing your aggregate.
               override def bufferSchema: StructType = StructType(
@@ -220,7 +220,7 @@ object PreprocCSVTable {
               first(df_all.col("pm25_daily_average_avg")).alias("AvgDailyPM2.5Exposure_2"),
               first(df_all.col("ozone_daily_8hour_maximum_avg")).alias("MaxDailyOzoneExposure_2"),
               max(df_all.col("ObesityBMIVisit")).alias("ObesityBMI"),
-              new TotalEDInpatientVisits()(df_all.col("VisitType"),
+              new TotalEDInpatientVisits()($"VisitType",
                 $"RespiratoryDx")) ++ demograph.map(v => first(df_all.col(v)).alias(v)) ++ acs.map(v => first(df_all.col(v)).alias(v)) ++ visit.map(v => max(df_all.col(v)).alias(v))
 
             val df_all2 = df_all
