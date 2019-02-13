@@ -221,17 +221,18 @@ object PreprocCSVTable {
               first(df_all.col("ozone_daily_8hour_maximum_avg")).alias("MaxDailyOzoneExposure_2"),
               max(df_all.col("ObesityBMIVisit")).alias("ObesityBMI"),
               new TotalEDInpatientVisits()(df_all.col("VisitType"),
-                df_all.col("AsthmaDx").cast(BooleanType).or(
-                  df_all.col("CroupDx").cast(BooleanType)
-                ).or(
-                  df_all.col("ReactiveAirwayDx").cast(BooleanType)
-                ).or(
-                  df_all.col("CoughDx").cast(BooleanType)
-                ).or(
-                  df_all.col("PneumoniaDx").cast(BooleanType)
-                ))) ++ demograph.map(v => first(df_all.col(v)).alias(v)) ++ acs.map(v => first(df_all.col(v)).alias(v)) ++ visit.map(v => max(df_all.col(v)).alias(v))
+                $"RespiratoryDx")) ++ demograph.map(v => first(df_all.col(v)).alias(v)) ++ acs.map(v => first(df_all.col(v)).alias(v)) ++ visit.map(v => max(df_all.col(v)).alias(v))
 
             val df_all2 = df_all
+                .withColumn("RespiratoryDx", df_all.col("AsthmaDx").cast(BooleanType).or(
+                  df_all.col("CroupDx").cast(BooleanType)
+                  ).or(
+                  df_all.col("ReactiveAirwayDx").cast(BooleanType)
+                  ).or(
+                  df_all.col("CoughDx").cast(BooleanType)
+                  ).or(
+                  df_all.col("PneumoniaDx").cast(BooleanType)
+                  ))
               .groupBy("patient_num", "year").agg(patient_aggs.head, patient_aggs.tail:_*)
             var df_all_patient = df_all2
               .withColumn("AgeStudyStart", ageYear($"birth_date", $"year"))
