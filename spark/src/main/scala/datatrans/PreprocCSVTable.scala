@@ -5,9 +5,9 @@ import java.io._
 import datatrans.Utils._
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
-import org.apache.spark.sql.expressions.{ MutableAggregationBuffer, UserDefinedAggregateFunction }
-import org.apache.spark.sql.types.{ StringType, StructField, StructType, IntegerType, DataType, DateType, DoubleType }
-import org.apache.spark.sql.{ SparkSession, Column, Row }
+import org.apache.spark.sql.expressions.{MutableAggregationBuffer, UserDefinedAggregateFunction}
+import org.apache.spark.sql.types._
+import org.apache.spark.sql.{Column, Row, SparkSession}
 import org.joda.time.Years
 import org.joda.time.format.ISODateTimeFormat
 import org.joda.time._
@@ -157,7 +157,8 @@ object PreprocCSVTable {
               // This is how to update your buffer schema given an input.
               override def update(buffer: MutableAggregationBuffer, input: Row): Unit = {
                 val visitType = input.getAs[String](0)
-                if(visitType == "IMP" || visitType == "EMER") {
+                val respiratoryDx = input.getAs[Boolean](1)
+                if(respiratoryDx && (visitType == "IMP" || visitType == "EMER")) {
                   buffer(0) = buffer.getAs[Int](0) + 1
                 }
               }
@@ -219,7 +220,16 @@ object PreprocCSVTable {
               first(df_all.col("pm25_daily_average_avg")).alias("AvgDailyPM2.5Exposure_2"),
               first(df_all.col("ozone_daily_8hour_maximum_avg")).alias("MaxDailyOzoneExposure_2"),
               max(df_all.col("ObesityBMIVisit")).alias("ObesityBMI"),
-              new TotalEDInpatientVisits()(df_all.col("VisitType")).alias("TotalEDInpatientVisits")) ++ demograph.map(v => first(df_all.col(v)).alias(v)) ++ acs.map(v => first(df_all.col(v)).alias(v)) ++ visit.map(v => max(df_all.col(v)).alias(v))
+              new TotalEDInpatientVisits()(df_all.col("VisitType"),
+                df_all.col("AsthmaDx").cast(BooleanType).or(
+                  df_all.col("CroupDx").cast(BooleanType)
+                ).or(
+                  df_all.col("ReactiveAirwayDx").cast(BooleanType)
+                ).or(
+                  df_all.col("CoughDx").cast(BooleanType)
+                ).or(
+                  df_all.col("PneumoniaDx").cast(BooleanType)
+                ))) ++ demograph.map(v => first(df_all.col(v)).alias(v)) ++ acs.map(v => first(df_all.col(v)).alias(v)) ++ visit.map(v => max(df_all.col(v)).alias(v))
 
             val df_all2 = df_all
               .groupBy("patient_num", "year").agg(patient_aggs.head, patient_aggs.tail:_*)
