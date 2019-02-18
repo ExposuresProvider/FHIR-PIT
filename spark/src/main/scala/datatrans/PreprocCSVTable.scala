@@ -133,7 +133,7 @@ object PreprocCSVTable {
               val study_start_joda = DateTime.parse(start_date, ISODateTimeFormat.dateParser())
               Years.yearsBetween(birth_date_joda, study_start_joda).getYears
             })
-            class TotalEDInpatientVisits extends UserDefinedAggregateFunction {
+            class TotalTypeVisits(vtype : String) extends UserDefinedAggregateFunction {
               // This is the input fields for your aggregate function.
               override def inputSchema: org.apache.spark.sql.types.StructType =
                 StructType(StructField("VisitType", StringType) :: StructField("RespiratoryDx", BooleanType) :: Nil)
@@ -158,7 +158,7 @@ object PreprocCSVTable {
               override def update(buffer: MutableAggregationBuffer, input: Row): Unit = {
                 val visitType = input.getAs[String](0)
                 val respiratoryDx = input.getAs[Boolean](1)
-                if(respiratoryDx && (visitType.contains("IMP") || visitType.contains("EMER"))) {
+                if(respiratoryDx && visitType.contains(vtype)) {
                   buffer(0) = buffer.getAs[Int](0) + 1
                 }
               }
@@ -220,7 +220,9 @@ object PreprocCSVTable {
               first(df_all.col("pm25_daily_average_avg")).alias("AvgDailyPM2.5Exposure_2"),
               first(df_all.col("ozone_daily_8hour_maximum_avg")).alias("MaxDailyOzoneExposure_2"),
               max(df_all.col("ObesityBMIVisit")).alias("ObesityBMI"),
-              new TotalEDInpatientVisits()($"VisitType", $"RespiratoryDx").alias("TotalEDInpatientVisits")) ++ demograph.map(v => first(df_all.col(v)).alias(v)) ++ acs.map(v => first(df_all.col(v)).alias(v)) ++ visit.map(v => max(df_all.col(v)).alias(v))
+              new TotalTypeVisits("EMER")($"VisitType", $"RespiratoryDx").alias("TotalEDVisits"),
+              new TotalTypeVisits("IMP")($"VisitType", $"RespiratoryDx").alias("TotalInpatientVisits"),
+              (new TotalTypeVisits("EMER")($"VisitType", $"RespiratoryDx") + new TotalTypeVisits("IMP")($"VisitType", $"RespiratoryDx")).alias("TotalEDInpatientVisits")) ++ demograph.map(v => first(df_all.col(v)).alias(v)) ++ acs.map(v => first(df_all.col(v)).alias(v)) ++ visit.map(v => max(df_all.col(v)).alias(v))
 
             val df_all2 = df_all
               .withColumn("RespiratoryDx", $"AsthmaDx" === "1" || $"CroupDx" === "1" || $"ReactiveAirwayDx" === "1" || $"CoughDx" === "1" || $"PneumoniaDx" === "1")
