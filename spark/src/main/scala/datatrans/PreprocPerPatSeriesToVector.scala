@@ -25,30 +25,8 @@ case class Config(
 )
 
 object PreprocPerPatSeriesToVector {
-  val asthmare = "(493[.]|J45[.]).*".r
-  val croupre = "(464[.]|J05[.]).*".r
-  val reactiveAirwayRe = "(496[.]|J44[.]|J66[.]).*".r
-  val coughRe = "(786[.]|R05[.]).*".r
-  val pneumoniaRe = "(48[1-6][.]|J1[2-8].).*".r
-  val obesityRe = "(278[.]|E66.[^3]).*".r
-  def map_condition(code : String) : Seq[String] = {
-    code match {
-      case asthmare(_*) =>
-        Seq("AsthmaDx")
-      case croupre(_*) =>
-        Seq("CroupDx")
-      case reactiveAirwayRe(_*) =>
-        Seq("ReactiveAirwayDx")
-      case coughRe(_*) =>
-        Seq("CoughDx")
-      case pneumoniaRe(_*) =>
-        Seq("PneumoniaDx")
-      case obesityRe(_*) =>
-        Seq("ObesityDx")
-      case _ =>
-        Seq()
-    }
-  }
+  def map_condition(code : String) : Seq[String] =
+    ConditionMapper.map_condition(code)
 
   def sort_by_effectiveDateTime(labs : Seq[Labs]) : Seq[Labs] =
     labs.sortWith((a, b) => {
