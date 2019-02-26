@@ -529,13 +529,6 @@ class Cache[K,V <: AnyRef](fun : K => V) {
     "Mepolizumab"
   )
 
-  val dx = Seq(
-    "AsthmaDx",
-    "CroupDx",
-    "ReactiveAirwayDx",
-    "CoughDx",
-    "PneumoniaDx",
-    "ObesityDx")
 
   val acs = Seq(
     "EstResidentialDensity",
@@ -547,7 +540,8 @@ class Cache[K,V <: AnyRef](fun : K => V) {
     "EstProbabilityNoHealthIns",
     "EstProbabilityESL",
     "EstHouseholdIncome",
-    "MajorRoadwayHighwayExposure")
+    "MajorRoadwayHighwayExposure",
+    "ur")
 
   val demograph = Seq(
     "birth_date",

@@ -15,6 +15,7 @@ import org.joda.time.format.DateTimeFormat
 import scopt._
 import datatrans._
 import org.apache.spark.sql.functions._
+import datatrans.ConditionMapper._
 
 case class PreprocCSVTableConfig(
   patient_file : String = "",

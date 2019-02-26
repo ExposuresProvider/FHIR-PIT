@@ -39,5 +39,7 @@ object ConditionMapper {
         }
     }
 
+  val dx = condMap.keys.toSeq
+
 }
 
