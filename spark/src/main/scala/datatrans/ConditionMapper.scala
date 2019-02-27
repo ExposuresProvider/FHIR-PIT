@@ -39,7 +39,7 @@ object ConditionMapper {
         }
     }
 
-  val dx = condMap.keys.toSeq
+  val dx = condMap.keys.toSeq.map(_ + "Dx")
 
 }
 
