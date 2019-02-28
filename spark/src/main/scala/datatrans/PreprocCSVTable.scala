@@ -196,7 +196,7 @@ object PreprocCSVTable {
 
             for ((feature1, feature2) <- Seq(("pm25", "PM2.5"), ("o3", "Ozone")); (stat1, stat2) <- Seq(("avg", "Avg"), ("max", "Max"))) {
                 df_all_visit = df_all_visit.withColumnRenamed(feature1 + "_" + stat1, stat2 + "24h" + feature2 + "Exposure")
-                for (stat_b <- Seq("avg", "max"))
+                for (stat_b <- Seq("avg", "max", "min", "stddev"))
                   df_all_visit = df_all_visit.drop(feature1 + "_" + stat1 + "_" + stat_b)
               }
 
