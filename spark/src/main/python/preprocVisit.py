@@ -9,15 +9,16 @@ binstr = sys.argv[4]
 
 df = pd.read_csv(input_file)
 
-df["MepolizumabVisit"] = 0
-quantile(df, "Avg24hPM2.5Exposure", 5, "qcut", "Avg24hPM2.5Exposure_qcut")
-quantile(df, "Max24hPM2.5Exposure", 5, "qcut", "Max24hPM2.5Exposure_qcut")
-quantile(df, "Avg24hOzoneExposure", 5, "qcut", "Avg24hOzoneExposure_qcut")
-quantile(df, "Max24hOzoneExposure", 5, "qcut", "Max24hOzoneExposure_qcut")
-quantile(df, "Avg24hPM2.5Exposure", 5, binstr)
-quantile(df, "Max24hPM2.5Exposure", 5, binstr)
-quantile(df, "Avg24hOzoneExposure", 5, binstr)
-quantile(df, "Max24hOzoneExposure", 5, binstr)
+for binning, binstr in [("_qcut", "qcut"), ("", binstr)]:
+    for feature in ["PM2.5", "Ozone"]:
+        for stat in ["Avg", "Max"]:
+                col = stat + "24h" + feature + "Exposure"
+                col_2 = stat + "24h" + feature + "Exposure" + "_2"
+                quantile(df, col, 5, binstr, col + binning)
+                if col_2 in df.columns.values:
+                    quantile(df, col_2, 5, binstr, col_2 + binning)
+                else:
+                    print(col_2 + " does not exist")
 preprocSocial(df)
 
 df["year"] = year

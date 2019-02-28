@@ -9,12 +9,17 @@ binstr = sys.argv[4]
 
 df = pd.read_csv(input_file)
 
-df["Mepolizumab"] = 0
 for binning, binstr in [("_qcut", "qcut"), ("", binstr)]:
     for feature in ["PM2.5", "Ozone"]:
         for stat in ["Avg", "Max"]:
             for suffix in ["_StudyAvg", "_StudyMax", ""]:
-                quantile(df, stat + "Daily" + feature + "Exposure" + suffix, 5, binstr, stat + "Daily" + feature + "Exposure" + suffix + binning)
+                col = stat + "Daily" + feature + "Exposure" + suffix
+                col_2 = stat + "Daily" + feature + "Exposure" + suffix + "_2"
+                quantile(df, col, 5, binstr, col + binning)
+                if col_2 in df.columns.values:
+                    quantile(df, col_2, 5, binstr, col_2 + binning)
+                else:
+                    print(col_2 + " does not exist")
 preprocSocial(df)
 
 df["year"] = year
