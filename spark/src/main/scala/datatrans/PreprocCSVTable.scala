@@ -194,6 +194,19 @@ object PreprocCSVTable {
               df_all_visit = df_all_visit.withColumnRenamed(v,v + "Visit")
             })
 
+            for ((feature1, feature2) <- Seq(("pm25", "PM2.5"), ("o3", "Ozone")); (stat1, stat2) <- Seq(("avg", "Avg"), ("max", "Max"))) {
+                df_all_visit = df_all_visit.withColumnRenamed(feature1 + "_" + stat1, stat2 + "24h" + feature2 + "Exposure")
+                for (stat_b <- Seq("avg", "max"))
+                  df_all_visit = df_all_visit.drop(feature1 + "_" + stat1 + "_" + stat_b)
+              }
+
+
+            for ((feature1, feature2) <- Seq(("pm25_daily_average", "Avg24hPM2.5"), ("ozone_daily_8hour_maximum", "Max24hOzone"))) {
+              df_all_visit = df_all_visit.withColumnRenamed(feature1, feature2 + "Exposure_2")
+              for (stat_b <- Seq("avg", "max"))
+                df_all_visit = df_all_visit.drop(feature1 + "_" + stat_b)
+            }
+
             df_all_visit = df_all_visit
               .withColumnRenamed("ObesityBMIVisit", "ObesityBMIVisit0")
               .withColumn("ObesityBMIVisit", procObesityBMI($"ObesityBMIVisit0"))
@@ -205,25 +218,20 @@ object PreprocCSVTable {
 
             writeDataframe(hc, output_all_visit, df_all_visit)
 
-            val patient_aggs = Seq(
-              first(df_all.col("pm25_avg_avg")).alias("AvgDailyPM2.5Exposure_StudyAvg"),
-              first(df_all.col("pm25_avg_max")).alias("AvgDailyPM2.5Exposure_StudyMax"),
-              first(df_all.col("pm25_max_avg")).alias("MaxDailyPM2.5Exposure_StudyAvg"),
-              first(df_all.col("pm25_max_max")).alias("MaxDailyPM2.5Exposure_StudyMax"),
-              first(df_all.col("o3_avg_avg")).alias("AvgDailyOzoneExposure_StudyAvg"),
-              first(df_all.col("o3_avg_max")).alias("AvgDailyOzoneExposure_StudyMax"),
-              first(df_all.col("o3_max_avg")).alias("MaxDailyOzoneExposure_StudyAvg"),
-              first(df_all.col("o3_max_max")).alias("MaxDailyOzoneExposure_StudyMax"),
-              first(df_all.col("pm25_avg_avg")).alias("AvgDailyPM2.5Exposure"),
-              first(df_all.col("pm25_max_max")).alias("MaxDailyPM2.5Exposure"),
-              first(df_all.col("o3_avg_avg")).alias("AvgDailyOzoneExposure"),
-              first(df_all.col("o3_max_max")).alias("MaxDailyOzoneExposure"),
-              first(df_all.col("pm25_daily_average_avg")).alias("AvgDailyPM2.5Exposure_2"),
-              first(df_all.col("ozone_daily_8hour_maximum_avg")).alias("MaxDailyOzoneExposure_2"),
-              max(df_all.col("ObesityBMIVisit")).alias("ObesityBMI"),
-              new TotalTypeVisits("EMER")($"VisitType", $"RespiratoryDx").alias("TotalEDVisits"),
-              new TotalTypeVisits("IMP")($"VisitType", $"RespiratoryDx").alias("TotalInpatientVisits"),
-              (new TotalTypeVisits("EMER")($"VisitType", $"RespiratoryDx") + new TotalTypeVisits("IMP")($"VisitType", $"RespiratoryDx")).alias("TotalEDInpatientVisits")) ++ demograph.map(v => first(df_all.col(v)).alias(v)) ++ acs.map(v => first(df_all.col(v)).alias(v)) ++ visit.map(v => max(df_all.col(v)).alias(v))
+            val patient_aggs =
+              (for ((feature1, feature2) <- Seq(("pm25", "PM2.5"), ("o3", "Ozone")); (stat1, stat2) <- Seq(("avg", "Avg"), ("max", "Max")); (stat1_b, stat2_b) <- Seq(("avg", "Avg"), ("max", "Max")))
+                  yield first(df_all.col(feature1 + "_" + stat1 + "_" + stat1_b)).alias(stat2 + "Daily" + feature2 + "Exposure_Study" + stat2_b)) ++
+                (for ((feature1, feature2) <- Seq(("pm25_daily_average", "AvgDailyPM2.5"), ("ozone_daily_8hour_maximum", "MaxDailyOzone")))
+                yield first(df_all.col(feature1 + "_avg")).alias(feature2 + "Exposure_2")
+                ) ++
+                Seq(
+                  max(df_all.col("ObesityBMIVisit")).alias("ObesityBMI"),
+                  new TotalTypeVisits("EMER")($"VisitType", $"RespiratoryDx").alias("TotalEDVisits"),
+                  new TotalTypeVisits("IMP")($"VisitType", $"RespiratoryDx").alias("TotalInpatientVisits"),
+                  (new TotalTypeVisits("EMER")($"VisitType", $"RespiratoryDx") + new TotalTypeVisits("IMP")($"VisitType", $"RespiratoryDx")).alias("TotalEDInpatientVisits")) ++
+                demograph.map(v => first(df_all.col(v)).alias(v)) ++
+                acs.map(v => first(df_all.col(v)).alias(v)) ++
+                visit.map(v => max(df_all.col(v)).alias(v))
 
             val df_all2 = df_all
               .withColumn("RespiratoryDx", $"AsthmaDx" === "1" || $"CroupDx" === "1" || $"ReactiveAirwayDx" === "1" || $"CoughDx" === "1" || $"PneumoniaDx" === "1")
