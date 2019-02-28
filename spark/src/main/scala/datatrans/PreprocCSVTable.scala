@@ -221,6 +221,8 @@ object PreprocCSVTable {
             val patient_aggs =
               (for ((feature1, feature2) <- Seq(("pm25", "PM2.5"), ("o3", "Ozone")); (stat1, stat2) <- Seq(("avg", "Avg"), ("max", "Max")); (stat1_b, stat2_b) <- Seq(("avg", "Avg"), ("max", "Max")))
                   yield first(df_all.col(feature1 + "_" + stat1 + "_" + stat1_b)).alias(stat2 + "Daily" + feature2 + "Exposure_Study" + stat2_b)) ++
+              (for ((feature1, feature2) <- Seq(("pm25", "PM2.5"), ("o3", "Ozone")); (stat1, stat2) <- Seq(("avg", "Avg"), ("max", "Max")))
+                  yield first(df_all.col(feature1 + "_" + stat1 + "_" + stat1)).alias(stat2 + "Daily" + feature2 + "Exposure")) ++
                 (for ((feature1, feature2) <- Seq(("pm25_daily_average", "AvgDailyPM2.5"), ("ozone_daily_8hour_maximum", "MaxDailyOzone")))
                 yield first(df_all.col(feature1 + "_avg")).alias(feature2 + "Exposure_2")
                 ) ++
