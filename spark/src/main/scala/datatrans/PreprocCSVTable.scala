@@ -215,6 +215,7 @@ object PreprocCSVTable {
             val deidentify = df_all_visit.columns.intersect(config.deidentify)
             df_all_visit = df_all_visit
               .drop(deidentify : _*)
+            df_all_visit = df_all_visit.filter($"AgeVisit" < 90)
 
             writeDataframe(hc, output_all_visit, df_all_visit)
 
@@ -245,6 +246,7 @@ object PreprocCSVTable {
               .drop("ObesityBMI0")
             val deidentify2 = df_all_patient.columns.intersect(config.deidentify)
             df_all_patient = df_all_patient.drop(deidentify2 : _*)
+            df_all_patient = df_all_patient.filter($"AgeStudyStart" < 90)
             writeDataframe(hc, output_all_patient, df_all_patient)
           }
 

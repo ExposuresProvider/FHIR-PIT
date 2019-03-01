@@ -145,7 +145,7 @@ object PreprocPerPatSeriesToVector {
       "Unknown"
     } else {
       race.head.trim match {
-        case "2106-3" => "Caucasion"
+        case "2106-3" => "Caucasian"
         case "2054-5" => "African American"
         case "2028-9" => "Asian"
         case "2076-8" => "Native Hawaiian/Pacific Islander"
