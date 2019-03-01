@@ -9,7 +9,7 @@ binstr = sys.argv[4]
 
 df = pd.read_csv(input_file)
 
-df["AgeVisit"] = pd.cut(df["AgeVisit"].apply(preprocHighwayExposure), [0, 3, 18, 35, 51, 70, 90], labels=['0-2', '3-17', '18-34', '35-50', '51-69', '70+'], include_lowest=True, right=False)
+df["AgeVisit"] = pd.cut(df["AgeVisit"], [0, 3, 18, 35, 51, 70, 90], labels=['0-2', '3-17', '18-34', '35-50', '51-69', '70+'], include_lowest=True, right=False)
 
 for binning, binstr in [("_qcut", "qcut"), ("", binstr)]:
     for feature in ["PM2.5", "Ozone"]:
