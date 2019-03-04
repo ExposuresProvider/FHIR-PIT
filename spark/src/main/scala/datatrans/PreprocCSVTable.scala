@@ -182,8 +182,15 @@ object PreprocCSVTable {
                 df_all = df_all.withColumn(col, lit(0))
               })
 
+            val sex2gen = udf((s : String) => s match {
+                case "Male" => s
+                case "Female" => s
+                case _ => null
+            })
+            
             df_all = df_all
               .withColumn("year", year($"start_date"))
+              .withColumn("Sex2", sex2gen($"Sex"))
 
             val procObesityBMI = udf((x : Double) => if(x >= 30) 1 else 0)
 
