@@ -167,8 +167,8 @@ object PreprocPerPatSeriesToVector {
 
   def map_sex(sex : String) : String =
     sex match {
-      case "male" => "M"
-      case "female" => "F"
+      case "male" => "Male"
+      case "female" => "Female"
       case _ => "Unknown"
     }
 
