@@ -244,8 +244,6 @@ object PreprocPerPatSeriesToVector {
           val recs = new ListBuffer[Map[String, Any]]() // a list of encounters, start_time
 
           val encounter = pat.encounter
-          val medication = pat.medication
-          val condition = pat.condition
           val birth_date_joda = DateTime.parse(pat.birthDate, ISODateTimeFormat.dateParser())
           val sex = pat.gender
           val race = pat.race
@@ -286,18 +284,36 @@ object PreprocPerPatSeriesToVector {
             })
           })
 
-          medication.foreach(med => {
+          pat.medication.foreach(med => {
             val medication_authoredOn_joda = DateTime.parse(med.authoredOn, ISODateTimeFormat.dateTimeParser())
             if (intv.contains(medication_authoredOn_joda)) {
               encounter_map.addBinding(medication_authoredOn_joda, Encounter("", "", None, None, None, Seq(), Seq(), Seq(med), Seq(), Seq()))
             }
           })
 
-          condition.foreach(cond => {
+          pat.condition.foreach(cond => {
             val condition_assertedDate_joda = DateTime.parse(cond.assertedDate, ISODateTimeFormat.dateTimeParser())
             if (intv.contains(condition_assertedDate_joda)) {
               encounter_map.addBinding(condition_assertedDate_joda, Encounter("", "", None, None, None, Seq(cond), Seq(), Seq(), Seq(), Seq()))
             }
+          })
+
+          pat.labs.foreach(cond => {
+            val condition_assertedDate_joda = DateTime.parse(cond.effectiveDateTime, ISODateTimeFormat.dateTimeParser())
+            if (intv.contains(condition_assertedDate_joda)) {
+              encounter_map.addBinding(condition_assertedDate_joda, Encounter("", "", None, None, None, Seq(), Seq(cond), Seq(), Seq(), Seq()))
+            }
+          })
+
+          pat.procedure.foreach(cond => {
+            val condition_assertedDate_joda = DateTime.parse(cond.performedDateTime, ISODateTimeFormat.dateTimeParser())
+            if (intv.contains(condition_assertedDate_joda)) {
+              encounter_map.addBinding(condition_assertedDate_joda, Encounter("", "", None, None, None, Seq(), Seq(), Seq(), Seq(cond), Seq()))
+            }
+          })
+
+          pat.bmi.foreach(b => {
+            throw new RuntimeException("error: " + b)
           })
 
           encounter_map.foreach {
