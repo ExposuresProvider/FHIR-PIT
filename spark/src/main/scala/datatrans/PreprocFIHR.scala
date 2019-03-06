@@ -49,10 +49,12 @@ object PreprocFIHR {
           val output_dir_path = new Path(config.output_dir)
           val output_dir_file_system = output_dir_path.getFileSystem(hc)
 
-          println("processing Resources")
-          config.resc_types.foreach(resc_type => proc_resc(config, hc, input_dir_file_system, resc_type, output_dir_file_system))
           println("processing Encounter")
           proc_enc(config, hc, input_dir_file_system, output_dir_file_system)
+          println("loading Encounter ids")
+          val encounter_ids = load_encounter_ids(config, hc, input_dir_file_system)
+          println("processing Resources")
+          config.resc_types.foreach(resc_type => proc_resc(config, hc, encounter_ids, input_dir_file_system, resc_type, output_dir_file_system))
           println("combining Patient")
           combine_pat(config, hc, input_dir_file_system, output_dir_file_system)
           println("generating geodata")
@@ -91,7 +93,7 @@ object PreprocFIHR {
     }
   }
 
-  private def proc_resc(config: PreprocFIHRConfig, hc: Configuration, input_dir_file_system: FileSystem, resc_type: String, output_dir_file_system: FileSystem) {
+  private def proc_resc(config: PreprocFIHRConfig, hc: Configuration, encounter_ids: Seq[String], input_dir_file_system: FileSystem, resc_type: String, output_dir_file_system: FileSystem) {
     if (!config.skip_preproc.contains(resc_type)) {
       import Implicits0._
       import Implicits1._
@@ -115,15 +117,17 @@ object PreprocFIHR {
 
           val id = obj.id
           val patient_num = obj.subjectReference.split("/")(1)
-          val encounter_id = obj.contextReference.split("/")(1)
+          val encounter_id = obj.contextReference.map(_.split("/")(1))
 
           println("processing " + resc_type + " " + count.incrementAndGet + " / " + n + " " + id)
 
-          val output_file =
-            resc_type match {
-              case "Medication" => config.output_dir + "/" + resc_type + "/" + patient_num + "/" + f + "@" + i // medication doesn't have valid encounter id
-              case _ => config.output_dir + "/" + resc_type + "/" + patient_num + "/" + encounter_id + "/" + f + "@" + i
-            }
+          val valid_encounter_id = encounter_id.flatMap(eid => if (encounter_ids.contains(eid)) Some(eid) else None)
+
+          val output_file = valid_encounter_id match {
+            case Some(eid) => config.output_dir + "/" + resc_type + "/" + patient_num + "/" + eid + "/" + f + "@" + i
+            case None => config.output_dir + "/" + resc_type + "/" + patient_num + "/" + f + "@" + i
+          }
+
           val output_file_path = new Path(output_file)
           def parseFile : JsValue =
             resc_type match {
@@ -205,6 +209,18 @@ object PreprocFIHR {
     count
   }
 
+  private def load_encounter_ids(config: PreprocFIHRConfig, hc: Configuration, input_dir_file_system: FileSystem) : Seq[String] = {
+    val input_dir = config.input_dir + "/Encounter"
+    val input_dir_path = new Path(input_dir)
+    val itr = input_dir_file_system.listFiles(input_dir_path, false)
+    val encounter_ids = ListBuffer[String]()
+    while(itr.hasNext) {
+      val input_file_name = itr.next().getPath().getName()
+      encounter_ids.append(input_file_name)
+    }
+    encounter_ids
+  }
+
   private def combine_pat(config: PreprocFIHRConfig, hc: Configuration, input_dir_file_system: FileSystem, output_dir_file_system: FileSystem) {
     import Implicits0._
     import Implicits1.patientReads
@@ -279,6 +295,17 @@ object PreprocFIHR {
               })
             }
             pat = pat.copy(medication = meds)
+            // conds
+            val input_cond_dir = config.output_dir + "/conds/" + patient_num
+            val input_cond_dir_path = new Path(input_cond_dir)
+            val conds = ListBuffer[Condition]()
+            if(output_dir_file_system.exists(input_cond_dir_path)) {
+              Utils.HDFSCollection(hc, input_cond_dir_path).foreach(cond_dir => {
+                val cond = Utils.loadJson[Condition](hc, cond_dir)
+                conds += cond
+              })
+            }
+            pat = pat.copy(condition = conds)
             Utils.writeToFile(hc, output_file, Json.stringify(Json.toJson(pat)))
           }
         } catch {

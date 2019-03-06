@@ -20,7 +20,8 @@ case class Patient(
   lat : Double,
   lon : Double,
   encounter : Seq[Encounter],
-  medication : Seq[Medication] // some medications doesn't have valid encounter id, add them here
+  medication : Seq[Medication], // some medications don't have valid encounter id, add them here
+  condition : Seq[Condition] // some conditions don't have valid encounter id, add them here
 )
 
 case class Encounter(id : String, subjectReference : String, code : Option[String], startDate : Option[String], endDate : Option[String], condition: Seq[Condition], labs: Seq[Labs], medication: Seq[Medication], procedure: Seq[Procedure], bmi: Seq[BMI])
@@ -28,14 +29,14 @@ case class Encounter(id : String, subjectReference : String, code : Option[Strin
 sealed trait Resource {
   val id : String
   val subjectReference : String
-  val contextReference : String
+  val contextReference : Option[String]
 }
 
-case class Condition(override val id : String, override val subjectReference : String, override val contextReference : String, system : String, code : String, assertedDate : String) extends Resource
-case class Labs(override val id : String, override val subjectReference : String, override val contextReference : String, code : String, value : Value, flag : Option[String], effectiveDateTime : String) extends Resource
-case class Medication(override val id : String, override val subjectReference : String, override val contextReference : String, medication : String, authoredOn : String, start: String, end: Option[String]) extends Resource
-case class Procedure(override val id : String, override val subjectReference : String, override val contextReference : String, system : String, code : String, performedDateTime : String) extends Resource
-case class BMI(override val id : String, override val subjectReference : String, override val contextReference : String, code : String, value : Value) extends Resource
+case class Condition(override val id : String, override val subjectReference : String, override val contextReference : Option[String], system : String, code : String, assertedDate : String) extends Resource
+case class Labs(override val id : String, override val subjectReference : String, override val contextReference : Option[String], code : String, value : Value, flag : Option[String], effectiveDateTime : String) extends Resource
+case class Medication(override val id : String, override val subjectReference : String, override val contextReference : Option[String], medication : String, authoredOn : String, start: String, end: Option[String]) extends Resource
+case class Procedure(override val id : String, override val subjectReference : String, override val contextReference : Option[String], system : String, code : String, performedDateTime : String) extends Resource
+case class BMI(override val id : String, override val subjectReference : String, override val contextReference : Option[String], code : String, value : Value) extends Resource
 
 abstract class Value extends Serializable
 case class ValueQuantity(valueNumber : Double, unit : Option[String]) extends Value
@@ -93,7 +94,7 @@ object Implicits1 {
       val latlon = (geo(0) \ "extension").as[Seq[JsValue]]
       val lat = (latlon.filter(json => (json \ "url").as[String] == "latitude")(0) \ "valueDecimal").as[Double]
       val lon = (latlon.filter(json => (json \ "url").as[String] == "longitude")(0) \ "valueDecimal").as[Double]
-      JsSuccess(Patient(id, race, ethnicity, gender, birthDate, lat, lon, Seq(), Seq()))
+      JsSuccess(Patient(id, race, ethnicity, gender, birthDate, lat, lon, Seq(), Seq(), Seq()))
     }
   }
   implicit val conditionReads: Reads[Condition] = new Reads[Condition] {
@@ -101,7 +102,7 @@ object Implicits1 {
       val resource = json \ "resource"
       val id = (resource \ "id").as[String]
       val subjectReference = (resource \ "subject" \ "reference").as[String]
-      val contextReference = (resource \ "context" \ "reference").as[String]
+      val contextReference = (resource \ "context" \ "reference").asOpt[String]
       val coding = (resource \ "code" \ "coding").as[Seq[JsValue]]
       assert(coding.size == 1)
       val system = (coding(0) \ "system").as[String]
@@ -127,7 +128,7 @@ object Implicits1 {
       val resource = json \ "resource"
       val id = (resource \ "id").as[String]
       val subjectReference = (resource \ "subject" \ "reference").as[String]
-      val contextReference = (resource \ "context" \ "reference").as[String]
+      val contextReference = (resource \ "context" \ "reference").asOpt[String]
       val coding = (resource \ "code" \ "coding").as[Seq[JsValue]]
       assert(coding.size == 1)
       val code = (coding(0) \ "code").as[String]
@@ -150,7 +151,7 @@ object Implicits1 {
       val resource = json \ "resource"
       val id = (resource \ "id").as[String]
       val subjectReference = (resource \ "subject" \ "reference").as[String]
-      val contextReference = (resource \ "context" \ "reference").as[String]
+      val contextReference = (resource \ "context" \ "reference").asOpt[String]
       val coding = (resource \ "code" \ "coding").as[Seq[JsValue]]
       assert(coding.size == 1)
       val code = (coding(0) \ "code").as[String]
@@ -171,7 +172,7 @@ object Implicits1 {
       val resource = json \ "resource"
       val id = (resource \ "id").as[String]
       val subjectReference = (resource \ "subject" \ "reference").as[String]
-      val contextReference = (resource \ "context" \ "reference").as[String]
+      val contextReference = (resource \ "context" \ "reference").asOpt[String]
       val medication = (resource \ "medicationReference" \ "reference").as[String]
       val authoredOn = (resource \ "authoredOn").as[String]
       val validityPeriod = resource \ "dispenseRequest" \ "validityPeriod"
@@ -185,7 +186,7 @@ object Implicits1 {
       val resource = json \ "resource"
       val id = (resource \ "id").as[String]
       val subjectReference = (resource \ "subject" \ "reference").as[String]
-      val contextReference = (resource \ "context" \ "reference").as[String]
+      val contextReference = (resource \ "context" \ "reference").asOpt[String]
       val coding = (resource \ "code" \ "coding").as[Seq[JsValue]]
       assert(coding.size == 1)
       val system = (coding(0) \ "system").as[String]

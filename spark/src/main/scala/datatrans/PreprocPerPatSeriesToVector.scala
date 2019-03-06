@@ -25,8 +25,8 @@ case class Config(
 )
 
 object PreprocPerPatSeriesToVector {
-  def map_condition(code : String) : Seq[String] =
-    ConditionMapper.map_condition(code)
+  def map_condition(system : String, code : String) : Seq[String] =
+    ConditionMapper.map_condition(system, code)
 
   def sort_by_effectiveDateTime(labs : Seq[Labs]) : Seq[Labs] =
     labs.sortWith((a, b) => {
@@ -245,6 +245,7 @@ object PreprocPerPatSeriesToVector {
 
           val encounter = pat.encounter
           val medication = pat.medication
+          val condition = pat.condition
           val birth_date_joda = DateTime.parse(pat.birthDate, ISODateTimeFormat.dateParser())
           val sex = pat.gender
           val race = pat.race
@@ -292,6 +293,13 @@ object PreprocPerPatSeriesToVector {
             }
           })
 
+          condition.foreach(cond => {
+            val condition_assertedDate_joda = DateTime.parse(cond.assertedDate, ISODateTimeFormat.dateTimeParser())
+            if (intv.contains(condition_assertedDate_joda)) {
+              encounter_map.addBinding(condition_assertedDate_joda, Encounter("", "", None, None, None, Seq(cond), Seq(), Seq(), Seq(), Seq()))
+            }
+          })
+
           encounter_map.foreach {
             case (encounter_start_date_joda, encset) =>
               var rec0 = demographic
@@ -312,7 +320,7 @@ object PreprocPerPatSeriesToVector {
                   })
                 })
                 cond.foreach(m => {
-                  map_condition(m.code).foreach(n => {
+                  map_condition(m.system, m.code).foreach(n => {
                     rec += (n -> 1)
                   })
                 })
