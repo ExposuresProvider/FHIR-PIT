@@ -4,9 +4,11 @@ def quantile(df, col, n, bin="qcut", column=None):
     if not column:
         column = col
     if bin == "qcut":
-        df[column] = pd.qcut(df[col], n, labels=list(map(str, range(1,n+1))))
+        df[column], bins = pd.qcut(df[col], n, labels=list(map(str, range(1,n+1))), retbins=True)
+        print(column, bins)
     elif bin == "cut":
-        df[column] = pd.cut(df[col], n, labels=list(map(str, range(1,n+1))))
+        df[column], bins = pd.cut(df[col], n, labels=list(map(str, range(1,n+1))), retbins=True)
+        print(column, bins)
     else:
         raise "unsupported binning method"
 
