@@ -24,5 +24,17 @@ libraryDependencies += "javax.media" % "jai_core" % "1.1.3" from "http://downloa
 libraryDependencies += "org.apache.commons" % "commons-csv" % "1.6"
 libraryDependencies += "org.typelevel" %% "squants" % "1.4.0"
 
+assemblyMergeStrategy in assembly := {
+  case PathList("com", "vividsolutions", _*) => MergeStrategy.last
+  case PathList("javax", "inject", _*) => MergeStrategy.last
+  case PathList("org", "aopalliance", _*) => MergeStrategy.last
+  case PathList("org", "apache", _*) => MergeStrategy.last
+  case PathList("META-INF", _*) => MergeStrategy.discard
+  case PathList("git.properties") => MergeStrategy.discard
+  case x =>
+    val oldStrategy = (assemblyMergeStrategy in assembly).value
+    oldStrategy(x)
+}
+
 maxErrors := 1
 

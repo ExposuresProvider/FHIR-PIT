@@ -1,15 +1,10 @@
 import sys
 from utils import submit
 
-cache_dir = sys.argv[1]
-host_name = sys.argv[2]
-input_dir = sys.argv[3]
-resc_types = sys.argv[4]
-skip_preproc = sys.argv[5]
-output_dir = sys.argv[6]
+host_name, input_dir, resc_types, skip_preproc, output_dir, *args = sys.argv[1:]
 
-args = []
-args.extend(sys.argv[7:])
+ = []
+args.extend(sys.argv[6:])
 
 submit(host_name, cache_dir, "datatrans.PreprocFIHR",
            "--input_dir=" + input_dir,

@@ -8,10 +8,8 @@ import pandas as pd
 from timeit import default_timer as timer
 import os
 
-def submit(host_name, cache_dir, cls, *args, **kwargs):
+def submit(host_name, cls, *args, **kwargs):
     start = timer()
-
-    cache = ",".join([filename for filename in glob.iglob(os.path.join(cache_dir, ".ivy2", "**", "*.jar"), recursive=True)])
 
     if host_name == "local":
         submit_2_target_nodet = "local[*]"
@@ -29,7 +27,6 @@ def submit(host_name, cache_dir, cls, *args, **kwargs):
            "1",
            "--executor-cores",
            "30",
-           "--jars"] + [cache] + [
            "--class",
            cls,
            "target/scala-2.11/preproc_2.11-1.0.jar"] + list(args)
@@ -50,10 +47,10 @@ def submit(host_name, cache_dir, cls, *args, **kwargs):
     print(end - start)
 
 
-def run(cache_dir, cls, *args, **kwargs):
+def run(cls, *args, **kwargs):
     start = timer()
 
-    cache = ":".join(["target/scala-2.11/preproc_2.11-1.0.jar"] + [filename for filename in glob.iglob(os.path.join(cache_dir, ".ivy2", "**", "*.jar"), recursive=True)])
+    cache = "target/scala-2.11/preproc_2.11-1.0.jar"
 
     cmd = ["java",
            "-classpath",

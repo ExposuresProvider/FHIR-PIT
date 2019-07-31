@@ -1,5 +1,13 @@
 # spark data transformation tool #
 
+## build sbt jar
+
+```
+sbt assembly
+```
+
+
+
 ## build singularity container
 
 ```
