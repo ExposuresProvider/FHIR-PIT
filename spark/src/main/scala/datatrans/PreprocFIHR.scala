@@ -20,10 +20,6 @@ object PreprocFHIRResourceType {
     type JsonType
     def toJson(obj : Any): JsValue
     def fromJson(obj : JsValue):JsonType
-    override def toString() = {
-      val a = this.getClass.getSimpleName
-      a.dropRight("ResourceType".length)
-    }
   }
   sealed trait ResourceType extends JsonifiableType {
     def setEncounter(enc: Encounter, objs: Seq[JsValue]): Encounter
@@ -34,6 +30,7 @@ object PreprocFHIRResourceType {
       Json.toJson(obj.asInstanceOf[JsonType])
     override def fromJson(obj : JsValue):JsonType =
       obj.as[JsonType]
+    override def toString() = "Encounter"
   }
   case object PatientResourceType extends JsonifiableType {
     type JsonType = Patient
@@ -41,6 +38,7 @@ object PreprocFHIRResourceType {
       Json.toJson(obj.asInstanceOf[JsonType])
     override def fromJson(obj : JsValue):JsonType =
       obj.as[JsonType]
+    override def toString() = "Patient"
   }
   case object LabResourceType extends ResourceType {
     type JsonType = Lab
@@ -50,6 +48,7 @@ object PreprocFHIRResourceType {
       obj.as[JsonType]
     override def setEncounter(enc: Encounter, objs: Seq[JsValue]) : Encounter =
       enc.copy(lab = objs.map(obj => obj.as[Lab]))
+    override def toString() = "Lab"
   }
   case object ConditionResourceType extends ResourceType {
     type JsonType = Condition
@@ -59,6 +58,7 @@ object PreprocFHIRResourceType {
       obj.as[JsonType]
     override def setEncounter(enc: Encounter, objs: Seq[JsValue]) : Encounter =
       enc.copy(condition = objs.map(obj => obj.as[Condition]))
+    override def toString() = "Condition"
   }
   case object MedicationRequestResourceType extends ResourceType {
     type JsonType = Medication
@@ -68,6 +68,7 @@ object PreprocFHIRResourceType {
       obj.as[JsonType]
     override def setEncounter(enc: Encounter, objs: Seq[JsValue]) : Encounter =
       enc.copy(medication = objs.map(obj => obj.as[Medication]))
+    override def toString() = "MedicationRequest"
   }
   case object ProcedureResourceType extends ResourceType {
     type JsonType = Procedure
@@ -77,6 +78,7 @@ object PreprocFHIRResourceType {
       obj.as[JsonType]
     override def setEncounter(enc: Encounter, objs: Seq[JsValue]) : Encounter =
       enc.copy(procedure = objs.map(obj => obj.as[Procedure]))
+    override def toString() = "Procedure"
   }
   case object BMIResourceType extends ResourceType {
     type JsonType = BMI
@@ -86,6 +88,7 @@ object PreprocFHIRResourceType {
       obj.as[JsonType]
     override def setEncounter(enc: Encounter, objs: Seq[JsValue]) : Encounter =
       enc.copy(bmi = objs.map(obj => obj.as[BMI]))
+    override def toString() = "BMI"
   }
 
   object MyYamlProtocol extends DefaultYamlProtocol {
