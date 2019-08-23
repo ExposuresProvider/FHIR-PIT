@@ -22,6 +22,7 @@ object PreprocFHIRResourceType {
     def fromJson(obj : JsValue):JsonType
     override def toString() = {
       val a = this.getClass.getSimpleName
+      println(a)
       a.dropRight("ResourceType".length)
     }
   }
