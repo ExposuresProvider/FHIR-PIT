@@ -21,8 +21,8 @@ object PreprocFHIRResourceType {
     def toJson(obj : Any): JsValue
     def fromJson(obj : JsValue):JsonType
     override def toString() = {
-      val a = super.toString()
-      a.substring(0, a.length - 12)
+      val a = this.getClass.getSimpleName
+      a.dropRight("ResourceType".length)
     }
   }
   sealed trait ResourceType extends JsonifiableType {
