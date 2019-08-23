@@ -145,7 +145,7 @@ object Implicits1 {
           ValueString((resource \ "valueString").as[String])
       }
       val flag = None
-      val effectiveDateTime = (resource \ "effectiveDateTime").as[String]
+      val effectiveDateTime = (resource \ "issued").as[String]
       JsSuccess(Lab(id, subjectReference, contextReference, code, value, flag, effectiveDateTime))
     }
   }
