@@ -19,11 +19,11 @@ import datatrans.Config._
 import net.jcazevedo.moultingyaml._
 
 case class PreprocPerPatSeriesToVectorConfig(
-  input_directory : String = "",
-  output_directory : String = "",
-  start_date : DateTime = DateTime.parse("2010-01-01", ISODateTimeFormat.dateParser()),
-  end_date : DateTime = DateTime.parse("2015-01-01", ISODateTimeFormat.dateParser()),
-  med_map : Option[String] = None
+  input_directory : String,
+  output_directory : String,
+  start_date : DateTime,
+  end_date : DateTime,
+  med_map : Option[String]
 )
 
 object PreprocPerPatSeriesToVector {
