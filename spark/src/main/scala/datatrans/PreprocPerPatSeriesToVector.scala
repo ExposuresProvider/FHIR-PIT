@@ -15,8 +15,10 @@ import scopt._
 import scala.collection.JavaConverters._
 import squants.mass.{Kilograms, Grams, Pounds}
 import squants.space.{Centimeters, Inches}
+import datatrans.Config._
+import net.jcazevedo.moultingyaml._
 
-case class Config(
+case class PreprocPerPatSeriesToVectorConfig(
   input_directory : String = "",
   output_directory : String = "",
   start_date : DateTime = DateTime.parse("2010-01-01", ISODateTimeFormat.dateParser()),
@@ -217,7 +219,7 @@ object PreprocPerPatSeriesToVector {
     }
   }
 
-  def proc_pid(config : Config, hc : Configuration, p:String, start_date : DateTime, end_date : DateTime, medmap : Option[Map[String, String]]): Unit =
+  def proc_pid(config : PreprocPerPatSeriesToVectorConfig, hc : Configuration, p:String, start_date : DateTime, end_date : DateTime, medmap : Option[Map[String, String]]): Unit =
     time {
 
 
@@ -426,14 +428,6 @@ object PreprocPerPatSeriesToVector {
   }
   
   def main(args: Array[String]) {
-    val parser = new OptionParser[Config]("series_to_vector") {
-      head("series_to_vector")
-      opt[String]("input_directory").required.action((x,c) => c.copy(input_directory = x))
-      opt[String]("output_directory").required.action((x,c) => c.copy(output_directory = x))
-      opt[String]("start_date").action((x,c) => c.copy(start_date = DateTime.parse(x, ISODateTimeFormat.dateParser())))
-      opt[String]("end_date").action((x,c) => c.copy(end_date = DateTime.parse(x, ISODateTimeFormat.dateParser())))
-      opt[String]("mdctn_rxnorm").action((x,c) => c.copy(med_map = Some(x)))
-    }
 
     val spark = SparkSession.builder().appName("datatrans preproc").getOrCreate()
 
@@ -441,8 +435,9 @@ object PreprocPerPatSeriesToVector {
 
     // For implicit conversions like converting RDDs to DataFrames
     import spark.implicits._
+    import DefaultYamlProtocol._
 
-    parser.parse(args, Config()) match {
+    parseInput[PreprocPerPatSeriesToVectorConfig](args, yamlFormat5(PreprocPerPatSeriesToVectorConfig)) match {
       case Some(config) =>
 
         time {

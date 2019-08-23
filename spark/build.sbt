@@ -23,6 +23,7 @@ libraryDependencies += "junit" % "junit" % "4.11" % Test
 libraryDependencies += "javax.media" % "jai_core" % "1.1.3" from "http://download.osgeo.org/webdav/geotools/javax/media/jai_core/1.1.3/jai_core-1.1.3.jar"
 libraryDependencies += "org.apache.commons" % "commons-csv" % "1.6"
 libraryDependencies += "org.typelevel" %% "squants" % "1.4.0"
+libraryDependencies += "net.jcazevedo" %% "moultingyaml" % "0.4.1"
 
 assemblyMergeStrategy in assembly := {
   case PathList("com", "vividsolutions", _*) => MergeStrategy.last

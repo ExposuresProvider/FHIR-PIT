@@ -10,24 +10,20 @@ import scala.collection.mutable.ListBuffer
 import scopt._
 import java.util.Base64
 import java.nio.charset.StandardCharsets
+import datatrans.Config._
+import net.jcazevedo.moultingyaml._
 
 case class PreprocFIHRConfig(
-  input_dir : String = "",
-  output_dir : String = "",
-  resc_types : Seq[String] = Seq(),
-  skip_preproc : Seq[String] = Seq()
+  input_dir : String = "", // input directory of FHIR data
+  output_dir : String = "", // output directory of patient data
+  resc_types : Map[String, String] = Map(), // map resource type to directory, these are resources included in patient data
+  skip_preproc : Seq[String] = Seq() // skip preprocessing these resource as they have already benn preprocessed 
 )
 
 object PreprocFIHR {
 
   def main(args: Array[String]) {
-    val parser = new OptionParser[PreprocFIHRConfig]("series_to_vector") {
-      head("series_to_vector")
-      opt[String]("input_dir").required.action((x,c) => c.copy(input_dir = x))
-      opt[String]("output_dir").required.action((x,c) => c.copy(output_dir = x))
-      opt[Seq[String]]("resc_types").required.action((x,c) => c.copy(resc_types = x))
-      opt[Seq[String]]("skip_preproc").required.action((x,c) => c.copy(skip_preproc = x))
-    }
+    
 
     val spark = SparkSession.builder().appName("datatrans preproc").getOrCreate()
 
@@ -35,8 +31,9 @@ object PreprocFIHR {
 
     // For implicit conversions like converting RDDs to DataFrames
     // import spark.implicits._
+    import DefaultYamlProtocol._
 
-    parser.parse(args, PreprocFIHRConfig()) match {
+    parseInput[PreprocFIHRConfig](args, yamlFormat4(PreprocFIHRConfig)) match {
       case Some(config) =>
 
         Utils.time {
@@ -50,11 +47,18 @@ object PreprocFIHR {
           val output_dir_file_system = output_dir_path.getFileSystem(hc)
 
           println("processing Encounter")
-          proc_enc(config, hc, input_dir_file_system, output_dir_file_system)
+          if (!config.skip_preproc.contains("Encounter")) {
+            proc_enc(config, hc, input_dir_file_system, output_dir_file_system)
+          }
+
           println("loading Encounter ids")
-          val encounter_ids = load_encounter_ids(config, hc, input_dir_file_system)
+          val encounter_ids = load_encounter_ids(input_dir_file_system, config.input_dir)
           println("processing Resources")
-          config.resc_types.foreach(resc_type => proc_resc(config, hc, encounter_ids, input_dir_file_system, resc_type, output_dir_file_system))
+          config.resc_types.keys.foreach(resc_type =>
+              if (!config.skip_preproc.contains(resc_type)) {
+                proc_resc(config, hc, encounter_ids, input_dir_file_system, resc_type, output_dir_file_system)
+              }
+          )
           println("combining Patient")
           combine_pat(config, hc, input_dir_file_system, output_dir_file_system)
           println("generating geodata")
@@ -70,8 +74,8 @@ object PreprocFIHR {
 
   }
 
-  private def proc_gen(config: PreprocFIHRConfig, hc: Configuration, input_dir_file_system: FileSystem, resc_type: String, output_dir_file_system: FileSystem, proc : ((JsObject, String, Int)) => Unit) : Unit = {
-    val input_dir = config.input_dir + "/" + resc_type
+  private def proc_gen(input_dir_file_system: FileSystem, input_dir0: String, resc_dir: String, proc : ((JsObject, String, Int)) => Unit) : Unit = {
+    val input_dir = input_dir0 + "/" + resc_dir
     val input_dir_path = new Path(input_dir)
     val itr = input_dir_file_system.listFiles(input_dir_path, false)
     while(itr.hasNext) {
@@ -94,101 +98,102 @@ object PreprocFIHR {
   }
 
   private def proc_resc(config: PreprocFIHRConfig, hc: Configuration, encounter_ids: Seq[String], input_dir_file_system: FileSystem, resc_type: String, output_dir_file_system: FileSystem) {
-    if (!config.skip_preproc.contains(resc_type)) {
-      import Implicits0._
-      import Implicits1._
-      val count = new AtomicInteger(0)
-      val n = resc_count(config, hc, input_dir_file_system, resc_type)
+    import Implicits0._
+    import Implicits1._
+    val count = new AtomicInteger(0)
+    val resc_dir = config.resc_types(resc_type)
+    val n = resc_count(input_dir_file_system, config.input_dir, resc_dir)
 
-      proc_gen(config, hc, input_dir_file_system, resc_type, output_dir_file_system, {
-        case (obj1, f, i) =>
-          val obj : Resource = resc_type match {
+    proc_gen(input_dir_file_system, config.input_dir, resc_dir, {
+      case (obj1, f, i) =>
+        val obj : Resource = resc_type match {
+          case "Condition" =>
+            obj1.as[Condition]
+          case "Labs" =>
+            obj1.as[Labs]
+          case "Medication" =>
+            obj1.as[Medication]
+          case "Procedure" =>
+            obj1.as[Procedure]
+          case "BMI" =>
+            obj1.as[BMI]
+        }
+
+        val id = obj.id
+        val patient_num = obj.subjectReference.split("/")(1)
+        val encounter_id = obj.contextReference.map(_.split("/")(1))
+
+        println("processing " + resc_type + " " + count.incrementAndGet + " / " + n + " " + id)
+
+        val valid_encounter_id = encounter_id.filter(eid => if (encounter_ids.contains(eid)) true else {
+          println("invalid encounter id " + eid)
+          false
+        })
+
+        val output_file = valid_encounter_id match {
+          case Some(eid) => config.output_dir + "/" + resc_type + "/" + patient_num + "/" + eid + "/" + f + "@" + i
+          case None => config.output_dir + "/" + resc_type + "/" + patient_num + "/" + f + "@" + i
+        }
+
+        val output_file_path = new Path(output_file)
+        def parseFile : JsValue =
+          resc_type match {
             case "Condition" =>
-              obj1.as[Condition]
+              Json.toJson(obj.asInstanceOf[Condition])
             case "Labs" =>
-              obj1.as[Labs]
+              Json.toJson(obj.asInstanceOf[Labs])
             case "Medication" =>
-              obj1.as[Medication]
+              Json.toJson(obj.asInstanceOf[Medication])
             case "Procedure" =>
-              obj1.as[Procedure]
+              Json.toJson(obj.asInstanceOf[Procedure])
             case "BMI" =>
-              obj1.as[BMI]
+              Json.toJson(obj.asInstanceOf[BMI])
           }
-
-          val id = obj.id
-          val patient_num = obj.subjectReference.split("/")(1)
-          val encounter_id = obj.contextReference.map(_.split("/")(1))
-
-          println("processing " + resc_type + " " + count.incrementAndGet + " / " + n + " " + id)
-
-          val valid_encounter_id = encounter_id.flatMap(eid => if (encounter_ids.contains(eid)) Some(eid) else None)
-
-          val output_file = valid_encounter_id match {
-            case Some(eid) => config.output_dir + "/" + resc_type + "/" + patient_num + "/" + eid + "/" + f + "@" + i
-            case None => config.output_dir + "/" + resc_type + "/" + patient_num + "/" + f + "@" + i
-          }
-
-          val output_file_path = new Path(output_file)
-          def parseFile : JsValue =
-            resc_type match {
-              case "Condition" =>
-                Json.toJson(obj.asInstanceOf[Condition])
-              case "Labs" =>
-                Json.toJson(obj.asInstanceOf[Labs])
-              case "Medication" =>
-                Json.toJson(obj.asInstanceOf[Medication])
-              case "Procedure" =>
-                Json.toJson(obj.asInstanceOf[Procedure])
-              case "BMI" =>
-                Json.toJson(obj.asInstanceOf[BMI])
-            }
-          def writeFile(obj2 : JsValue) : Unit =
-            Utils.writeToFile(hc, output_file, Json.stringify(obj2))
+        def writeFile(obj2 : JsValue) : Unit =
+          Utils.writeToFile(hc, output_file, Json.stringify(obj2))
           
-          if (output_dir_file_system.exists(output_file_path)) {
-            println(id ++ " file " ++ output_file + " exists")
-          } else {
-            val obj2 = parseFile
-            writeFile(obj2)
-          }
+        if (output_dir_file_system.exists(output_file_path)) {
+          println(id ++ " file " ++ output_file + " exists")
+        } else {
+          val obj2 = parseFile
+          writeFile(obj2)
+        }
 
-      })
-    }
+    })
   }
 
   private def proc_enc(config: PreprocFIHRConfig, hc: Configuration, input_dir_file_system: FileSystem, output_dir_file_system: FileSystem) {
     val resc_type = "Encounter"
-    if (!config.skip_preproc.contains(resc_type)) {
-      import Implicits0._
-      import Implicits1._
-      val count = new AtomicInteger(0)
-      val n = resc_count(config, hc, input_dir_file_system, resc_type)
+    val resc_dir = config.resc_types(resc_type)
+    import Implicits0._
+    import Implicits1._
+    val count = new AtomicInteger(0)
+    val n = resc_count(input_dir_file_system, config.input_dir, resc_dir)
 
-      proc_gen(config, hc, input_dir_file_system, resc_type, output_dir_file_system, {
-        case (obj1, f, i) =>
-          val obj = obj1.as[Encounter]
+    proc_gen(input_dir_file_system, config.input_dir, resc_dir, {
+      case (obj1, f, i) =>
+        val obj = obj1.as[Encounter]
 
-          val id = obj.id
-          val patient_num = obj.subjectReference.split("/")(1)
+        val id = obj.id
+        val patient_num = obj.subjectReference.split("/")(1)
 
-          println("processing " + resc_type + " " + count.incrementAndGet + " / " + n + " " + id)
+        println("processing " + resc_type + " " + count.incrementAndGet + " / " + n + " " + id)
 
-          val output_file = config.output_dir + "/" + resc_type + "/" + patient_num + "/" + f + "@" + i
-          val output_file_path = new Path(output_file)
+        val output_file = config.output_dir + "/" + resc_type + "/" + patient_num + "/" + f + "@" + i
+        val output_file_path = new Path(output_file)
 
-          if (output_dir_file_system.exists(output_file_path)) {
+        if (output_dir_file_system.exists(output_file_path)) {
             println(output_file + " exists")
-          } else {
-            val obj2 = Json.toJson(obj)
-            Utils.writeToFile(hc, output_file, Json.stringify(obj2))
-          }
+        } else {
+          val obj2 = Json.toJson(obj)
+          Utils.writeToFile(hc, output_file, Json.stringify(obj2))
+        }
 
-      })
-    }
+    })
   }
 
-  private def resc_count(config: PreprocFIHRConfig, hc: Configuration, input_dir_file_system: FileSystem, resc_type: String) : Int = {
-    val input_dir = config.input_dir + "/" + resc_type
+  private def resc_count(input_dir_file_system: FileSystem, input_dir0: String, resc_dir: String) : Int = {
+    val input_dir = input_dir0 + "/" + resc_dir
     val input_dir_path = new Path(input_dir)
     val itr = input_dir_file_system.listFiles(input_dir_path, false)
     var count = 0
@@ -209,8 +214,8 @@ object PreprocFIHR {
     count
   }
 
-  private def load_encounter_ids(config: PreprocFIHRConfig, hc: Configuration, input_dir_file_system: FileSystem) : Seq[String] = {
-    val input_dir = config.input_dir + "/Encounter"
+  private def load_encounter_ids(input_dir_file_system: FileSystem, input_dir0: String) : Seq[String] = {
+    val input_dir = input_dir0 + "/Encounter"
     val input_dir_path = new Path(input_dir)
     val itr = input_dir_file_system.listFiles(input_dir_path, false)
     val encounter_ids = ListBuffer[String]()
@@ -226,11 +231,12 @@ object PreprocFIHR {
     import Implicits1.patientReads
     import Implicits2.{encounterReads, conditionReads, labsReads, bmiReads, medicationReads, procedureReads}
     val resc_type = "Patient"
+    val resc_dir = config.resc_types(resc_type)
     val count = new AtomicInteger(0)
 
-    val n = resc_count(config, hc, input_dir_file_system, resc_type)
+    val n = resc_count(input_dir_file_system, config.input_dir, resc_dir)
 
-    proc_gen(config, hc, input_dir_file_system, resc_type, output_dir_file_system, {
+    proc_gen(input_dir_file_system, config.input_dir, resc_dir, {
       case (obj, f, i) =>
         var pat = obj.as[Patient]
         val patient_num = pat.id
@@ -251,7 +257,7 @@ object PreprocFIHR {
               Utils.HDFSCollection(hc, input_enc_dir_path).foreach(encounter_dir => {
                 var enc = Utils.loadJson[Encounter](hc, encounter_dir)
                 val encounter_id = enc.id
-                config.resc_types.foreach(resc_type => {
+                config.resc_types.keys.foreach(resc_type => {
                   val input_resc_dir = config.output_dir + "/" + resc_type + "/" + patient_num + "/" + encounter_id
                   val input_resc_dir_path = new Path(input_resc_dir)
                   if(output_dir_file_system.exists(input_resc_dir_path)) {
