@@ -13,17 +13,116 @@ import java.nio.charset.StandardCharsets
 import datatrans.Config._
 import net.jcazevedo.moultingyaml._
 
+object PreprocFHIRResourceType {
+  import Implicits0._
+  import Implicits1._
+  sealed trait JsonifiableType {
+    type JsonType
+    def toJson(obj : Any): JsValue
+    def fromJson(obj : JsValue):JsonType
+  }
+  sealed trait ResourceType extends JsonifiableType {
+    def setEncounter(enc: Encounter, objs: Seq[JsValue]): Encounter
+  }
+  case object EncounterResourceType extends JsonifiableType {
+    type JsonType = Encounter
+    override def toJson(obj : Any): JsValue =
+      Json.toJson(obj.asInstanceOf[JsonType])
+    override def fromJson(obj : JsValue):JsonType =
+      obj.as[JsonType]
+  }
+  case object PatientResourceType extends JsonifiableType {
+    type JsonType = Patient
+    override def toJson(obj : Any): JsValue =
+      Json.toJson(obj.asInstanceOf[JsonType])
+    override def fromJson(obj : JsValue):JsonType =
+      obj.as[JsonType]
+  }
+  case object LabResourceType extends ResourceType {
+    type JsonType = Lab
+    override def toJson(obj : Any): JsValue =
+      Json.toJson(obj.asInstanceOf[Lab])
+    override def fromJson(obj : JsValue):JsonType =
+      obj.as[JsonType]
+    override def setEncounter(enc: Encounter, objs: Seq[JsValue]) : Encounter =
+      enc.copy(lab = objs.map(obj => obj.as[Lab]))
+  }
+  case object ConditionResourceType extends ResourceType {
+    type JsonType = Condition
+    override def toJson(obj : Any): JsValue =
+      Json.toJson(obj.asInstanceOf[JsonType])
+    override def fromJson(obj : JsValue):JsonType =
+      obj.as[JsonType]
+    override def setEncounter(enc: Encounter, objs: Seq[JsValue]) : Encounter =
+      enc.copy(condition = objs.map(obj => obj.as[Condition]))
+  }
+  case object MedicationRequestResourceType extends ResourceType {
+    type JsonType = Medication
+    override def toJson(obj : Any): JsValue =
+      Json.toJson(obj.asInstanceOf[JsonType])
+    override def fromJson(obj : JsValue):JsonType =
+      obj.as[JsonType]
+    override def setEncounter(enc: Encounter, objs: Seq[JsValue]) : Encounter =
+      enc.copy(medication = objs.map(obj => obj.as[Medication]))
+  }
+  case object ProcedureResourceType extends ResourceType {
+    type JsonType = Procedure
+    override def toJson(obj : Any): JsValue =
+      Json.toJson(obj.asInstanceOf[JsonType])
+    override def fromJson(obj : JsValue):JsonType =
+      obj.as[JsonType]
+    override def setEncounter(enc: Encounter, objs: Seq[JsValue]) : Encounter =
+      enc.copy(procedure = objs.map(obj => obj.as[Procedure]))
+  }
+  case object BMIResourceType extends ResourceType {
+    type JsonType = BMI
+    override def toJson(obj : Any): JsValue =
+      Json.toJson(obj.asInstanceOf[JsonType])
+    override def fromJson(obj : JsValue):JsonType =
+      obj.as[JsonType]
+    override def setEncounter(enc: Encounter, objs: Seq[JsValue]) : Encounter =
+      enc.copy(bmi = objs.map(obj => obj.as[BMI]))
+  }
+
+  object MyYamlProtocol extends DefaultYamlProtocol {
+    implicit val resourceTypeFormat = new YamlFormat[JsonifiableType] {
+      def write(x: JsonifiableType) = StringYamlFormat.write(x.toString())
+      def read(value: YamlValue) = StringYamlFormat.read(value) match {
+        case "Condition" =>
+          ConditionResourceType
+        case "Lab" =>
+          LabResourceType
+        case "MedicationRequest" =>
+          MedicationRequestResourceType
+        case "Procedure" =>
+          ProcedureResourceType
+        case "BMI" =>
+          BMIResourceType
+        case "Encounter" =>
+          EncounterResourceType
+        case "Patient" =>
+          PatientResourceType
+        case a =>
+          throw new RuntimeException("unsupported resource type " + a)
+      }
+    }
+
+    implicit val preprocFHIRConfigFormat = yamlFormat4(PreprocFIHRConfig)
+  }
+}
+
+import PreprocFHIRResourceType._
+
 case class PreprocFIHRConfig(
   input_dir : String = "", // input directory of FHIR data
   output_dir : String = "", // output directory of patient data
-  resc_types : Map[String, String] = Map(), // map resource type to directory, these are resources included in patient data
-  skip_preproc : Seq[String] = Seq() // skip preprocessing these resource as they have already benn preprocessed 
+  resc_types : Map[JsonifiableType, String] = Map(), // map resource type to directory, these are resources included in patient data
+  skip_preproc : Seq[String] = Seq() // skip preprocessing these resource as they have already benn preprocessed
 )
 
 object PreprocFIHR {
 
-  def main(args: Array[String]) {
-    
+  def main(args: Array[String]) {    
 
     val spark = SparkSession.builder().appName("datatrans preproc").getOrCreate()
 
@@ -31,9 +130,9 @@ object PreprocFIHR {
 
     // For implicit conversions like converting RDDs to DataFrames
     // import spark.implicits._
-    import DefaultYamlProtocol._
+    import MyYamlProtocol._
 
-    parseInput[PreprocFIHRConfig](args, yamlFormat4(PreprocFIHRConfig)) match {
+    parseInput[PreprocFIHRConfig](args, preprocFHIRConfigFormat) match {
       case Some(config) =>
 
         Utils.time {
@@ -55,9 +154,12 @@ object PreprocFIHR {
           val encounter_ids = load_encounter_ids(input_dir_file_system, config.input_dir)
           println("processing Resources")
           config.resc_types.keys.foreach(resc_type =>
-              if (!config.skip_preproc.contains(resc_type)) {
-                proc_resc(config, hc, encounter_ids, input_dir_file_system, resc_type, output_dir_file_system)
-              }
+            resc_type match {
+              case ty : ResourceType =>
+                  if(!config.skip_preproc.contains(resc_type)) 
+                    proc_resc(config, hc, encounter_ids, input_dir_file_system, resc_type.asInstanceOf[ResourceType], output_dir_file_system)
+              case _ =>
+            }
           )
           println("combining Patient")
           combine_pat(config, hc, input_dir_file_system, output_dir_file_system)
@@ -97,7 +199,7 @@ object PreprocFIHR {
     }
   }
 
-  private def proc_resc(config: PreprocFIHRConfig, hc: Configuration, encounter_ids: Seq[String], input_dir_file_system: FileSystem, resc_type: String, output_dir_file_system: FileSystem) {
+  private def proc_resc(config: PreprocFIHRConfig, hc: Configuration, encounter_ids: Seq[String], input_dir_file_system: FileSystem, resc_type: ResourceType, output_dir_file_system: FileSystem) {
     import Implicits0._
     import Implicits1._
     val count = new AtomicInteger(0)
@@ -106,18 +208,7 @@ object PreprocFIHR {
 
     proc_gen(input_dir_file_system, config.input_dir, resc_dir, {
       case (obj1, f, i) =>
-        val obj : Resource = resc_type match {
-          case "Condition" =>
-            obj1.as[Condition]
-          case "Labs" =>
-            obj1.as[Labs]
-          case "Medication" =>
-            obj1.as[Medication]
-          case "Procedure" =>
-            obj1.as[Procedure]
-          case "BMI" =>
-            obj1.as[BMI]
-        }
+        val obj : Resource = resc_type.fromJson(obj1).asInstanceOf[Resource]
 
         val id = obj.id
         val patient_num = obj.subjectReference.split("/")(1)
@@ -136,19 +227,7 @@ object PreprocFIHR {
         }
 
         val output_file_path = new Path(output_file)
-        def parseFile : JsValue =
-          resc_type match {
-            case "Condition" =>
-              Json.toJson(obj.asInstanceOf[Condition])
-            case "Labs" =>
-              Json.toJson(obj.asInstanceOf[Labs])
-            case "Medication" =>
-              Json.toJson(obj.asInstanceOf[Medication])
-            case "Procedure" =>
-              Json.toJson(obj.asInstanceOf[Procedure])
-            case "BMI" =>
-              Json.toJson(obj.asInstanceOf[BMI])
-          }
+        def parseFile : JsValue = resc_type.toJson(obj)
         def writeFile(obj2 : JsValue) : Unit =
           Utils.writeToFile(hc, output_file, Json.stringify(obj2))
           
@@ -163,7 +242,7 @@ object PreprocFIHR {
   }
 
   private def proc_enc(config: PreprocFIHRConfig, hc: Configuration, input_dir_file_system: FileSystem, output_dir_file_system: FileSystem) {
-    val resc_type = "Encounter"
+    val resc_type = EncounterResourceType
     val resc_dir = config.resc_types(resc_type)
     import Implicits0._
     import Implicits1._
@@ -229,8 +308,8 @@ object PreprocFIHR {
   private def combine_pat(config: PreprocFIHRConfig, hc: Configuration, input_dir_file_system: FileSystem, output_dir_file_system: FileSystem) {
     import Implicits0._
     import Implicits1.patientReads
-    import Implicits2.{encounterReads, conditionReads, labsReads, bmiReads, medicationReads, procedureReads}
-    val resc_type = "Patient"
+    import Implicits2.{encounterReads, conditionReads, labReads, bmiReads, medicationReads, procedureReads}
+    val resc_type = PatientResourceType
     val resc_dir = config.resc_types(resc_type)
     val count = new AtomicInteger(0)
 
@@ -257,35 +336,26 @@ object PreprocFIHR {
               Utils.HDFSCollection(hc, input_enc_dir_path).foreach(encounter_dir => {
                 var enc = Utils.loadJson[Encounter](hc, encounter_dir)
                 val encounter_id = enc.id
-                config.resc_types.keys.foreach(resc_type => {
-                  val input_resc_dir = config.output_dir + "/" + resc_type + "/" + patient_num + "/" + encounter_id
-                  val input_resc_dir_path = new Path(input_resc_dir)
-                  if(output_dir_file_system.exists(input_resc_dir_path)) {
-                    println("found resource " + resc_type + "/" + patient_num + "/" + encounter_id)
-                    val objs = Utils.HDFSCollection(hc, input_resc_dir_path).map(input_resc_file_path =>
-                      try {
-                        val input_resc_file_input_stream = output_dir_file_system.open(input_resc_file_path)
-                        Json.parse(input_resc_file_input_stream)
-                      } catch {
-                        case e : Exception =>
-                          throw new Exception("error processing " + resc_type + " " + input_resc_file_path, e)
-                      }).toSeq
-                    resc_type match {
-                      case "Condition" =>
-                        enc = enc.copy(condition = objs.map(obj => obj.as[Condition]))
-                      case "Labs" =>
-                        enc = enc.copy(labs = objs.map(obj => obj.as[Labs]))
-                      case "BMI" =>
-                        enc = enc.copy(bmi = objs.map(obj => obj.as[BMI]))
-                      case "Medication" =>
-                        enc = enc.copy(medication = objs.map(obj => obj.as[Medication]))
-                      case "Procedure" =>
-                        enc = enc.copy(procedure = objs.map(obj => obj.as[Procedure]))
+                config.resc_types.keys.foreach{
+                  case resc_type : ResourceType => 
+                    val input_resc_dir = config.output_dir + "/" + resc_type + "/" + patient_num + "/" + encounter_id
+                    val input_resc_dir_path = new Path(input_resc_dir)
+                    if(output_dir_file_system.exists(input_resc_dir_path)) {
+                      println("found resource " + resc_type + "/" + patient_num + "/" + encounter_id)
+                      val objs = Utils.HDFSCollection(hc, input_resc_dir_path).map(input_resc_file_path =>
+                        try {
+                          val input_resc_file_input_stream = output_dir_file_system.open(input_resc_file_path)
+                          Json.parse(input_resc_file_input_stream)
+                        } catch {
+                          case e : Exception =>
+                            throw new Exception("error processing " + resc_type + " " + input_resc_file_path, e)
+                        }).toSeq
+                      enc = resc_type.setEncounter(enc, objs)
+                    } else {
+                      println("cannot find resource " + resc_type + "/" + patient_num + "/" + encounter_id)
                     }
-                  } else {
-                    println("cannot find resource " + resc_type + "/" + patient_num + "/" + encounter_id)
-                  }
-                })
+                  case _ =>
+                }
                 encs += enc
               })
             }

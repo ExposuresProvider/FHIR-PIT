@@ -30,8 +30,8 @@ object PreprocPerPatSeriesToVector {
   def map_condition(system : String, code : String) : Seq[String] =
     ConditionMapper.map_condition(system, code)
 
-  def sort_by_effectiveDateTime(labs : Seq[Labs]) : Seq[Labs] =
-    labs.sortWith((a, b) => {
+  def sort_by_effectiveDateTime(lab : Seq[Lab]) : Seq[Lab] =
+    lab.sortWith((a, b) => {
       val at = DateTime.parse(a.effectiveDateTime, ISODateTimeFormat.dateTimeParser())
       val bt = DateTime.parse(b.effectiveDateTime, ISODateTimeFormat.dateTimeParser())
       if(at == bt && a.value != b.value) {
@@ -40,33 +40,33 @@ object PreprocPerPatSeriesToVector {
       at.isBefore(bt)
     })
 
-  def map_labs(labs : Seq[Labs]) : Seq[(String, JsValue)] = {
-    val wbc = sort_by_effectiveDateTime(labs.filter(lab => lab.code == "6690-2")) // 26464-8
-    val hct = sort_by_effectiveDateTime(labs.filter(lab => lab.code == "20570-8")) // 24360-0
-    val plt = sort_by_effectiveDateTime(labs.filter(lab => lab.code == "26515-7")) // 7773
-    val fev1 = sort_by_effectiveDateTime(labs.filter(lab => lab.code == "20150-9")) // 52485-0
-    val fvc = sort_by_effectiveDateTime(labs.filter(lab => lab.code == "19870-5")) // 52485-0
-    val fev1fvc = sort_by_effectiveDateTime(labs.filter(lab => lab.code == "19926-5")) // 52485-0
+  def map_lab(lab : Seq[Lab]) : Seq[(String, JsValue)] = {
+    val wbc = sort_by_effectiveDateTime(lab.filter(lab => lab.code == "6690-2")) // 26464-8
+    val hct = sort_by_effectiveDateTime(lab.filter(lab => lab.code == "20570-8")) // 24360-0
+    val plt = sort_by_effectiveDateTime(lab.filter(lab => lab.code == "26515-7")) // 7773
+    val fev1 = sort_by_effectiveDateTime(lab.filter(lab => lab.code == "20150-9")) // 52485-0
+    val fvc = sort_by_effectiveDateTime(lab.filter(lab => lab.code == "19870-5")) // 52485-0
+    val fev1fvc = sort_by_effectiveDateTime(lab.filter(lab => lab.code == "19926-5")) // 52485-0
     val listBuf = new ListBuffer[(String, JsValue)]()
 
-    def extractColumns(labs: Seq[Labs], prefix: String) = {
-      if(!labs.isEmpty) {
+    def extractColumns(lab: Seq[Lab], prefix: String) = {
+      if(!lab.isEmpty) {
         Seq(
-          (f"${prefix}_FirstValue", JsNumber(labs.head.value.asInstanceOf[ValueQuantity].valueNumber)),
-          (f"${prefix}_FirstFlag", JsString(labs.head.flag.getOrElse(""))),
-          (f"${prefix}_LastValue", JsNumber(labs.last.value.asInstanceOf[ValueQuantity].valueNumber)),
-          (f"${prefix}_LastFlag", JsString(labs.last.flag.getOrElse("")))
+          (f"${prefix}_FirstValue", JsNumber(lab.head.value.asInstanceOf[ValueQuantity].valueNumber)),
+          (f"${prefix}_FirstFlag", JsString(lab.head.flag.getOrElse(""))),
+          (f"${prefix}_LastValue", JsNumber(lab.last.value.asInstanceOf[ValueQuantity].valueNumber)),
+          (f"${prefix}_LastFlag", JsString(lab.last.flag.getOrElse("")))
         )
       } else {
         Seq()
       }
     }
 
-    def extractColumns2(labs: Seq[Labs], prefix: String) = {
-      if(!labs.isEmpty) {
+    def extractColumns2(lab: Seq[Lab], prefix: String) = {
+      if(!lab.isEmpty) {
         Seq(
-          (f"${prefix}_FirstValue", JsNumber(labs.head.value.asInstanceOf[ValueQuantity].valueNumber)),
-          (f"${prefix}_LastValue", JsNumber(labs.last.value.asInstanceOf[ValueQuantity].valueNumber))
+          (f"${prefix}_FirstValue", JsNumber(lab.head.value.asInstanceOf[ValueQuantity].valueNumber)),
+          (f"${prefix}_LastValue", JsNumber(lab.last.value.asInstanceOf[ValueQuantity].valueNumber))
         )
       } else {
         Seq()
@@ -261,7 +261,7 @@ object PreprocPerPatSeriesToVector {
               case None =>
                 val med = enc.medication
                 val cond = enc.condition
-                val lab = enc.labs
+                val lab = enc.lab
                 val proc = enc.procedure
                 val bmi = enc.bmi
                 if(!med.isEmpty) {
@@ -300,7 +300,7 @@ object PreprocPerPatSeriesToVector {
             }
           })
 
-          pat.labs.foreach(cond => {
+          pat.lab.foreach(cond => {
             val condition_assertedDate_joda = DateTime.parse(cond.effectiveDateTime, ISODateTimeFormat.dateTimeParser())
             if (intv.contains(condition_assertedDate_joda)) {
               encounter_map.addBinding(condition_assertedDate_joda, Encounter("", "", None, None, None, Seq(), Seq(cond), Seq(), Seq(), Seq()))
@@ -328,7 +328,7 @@ object PreprocPerPatSeriesToVector {
                 var rec = rec0 + ("encounter_num" -> enc.id, "VisitType" -> enc.code.getOrElse(""))
                 val med = enc.medication
                 val cond = enc.condition
-                val lab = enc.labs
+                val lab = enc.lab
                 val proc = enc.procedure
                 val bmi = enc.bmi
 
@@ -342,7 +342,7 @@ object PreprocPerPatSeriesToVector {
                     rec += (n -> 1)
                   })
                 })
-                map_labs(lab).foreach(rec += _)
+                map_lab(lab).foreach(rec += _)
 
                 rec += ("ObesityBMIVisit" -> (map_bmi(bmi) match {
                   case Some(x) => x
@@ -382,7 +382,7 @@ object PreprocPerPatSeriesToVector {
                     b.endDate
                 }
 
-                Encounter(a.id + "|" + b.id, a.subjectReference, code, startDate, endDate, a.condition ++ b.condition, a.labs ++ b.labs, a.medication ++ b.medication, a.procedure ++ b.procedure, a.bmi ++ b.bmi)
+                Encounter(a.id + "|" + b.id, a.subjectReference, code, startDate, endDate, a.condition ++ b.condition, a.lab ++ b.lab, a.medication ++ b.medication, a.procedure ++ b.procedure, a.bmi ++ b.bmi)
 
               }
 

@@ -22,12 +22,12 @@ case class Patient(
   encounter : Seq[Encounter],
   medication : Seq[Medication], // some medications don't have valid encounter id, add them here
   condition : Seq[Condition], // some conditions don't have valid encounter id, add them here
-  labs : Seq[Labs], // some labs don't have valid encounter id, add them here
+  lab : Seq[Lab], // some lab don't have valid encounter id, add them here
   procedure : Seq[Procedure], // some procedures don't have valid encounter id, add them here
   bmi : Seq[BMI] // some bmis don't have valid encounter id, add them here
 )
 
-case class Encounter(id : String, subjectReference : String, code : Option[String], startDate : Option[String], endDate : Option[String], condition: Seq[Condition], labs: Seq[Labs], medication: Seq[Medication], procedure: Seq[Procedure], bmi: Seq[BMI])
+case class Encounter(id : String, subjectReference : String, code : Option[String], startDate : Option[String], endDate : Option[String], condition: Seq[Condition], lab: Seq[Lab], medication: Seq[Medication], procedure: Seq[Procedure], bmi: Seq[BMI])
 
 sealed trait Resource {
   val id : String
@@ -36,7 +36,7 @@ sealed trait Resource {
 }
 
 case class Condition(override val id : String, override val subjectReference : String, override val contextReference : Option[String], system : String, code : String, assertedDate : String) extends Resource
-case class Labs(override val id : String, override val subjectReference : String, override val contextReference : Option[String], code : String, value : Value, flag : Option[String], effectiveDateTime : String) extends Resource
+case class Lab(override val id : String, override val subjectReference : String, override val contextReference : Option[String], code : String, value : Value, flag : Option[String], effectiveDateTime : String) extends Resource
 case class Medication(override val id : String, override val subjectReference : String, override val contextReference : Option[String], medication : String, authoredOn : String, start: String, end: Option[String]) extends Resource
 case class Procedure(override val id : String, override val subjectReference : String, override val contextReference : Option[String], system : String, code : String, performedDateTime : String) extends Resource
 case class BMI(override val id : String, override val subjectReference : String, override val contextReference : Option[String], code : String, value : Value) extends Resource
@@ -57,7 +57,7 @@ object Implicits0 {
   implicit val valueStringWrites: Writes[ValueString] = Json.writes[ValueString]
 
   implicit val conditionWrites: Writes[Condition] = Json.writes[Condition]
-  implicit val labsWrites: Writes[Labs] = Json.writes[Labs]
+  implicit val labWrites: Writes[Lab] = Json.writes[Lab]
   implicit val bmiWrites: Writes[BMI] = Json.writes[BMI]
   implicit val medicationWrites: Writes[Medication] = Json.writes[Medication]
   implicit val procedureWrites: Writes[Procedure] = Json.writes[Procedure]
@@ -72,7 +72,7 @@ object Implicits2 {
   implicit val valueReads: Reads[Value] = valueQuantityReads.map(a => a.asInstanceOf[Value]) orElse valueStringReads.map(a => a.asInstanceOf[Value])
 
   implicit val conditionReads: Reads[Condition] = Json.reads[Condition]
-  implicit val labsReads: Reads[Labs] = Json.reads[Labs]
+  implicit val labReads: Reads[Lab] = Json.reads[Lab]
   implicit val bmiReads: Reads[BMI] = Json.reads[BMI]
   implicit val medicationReads: Reads[Medication] = Json.reads[Medication]
   implicit val procedureReads: Reads[Procedure] = Json.reads[Procedure]
@@ -126,8 +126,8 @@ object Implicits1 {
       JsSuccess(Encounter(id, subjectReference, code, startDate, endDate, Seq(), Seq(), Seq(), Seq(), Seq()))
     }
   }
-  implicit val labsReads: Reads[Labs] = new Reads[Labs] {
-    override def reads(json: JsValue): JsResult[Labs] = {
+  implicit val labReads: Reads[Lab] = new Reads[Lab] {
+    override def reads(json: JsValue): JsResult[Lab] = {
       val resource = json \ "resource"
       val id = (resource \ "id").as[String]
       val subjectReference = (resource \ "subject" \ "reference").as[String]
@@ -146,7 +146,7 @@ object Implicits1 {
       }
       val flag = None
       val effectiveDateTime = (resource \ "effectiveDateTime").as[String]
-      JsSuccess(Labs(id, subjectReference, contextReference, code, value, flag, effectiveDateTime))
+      JsSuccess(Lab(id, subjectReference, contextReference, code, value, flag, effectiveDateTime))
     }
   }
   implicit val bmiReads: Reads[BMI] = new Reads[BMI] {
