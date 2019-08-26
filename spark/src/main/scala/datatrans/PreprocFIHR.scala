@@ -294,7 +294,11 @@ object PreprocFIHR {
       if (!(obj \ "resourceType").isDefined) {
         count += 1
       } else {
-        count += (obj \ "entry").get.as[JsArray].value.size
+        if((obj \ "entry").isDefined) {
+          count += (obj \ "entry").get.as[JsArray].value.size
+        } else {
+          println("cannot find entry field " + input_file_path.getName)
+        }
       }
     }
     count
