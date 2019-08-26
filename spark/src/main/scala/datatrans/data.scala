@@ -119,8 +119,8 @@ object Implicits1 {
       val geo = extension.filter(json => (json \ "url").as[String] == "http://hl7.org/fhir/StructureDefinition/geolocation")
       assert(geo.size == 1, id)
       val latlon = (geo(0) \ "extension").as[Seq[JsValue]]
-      val lat = (latlon.filter(json => (json \ "url").as[String] == "latitude")(0) \ "valueDecimal").as[Double]
-      val lon = (latlon.filter(json => (json \ "url").as[String] == "longitude")(0) \ "valueDecimal").as[Double]
+      val lat = (latlon.filter(json => (json \ "url").as[String] == "Latitude")(0) \ "valueDecimal").as[Double]
+      val lon = (latlon.filter(json => (json \ "url").as[String] == "Longitude")(0) \ "valueDecimal").as[Double]
       JsSuccess(Patient(id, race, ethnicity, gender, birthDate, lat, lon, Seq(), Seq(), Seq(), Seq(), Seq(), Seq()))
     }
   }
