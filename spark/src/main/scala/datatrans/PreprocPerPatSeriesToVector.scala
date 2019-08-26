@@ -27,8 +27,8 @@ case class PreprocPerPatSeriesToVectorConfig(
 )
 
 object PreprocPerPatSeriesToVector {
-  def map_condition(system : String, code : String) : Seq[String] =
-    ConditionMapper.map_condition(system, code)
+  def map_condition(coding: Coding) : Seq[String] =
+    ConditionMapper.map_condition(coding.system, coding.code)
 
   def sort_by_effectiveDateTime(lab : Seq[Lab]) : Seq[Lab] =
     lab.sortWith((a, b) => {
@@ -41,12 +41,14 @@ object PreprocPerPatSeriesToVector {
     })
 
   def map_lab(lab : Seq[Lab]) : Seq[(String, JsValue)] = {
-    val wbc = sort_by_effectiveDateTime(lab.filter(lab => lab.code == "6690-2")) // 26464-8
-    val hct = sort_by_effectiveDateTime(lab.filter(lab => lab.code == "20570-8")) // 24360-0
-    val plt = sort_by_effectiveDateTime(lab.filter(lab => lab.code == "26515-7")) // 7773
-    val fev1 = sort_by_effectiveDateTime(lab.filter(lab => lab.code == "20150-9")) // 52485-0
-    val fvc = sort_by_effectiveDateTime(lab.filter(lab => lab.code == "19870-5")) // 52485-0
-    val fev1fvc = sort_by_effectiveDateTime(lab.filter(lab => lab.code == "19926-5")) // 52485-0
+    def filter_by_code(code : String) =
+      sort_by_effectiveDateTime(lab.filter(lab => lab.coding.exists((x) => x.code == code)))
+    val wbc = filter_by_code("6690-2") // 26464-8
+    val hct = filter_by_code("20570-8") // 24360-0
+    val plt = filter_by_code("26515-7") // 7773
+    val fev1 = filter_by_code("20150-9") // 52485-0
+    val fvc = filter_by_code("19870-5") // 52485-0
+    val fev1fvc = filter_by_code("19926-5") // 52485-0
     val listBuf = new ListBuffer[(String, JsValue)]()
 
     def extractColumns(lab: Seq[Lab], prefix: String) = {
@@ -82,7 +84,7 @@ object PreprocPerPatSeriesToVector {
 
   }
 
-  def map_procedure(system : String, code : String) : Seq[String] = Seq() /* {
+  def map_procedure(coding : Coding) : Seq[String] = Seq() /* {
     system match {
       case "http://www.ama-assn.org/go/cpt/" =>
         code match {
@@ -120,25 +122,30 @@ object PreprocPerPatSeriesToVector {
     }
   } */
 
-  def map_medication(medmap : Option[Map[String, String]], code : String) : Seq[String] = {
-    medmap match {
-      case Some(mm) =>
-        mm.get(code.stripPrefix("Medication/").stripSuffix("|ADS")) match {
-          case Some(ms) =>
-            val medfiltered = meds.filter(med => ms.toLowerCase.contains(med.toLowerCase))
-            // println("medication " + ms + " " + meds + " " + medfiltered)
-            medfiltered
+  def map_medication(medmap : Option[Map[String, String]], coding : Coding) : Seq[String] = {
+    coding.display match {
+      case None =>
+        medmap match {
+          case Some(mm) =>
+            mm.get(coding.code.stripPrefix("Medication/").stripSuffix("|ADS")) match {
+              case Some(ms) =>
+                val medfiltered = meds.filter(med => ms.toLowerCase.contains(med.toLowerCase))
+                // println("medication " + ms + " " + meds + " " + medfiltered)
+                medfiltered
+              case None =>
+                println("cannot find medication name for code " + coding.code)
+                Seq()
+            }
           case None =>
-            println("cannot find medication name for code " + code)
+
+            println("no display attribute and no medication map")
+
+
+
             Seq()
         }
-      case None =>
-
-        // println("medication")
-
-
-
-        Seq()
+      case Some(s) =>
+        meds.filter(med => s.toLowerCase.contains(med.toLowerCase))
     }
   }
 
@@ -175,9 +182,11 @@ object PreprocPerPatSeriesToVector {
     }
 
   def map_bmi(bmi : Seq[BMI]) : Option[Double] = {
-    val bmiQuas = bmi.filter(m => m.code == LOINC.BMI)
-    val heightQuas = bmi.filter(m => m.code == LOINC.BODY_HEIGHT)
-    val weightQuas = bmi.filter(m => m.code == LOINC.BODY_WEIGHT)
+    def filter_by_code(code : String) =
+      bmi.filter(bmi => bmi.coding.exists((x) => x.code == code))
+    val bmiQuas = filter_by_code(LOINC.BMI)
+    val heightQuas = filter_by_code(LOINC.BODY_HEIGHT)
+    val weightQuas = filter_by_code(LOINC.BODY_WEIGHT)
     bmiQuas match {
       case Seq() =>
         (heightQuas, weightQuas) match {
@@ -265,8 +274,8 @@ object PreprocPerPatSeriesToVector {
                 val proc = enc.procedure
                 val bmi = enc.bmi
                 if(!med.isEmpty) {
-                  // med encounter use authorized on date
-                  Some(DateTime.parse(med(0).authoredOn, ISODateTimeFormat.dateTimeParser()))
+                  // med encounter use start date
+                  Some(DateTime.parse(med(0).start, ISODateTimeFormat.dateTimeParser()))
                 } else if(!cond.isEmpty) {
                   // cond encounter use asserted date
                   Some(DateTime.parse(cond(0).assertedDate, ISODateTimeFormat.dateTimeParser()))
@@ -287,7 +296,7 @@ object PreprocPerPatSeriesToVector {
           })
 
           pat.medication.foreach(med => {
-            val medication_authoredOn_joda = DateTime.parse(med.authoredOn, ISODateTimeFormat.dateTimeParser())
+            val medication_authoredOn_joda = DateTime.parse(med.start, ISODateTimeFormat.dateTimeParser())
             if (intv.contains(medication_authoredOn_joda)) {
               encounter_map.addBinding(medication_authoredOn_joda, Encounter("", "", None, None, None, Seq(), Seq(), Seq(med), Seq(), Seq()))
             }
@@ -325,23 +334,23 @@ object PreprocPerPatSeriesToVector {
               rec0 += ("start_date" -> encounter_start_date_joda.toString("yyyy-MM-dd"), "AgeVisit" -> age) 
 
               def toVector(enc : Encounter) = {
-                var rec = rec0 + ("encounter_num" -> enc.id, "VisitType" -> enc.code.getOrElse(""))
+                var rec = rec0 + ("encounter_num" -> enc.id, "VisitType" -> enc.classAttr.map(_.code).getOrElse(""))
                 val med = enc.medication
                 val cond = enc.condition
                 val lab = enc.lab
                 val proc = enc.procedure
                 val bmi = enc.bmi
 
-                med.foreach(m => {
-                  map_medication(medmap, m.medication).foreach(n => {
+                med.foreach(m =>
+                  m.coding.foreach(coding => map_medication(medmap, coding).foreach(n => {
                     rec += (n -> 1)
-                  })
-                })
-                cond.foreach(m => {
-                  map_condition(m.system, m.code).foreach(n => {
+                  }))
+                )
+                cond.foreach(m =>
+                  m.coding.foreach(coding => map_condition(coding).foreach(n => {
                     rec += (n -> 1)
-                  })
-                })
+                  }))
+                )
                 map_lab(lab).foreach(rec += _)
 
                 rec += ("ObesityBMIVisit" -> (map_bmi(bmi) match {
@@ -349,26 +358,32 @@ object PreprocPerPatSeriesToVector {
                   case None => -1
                 }))
 
-                proc.foreach(m => {
-                  map_procedure(m.system, m.code).foreach(n => {
+                proc.foreach(m =>
+                  m.coding.foreach(coding => map_procedure(coding).foreach(n => {
                     rec += (n -> 1)
-                  })
-                })
+                  }))
+                )
                 recs.append(rec)
               }
 
-              def mergeEncounter(a: Encounter, b: Encounter): Encounter = {
-                val code = a.code match {
+              def mergeSetString(a: String, b: String): String =
+                (a.split("[|]").toSet ++ b.split("[|]").toSet).toSeq.sorted.mkString("|")
+
+              def mergeOption[T](a:Option[T], b:Option[T], f:(T,T)=>T): Option[T] =
+                a match {
                   case Some(ac) =>
-                    b.code match {
+                    b match {
                       case Some(bc) =>
-                        Some((ac.split("[|]").toSet ++ bc.split("[|]").toSet).toSeq.sorted.mkString("|"))
+                        Some(f(ac,bc))
                       case None =>
-                        a.code
+                        a
                     }
                   case None =>
-                    b.code
+                    b
                 }
+
+              def mergeEncounter(a: Encounter, b: Encounter): Encounter = {
+                val classAttr = mergeOption(a.classAttr, b.classAttr, (ac:Coding, bc:Coding) => Coding(mergeSetString(ac.system, bc.system), mergeSetString(ac.code, bc.code), mergeOption(ac.display, bc.display, mergeSetString)))
                 val startDate = a.startDate match {
                   case Some(ac) =>
                     a.startDate
@@ -382,7 +397,7 @@ object PreprocPerPatSeriesToVector {
                     b.endDate
                 }
 
-                Encounter(a.id + "|" + b.id, a.subjectReference, code, startDate, endDate, a.condition ++ b.condition, a.lab ++ b.lab, a.medication ++ b.medication, a.procedure ++ b.procedure, a.bmi ++ b.bmi)
+                Encounter(a.id + "|" + b.id, a.subjectReference, classAttr, startDate, endDate, a.condition ++ b.condition, a.lab ++ b.lab, a.medication ++ b.medication, a.procedure ++ b.procedure, a.bmi ++ b.bmi)
 
               }
 
