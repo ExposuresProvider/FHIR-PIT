@@ -122,9 +122,9 @@ object Implicits1 {
     override def reads(json: JsValue): JsResult[Patient] = {
       val resource = json \ "resource"
       val id = (resource \ "id").as[String]
-      val extension = (resource \ "extension").as[Seq[JsValue]]
-      val race = extension.filter(json => (json \ "url").as[String] == "http://hl7.org/fhir/v3/Race").map(json => (json \ "valueString").as[String])
-      val ethnicity = extension.filter(json => (json \ "url").as[String] == "http://hl7.org/fhir/v3/Ethnicity").map(json => (json \ "valueString").as[String])
+      val extension = (resource \ "extension").asOpt[Seq[JsValue]]
+      val race = extension.map(x => x.filter(json => (json \ "url").as[String] == "http://hl7.org/fhir/v3/Race").map(json => (json \ "valueString").as[String])).getOrElse(Seq())
+      val ethnicity = extension.map(x => x.filter(json => (json \ "url").as[String] == "http://hl7.org/fhir/v3/Ethnicity").map(json => (json \ "valueString").as[String])).getOrElse(Seq())
       val gender = resource \ "gender" match {
         case JsDefined(x) => x.as[String]
         case JsUndefined() => "Unknown"
