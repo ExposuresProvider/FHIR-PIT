@@ -420,7 +420,15 @@ object PreprocFIHR {
       try {
         val output_file = config.output_dir + "/Patient/" + patient_num
         val pat = Utils.loadJson[Patient](new Configuration(), new Path(output_file))
-        (patient_num, pat.lat, pat.lon)
+        if (pat.address.length == 0) {
+          println("no lat lon")
+          (patient_num, 0xffff, 0xffff)
+        } else {
+          if(pat.address.length > 1) {
+            println("more than one lat lon using first")
+          }
+          (patient_num, pat.address(0).lat, pat.address(0).lon)
+        }
       } catch {
         case e : Exception =>
           throw new Exception("error processing Patient " + patient_num, e)

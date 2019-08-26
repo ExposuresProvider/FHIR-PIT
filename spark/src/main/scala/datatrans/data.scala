@@ -17,14 +17,18 @@ case class Patient(
   ethnicity : Seq[String],
   gender : String,
   birthDate : String,
-  lat : Double,
-  lon : Double,
+  address: Seq[Address],
   encounter : Seq[Encounter],
   medication : Seq[Medication], // some medications don't have valid encounter id, add them here
   condition : Seq[Condition], // some conditions don't have valid encounter id, add them here
   lab : Seq[Lab], // some lab don't have valid encounter id, add them here
   procedure : Seq[Procedure], // some procedures don't have valid encounter id, add them here
   bmi : Seq[BMI] // some bmis don't have valid encounter id, add them here
+)
+
+case class Address(
+  lat : Double,
+  lon : Double
 )
 
 case class Encounter(id : String, subjectReference : String, classAttr : Option[Coding], startDate : Option[String], endDate : Option[String], condition: Seq[Condition], lab: Seq[Lab], medication: Seq[Medication], procedure: Seq[Procedure], bmi: Seq[BMI])
@@ -58,6 +62,7 @@ object Implicits0 {
   implicit val valueQuantityWrites: Writes[ValueQuantity] = Json.writes[ValueQuantity]
   implicit val valueStringWrites: Writes[ValueString] = Json.writes[ValueString]
   implicit val codingWrites: Writes[Coding] = Json.writes[Coding]
+  implicit val addressWrites: Writes[Address] = Json.writes[Address]
 
   implicit val conditionWrites: Writes[Condition] = Json.writes[Condition]
   implicit val labWrites: Writes[Lab] = Json.writes[Lab]
@@ -74,6 +79,7 @@ object Implicits2 {
 
   implicit val valueReads: Reads[Value] = valueQuantityReads.map(a => a.asInstanceOf[Value]) orElse valueStringReads.map(a => a.asInstanceOf[Value])
   implicit val codingReads: Reads[Coding] = Json.reads[Coding]
+  implicit val addressReads: Reads[Address] = Json.reads[Address]
 
   implicit val conditionReads: Reads[Condition] = Json.reads[Condition]
   implicit val labReads: Reads[Lab] = Json.reads[Lab]
@@ -104,6 +110,14 @@ object Implicits1 {
       JsSuccess(Coding(system, code, display))
     }
   }
+  implicit val addressReads: Reads[Address] = new Reads[Address] {
+    override def reads(json: JsValue): JsResult[Address] = {
+      val latlon = (json \ "extension").as[Seq[JsValue]]
+      val lat = (latlon.filter(json => (json \ "url").as[String].toLowerCase == "latitude")(0) \ "valueDecimal").as[Double]
+      val lon = (latlon.filter(json => (json \ "url").as[String].toLowerCase == "longitude")(0) \ "valueDecimal").as[Double]
+      JsSuccess(Address(lat, lon))
+    }
+  }
   implicit val patientReads: Reads[Patient] = new Reads[Patient] {
     override def reads(json: JsValue): JsResult[Patient] = {
       val resource = json \ "resource"
@@ -116,12 +130,8 @@ object Implicits1 {
         case JsUndefined() => "Unknown"
       }
       val birthDate = (resource \ "birthDate").as[String]
-      val geo = extension.filter(json => (json \ "url").as[String] == "http://hl7.org/fhir/StructureDefinition/geolocation")
-      assert(geo.size == 1, id)
-      val latlon = (geo(0) \ "extension").as[Seq[JsValue]]
-      val lat = (latlon.filter(json => (json \ "url").as[String] == "Latitude")(0) \ "valueDecimal").as[Double]
-      val lon = (latlon.filter(json => (json \ "url").as[String] == "Longitude")(0) \ "valueDecimal").as[Double]
-      JsSuccess(Patient(id, race, ethnicity, gender, birthDate, lat, lon, Seq(), Seq(), Seq(), Seq(), Seq(), Seq()))
+      val address = (resource \ "addresss").asOpt[Seq[JsValue]].map(x=>x.flatMap(x => (x \ "extension").as[Seq[Address]])).getOrElse(Seq())
+      JsSuccess(Patient(id, race, ethnicity, gender, birthDate, address, Seq(), Seq(), Seq(), Seq(), Seq(), Seq()))
     }
   }
   implicit val conditionReads: Reads[Condition] = new Reads[Condition] {
