@@ -198,10 +198,14 @@ object PreprocFIHR {
       if (!(obj \ "resourceType").isDefined) {
         proc((obj.as[JsObject], input_file_path.getName, 0))
       } else {
-        val entry = (obj \ "entry").get.as[List[JsObject]]
-        val n = entry.size
+        if((obj \ "entry").isDefined) {
+          val entry = (obj \ "entry").get.as[List[JsObject]]
+          val n = entry.size
 
-        entry.par.zipWithIndex.map({case (o,i) => (o,input_file_path.getName,i)}).foreach(proc)
+          entry.par.zipWithIndex.map({case (o,i) => (o,input_file_path.getName,i)}).foreach(proc)
+        } else {
+          println("cannot find entry field " + input_file_path.getName)
+        }
       }
     }
   }
