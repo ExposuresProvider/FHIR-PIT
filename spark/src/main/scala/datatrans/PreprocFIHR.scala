@@ -153,12 +153,12 @@ object PreprocFIHR {
           val output_dir_file_system = output_dir_path.getFileSystem(hc)
 
           println("processing Encounter")
-          if (!config.skip_preproc.contains("Encounter")) {
+          if (!config.skip_preproc.contains(EncounterResourceType.toString)) {
             proc_enc(config, hc, input_dir_file_system, output_dir_file_system)
           }
 
           println("loading Encounter ids")
-          val encounter_ids = load_encounter_ids(input_dir_file_system, config.input_directory)
+          val encounter_ids = load_encounter_ids(input_dir_file_system, config.input_directory, config.resc_types(EncounterResourceType))
           println("processing Resources")
           config.resc_types.keys.foreach(resc_type =>
             resc_type match {
@@ -308,8 +308,8 @@ object PreprocFIHR {
     count
   }
 
-  private def load_encounter_ids(input_dir_file_system: FileSystem, input_dir0: String) : Seq[String] = {
-    val input_dir = input_dir0 + "/Encounter"
+  private def load_encounter_ids(input_dir_file_system: FileSystem, input_dir0: String, resc_dir: String) : Seq[String] = {
+    val input_dir = input_dir0 + "/" + resc_dir
     val input_dir_path = new Path(input_dir)
     val itr = input_dir_file_system.listFiles(input_dir_path, false)
     val encounter_ids = ListBuffer[String]()
@@ -338,13 +338,13 @@ object PreprocFIHR {
 
           println("processing " + resc_type + " " + count.incrementAndGet + " / " + n + " " + patient_num)
 
-          val output_file = config.output_directory + "/Patient/" + patient_num
+          val output_file = config.output_directory + "/" + config.resc_types(PatientResourceType) + "/" + patient_num
           val output_file_path = new Path(output_file)
           if (output_dir_file_system.exists(output_file_path)) {
             println(output_file + " exists")
           } else {
             // encounter 
-            val input_enc_dir = config.output_directory + "/Encounter/" + patient_num
+            val input_enc_dir = config.output_directory + "/" + config.resc_types(EncounterResourceType) + "/" + patient_num
             val input_enc_dir_path = new Path(input_enc_dir)
             val encs = ListBuffer[Encounter]()
             if(output_dir_file_system.exists(input_enc_dir_path)) {
@@ -353,10 +353,10 @@ object PreprocFIHR {
                 val encounter_id = enc.id
                 config.resc_types.keys.foreach{
                   case resc_type : ResourceType => 
-                    val input_resc_dir = config.output_directory + "/" + resc_type + "/" + patient_num + "/" + encounter_id
+                    val input_resc_dir = config.output_directory + "/" + config.resc_types(resc_type) + "/" + patient_num + "/" + encounter_id
                     val input_resc_dir_path = new Path(input_resc_dir)
                     if(output_dir_file_system.exists(input_resc_dir_path)) {
-                      println("found resource " + resc_type + "/" + patient_num + "/" + encounter_id)
+                      println("found resource " + config.resc_types(resc_type) + "/" + patient_num + "/" + encounter_id)
                       val objs = Utils.HDFSCollection(hc, input_resc_dir_path).map(input_resc_file_path =>
                         try {
                           val input_resc_file_input_stream = output_dir_file_system.open(input_resc_file_path)
@@ -367,7 +367,7 @@ object PreprocFIHR {
                         }).toSeq
                       enc = resc_type.setEncounter(enc, objs)
                     } else {
-                      println("cannot find resource " + resc_type + "/" + patient_num + "/" + encounter_id)
+                      println("cannot find resource " + config.resc_types(resc_type) + "/" + patient_num + "/" + encounter_id)
                     }
                   case _ =>
                 }
@@ -376,7 +376,7 @@ object PreprocFIHR {
             }
             pat = pat.copy(encounter = encs)
             // medication
-            val input_med_dir = config.output_directory + "/Medication/" + patient_num
+            val input_med_dir = config.output_directory + "/" + config.resc_types(MedicationRequestResourceType) + "/" + patient_num
             val input_med_dir_path = new Path(input_med_dir)
             val meds = ListBuffer[Medication]()
             if(output_dir_file_system.exists(input_med_dir_path)) {
@@ -387,7 +387,7 @@ object PreprocFIHR {
             }
             pat = pat.copy(medication = meds)
             // conds
-            val input_cond_dir = config.output_directory + "/conds/" + patient_num
+            val input_cond_dir = config.output_directory + "/" + config.resc_types(ConditionResourceType) + "/" + patient_num
             val input_cond_dir_path = new Path(input_cond_dir)
             val conds = ListBuffer[Condition]()
             if(output_dir_file_system.exists(input_cond_dir_path)) {
@@ -414,7 +414,7 @@ object PreprocFIHR {
     import Implicits2._
 
     val resc_type = "Patient"
-    val pat_dir = config.output_directory + "/Patient"
+    val pat_dir = config.output_directory + "/" + config.resc_types(PatientResourceType)
     val pat_dir_path = new Path(pat_dir)
     val pat_dir_df = output_dir_file_system.listStatus(pat_dir_path, new PathFilter {
       override def accept(path : Path): Boolean = output_dir_file_system.isFile(path)
@@ -423,7 +423,7 @@ object PreprocFIHR {
     val out_df = pat_dir_df.map(patient_num => {
       println("processing " + patient_num)
       try {
-        val output_file = config.output_directory + "/Patient/" + patient_num
+        val output_file = config.output_directory + "/" + config.resc_types(PatientResourceType) + "/" + patient_num
         val pat = Utils.loadJson[Patient](new Configuration(), new Path(output_file))
         if (pat.address.length == 0) {
           println("no lat lon")
