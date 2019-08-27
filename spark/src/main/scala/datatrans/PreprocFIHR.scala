@@ -163,7 +163,7 @@ object PreprocFIHR {
           config.resc_types.keys.foreach(resc_type =>
             resc_type match {
               case ty : ResourceType =>
-                  if(!config.skip_preproc.contains(resc_type)) 
+                  if(!config.skip_preproc.contains(resc_type.toString)) 
                     proc_resc(config, hc, encounter_ids, input_dir_file_system, resc_type.asInstanceOf[ResourceType], output_dir_file_system)
               case _ =>
             }
@@ -408,6 +408,7 @@ object PreprocFIHR {
 
   }
 
+  case class PatientGeo(patient_num: String, lat: Double, lon: Double)
   private def gen_geodata(spark: SparkSession, config: PreprocFIHRConfig, hc: Configuration, output_dir_file_system: FileSystem) {
     import spark.implicits._
     import Implicits2._
@@ -426,21 +427,21 @@ object PreprocFIHR {
         val pat = Utils.loadJson[Patient](new Configuration(), new Path(output_file))
         if (pat.address.length == 0) {
           println("no lat lon")
-          (patient_num, 0xffff, 0xffff)
+          PatientGeo(patient_num, 0xffff, 0xffff)
         } else {
           if(pat.address.length > 1) {
             println("more than one lat lon using first")
           }
-          (patient_num, pat.address(0).lat, pat.address(0).lon)
+          PatientGeo(patient_num, pat.address(0).lat, pat.address(0).lon)
         }
       } catch {
         case e : Exception =>
           throw new Exception("error processing Patient " + patient_num, e)
       }
-    }).toDF("patient_num", "lat", "lon")
+    })
 
     val out_file = config.output_dir + "/geo.csv"
-    Utils.writeDataframe(hc, out_file, out_df)
+    Utils.writeDataframe(hc, out_file, out_df.toDF())
 
 
   }
