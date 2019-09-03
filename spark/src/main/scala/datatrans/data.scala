@@ -104,8 +104,9 @@ object Implicits1 {
   }
   implicit val codingReads: Reads[Coding] = new Reads[Coding] {
     override def reads(json: JsValue): JsResult[Coding] = {
-      val system = (json \ "system").as[String]
       val code = (json \ "code").as[String]
+      // set system to empty string if code is 99999
+      val system = if(code == "99999") "" else (json \ "system").as[String] 
       val display = (json \ "display").asOpt[String]
       JsSuccess(Coding(system, code, display))
     }
