@@ -17,102 +17,7 @@ import com.github.plokhotnyuk.jsoniter_scala.core._
 
 import Implicits._
 
-object PreprocFHIRResourceType {
-  sealed trait JsonifiableType {
-    type JsonType
-    def fromJson(obj : JsValue):JsonType
-  }
-  sealed trait ResourceType extends JsonifiableType {
-    def setEncounter(enc: Encounter, objs: Seq[JsValue]): Encounter
-  }
-  case object EncounterResourceType extends JsonifiableType {
-    type JsonType = Encounter
-    override def fromJson(obj : JsValue):JsonType =
-      obj.as[JsonType]
-    override def toString() = "Encounter"
-  }
-  case object PatientResourceType extends JsonifiableType {
-    type JsonType = Patient
-    override def fromJson(obj : JsValue):JsonType =
-      obj.as[JsonType]
-    override def toString() = "Patient"
-  }
-  case object LabResourceType extends ResourceType {
-    type JsonType = Lab
-    override def fromJson(obj : JsValue):JsonType =
-      obj.as[JsonType]
-    override def setEncounter(enc: Encounter, objs: Seq[JsValue]) : Encounter =
-      enc.copy(lab = objs.map(obj => obj.as[Lab]))
-    override def toString() = "Lab"
-  }
-  case object ConditionResourceType extends ResourceType {
-    type JsonType = Condition
-    override def fromJson(obj : JsValue):JsonType =
-      obj.as[JsonType]
-    override def setEncounter(enc: Encounter, objs: Seq[JsValue]) : Encounter =
-      enc.copy(condition = objs.map(obj => obj.as[Condition]))
-    override def toString() = "Condition"
-  }
-  case object MedicationRequestResourceType extends ResourceType {
-    type JsonType = Medication
-    override def fromJson(obj : JsValue):JsonType =
-      obj.as[JsonType]
-    override def setEncounter(enc: Encounter, objs: Seq[JsValue]) : Encounter =
-      enc.copy(medication = objs.map(obj => obj.as[Medication]))
-    override def toString() = "MedicationRequest"
-  }
-  case object ProcedureResourceType extends ResourceType {
-    type JsonType = Procedure
-    override def fromJson(obj : JsValue):JsonType =
-      obj.as[JsonType]
-    override def setEncounter(enc: Encounter, objs: Seq[JsValue]) : Encounter =
-      enc.copy(procedure = objs.map(obj => obj.as[Procedure]))
-    override def toString() = "Procedure"
-  }
-  case object BMIResourceType extends ResourceType {
-    type JsonType = BMI
-    override def fromJson(obj : JsValue):JsonType =
-      obj.as[JsonType]
-    override def setEncounter(enc: Encounter, objs: Seq[JsValue]) : Encounter =
-      enc.copy(bmi = objs.map(obj => obj.as[BMI]))
-    override def toString() = "BMI"
-  }
-
-  object MyYamlProtocol extends DefaultYamlProtocol {
-    implicit val resourceTypeFormat = new YamlFormat[JsonifiableType] {
-      def write(x: JsonifiableType) = StringYamlFormat.write(x.toString())
-      def read(value: YamlValue) = StringYamlFormat.read(value) match {
-        case "Condition" =>
-          ConditionResourceType
-        case "Lab" =>
-          LabResourceType
-        case "MedicationRequest" =>
-          MedicationRequestResourceType
-        case "Procedure" =>
-          ProcedureResourceType
-        case "BMI" =>
-          BMIResourceType
-        case "Encounter" =>
-          EncounterResourceType
-        case "Patient" =>
-          PatientResourceType
-        case a =>
-          throw new RuntimeException("unsupported resource type " + a)
-      }
-    }
-
-    implicit val preprocFHIRConfigFormat = yamlFormat4(PreprocFIHRConfig)
-  }
-}
-
 import PreprocFHIRResourceType._
-
-case class PreprocFIHRConfig(
-  input_directory : String = "", // input directory of FHIR data
-  output_directory : String = "", // output directory of patient data
-  resc_types : Map[JsonifiableType, String] = Map(), // map resource type to directory, these are resources included in patient data
-  skip_preproc : Seq[String] = Seq() // skip preprocessing these resource as they have already benn preprocessed
-)
 
 object PreprocFIHR {
 
@@ -122,45 +27,11 @@ object PreprocFIHR {
 
     spark.sparkContext.setLogLevel("WARN")
 
-    // For implicit conversions like converting RDDs to DataFrames
-    // import spark.implicits._
     import MyYamlProtocol._
 
-    parseInput[PreprocFIHRConfig](args, preprocFHIRConfigFormat) match {
+    parseInput[PreprocFIHRConfig](args) match {
       case Some(config) =>
-
-        Utils.time {
-
-
-          val hc = spark.sparkContext.hadoopConfiguration
-          val input_dir_path = new Path(config.input_directory)
-          val input_dir_file_system = input_dir_path.getFileSystem(hc)
-
-          val output_dir_path = new Path(config.output_directory)
-          val output_dir_file_system = output_dir_path.getFileSystem(hc)
-
-          println("processing Encounter")
-          if (!config.skip_preproc.contains(EncounterResourceType.toString)) {
-            proc_enc(config, hc, input_dir_file_system, output_dir_file_system)
-          }
-
-          println("loading Encounter ids")
-          val encounter_ids = load_encounter_ids(input_dir_file_system, config.input_directory, config.resc_types(EncounterResourceType))
-          println("processing Resources")
-          config.resc_types.keys.foreach(resc_type =>
-            resc_type match {
-              case ty : ResourceType =>
-                  if(!config.skip_preproc.contains(resc_type.toString)) 
-                    proc_resc(config, hc, encounter_ids, input_dir_file_system, resc_type.asInstanceOf[ResourceType], output_dir_file_system)
-              case _ =>
-            }
-          )
-          println("combining Patient")
-          combine_pat(config, hc, input_dir_file_system, output_dir_file_system)
-          println("generating geodata")
-          gen_geodata(spark, config, hc, output_dir_file_system)
-
-        }
+        step(spark, config)
       case None =>
     }
 
@@ -168,6 +39,41 @@ object PreprocFIHR {
     spark.stop()
 
 
+  }
+
+  def step(spark: SparkSession, config: PreprocFIHRConfig): Unit = {
+    Utils.time {
+
+
+      val hc = spark.sparkContext.hadoopConfiguration
+      val input_dir_path = new Path(config.input_directory)
+      val input_dir_file_system = input_dir_path.getFileSystem(hc)
+
+      val output_dir_path = new Path(config.output_directory)
+      val output_dir_file_system = output_dir_path.getFileSystem(hc)
+
+      println("processing Encounter")
+      if (!config.skip_preproc.contains(EncounterResourceType.toString)) {
+        proc_enc(config, hc, input_dir_file_system, output_dir_file_system)
+      }
+
+      println("loading Encounter ids")
+      val encounter_ids = load_encounter_ids(input_dir_file_system, config.input_directory, config.resc_types(EncounterResourceType))
+      println("processing Resources")
+      config.resc_types.keys.foreach(resc_type =>
+        resc_type match {
+          case ty : ResourceType =>
+            if(!config.skip_preproc.contains(resc_type.toString))
+              proc_resc(config, hc, encounter_ids, input_dir_file_system, resc_type.asInstanceOf[ResourceType], output_dir_file_system)
+          case _ =>
+        }
+      )
+      println("combining Patient")
+      combine_pat(config, hc, input_dir_file_system, output_dir_file_system)
+      println("generating geodata")
+      gen_geodata(spark, config, hc, output_dir_file_system)
+
+    }
   }
 
   private def proc_gen(input_dir_file_system: FileSystem, input_dir0: String, resc_dir: String, proc : ((JsObject, String, Int)) => Unit) : Unit = {

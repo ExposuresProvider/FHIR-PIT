@@ -22,14 +22,6 @@ import com.github.plokhotnyuk.jsoniter_scala.core._
 
 import Implicits._
 
-case class PreprocPerPatSeriesToVectorConfig(
-  input_directory : String,
-  output_directory : String,
-  start_date : DateTime,
-  end_date : DateTime,
-  med_map : Option[String]
-)
-
 object PreprocPerPatSeriesToVector {
   def map_condition(coding: Coding) : Seq[String] =
     ConditionMapper.map_condition(coding.system, coding.code)
@@ -444,6 +436,34 @@ object PreprocPerPatSeriesToVector {
     }
    
   }
+
+  def step(spark: SparkSession, config: PreprocPerPatSeriesToVectorConfig): Unit = {
+    // For implicit conversions like converting RDDs to DataFrames
+    import spark.implicits._
+    import DefaultYamlProtocol._
+
+    time {
+      val hc = spark.sparkContext.hadoopConfiguration
+      val start_date_joda = config.start_date
+      val end_date_joda = config.end_date
+
+      val input_directory_path = new Path(config.input_directory)
+      val input_directory_file_system = input_directory_path.getFileSystem(hc)
+
+      val medmap = config.med_map.map(med_map => loadMedMap(hc, med_map))
+
+
+      withCounter(count =>
+        new HDFSCollection(hc, input_directory_path).foreach(f => {
+          val p = f.getName
+          println("processing " + count.incrementAndGet + " " + p)
+          proc_pid(config, hc, p, start_date_joda, end_date_joda, medmap)
+        })
+      )
+
+    }
+
+  }
   
   def main(args: Array[String]) {
 
@@ -451,33 +471,11 @@ object PreprocPerPatSeriesToVector {
 
     spark.sparkContext.setLogLevel("WARN")
 
-    // For implicit conversions like converting RDDs to DataFrames
-    import spark.implicits._
-    import DefaultYamlProtocol._
+    import MyYamlProtocol._
 
-    parseInput[PreprocPerPatSeriesToVectorConfig](args, yamlFormat5(PreprocPerPatSeriesToVectorConfig)) match {
+    parseInput[PreprocPerPatSeriesToVectorConfig](args) match {
       case Some(config) =>
-
-        time {
-          val hc = spark.sparkContext.hadoopConfiguration
-          val start_date_joda = config.start_date
-          val end_date_joda = config.end_date
-
-          val input_directory_path = new Path(config.input_directory)
-          val input_directory_file_system = input_directory_path.getFileSystem(hc)
-
-          val medmap = config.med_map.map(med_map => loadMedMap(hc, med_map))
-
-
-          withCounter(count =>
-            new HDFSCollection(hc, input_directory_path).foreach(f => {
-              val p = f.getName
-              println("processing " + count.incrementAndGet + " " + p)
-              proc_pid(config, hc, p, start_date_joda, end_date_joda, medmap)
-            })
-          )
-
-        }
+        step(spark, config)
       case None =>
     }
 
