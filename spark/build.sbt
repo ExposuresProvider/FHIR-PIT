@@ -24,6 +24,13 @@ libraryDependencies += "javax.media" % "jai_core" % "1.1.3" from "http://downloa
 libraryDependencies += "org.apache.commons" % "commons-csv" % "1.6"
 libraryDependencies += "org.typelevel" %% "squants" % "1.4.0"
 libraryDependencies += "net.jcazevedo" %% "moultingyaml" % "0.4.1"
+libraryDependencies += "io.suzaku" %% "boopickle" % "1.3.1"
+libraryDependencies ++= Seq(
+  "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-core"   % "0.55.2" % Compile,
+  "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-macros" % "0.55.2" % Provided // required only in compile-time
+)
+// https://mvnrepository.com/artifact/com.jsoniter/jsoniter
+libraryDependencies += "com.jsoniter" % "jsoniter" % "0.9.23"
 
 assemblyMergeStrategy in assembly := {
   case PathList("com", "vividsolutions", _*) => MergeStrategy.last

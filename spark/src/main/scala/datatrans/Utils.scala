@@ -20,6 +20,8 @@ import scala.ref.SoftReference
 
 import scala.collection.mutable.Map
 import java.security.MessageDigest
+import com.github.plokhotnyuk.jsoniter_scala.macros._
+import com.github.plokhotnyuk.jsoniter_scala.core._
 
 object Utils {
 
@@ -397,11 +399,18 @@ object Utils {
     }
   }
 
-  def loadJson[U](hc: Configuration, path: Path)(implicit reads : Reads[U]) : U = {
+  def loadJson[U](hc: Configuration, path: Path)(implicit codec : JsonValueCodec[U]) : U = {
     val fs = path.getFileSystem(hc)
     val is = fs.open(path)
-    val obj = try { Json.parse(is) } finally { is.close() }
-    obj.as[U]
+    val obj = try { readFromStream[U](is) } finally { is.close() }
+    obj
+  }
+
+  def saveJson[U](hc: Configuration, path: Path, json: U)(implicit codec : JsonValueCodec[U]) : Unit = {
+    val fs = path.getFileSystem(hc)
+    val is = fs.create(path)
+    val obj = try { writeToStream[U](json, is) } finally { is.close() }
+  
   }
 
 class Cache[K,V <: AnyRef](fun : K => V) {

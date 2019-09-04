@@ -12,13 +12,14 @@ import java.util.Base64
 import java.nio.charset.StandardCharsets
 import datatrans.Config._
 import net.jcazevedo.moultingyaml._
+import com.github.plokhotnyuk.jsoniter_scala.macros._
+import com.github.plokhotnyuk.jsoniter_scala.core._
+
+import Implicits._
 
 object PreprocFHIRResourceType {
-  import Implicits0._
-  import Implicits1._
   sealed trait JsonifiableType {
     type JsonType
-    def toJson(obj : Any): JsValue
     def fromJson(obj : JsValue):JsonType
   }
   sealed trait ResourceType extends JsonifiableType {
@@ -26,24 +27,18 @@ object PreprocFHIRResourceType {
   }
   case object EncounterResourceType extends JsonifiableType {
     type JsonType = Encounter
-    override def toJson(obj : Any): JsValue =
-      Json.toJson(obj.asInstanceOf[JsonType])
     override def fromJson(obj : JsValue):JsonType =
       obj.as[JsonType]
     override def toString() = "Encounter"
   }
   case object PatientResourceType extends JsonifiableType {
     type JsonType = Patient
-    override def toJson(obj : Any): JsValue =
-      Json.toJson(obj.asInstanceOf[JsonType])
     override def fromJson(obj : JsValue):JsonType =
       obj.as[JsonType]
     override def toString() = "Patient"
   }
   case object LabResourceType extends ResourceType {
     type JsonType = Lab
-    override def toJson(obj : Any): JsValue =
-      Json.toJson(obj.asInstanceOf[Lab])
     override def fromJson(obj : JsValue):JsonType =
       obj.as[JsonType]
     override def setEncounter(enc: Encounter, objs: Seq[JsValue]) : Encounter =
@@ -52,8 +47,6 @@ object PreprocFHIRResourceType {
   }
   case object ConditionResourceType extends ResourceType {
     type JsonType = Condition
-    override def toJson(obj : Any): JsValue =
-      Json.toJson(obj.asInstanceOf[JsonType])
     override def fromJson(obj : JsValue):JsonType =
       obj.as[JsonType]
     override def setEncounter(enc: Encounter, objs: Seq[JsValue]) : Encounter =
@@ -62,8 +55,6 @@ object PreprocFHIRResourceType {
   }
   case object MedicationRequestResourceType extends ResourceType {
     type JsonType = Medication
-    override def toJson(obj : Any): JsValue =
-      Json.toJson(obj.asInstanceOf[JsonType])
     override def fromJson(obj : JsValue):JsonType =
       obj.as[JsonType]
     override def setEncounter(enc: Encounter, objs: Seq[JsValue]) : Encounter =
@@ -72,8 +63,6 @@ object PreprocFHIRResourceType {
   }
   case object ProcedureResourceType extends ResourceType {
     type JsonType = Procedure
-    override def toJson(obj : Any): JsValue =
-      Json.toJson(obj.asInstanceOf[JsonType])
     override def fromJson(obj : JsValue):JsonType =
       obj.as[JsonType]
     override def setEncounter(enc: Encounter, objs: Seq[JsValue]) : Encounter =
@@ -82,8 +71,6 @@ object PreprocFHIRResourceType {
   }
   case object BMIResourceType extends ResourceType {
     type JsonType = BMI
-    override def toJson(obj : Any): JsValue =
-      Json.toJson(obj.asInstanceOf[JsonType])
     override def fromJson(obj : JsValue):JsonType =
       obj.as[JsonType]
     override def setEncounter(enc: Encounter, objs: Seq[JsValue]) : Encounter =
@@ -211,8 +198,6 @@ object PreprocFIHR {
   }
 
   private def proc_resc(config: PreprocFIHRConfig, hc: Configuration, encounter_ids: Seq[String], input_dir_file_system: FileSystem, resc_type: ResourceType, output_dir_file_system: FileSystem) {
-    import Implicits0._
-    import Implicits1._
     val count = new AtomicInteger(0)
     val resc_dir = config.resc_types(resc_type)
     val n = resc_count(input_dir_file_system, config.input_directory, resc_dir)
@@ -238,15 +223,10 @@ object PreprocFIHR {
         }
 
         val output_file_path = new Path(output_file)
-        def parseFile : JsValue = resc_type.toJson(obj)
-        def writeFile(obj2 : JsValue) : Unit =
-          Utils.writeToFile(hc, output_file, Json.stringify(obj2))
-          
         if (output_dir_file_system.exists(output_file_path)) {
           println(id ++ " file " ++ output_file + " exists")
         } else {
-          val obj2 = parseFile
-          writeFile(obj2)
+          Utils.saveJson(hc, output_file_path, obj)
         }
 
     })
@@ -255,8 +235,6 @@ object PreprocFIHR {
   private def proc_enc(config: PreprocFIHRConfig, hc: Configuration, input_dir_file_system: FileSystem, output_dir_file_system: FileSystem) {
     val resc_type = EncounterResourceType
     val resc_dir = config.resc_types(resc_type)
-    import Implicits0._
-    import Implicits1._
     val count = new AtomicInteger(0)
     val n = resc_count(input_dir_file_system, config.input_directory, resc_dir)
 
@@ -275,8 +253,7 @@ object PreprocFIHR {
         if (output_dir_file_system.exists(output_file_path)) {
             println(output_file + " exists")
         } else {
-          val obj2 = Json.toJson(obj)
-          Utils.writeToFile(hc, output_file, Json.stringify(obj2))
+          Utils.saveJson(hc, output_file_path, obj)
         }
 
     })
@@ -321,9 +298,6 @@ object PreprocFIHR {
   }
 
   private def combine_pat(config: PreprocFIHRConfig, hc: Configuration, input_dir_file_system: FileSystem, output_dir_file_system: FileSystem) {
-    import Implicits0._
-    import Implicits1.patientReads
-    import Implicits2.{encounterReads, conditionReads, labReads, bmiReads, medicationReads, procedureReads}
     val resc_type = PatientResourceType
     val resc_dir = config.resc_types(resc_type)
     val count = new AtomicInteger(0)
@@ -381,7 +355,7 @@ object PreprocFIHR {
             val meds = ListBuffer[Medication]()
             if(output_dir_file_system.exists(input_med_dir_path)) {
               Utils.HDFSCollection(hc, input_med_dir_path).foreach(med_dir => {
-                val med = Utils.loadJson[Medication](hc, med_dir)
+                val med = Utils.loadJson[Resource](hc, med_dir).asInstanceOf[Medication]
                 meds += med
               })
             }
@@ -392,12 +366,13 @@ object PreprocFIHR {
             val conds = ListBuffer[Condition]()
             if(output_dir_file_system.exists(input_cond_dir_path)) {
               Utils.HDFSCollection(hc, input_cond_dir_path).foreach(cond_dir => {
-                val cond = Utils.loadJson[Condition](hc, cond_dir)
+                val cond = Utils.loadJson[Resource](hc, cond_dir).asInstanceOf[Condition]
                 conds += cond
               })
             }
             pat = pat.copy(condition = conds)
-            Utils.writeToFile(hc, output_file, Json.stringify(Json.toJson(pat)))
+            val output_file_path = new Path(output_file)
+            Utils.saveJson(hc, output_file_path, pat)
           }
         } catch {
           case e : Exception =>
@@ -411,7 +386,6 @@ object PreprocFIHR {
   case class PatientGeo(patient_num: String, lat: Double, lon: Double)
   private def gen_geodata(spark: SparkSession, config: PreprocFIHRConfig, hc: Configuration, output_dir_file_system: FileSystem) {
     import spark.implicits._
-    import Implicits2._
 
     val resc_type = "Patient"
     val pat_dir = config.output_directory + "/" + config.resc_types(PatientResourceType)

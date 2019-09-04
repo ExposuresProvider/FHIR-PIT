@@ -9,6 +9,8 @@ import play.api.libs.json._
 import scopt._
 import java.util.Base64
 import java.nio.charset.StandardCharsets
+import com.github.plokhotnyuk.jsoniter_scala.macros._
+import com.github.plokhotnyuk.jsoniter_scala.core._
 
 
 case class Patient(
@@ -47,49 +49,18 @@ case class BMI(override val id : String, override val subjectReference : String,
 
 case class Coding(system: String, code: String, display: Option[String])
 
-abstract class Value extends Serializable
+sealed trait Value
 case class ValueQuantity(valueNumber : Double, unit : Option[String]) extends Value
 case class ValueString(valueText: String) extends Value
 
-object Implicits0 {
-  implicit val valueWrites: Writes[Value] = new Writes[Value] {
-    override def writes(v : Value) =
-      v match {
-        case vq : ValueQuantity => Json.toJson(vq)(valueQuantityWrites)
-        case vs : ValueString => Json.toJson(vs)(valueStringWrites)
-      }
-  }
-  implicit val valueQuantityWrites: Writes[ValueQuantity] = Json.writes[ValueQuantity]
-  implicit val valueStringWrites: Writes[ValueString] = Json.writes[ValueString]
-  implicit val codingWrites: Writes[Coding] = Json.writes[Coding]
-  implicit val addressWrites: Writes[Address] = Json.writes[Address]
 
-  implicit val conditionWrites: Writes[Condition] = Json.writes[Condition]
-  implicit val labWrites: Writes[Lab] = Json.writes[Lab]
-  implicit val bmiWrites: Writes[BMI] = Json.writes[BMI]
-  implicit val medicationWrites: Writes[Medication] = Json.writes[Medication]
-  implicit val procedureWrites: Writes[Procedure] = Json.writes[Procedure]
-  implicit val encounterWrites: Writes[Encounter] = Json.writes[Encounter]
-  implicit val patientWrites: Writes[Patient] = Json.writes[Patient]
-}
+object Implicits{
+  implicit val codingCodec: JsonValueCodec[Coding] = JsonCodecMaker.make[Coding](CodecMakerConfig())
+  implicit val valueCodec: JsonValueCodec[Value] = JsonCodecMaker.make[Value](CodecMakerConfig())
+  implicit val resourceCodec: JsonValueCodec[Resource] = JsonCodecMaker.make[Resource](CodecMakerConfig())
+  implicit val encounterCodec: JsonValueCodec[Encounter] = JsonCodecMaker.make[Encounter](CodecMakerConfig())
+  implicit val patientCodec: JsonValueCodec[Patient] = JsonCodecMaker.make[Patient](CodecMakerConfig())
 
-object Implicits2 {
-  implicit val valueQuantityReads: Reads[ValueQuantity] = Json.reads[ValueQuantity]
-  implicit val valueStringReads: Reads[ValueString] = Json.reads[ValueString]
-
-  implicit val valueReads: Reads[Value] = valueQuantityReads.map(a => a.asInstanceOf[Value]) orElse valueStringReads.map(a => a.asInstanceOf[Value])
-  implicit val codingReads: Reads[Coding] = Json.reads[Coding]
-  implicit val addressReads: Reads[Address] = Json.reads[Address]
-
-  implicit val conditionReads: Reads[Condition] = Json.reads[Condition]
-  implicit val labReads: Reads[Lab] = Json.reads[Lab]
-  implicit val bmiReads: Reads[BMI] = Json.reads[BMI]
-  implicit val medicationReads: Reads[Medication] = Json.reads[Medication]
-  implicit val procedureReads: Reads[Procedure] = Json.reads[Procedure]
-  implicit val encounterReads: Reads[Encounter] = Json.reads[Encounter]
-  implicit val patientReads: Reads[Patient] = Json.reads[Patient]
-}
-object Implicits1 {
   implicit val quantityReads: Reads[Value] = new Reads[Value] {
     override def reads(json: JsValue): JsResult[Value] = {
       json \ "valueQuantity" match {
@@ -106,7 +77,7 @@ object Implicits1 {
     override def reads(json: JsValue): JsResult[Coding] = {
       val code = (json \ "code").as[String]
       // set system to empty string if code is 99999
-      val system = if(code == "99999") "" else (json \ "system").as[String] 
+      val system = if(code == "99999") "" else (json \ "system").as[String]
       val display = (json \ "display").asOpt[String]
       JsSuccess(Coding(system, code, display))
     }
@@ -207,6 +178,6 @@ object Implicits1 {
       JsSuccess(Procedure(id, subjectReference, contextReference, coding, performedDateTime))
     }
   }
-}
 
+}
 

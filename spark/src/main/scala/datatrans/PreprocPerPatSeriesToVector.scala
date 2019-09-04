@@ -17,6 +17,10 @@ import squants.mass.{Kilograms, Grams, Pounds}
 import squants.space.{Centimeters, Inches}
 import datatrans.Config._
 import net.jcazevedo.moultingyaml._
+import com.github.plokhotnyuk.jsoniter_scala.macros._
+import com.github.plokhotnyuk.jsoniter_scala.core._
+
+import Implicits._
 
 case class PreprocPerPatSeriesToVectorConfig(
   input_directory : String,
@@ -249,7 +253,6 @@ object PreprocPerPatSeriesToVector {
           println("json not found, skipped " + p)
         } else {
           println("loading json from " + input_file)
-          import datatrans.Implicits2._
           val pat = loadJson[Patient](hc, new Path(input_file))
 
           val recs = new ListBuffer[Map[String, Any]]() // a list of encounters, start_time
