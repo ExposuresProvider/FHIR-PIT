@@ -16,6 +16,9 @@ import com.github.plokhotnyuk.jsoniter_scala.macros._
 import com.github.plokhotnyuk.jsoniter_scala.core._
 import org.joda.time._
 import org.joda.time.format.{DateTimeFormat, ISODateTimeFormat}
+import scala.collection.mutable.{Set, Queue}
+import scala.util.control._
+import Breaks._
 
 import Implicits._
 
@@ -100,6 +103,12 @@ case class PreprocPerPatSeriesToVectorConfig(
   med_map : Option[String]
 ) extends StepConfig
 
+case class Step(
+  step: StepConfig,
+  name: String,
+  dependsOn: Seq[String]
+)
+
 object MyYamlProtocol extends DefaultYamlProtocol {
   implicit val resourceTypeFormat = new YamlFormat[JsonifiableType] {
     def write(x: JsonifiableType) = StringYamlFormat.write(x.toString())
@@ -131,18 +140,18 @@ object MyYamlProtocol extends DefaultYamlProtocol {
     def write(x: StepConfig) =
       x match {
         case c : PreprocFIHRConfig => YamlObject(
-          YamlString("step") -> YamlString("FHIR"),
-          YamlString("config") -> preprocFHIRConfigFormat.write(c)
+          YamlString("function") -> YamlString("FHIR"),
+          YamlString("arguments") -> preprocFHIRConfigFormat.write(c)
         )
         case c : PreprocPerPatSeriesToVectorConfig => YamlObject(
-          YamlString("step") -> YamlString("PerPatSeriesToVector"),
-          YamlString("config") -> preprocPetPatSeriesToVectorConfigFormat.write(c)
+          YamlString("function") -> YamlString("PerPatSeriesToVector"),
+          YamlString("arguments") -> preprocPetPatSeriesToVectorConfigFormat.write(c)
         )
       }
 
     def read(value: YamlValue) = {
-      val config = value.asYamlObject.getFields(YamlString("config")).head
-      value.asYamlObject.getFields(YamlString("step")).head match {
+      val config = value.asYamlObject.getFields(YamlString("function")).head
+      value.asYamlObject.getFields(YamlString("function")).head match {
         case YamlString("FHIR") =>
           preprocFHIRConfigFormat.read(config)
         case YamlString("PetPatSeriesToVector") =>
@@ -151,10 +160,29 @@ object MyYamlProtocol extends DefaultYamlProtocol {
     }
   }
 
+  implicit val stepFormat = yamlFormat3(Step)
+
 }
 
 
+sealed trait Status
+case object Success extends Status
+case object Failure extends Status
+case object NotRun extends Status
+
 object PreprocPipeline {
+
+
+  def safely[T](handler: PartialFunction[Throwable, T]): PartialFunction[Throwable, T] = {
+    case ex: ControlThrowable => throw ex
+      // case ex: OutOfMemoryError (Assorted other nasty exceptions you don't want to catch)
+	
+    //If it's an exception they handle, pass it on
+    case ex: Throwable if handler.isDefinedAt(ex) => handler(ex)
+	
+    // If they didn't handle it, rethrow. This line isn't necessary, just for clarity
+    case ex: Throwable => throw ex
+  }
 
   def main(args: Array[String]) {    
 
@@ -166,19 +194,60 @@ object PreprocPipeline {
     // import spark.implicits._
     import MyYamlProtocol._
 
-    parseInput[Seq[StepConfig]](args) match {
-      case Some(config) =>
-        for (conf <- config) {
-          println(conf)
-          conf match {
-            case c : PreprocFIHRConfig =>
-              PreprocFIHR.step(spark, c)
-            case c : PreprocPerPatSeriesToVectorConfig =>
-              PreprocPerPatSeriesToVector.step(spark, c)
+    parseInput[Seq[Step]](args) match {
+      case Some(steps) =>
+        val queued = Queue[Step]()
+        val success = Set[String]()
+        val failure = Set[String]()
+        val notRun = Set[String]()
+
+        queued.enqueue(steps:_*)
+        breakable {
+          while(!queued.isEmpty) {
+            breakable {
+              while (true) {
+                queued.dequeueFirst(step => !(step.dependsOn.toSet & (failure | notRun)).isEmpty) match {
+                  case None => break
+                  case Some(step) =>
+                    notRun.add(step.name)
+                    println("notRun: " + step.name)
+                }
+              }
+            }
+
+            queued.dequeueFirst(step => step.dependsOn.toSet.subsetOf(success)) match {
+              case None => break
+              case Some(step) =>
+
+                println(step)
+                try {
+                  step.step match {
+                    case c : PreprocFIHRConfig =>
+                      PreprocFIHR.step(spark, c)
+                    case c : PreprocPerPatSeriesToVectorConfig =>
+                      PreprocPerPatSeriesToVector.step(spark, c)
+                  }
+                  println("success: " + step.name)
+                  success.add(step.name)
+                } catch safely {
+                  case e: Throwable =>
+                    failure.add(step.name)
+                    println("failure: " + step.name)
+                    throw e
+                }
+
+            }
           }
         }
-
+        queued.foreach(step => notRun.add(step.name))
+        val status = Map[Status, Seq[String]](
+          Success -> success.toSeq,
+          Failure -> failure.toSeq,
+          NotRun -> notRun.toSeq
+        )
+        println(status)
       case None =>
+
     }
 
 
