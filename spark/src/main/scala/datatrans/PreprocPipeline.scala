@@ -198,7 +198,7 @@ object PreprocPipeline {
       case Some(steps) =>
         val queued = Queue[Step]()
         val success = Set[String]()
-        val failure = Set[String]()
+        val failure = Set[(String, Throwable)]()
         val notRun = Set[String]()
 
         queued.enqueue(steps:_*)
@@ -206,7 +206,7 @@ object PreprocPipeline {
           while(!queued.isEmpty) {
             breakable {
               while (true) {
-                queued.dequeueFirst(step => !(step.dependsOn.toSet & (failure | notRun)).isEmpty) match {
+                queued.dequeueFirst(step => !(step.dependsOn.toSet & (failure.map(_._1) | notRun)).isEmpty) match {
                   case None => break
                   case Some(step) =>
                     notRun.add(step.name)
@@ -231,19 +231,18 @@ object PreprocPipeline {
                   success.add(step.name)
                 } catch safely {
                   case e: Throwable =>
-                    failure.add(step.name)
-                    println("failure: " + step.name)
-                    throw e
+                    failure.add((step.name, e))
+                    println("failure: " + step.name + " by " + e)
                 }
 
             }
           }
         }
         queued.foreach(step => notRun.add(step.name))
-        val status = Map[Status, Seq[String]](
-          Success -> success.toSeq,
-          Failure -> failure.toSeq,
-          NotRun -> notRun.toSeq
+        val status = Map[Status, Any](
+          Success -> success,
+          Failure -> failure,
+          NotRun -> notRun
         )
         println(status)
       case None =>
