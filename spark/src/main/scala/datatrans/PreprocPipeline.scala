@@ -154,7 +154,7 @@ object MyYamlProtocol extends DefaultYamlProtocol {
       value.asYamlObject.getFields(YamlString("function")).head match {
         case YamlString("FHIR") =>
           preprocFHIRConfigFormat.read(config)
-        case YamlString("PetPatSeriesToVector") =>
+        case YamlString("PerPatSeriesToVector") =>
           preprocPetPatSeriesToVectorConfigFormat.read(config)
       }
     }
