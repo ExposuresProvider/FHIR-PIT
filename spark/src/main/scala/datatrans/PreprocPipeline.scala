@@ -150,7 +150,7 @@ object MyYamlProtocol extends DefaultYamlProtocol {
       }
 
     def read(value: YamlValue) = {
-      val config = value.asYamlObject.getFields(YamlString("function")).head
+      val config = value.asYamlObject.getFields(YamlString("arguments")).head
       value.asYamlObject.getFields(YamlString("function")).head match {
         case YamlString("FHIR") =>
           preprocFHIRConfigFormat.read(config)
