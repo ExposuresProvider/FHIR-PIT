@@ -91,8 +91,8 @@ sealed trait StepConfig
 case class PreprocFIHRConfig(
   input_directory : String = "", // input directory of FHIR data
   output_directory : String = "", // output directory of patient data
-  resc_types : Map[JsonifiableType, String] = Map(), // map resource type to directory, these are resources included in patient data
-  skip_preproc : Seq[String] = Seq() // skip preprocessing these resource as they have already benn preprocessed
+  resc_types : Map[JsonifiableType, String], // map resource type to directory, these are resources included in patient data
+  skip_preproc : Seq[String] // skip preprocessing these resource as they have already benn preprocessed
 ) extends StepConfig
 
 case class PreprocPerPatSeriesToVectorConfig(
@@ -102,6 +102,19 @@ case class PreprocPerPatSeriesToVectorConfig(
   end_date : DateTime,
   med_map : Option[String]
 ) extends StepConfig
+
+case class EnvDataSourceConfig(
+  patgeo_data : String,
+  environmental_data : String,
+  output_file : String,
+  start_date : DateTime,
+  end_date : DateTime,
+  fips_data: String,
+  indices : Seq[String], // = Seq("o3", "pm25"),
+  statistics : Seq[String], // = Seq("avg", "max"),
+  indices2 : Seq[String] // = Seq("ozone_daily_8hour_maximum", "pm25_daily_average")
+) extends StepConfig
+
 
 case class Step(
   step: StepConfig,
@@ -136,6 +149,8 @@ object MyYamlProtocol extends DefaultYamlProtocol {
 
   implicit val preprocPetPatSeriesToVectorConfigFormat = yamlFormat5(PreprocPerPatSeriesToVectorConfig)
 
+  implicit val envDataSourceConfigFormat = yamlFormat9(EnvDataSourceConfig)
+
   implicit val configFormat = new YamlFormat[StepConfig] {
     def write(x: StepConfig) =
       x match {
@@ -147,6 +162,10 @@ object MyYamlProtocol extends DefaultYamlProtocol {
           YamlString("function") -> YamlString("PerPatSeriesToVector"),
           YamlString("arguments") -> preprocPetPatSeriesToVectorConfigFormat.write(c)
         )
+        case c : EnvDataSourceConfig => YamlObject(
+          YamlString("function") -> YamlString("EnvDataSource"),
+          YamlString("arguments") -> envDataSourceConfigFormat.write(c)
+        )
       }
 
     def read(value: YamlValue) = {
@@ -156,6 +175,10 @@ object MyYamlProtocol extends DefaultYamlProtocol {
           preprocFHIRConfigFormat.read(config)
         case YamlString("PerPatSeriesToVector") =>
           preprocPetPatSeriesToVectorConfigFormat.read(config)
+        case YamlString("EnvDataSource") =>
+          envDataSourceConfigFormat.read(config)
+        case c =>
+          throw new RuntimeException(c)
       }
     }
   }
@@ -226,6 +249,8 @@ object PreprocPipeline {
                       PreprocFIHR.step(spark, c)
                     case c : PreprocPerPatSeriesToVectorConfig =>
                       PreprocPerPatSeriesToVector.step(spark, c)
+                    case c : EnvDataSourceConfig =>
+                      PreprocPerPatSeriesEnvData.step(spark, c)
                   }
                   println("success: " + step.name)
                   success.add(step.name)

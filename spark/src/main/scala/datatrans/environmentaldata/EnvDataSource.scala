@@ -8,22 +8,10 @@ import org.apache.spark.sql.types._
 import play.api.libs.json._
 import org.joda.time._
 import play.api.libs.json.Json.JsValueWrapper
+import datatrans.EnvDataSourceConfig
 
 import org.apache.spark.sql.functions._
 import org.apache.hadoop.fs._
-
-case class EnvDataSourceConfig(
-  patgeo_data : String = "",
-  environmental_data : String = "",
-  output_file : String = "",
-  start_date : DateTime = DateTime.now(),
-  end_date : DateTime = DateTime.now(),
-  fips_data: String = "",
-  indices : Seq[String] = Seq("o3", "pm25"),
-  statistics : Seq[String] = Seq("avg", "max"),
-  indices2 : Seq[String] = Seq("ozone_daily_8hour_maximum", "pm25_daily_average")
-)
-
 
 class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
   val envSchema = StructType(
