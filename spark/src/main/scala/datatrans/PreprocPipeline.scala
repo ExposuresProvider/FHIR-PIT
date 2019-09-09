@@ -19,7 +19,7 @@ import org.joda.time.format.{DateTimeFormat, ISODateTimeFormat}
 import scala.collection.mutable.{Set, Queue}
 import scala.util.control._
 import Breaks._
-import java.io.StringWriter
+import java.io.{StringWriter, PrintWriter}
 
 import Implicits._
 
@@ -259,6 +259,9 @@ object PreprocPipeline {
                   case e: Throwable =>
                     failure.add((step.name, e))
                     val sw = new StringWriter
+                    val pw = new PrintWriter(sw)
+                    e.printStackTrace(pw)
+                    pw.flush()
                     println("failure: " + step.name + " by " + e + " at " + sw.toString)
                 }
 

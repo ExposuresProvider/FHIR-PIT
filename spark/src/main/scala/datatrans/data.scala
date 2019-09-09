@@ -138,7 +138,7 @@ object Implicits{
       val coding = (resource \ "code" \ "coding").as[Seq[Coding]]
       val value = resource.as[Value]
       val flag = None
-      val effectiveDateTime = (resource \ "issued").as[String]
+      val effectiveDateTime = (resource \ "issued").asOpt[String].getOrElse((resource \ "effectivedatetime").as[String])
       JsSuccess(Lab(id, subjectReference, contextReference, coding, value, flag, effectiveDateTime))
     }
   }
