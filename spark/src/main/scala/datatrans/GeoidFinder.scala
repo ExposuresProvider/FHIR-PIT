@@ -80,22 +80,22 @@ class GeoidFinder(blockgrpShapefilePath : String, geoidPrefix: String = "")  {
 
   }
 
-  def getGeoidForLatLon(lat : Double, lon : Double) : String = {
+  def getGeoidForLatLon(lat : Double, lon : Double) : Option[String] = {
 
     var p : Point = null
 
     try {
       p = createPointLCC(lat, lon)
+      val feature = getCensusBlockContainingPoint(p)
+      val id = feature.getAttribute("GEOID").asInstanceOf[String]
+      Some(geoidPrefix + id)
     }
     catch {
       case e : Exception  =>
         System.out.println(e)
-        null
+        None
     }
 
-    val feature = getCensusBlockContainingPoint(p)
-    val id = feature.getAttribute("GEOID").asInstanceOf[String]
-    geoidPrefix + id
 
   }
 

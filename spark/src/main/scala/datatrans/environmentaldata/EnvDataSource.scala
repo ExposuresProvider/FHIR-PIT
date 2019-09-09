@@ -87,21 +87,51 @@ class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
     df2.join(aggregate, Seq("year"))
   }
 
-  def generateOutputDataFrame(key: (Seq[(Int, (Int, Int))], String, Seq[Int])) = {
+  def generateOutputDataFrame(key: (Seq[(Int, (Int, Int))], Option[String], Seq[Int])) = {
     val (coors, fips, years) = key
     val df = inputCache3(coors)
-    val df3 = inputCache2((fips, years))
-
-    (df, df3) match {
-      case (Some(df), Some(df3)) =>
-        val dfyear = aggregateByYear(df, names)
-        val df3year = aggregateByYear(df3.withColumn("year", year(df3.col("start_date"))), config.indices2)
-        val names2 = names ++ config.indices2
-        val names3 = for ((_, i) <- yearlyStatsToCompute; j <- names2) yield f"${j}_$i"
-
-        Some(dfyear.join(df3year, Seq("start_date"), "outer").select("start_date",  names2 ++ names3: _*).cache())
-      case _ =>
+    val df3 = fips match {
+      case Some(fips) =>
+        inputCache2((fips, years))
+      case None =>
+        println(f"skipped fips for ${coors} geoid not found")
         None
+    }
+
+    val dfyearm = df match {
+      case Some(df) =>
+        Some(aggregateByYear(df, names))
+      case None => 
+        println(f"input env df is not available ${coors}")
+        None
+    }
+   
+    val df3yearm = df3 match {
+      case Some(df3) =>
+        Some(aggregateByYear(df3.withColumn("year", year(df3.col("start_date"))), config.indices2))
+      case None =>
+        println(f"input fips df is not available ${fips}, ${years}")
+        None
+    }
+
+    val names2 = names ++ config.indices2
+    val names3 = for ((_, i) <- yearlyStatsToCompute; j <- names2) yield f"${j}_$i"
+
+    dfyearm match {
+      case Some(dfyear) =>
+        df3yearm match {
+          case Some(df3year) =>
+            Some(dfyear.join(df3year, Seq("start_date"), "outer").select("start_date", names2 ++ names3: _*).cache())
+          case None =>
+            Some(dfyear.select("start_date", names3: _*).cache())
+        }
+      case None =>
+        df3yearm match {
+          case Some(df3year) =>
+            Some(df3year.select("start_date", names2: _*).cache())
+          case None =>
+            None
+        }
     }
   }
 
@@ -152,6 +182,7 @@ class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
               case Some(df) =>
                 writeDataframe(hc, output_file, df)
               case None =>
+                println(f"skipped ${r} lat ${lat} lon ${lon} neither env is found")
             }
           }
 
