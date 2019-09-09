@@ -90,7 +90,7 @@ class GeoidFinder(blockgrpShapefilePath : String, geoidPrefix: String = "")  {
     catch {
       case e : Exception  =>
         System.out.println(e)
-        None.asInstanceOf[String]
+        null
     }
 
     val feature = getCensusBlockContainingPoint(p)
