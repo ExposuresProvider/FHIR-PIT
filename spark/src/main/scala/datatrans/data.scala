@@ -102,7 +102,7 @@ object Implicits{
         case JsUndefined() => "Unknown"
       }
       val birthDate = (resource \ "birthDate").as[String]
-      val address = (resource \ "addresss").asOpt[Seq[JsValue]].map(x=>x.flatMap(x => (x \ "extension").as[Seq[Address]])).getOrElse(Seq())
+      val address = (resource \ "address").asOpt[Seq[JsValue]].map(x=>x.flatMap(x => (x \ "extension").as[Seq[Address]])).getOrElse(Seq())
       JsSuccess(Patient(id, race, ethnicity, gender, birthDate, address, Seq(), Seq(), Seq(), Seq(), Seq(), Seq()))
     }
   }
@@ -138,7 +138,7 @@ object Implicits{
       val coding = (resource \ "code" \ "coding").as[Seq[Coding]]
       val value = resource.as[Value]
       val flag = None
-      val effectiveDateTime = (resource \ "issued").asOpt[String].getOrElse((resource \ "effectivedatetime").as[String])
+      val effectiveDateTime = (resource \ "effectiveDateTime").asOpt[String].getOrElse((resource \ "issued").as[String])
       JsSuccess(Lab(id, subjectReference, contextReference, coding, value, flag, effectiveDateTime))
     }
   }
