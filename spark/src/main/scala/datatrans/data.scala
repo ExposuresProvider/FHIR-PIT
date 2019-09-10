@@ -102,7 +102,7 @@ object Implicits{
         case JsUndefined() => "Unknown"
       }
       val birthDate = (resource \ "birthDate").as[String]
-      println("address = " + (resource \ "address") + " extensions = " + 
+      println("address = " + (resource \ "address") + " extensions = " + (resource \ "address").asOpt[Seq[JsValue]].map(x=>x.flatMap(x => (x \ "extension").as[Seq[Address]])).getOrElse(Seq()))
       val address = (resource \ "address").asOpt[Seq[JsValue]].map(x=>x.flatMap(x => (x \ "extension").as[Seq[Address]])).getOrElse(Seq())
       JsSuccess(Patient(id, race, ethnicity, gender, birthDate, address, Seq(), Seq(), Seq(), Seq(), Seq(), Seq()))
     }
