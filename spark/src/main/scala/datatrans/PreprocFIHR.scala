@@ -35,15 +35,12 @@ object PreprocFIHR {
       case None =>
     }
 
-
     spark.stop()
-
 
   }
 
   def step(spark: SparkSession, config: PreprocFIHRConfig): Unit = {
     Utils.time {
-
 
       val hc = spark.sparkContext.hadoopConfiguration
       val input_dir_path = new Path(config.input_directory)
@@ -103,7 +100,7 @@ object PreprocFIHR {
     }
   }
 
-  private def proc_resc(config: PreprocFIHRConfig, hc: Configuration, encounter_ids: Seq[String], input_dir_file_system: FileSystem, resc_type: ResourceType, output_dir_file_system: FileSystem) {
+  private def proc_resc(config: PreprocFIHRConfig, hc: Configuration, encounter_ids: Set[String], input_dir_file_system: FileSystem, resc_type: ResourceType, output_dir_file_system: FileSystem) {
     val count = new AtomicInteger(0)
     val resc_dir = config.resc_types(resc_type)
     val n = resc_count(input_dir_file_system, config.input_directory, resc_dir)
@@ -191,7 +188,7 @@ object PreprocFIHR {
     count
   }
 
-  private def load_encounter_ids(input_dir_file_system: FileSystem, input_dir0: String, resc_dir: String) : Seq[String] = {
+  private def load_encounter_ids(input_dir_file_system: FileSystem, input_dir0: String, resc_dir: String) : Set[String] = {
     val input_dir = input_dir0 + "/" + resc_dir
     val input_dir_path = new Path(input_dir)
     val itr = input_dir_file_system.listFiles(input_dir_path, false)
@@ -200,7 +197,7 @@ object PreprocFIHR {
       val input_file_name = itr.next().getPath().getName()
       encounter_ids.append(input_file_name)
     }
-    encounter_ids
+    encounter_ids.toSet
   }
 
   private def combine_pat(config: PreprocFIHRConfig, hc: Configuration, input_dir_file_system: FileSystem, output_dir_file_system: FileSystem) {
@@ -255,28 +252,26 @@ object PreprocFIHR {
               })
             }
             pat = pat.copy(encounter = encs)
-            // medication
-            val input_med_dir = config.output_directory + "/" + config.resc_types(MedicationRequestResourceType) + "/" + patient_num
-            val input_med_dir_path = new Path(input_med_dir)
-            val meds = ListBuffer[Medication]()
-            if(output_dir_file_system.exists(input_med_dir_path)) {
-              Utils.HDFSCollection(hc, input_med_dir_path).foreach(med_dir => {
-                val med = Utils.loadJson[Resource](hc, med_dir).asInstanceOf[Medication]
-                meds += med
-              })
+            def combineRescWithoutValueEncounterNumber[R](rt: ResourceType, update: Seq[R] => Unit) = {
+              // medication
+              val input_med_dir = config.output_directory + "/" + config.resc_types(rt) + "/" + patient_num
+              val input_med_dir_path = new Path(input_med_dir)
+              val meds = ListBuffer[R]()
+              if(output_dir_file_system.exists(input_med_dir_path)) {
+                Utils.HDFSCollection(hc, input_med_dir_path).foreach(med_dir => {
+                  val med = Utils.loadJson[Resource](hc, med_dir).asInstanceOf[R]
+                  meds += med
+                })
+              }
+              update(meds)
             }
-            pat = pat.copy(medication = meds)
-            // conds
-            val input_cond_dir = config.output_directory + "/" + config.resc_types(ConditionResourceType) + "/" + patient_num
-            val input_cond_dir_path = new Path(input_cond_dir)
-            val conds = ListBuffer[Condition]()
-            if(output_dir_file_system.exists(input_cond_dir_path)) {
-              Utils.HDFSCollection(hc, input_cond_dir_path).foreach(cond_dir => {
-                val cond = Utils.loadJson[Resource](hc, cond_dir).asInstanceOf[Condition]
-                conds += cond
-              })
-            }
-            pat = pat.copy(condition = conds)
+
+            combineRescWithoutValueEncounterNumber(MedicationRequestResourceType, (meds : Seq[Medication]) => { pat = pat.copy(medication = meds) })
+            combineRescWithoutValueEncounterNumber(ConditionResourceType, (meds: Seq[Condition]) => { pat = pat.copy(condition = meds) })
+            combineRescWithoutValueEncounterNumber(LabResourceType, (meds: Seq[Lab]) => { pat = pat.copy(lab = meds) })
+            combineRescWithoutValueEncounterNumber(ProcedureResourceType, (meds: Seq[Procedure]) => { pat = pat.copy(procedure = meds) })
+            combineRescWithoutValueEncounterNumber(BMIResourceType, (meds: Seq[BMI]) => { pat = pat.copy(bmi = meds) })
+
             val output_file_path = new Path(output_file)
             Utils.saveJson(hc, output_file_path, pat)
           }
