@@ -154,6 +154,21 @@ object MyYamlProtocol extends DefaultYamlProtocol {
 
   implicit val envDataSourceConfigFormat = yamlFormat9(EnvDataSourceConfig)
 
+  val fmt = ISODateTimeFormat.dateTime()
+  implicit val dateTimeFormat = new YamlFormat[DateTime] {
+    def write(x: DateTime) =
+      YamlString(fmt.print(x))
+
+    def read(value: YamlValue) =
+      value match {
+        case YamlString(s) =>
+          fmt.parseDateTime(s)
+        case _ =>
+          throw new RuntimeException("cannot parse date time from YamlValue " + value)
+      }
+
+  }
+
   implicit val configFormat = new YamlFormat[StepConfig] {
     def write(x: StepConfig) =
       x match {
