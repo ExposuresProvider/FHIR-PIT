@@ -116,6 +116,7 @@ case class EnvDataSourceConfig(
   indices2 : Seq[String] // = Seq("ozone_daily_8hour_maximum", "pm25_daily_average")
 ) extends StepConfig
 
+case object NullConfig extends StepConfig
 
 case class Step(
   step: StepConfig,
@@ -168,6 +169,9 @@ object MyYamlProtocol extends DefaultYamlProtocol {
           YamlString("function") -> YamlString("EnvDataSource"),
           YamlString("arguments") -> envDataSourceConfigFormat.write(c)
         )
+        case NullConfig => YamlObject(
+          YamlString("function") -> YamlString("Null")
+        )
       }
 
     def read(value: YamlValue) = {
@@ -179,6 +183,8 @@ object MyYamlProtocol extends DefaultYamlProtocol {
           preprocPetPatSeriesToVectorConfigFormat.read(config)
         case YamlString("EnvDataSource") =>
           envDataSourceConfigFormat.read(config)
+        case YamlString("Null") =>
+          NullConfig
         case c =>
           throw new RuntimeException(c)
       }
@@ -253,6 +259,8 @@ object PreprocPipeline {
                         PreprocPerPatSeriesToVector.step(spark, c)
                       case c : EnvDataSourceConfig =>
                         PreprocPerPatSeriesEnvData.step(spark, c)
+                      case NullConfig =>
+
                     }
                     println("success: " + step.name)
                     success.add(step.name)
