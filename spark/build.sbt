@@ -37,8 +37,21 @@ assemblyMergeStrategy in assembly := {
   case PathList("javax", "inject", _*) => MergeStrategy.last
   case PathList("org", "aopalliance", _*) => MergeStrategy.last
   case PathList("org", "apache", _*) => MergeStrategy.last
-  case PathList("META-INF", _*) => MergeStrategy.discard
   case PathList("git.properties") => MergeStrategy.discard
+  case PathList("META-INF", xs @ _*) =>
+    xs map {_.toLowerCase} match {
+      case ("manifest.mf" :: Nil) | ("index.list" :: Nil) | ("dependencies" :: Nil) =>
+        MergeStrategy.discard
+      case ps @ (_ :: _) if ps.last.endsWith(".sf") || ps.last.endsWith(".dsa") || ps.last.endsWith(".rsa") =>
+        MergeStrategy.discard
+      case "plexus" :: _ =>
+        MergeStrategy.discard
+      case ("services" :: _ :: Nil) =>
+        MergeStrategy.concat
+      case ("javax.media.jai.registryfile.jai" :: Nil) | ("registryfile.jai" :: Nil) | ("registryfile.jaiext" :: Nil) =>
+        MergeStrategy.concat
+      case _ => MergeStrategy.discard
+    }
   case x =>
     val oldStrategy = (assemblyMergeStrategy in assembly).value
     oldStrategy(x)
