@@ -133,13 +133,24 @@ object Implicits{
       JsSuccess(Encounter(id, subjectReference, classAttr, startDate, endDate, Seq(), Seq(), Seq(), Seq(), Seq()))
     }
   }
+
+  def filterCoding(coding: JsValue) : Boolean = {
+    coding \ "code" match {
+      case JsDefined(_) => true
+      case JsUndefined() =>
+        println(f"cannot find code field in JsValue ${coding}")
+        false
+    }
+  }
+
   implicit val labReads: Reads[Lab] = new Reads[Lab] {
     override def reads(json: JsValue): JsResult[Lab] = {
       val resource = json \ "resource"
       val id = (resource \ "id").as[String]
       val subjectReference = (resource \ "subject" \ "reference").as[String]
       val contextReference = (resource \ "context" \ "reference").asOpt[String]
-      val coding = (resource \ "code" \ "coding").as[Seq[Coding]]
+      // val coding = (resource \ "code" \ "coding").as[Seq[Coding]]
+      val coding = (resource \ "code" \ "coding").as[Seq[JsValue]].filter(filterCoding).map(x => x.as[Coding])
       val value = resource.asOpt[Value]
       val flag = None
       val effectiveDateTime = (resource \ "effectiveDateTime").asOpt[String].getOrElse((resource \ "issued").as[String])

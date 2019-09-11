@@ -252,7 +252,7 @@ object PreprocFIHR {
               })
             }
             pat = pat.copy(encounter = encs)
-            def combineRescWithoutValueEncounterNumber[R](rt: ResourceType, update: Seq[R] => Unit) = {
+            def combineRescWithoutValidEncounterNumber[R](rt: ResourceType, update: Seq[R] => Unit) = {
               // medication
               val input_med_dir = config.output_directory + "/" + config.resc_types(rt) + "/" + patient_num
               val input_med_dir_path = new Path(input_med_dir)
@@ -266,11 +266,11 @@ object PreprocFIHR {
               update(meds)
             }
 
-            combineRescWithoutValueEncounterNumber(MedicationRequestResourceType, (meds : Seq[Medication]) => { pat = pat.copy(medication = meds) })
-            combineRescWithoutValueEncounterNumber(ConditionResourceType, (meds: Seq[Condition]) => { pat = pat.copy(condition = meds) })
-            combineRescWithoutValueEncounterNumber(LabResourceType, (meds: Seq[Lab]) => { pat = pat.copy(lab = meds) })
-            combineRescWithoutValueEncounterNumber(ProcedureResourceType, (meds: Seq[Procedure]) => { pat = pat.copy(procedure = meds) })
-            combineRescWithoutValueEncounterNumber(BMIResourceType, (meds: Seq[BMI]) => { pat = pat.copy(bmi = meds) })
+            combineRescWithoutValidEncounterNumber(MedicationRequestResourceType, (meds : Seq[Medication]) => { pat = pat.copy(medication = meds) })
+            combineRescWithoutValidEncounterNumber(ConditionResourceType, (meds: Seq[Condition]) => { pat = pat.copy(condition = meds) })
+            combineRescWithoutValidEncounterNumber(LabResourceType, (meds: Seq[Lab]) => { pat = pat.copy(lab = meds) })
+            combineRescWithoutValidEncounterNumber(ProcedureResourceType, (meds: Seq[Procedure]) => { pat = pat.copy(procedure = meds) })
+            combineRescWithoutValidEncounterNumber(BMIResourceType, (meds: Seq[BMI]) => { pat = pat.copy(bmi = meds) })
 
             val output_file_path = new Path(output_file)
             Utils.saveJson(hc, output_file_path, pat)
