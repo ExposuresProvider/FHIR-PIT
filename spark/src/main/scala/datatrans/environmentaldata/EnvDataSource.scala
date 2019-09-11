@@ -168,7 +168,6 @@ class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
             println(output_file + " exists")
           } else {
             val yearseq = (config.start_date.year.get to config.end_date.minusDays(1).year.get)
-            println("start_date" + config.start_date + " end_date " + config.end_date + "yearseq = " + yearseq)
             val coors = yearseq.intersect(Seq(2010,2011)).flatMap(year => {
               latlon2rowcol(lat, lon, year) match {
                 case Some((row, col)) =>

@@ -19,42 +19,37 @@ object GeoidFinder {
 
 class GeoidFinder(blockgrpShapefilePath : String, geoidPrefix: String = "")  {
 
-  try {
-    val shp = new ShapefileHandler(blockgrpShapefilePath)
-    val features = shp.getFeatureCollection
-    GeoidFinder.index  = new SpatialIndexFeatureCollection(features.getSchema)
-    GeoidFinder.index.addAll(features)
-  }
-  catch {
-    case e : Exception => System.out.println(e)
-  }
+  val shp = new ShapefileHandler(blockgrpShapefilePath)
+  val features = shp.getFeatureCollection
+  GeoidFinder.index  = new SpatialIndexFeatureCollection(features.getSchema)
+  GeoidFinder.index.addAll(features)
 
 
   private def getCensusBlockContainingPoint(p : Point): SimpleFeature = {
 
     var feature : SimpleFeature = null
 
-    try {
 
-      val itr = GeoidFinder.index.features()
-      var done = false
-      while (itr.hasNext && !done) {
-        feature = itr.next
+    val itr = GeoidFinder.index.features()
+    var done = false
+    while (itr.hasNext && !done) {
+      feature = itr.next
 
-        def geom = feature.getDefaultGeometry.asInstanceOf[Geometry]
+      def geom = feature.getDefaultGeometry.asInstanceOf[Geometry]
 
-        if (geom.contains(p)) {
-          done = true
-        }
+      if (geom.contains(p)) {
+        done = true
       }
     }
-    catch {
-      case e : Exception  =>
-        System.out.println(e)
-        None.asInstanceOf[SimpleFeature]
+    if(done) {
+
+      feature
+    } else {
+      null
     }
 
-    feature
+
+
   }
 
   @throws(classOf[TransformException])
