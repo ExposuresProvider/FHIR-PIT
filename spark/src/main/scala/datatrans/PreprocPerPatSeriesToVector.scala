@@ -47,13 +47,15 @@ object PreprocPerPatSeriesToVector {
     val fev1fvc = filter_by_code("19926-5") // 52485-0
     val listBuf = new ListBuffer[(String, JsValue)]()
 
+    def extractValue(lab: Lab) = lab.value.map(x => JsNumber(x.asInstanceOf[ValueQuantity].valueNumber)).getOrElse(JsNull)
+    def extractFlag(lab: Lab) = lab.flag.map(JsString).getOrElse(JsNull)
     def extractColumns(lab: Seq[Lab], prefix: String) = {
       if(!lab.isEmpty) {
         Seq(
-          (f"${prefix}_FirstValue", JsNumber(lab.head.value.asInstanceOf[ValueQuantity].valueNumber)),
-          (f"${prefix}_FirstFlag", JsString(lab.head.flag.getOrElse(""))),
-          (f"${prefix}_LastValue", JsNumber(lab.last.value.asInstanceOf[ValueQuantity].valueNumber)),
-          (f"${prefix}_LastFlag", JsString(lab.last.flag.getOrElse("")))
+          (f"${prefix}_FirstValue", extractValue(lab.head)),
+          (f"${prefix}_FirstFlag", extractFlag(lab.head)),
+          (f"${prefix}_LastValue", extractValue(lab.last)),
+          (f"${prefix}_LastFlag", extractFlag(lab.last))
         )
       } else {
         Seq()
@@ -63,8 +65,8 @@ object PreprocPerPatSeriesToVector {
     def extractColumns2(lab: Seq[Lab], prefix: String) = {
       if(!lab.isEmpty) {
         Seq(
-          (f"${prefix}_FirstValue", JsNumber(lab.head.value.asInstanceOf[ValueQuantity].valueNumber)),
-          (f"${prefix}_LastValue", JsNumber(lab.last.value.asInstanceOf[ValueQuantity].valueNumber))
+          (f"${prefix}_FirstValue", extractValue(lab.head)),
+          (f"${prefix}_LastValue", extractValue(lab.last))
         )
       } else {
         Seq()

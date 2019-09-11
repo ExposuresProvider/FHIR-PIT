@@ -42,7 +42,7 @@ sealed trait Resource {
 }
 
 case class Condition(override val id : String, override val subjectReference : String, override val contextReference : Option[String], coding: Seq[Coding], assertedDate : String) extends Resource
-case class Lab(override val id : String, override val subjectReference : String, override val contextReference : Option[String], coding : Seq[Coding], value : Value, flag : Option[String], effectiveDateTime : String) extends Resource
+case class Lab(override val id : String, override val subjectReference : String, override val contextReference : Option[String], coding : Seq[Coding], value : Option[Value], flag : Option[String], effectiveDateTime : String) extends Resource
 case class Medication(override val id : String, override val subjectReference : String, override val contextReference : Option[String], coding : Seq[Coding], authoredOn : Option[String], start: String, end: Option[String]) extends Resource
 case class Procedure(override val id : String, override val subjectReference : String, override val contextReference : Option[String], coding : Seq[Coding], performedDateTime : String) extends Resource
 case class BMI(override val id : String, override val subjectReference : String, override val contextReference : Option[String], coding : Seq[Coding], value : Value) extends Resource
@@ -70,7 +70,10 @@ object Implicits{
           val unit = (vq \ "code").asOpt[String]
           JsSuccess(ValueQuantity(value, unit))
         case JsUndefined() =>
-          JsSuccess(ValueString((json \ "valueString").as[String]))
+          json \ "valueString" match {
+            case JsDefined(s) => JsSuccess(ValueString(s.as[String]))
+            case _ => JsError(Seq())
+          }
       }
     }
   }
@@ -137,7 +140,7 @@ object Implicits{
       val subjectReference = (resource \ "subject" \ "reference").as[String]
       val contextReference = (resource \ "context" \ "reference").asOpt[String]
       val coding = (resource \ "code" \ "coding").as[Seq[Coding]]
-      val value = resource.as[Value]
+      val value = resource.asOpt[Value]
       val flag = None
       val effectiveDateTime = (resource \ "effectiveDateTime").asOpt[String].getOrElse((resource \ "issued").as[String])
       JsSuccess(Lab(id, subjectReference, contextReference, coding, value, flag, effectiveDateTime))

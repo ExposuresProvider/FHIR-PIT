@@ -120,6 +120,7 @@ case class EnvDataSourceConfig(
 case class Step(
   step: StepConfig,
   name: String,
+  skip: Boolean,
   dependsOn: Seq[String]
 )
 
@@ -184,15 +185,10 @@ object MyYamlProtocol extends DefaultYamlProtocol {
     }
   }
 
-  implicit val stepFormat = yamlFormat3(Step)
+  implicit val stepFormat = yamlFormat4(Step)
 
 }
 
-
-sealed trait Status
-case object Success extends Status
-case object Failure extends Status
-case object NotRun extends Status
 
 object PreprocPipeline {
 
@@ -224,6 +220,7 @@ object PreprocPipeline {
         val success = Set[String]()
         val failure = Set[(String, Throwable)]()
         val notRun = Set[String]()
+        val skip = Set[String]()
 
         queued.enqueue(steps:_*)
         breakable {
@@ -234,47 +231,62 @@ object PreprocPipeline {
                   case None => break
                   case Some(step) =>
                     notRun.add(step.name)
-                    println("notRun: " + step.name)
+                    println("not run: " + step.name)
                 }
               }
             }
 
-            queued.dequeueFirst(step => step.dependsOn.toSet.subsetOf(success)) match {
+            queued.dequeueFirst(step => step.dependsOn.toSet.subsetOf(success & skip)) match {
               case None => break
               case Some(step) =>
 
                 println(step)
-                try {
-                  step.step match {
-                    case c : PreprocFIHRConfig =>
-                      PreprocFIHR.step(spark, c)
-                    case c : PreprocPerPatSeriesToVectorConfig =>
-                      PreprocPerPatSeriesToVector.step(spark, c)
-                    case c : EnvDataSourceConfig =>
-                      PreprocPerPatSeriesEnvData.step(spark, c)
+                if(step.skip) {
+                  println("skipped: " + step.name)
+                  skip.add(step.name)
+                } else {
+                  try {
+                    step.step match {
+                      case c : PreprocFIHRConfig =>
+                        PreprocFIHR.step(spark, c)
+                      case c : PreprocPerPatSeriesToVectorConfig =>
+                        PreprocPerPatSeriesToVector.step(spark, c)
+                      case c : EnvDataSourceConfig =>
+                        PreprocPerPatSeriesEnvData.step(spark, c)
+                    }
+                    println("success: " + step.name)
+                    success.add(step.name)
+                  } catch safely {
+                    case e: Throwable =>
+                      failure.add((step.name, e))
+                      val sw = new StringWriter
+                      val pw = new PrintWriter(sw)
+                      e.printStackTrace(pw)
+                      pw.flush()
+                      println("failure: " + step.name + " by " + e + " at " + sw.toString)
                   }
-                  println("success: " + step.name)
-                  success.add(step.name)
-                } catch safely {
-                  case e: Throwable =>
-                    failure.add((step.name, e))
-                    val sw = new StringWriter
-                    val pw = new PrintWriter(sw)
-                    e.printStackTrace(pw)
-                    pw.flush()
-                    println("failure: " + step.name + " by " + e + " at " + sw.toString)
                 }
-
             }
           }
         }
         queued.foreach(step => notRun.add(step.name))
-        val status = Map[Status, Any](
-          Success -> success,
-          Failure -> failure,
-          NotRun -> notRun
-        )
-        println(status)
+        def printSeq[T](title: String, success: Iterable[T], indent: String = "  ") = {
+          println(title)
+          for (s <- success) {
+            s match {
+              case (a, b) =>
+                println(indent + "(")
+                println(indent + indent + a + ",")
+                println(indent + indent + b)
+                println(indent + ")")
+              case _ => println(indent + s)
+            }
+          }
+        }
+        printSeq("===success===", success)
+        printSeq("===skipped===", skip)
+        printSeq("===failure===", failure)
+        printSeq("===not run===", notRun)
       case None =>
 
     }
