@@ -116,7 +116,7 @@ case class EnvDataSourceConfig(
   indices2 : Seq[String] // = Seq("ozone_daily_8hour_maximum", "pm25_daily_average")
 ) extends StepConfig
 
-case object NullConfig extends StepConfig
+case object NoopConfig extends StepConfig
 
 case class Step(
   step: StepConfig,
@@ -169,8 +169,9 @@ object MyYamlProtocol extends DefaultYamlProtocol {
           YamlString("function") -> YamlString("EnvDataSource"),
           YamlString("arguments") -> envDataSourceConfigFormat.write(c)
         )
-        case NullConfig => YamlObject(
-          YamlString("function") -> YamlString("Null")
+        case NoopConfig => YamlObject(
+          YamlString("function") -> YamlString("Noop"),
+          YamlString("arguments") -> YamlObject()
         )
       }
 
@@ -183,8 +184,8 @@ object MyYamlProtocol extends DefaultYamlProtocol {
           preprocPetPatSeriesToVectorConfigFormat.read(config)
         case YamlString("EnvDataSource") =>
           envDataSourceConfigFormat.read(config)
-        case YamlString("Null") =>
-          NullConfig
+        case YamlString("Noop") =>
+          NoopConfig
         case c =>
           throw new RuntimeException(c)
       }
@@ -259,7 +260,7 @@ object PreprocPipeline {
                         PreprocPerPatSeriesToVector.step(spark, c)
                       case c : EnvDataSourceConfig =>
                         PreprocPerPatSeriesEnvData.step(spark, c)
-                      case NullConfig =>
+                      case NoopConfig =>
 
                     }
                     println("success: " + step.name)
