@@ -243,7 +243,7 @@ object PreprocPipeline {
               }
             }
 
-            queued.dequeueFirst(step => step.dependsOn.toSet.subsetOf(success & skip)) match {
+            queued.dequeueFirst(step => step.dependsOn.toSet.subsetOf(success | skip)) match {
               case None => break
               case Some(step) =>
 
