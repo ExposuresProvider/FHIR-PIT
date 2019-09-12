@@ -266,11 +266,20 @@ object PreprocFIHR {
               update(meds)
             }
 
-            combineRescWithoutValidEncounterNumber(MedicationRequestResourceType, (meds : Seq[Medication]) => { pat = pat.copy(medication = meds) })
-            combineRescWithoutValidEncounterNumber(ConditionResourceType, (meds: Seq[Condition]) => { pat = pat.copy(condition = meds) })
-            combineRescWithoutValidEncounterNumber(LabResourceType, (meds: Seq[Lab]) => { pat = pat.copy(lab = meds) })
-            combineRescWithoutValidEncounterNumber(ProcedureResourceType, (meds: Seq[Procedure]) => { pat = pat.copy(procedure = meds) })
-            combineRescWithoutValidEncounterNumber(BMIResourceType, (meds: Seq[BMI]) => { pat = pat.copy(bmi = meds) })
+            config.resc_types.keys.foreach{
+              case MedicationRequestResourceType =>
+                combineRescWithoutValidEncounterNumber(MedicationRequestResourceType, (meds : Seq[Medication]) => { pat = pat.copy(medication = meds) })
+              case ConditionResourceType =>
+                combineRescWithoutValidEncounterNumber(ConditionResourceType, (meds: Seq[Condition]) => { pat = pat.copy(condition = meds) })
+              case LabResourceType =>
+                combineRescWithoutValidEncounterNumber(LabResourceType, (meds: Seq[Lab]) => { pat = pat.copy(lab = meds) })
+              case ProcedureResourceType =>
+                combineRescWithoutValidEncounterNumber(ProcedureResourceType, (meds: Seq[Procedure]) => { pat = pat.copy(procedure = meds) })
+              case BMIResourceType =>
+                combineRescWithoutValidEncounterNumber(BMIResourceType, (meds: Seq[BMI]) => { pat = pat.copy(bmi = meds) })
+              case PatientResourceType =>
+              case EncounterResourceType =>
+            }
 
             val output_file_path = new Path(output_file)
             Utils.saveJson(hc, output_file_path, pat)
