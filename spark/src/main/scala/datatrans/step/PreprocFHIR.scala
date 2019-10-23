@@ -1,4 +1,4 @@
-package datatrans
+package datatrans.step
 
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -15,11 +15,109 @@ import net.jcazevedo.moultingyaml._
 import com.github.plokhotnyuk.jsoniter_scala.macros._
 import com.github.plokhotnyuk.jsoniter_scala.core._
 
-import Implicits._
+import datatrans.Implicits._
+import datatrans._
+
+object PreprocFHIRResourceType {
+  sealed trait JsonifiableType {
+    type JsonType
+    def fromJson(obj : JsValue):JsonType
+  }
+  sealed trait ResourceType extends JsonifiableType {
+    def setEncounter(enc: Encounter, objs: Seq[JsValue]): Encounter
+  }
+  case object EncounterResourceType extends JsonifiableType {
+    type JsonType = Encounter
+    override def fromJson(obj : JsValue):JsonType =
+      obj.as[JsonType]
+    override def toString() = "Encounter"
+  }
+  case object PatientResourceType extends JsonifiableType {
+    type JsonType = Patient
+    override def fromJson(obj : JsValue):JsonType =
+      obj.as[JsonType]
+    override def toString() = "Patient"
+  }
+  case object LabResourceType extends ResourceType {
+    type JsonType = Lab
+    override def fromJson(obj : JsValue):JsonType =
+      obj.as[JsonType]
+    override def setEncounter(enc: Encounter, objs: Seq[JsValue]) : Encounter =
+      enc.copy(lab = objs.map(obj => obj.as[Lab]))
+    override def toString() = "Lab"
+  }
+  case object ConditionResourceType extends ResourceType {
+    type JsonType = Condition
+    override def fromJson(obj : JsValue):JsonType =
+      obj.as[JsonType]
+    override def setEncounter(enc: Encounter, objs: Seq[JsValue]) : Encounter =
+      enc.copy(condition = objs.map(obj => obj.as[Condition]))
+    override def toString() = "Condition"
+  }
+  case object MedicationRequestResourceType extends ResourceType {
+    type JsonType = Medication
+    override def fromJson(obj : JsValue):JsonType =
+      obj.as[JsonType]
+    override def setEncounter(enc: Encounter, objs: Seq[JsValue]) : Encounter =
+      enc.copy(medication = objs.map(obj => obj.as[Medication]))
+    override def toString() = "MedicationRequest"
+  }
+  case object ProcedureResourceType extends ResourceType {
+    type JsonType = Procedure
+    override def fromJson(obj : JsValue):JsonType =
+      obj.as[JsonType]
+    override def setEncounter(enc: Encounter, objs: Seq[JsValue]) : Encounter =
+      enc.copy(procedure = objs.map(obj => obj.as[Procedure]))
+    override def toString() = "Procedure"
+  }
+  case object BMIResourceType extends ResourceType {
+    type JsonType = BMI
+    override def fromJson(obj : JsValue):JsonType =
+      obj.as[JsonType]
+    override def setEncounter(enc: Encounter, objs: Seq[JsValue]) : Encounter =
+      enc.copy(bmi = objs.map(obj => obj.as[BMI]))
+    override def toString() = "BMI"
+  }
+
+}
 
 import PreprocFHIRResourceType._
 
-object PreprocFIHR {
+case class PreprocFHIRConfig(
+  input_directory : String = "", // input directory of FHIR data
+  output_directory : String = "", // output directory of patient data
+  resc_types : Map[JsonifiableType, String], // map resource type to directory, these are resources included in patient data
+  skip_preproc : Seq[String] // skip preprocessing these resource as they have already benn preprocessed
+) extends StepConfig {
+  val configConfig = PreprocFHIR
+}
+
+object FHIRYamlProtocol extends DefaultYamlProtocol {
+  implicit val resourceTypeFormat = new YamlFormat[JsonifiableType] {
+    def write(x: JsonifiableType) = StringYamlFormat.write(x.toString())
+    def read(value: YamlValue) = StringYamlFormat.read(value) match {
+      case "Condition" =>
+        ConditionResourceType
+      case "Lab" =>
+        LabResourceType
+      case "MedicationRequest" =>
+        MedicationRequestResourceType
+      case "Procedure" =>
+        ProcedureResourceType
+      case "BMI" =>
+        BMIResourceType
+      case "Encounter" =>
+        EncounterResourceType
+      case "Patient" =>
+        PatientResourceType
+      case a =>
+        throw new RuntimeException("unsupported resource type " + a)
+    }
+  }
+  implicit val fhirYamlFormat = yamlFormat4(PreprocFHIRConfig)
+}
+
+object PreprocFHIR extends StepConfigConfig {
 
   def main(args: Array[String]) {    
 
@@ -27,9 +125,9 @@ object PreprocFIHR {
 
     spark.sparkContext.setLogLevel("WARN")
 
-    import MyYamlProtocol._
+    import FHIRYamlProtocol._
 
-    parseInput[PreprocFIHRConfig](args) match {
+    parseInput[PreprocFHIRConfig](args) match {
       case Some(config) =>
         step(spark, config)
       case None =>
@@ -39,7 +137,13 @@ object PreprocFIHR {
 
   }
 
-  def step(spark: SparkSession, config: PreprocFIHRConfig): Unit = {
+  type ConfigType = PreprocFHIRConfig
+
+  val yamlFormat = FHIRYamlProtocol.fhirYamlFormat
+
+  val configType = "FHIR"
+
+  def step(spark: SparkSession, config: PreprocFHIRConfig): Unit = {
     Utils.time {
 
       val hc = spark.sparkContext.hadoopConfiguration
@@ -100,7 +204,7 @@ object PreprocFIHR {
     }
   }
 
-  private def proc_resc(config: PreprocFIHRConfig, hc: Configuration, encounter_ids: Set[String], input_dir_file_system: FileSystem, resc_type: ResourceType, output_dir_file_system: FileSystem) {
+  private def proc_resc(config: PreprocFHIRConfig, hc: Configuration, encounter_ids: Set[String], input_dir_file_system: FileSystem, resc_type: ResourceType, output_dir_file_system: FileSystem) {
     val count = new AtomicInteger(0)
     val resc_dir = config.resc_types(resc_type)
     val n = resc_count(input_dir_file_system, config.input_directory, resc_dir)
@@ -135,7 +239,7 @@ object PreprocFIHR {
     })
   }
 
-  private def proc_enc(config: PreprocFIHRConfig, hc: Configuration, input_dir_file_system: FileSystem, output_dir_file_system: FileSystem) {
+  private def proc_enc(config: PreprocFHIRConfig, hc: Configuration, input_dir_file_system: FileSystem, output_dir_file_system: FileSystem) {
     val resc_type = EncounterResourceType
     val resc_dir = config.resc_types(resc_type)
     val count = new AtomicInteger(0)
@@ -200,7 +304,7 @@ object PreprocFIHR {
     encounter_ids.toSet
   }
 
-  private def combine_pat(config: PreprocFIHRConfig, hc: Configuration, input_dir_file_system: FileSystem, output_dir_file_system: FileSystem) {
+  private def combine_pat(config: PreprocFHIRConfig, hc: Configuration, input_dir_file_system: FileSystem, output_dir_file_system: FileSystem) {
     val resc_type = PatientResourceType
     val resc_dir = config.resc_types(resc_type)
     val count = new AtomicInteger(0)
@@ -294,7 +398,7 @@ object PreprocFIHR {
   }
 
   case class PatientGeo(patient_num: String, lat: Double, lon: Double)
-  private def gen_geodata(spark: SparkSession, config: PreprocFIHRConfig, hc: Configuration, output_dir_file_system: FileSystem) {
+  private def gen_geodata(spark: SparkSession, config: PreprocFHIRConfig, hc: Configuration, output_dir_file_system: FileSystem) {
     import spark.implicits._
 
     val resc_type = "Patient"

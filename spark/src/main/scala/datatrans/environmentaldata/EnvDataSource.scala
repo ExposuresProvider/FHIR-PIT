@@ -8,7 +8,7 @@ import org.apache.spark.sql.types._
 import play.api.libs.json._
 import org.joda.time._
 import play.api.libs.json.Json.JsValueWrapper
-import datatrans.EnvDataSourceConfig
+import datatrans.step.EnvDataSourceConfig
 
 import org.apache.spark.sql.functions._
 import org.apache.hadoop.fs._

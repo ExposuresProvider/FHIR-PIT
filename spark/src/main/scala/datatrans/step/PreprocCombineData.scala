@@ -7,6 +7,10 @@ import org.apache.hadoop.fs.Path
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import play.api.libs.json._
 import scopt._
+import net.jcazevedo.moultingyaml._
+import datatrans.Config._
+import datatrans.Implicits._
+import datatrans._
 
 case class PreprocCombineDataConfig(
                               patient_dimension : String = "",
@@ -14,39 +18,27 @@ case class PreprocCombineDataConfig(
                               input_resc_dir : String = "",
                               output_dir : String = "",
                               resources : Seq[String] = Seq()
-                            )
+                            ) extends StepConfig {
+  val configConfig = PreprocCombineData
+}
 
-object PreprocCombineData {
+object CombineDataYamlProtocol extends DefaultYamlProtocol {
+  implicit val combineDataYamlFormat = yamlFormat5(PreprocCombineDataConfig)
+}
 
-  def main(args: Array[String]) {
-    val parser = new OptionParser[PreprocCombineDataConfig]("series_to_vector") {
-      head("series_to_vector")
-      opt[String]("patient_dimension").required.action((x,c) => c.copy(patient_dimension = x))
-      opt[String]("time_series").required.action((x,c) => c.copy(time_series = x))
-      opt[String]("input_resc_dir").required.action((x,c) => c.copy(input_resc_dir = x))
-      opt[String]("output_dir").required.action((x,c) => c.copy(output_dir = x))
-      opt[Seq[String]]("resources").required.action((x,c) => c.copy(resources = x))
+object PreprocCombineData extends StepConfigConfig {
+
+  type ConfigType = PreprocCombineDataConfig
+
+  val yamlFormat = CombineDataYamlProtocol.combineDataYamlFormat
+
+  val configType = "CombineData"
+
+  def step(spark: SparkSession, config: PreprocCombineDataConfig) : Unit = {
+    Utils.time {
+      proc_resc(spark, config)
     }
-
-    val spark = SparkSession.builder().appName("datatrans preproc").getOrCreate()
-
-    spark.sparkContext.setLogLevel("WARN")
-
-    parser.parse(args, PreprocCombineDataConfig()) match {
-      case Some(config) =>
-
-        Utils.time {
-
-          proc_resc(spark, config)
-
-        }
-      case None =>
-    }
-
-    spark.stop()
-
   }
-
 
   private def toJsValue(obj: Any) : JsValue = {
     if (obj == null) {

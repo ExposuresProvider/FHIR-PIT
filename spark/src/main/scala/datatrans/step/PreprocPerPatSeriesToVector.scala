@@ -1,4 +1,4 @@
-package datatrans
+package datatrans.step
 
 import org.apache.commons.csv._
 import java.io._
@@ -20,9 +20,31 @@ import net.jcazevedo.moultingyaml._
 import com.github.plokhotnyuk.jsoniter_scala.macros._
 import com.github.plokhotnyuk.jsoniter_scala.core._
 
-import Implicits._
+import datatrans.Implicits._
+import datatrans.Config._
+import datatrans._
 
-object PreprocPerPatSeriesToVector {
+case class PreprocPerPatSeriesToVectorConfig(
+  input_directory : String,
+  output_directory : String,
+  start_date : DateTime,
+  end_date : DateTime,
+  med_map : Option[String]
+) extends StepConfig {
+  val configConfig = PreprocPerPatSeriesToVector
+}
+
+object PreprocPerPatSeriesToVectorYamlProtocol extends SharedYamlProtocol {
+  implicit val preprocPerPatSeriesToVectorYamlFormat = yamlFormat5(PreprocPerPatSeriesToVectorConfig)
+}
+
+object PreprocPerPatSeriesToVector extends StepConfigConfig {
+  type ConfigType = PreprocPerPatSeriesToVectorConfig
+
+  val yamlFormat = PreprocPerPatSeriesToVectorYamlProtocol.preprocPerPatSeriesToVectorYamlFormat
+
+  val configType = "PerPatSeriesToVector"
+
   def map_condition(coding: Coding) : Seq[String] =
     ConditionMapper.map_condition(coding.system, coding.code)
 
@@ -473,7 +495,7 @@ object PreprocPerPatSeriesToVector {
 
     spark.sparkContext.setLogLevel("WARN")
 
-    import MyYamlProtocol._
+    import PreprocPerPatSeriesToVectorYamlProtocol._
 
     parseInput[PreprocPerPatSeriesToVectorConfig](args) match {
       case Some(config) =>
