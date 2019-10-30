@@ -31,14 +31,14 @@ case class PreprocCSVTableConfig(
 }
 
 object CSVTableYamlProtocol extends SharedYamlProtocol {
-  implicit val csvTableYamlFormat = yamlFormat7(PreprocCSVTableDataConfig)
+  implicit val csvTableYamlFormat = yamlFormat7(PreprocCSVTableConfig)
 }
 
 object PreprocCSVTable extends StepConfigConfig {
   
   type ConfigType = PreprocCSVTableConfig
 
-  val yamlFormat = csvTableYamlProtocol.csvTableYamlFormat
+  val yamlFormat = CSVTableYamlProtocol.csvTableYamlFormat
 
   val configType = "CSVTable"
 
