@@ -42,9 +42,7 @@ trait StepConfigConfig {
   def step(spark: SparkSession, config: ConfigType)
 }
 
-abstract class StepConfig (
-  c : StepConfigConfig
-) {
+abstract class StepConfig (c : StepConfigConfig) extends Serializable {
   val configConfig = c
 }
 
