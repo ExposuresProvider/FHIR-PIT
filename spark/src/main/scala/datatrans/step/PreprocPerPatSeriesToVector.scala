@@ -30,9 +30,7 @@ case class PreprocPerPatSeriesToVectorConfig(
   start_date : DateTime,
   end_date : DateTime,
   med_map : Option[String]
-) extends StepConfig {
-  val configConfig = PreprocPerPatSeriesToVector
-}
+) extends StepConfig(PreprocPerPatSeriesToVector)
 
 object PreprocPerPatSeriesToVectorYamlProtocol extends SharedYamlProtocol {
   implicit val preprocPerPatSeriesToVectorYamlFormat = yamlFormat5(PreprocPerPatSeriesToVectorConfig)

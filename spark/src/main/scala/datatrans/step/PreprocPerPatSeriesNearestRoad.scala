@@ -17,7 +17,7 @@ case class PreprocPerPatSeriesNearestRoadConfig(
   nearestroad_data : String,
   maximum_search_radius : Double, // = 500,
   output_file : String
-)
+) extends StepConfig(PreprocPerPatSeriesNearestRoad)
 
 object PerPatSeriesNearestRoadYamlProtocol extends DefaultYamlProtocol {
   implicit val perPatSeriesNearestRoadYamlFormat = yamlFormat4(PreprocPerPatSeriesNearestRoadConfig)

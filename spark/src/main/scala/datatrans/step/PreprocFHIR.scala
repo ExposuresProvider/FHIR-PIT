@@ -88,9 +88,7 @@ case class PreprocFHIRConfig(
   output_directory : String = "", // output directory of patient data
   resc_types : Map[JsonifiableType, String], // map resource type to directory, these are resources included in patient data
   skip_preproc : Seq[String] // skip preprocessing these resource as they have already benn preprocessed
-) extends StepConfig {
-  val configConfig = PreprocFHIR
-}
+) extends StepConfig(PreprocFHIR)
 
 object FHIRYamlProtocol extends DefaultYamlProtocol {
   implicit val resourceTypeFormat = new YamlFormat[JsonifiableType] {

@@ -32,7 +32,7 @@ object Config {
 
   }
 
-  val stepConfigConfigMap: Map[String, StepConfigConfig] = Seq(PreprocFHIR, PreprocPerPatSeriesToVector, PreprocPerPatSeriesEnvData, PreprocPerPatSeriesNearestRoad, PreprocPerPatSeriesACS, PreprocPerPatSeriesACS2, PreprocCombineData, PreprocCSVTable, Noop).map(c => (c.configType, c)).toMap
+  val stepConfigConfigMap: Map[String, StepConfigConfig] = Seq(PreprocFHIR, PreprocPerPatSeriesToVector, PreprocPerPatSeriesEnvData, PreprocPerPatSeriesNearestRoad, PreprocPerPatSeriesACS, PreprocPerPatSeriesACS2, PreprocCSVTable, Noop).map(c => (c.configType, c)).toMap
 }
 
 trait StepConfigConfig {
@@ -42,8 +42,10 @@ trait StepConfigConfig {
   def step(spark: SparkSession, config: ConfigType)
 }
 
-trait StepConfig {
-  val configConfig : StepConfigConfig
+abstract class StepConfig (
+  c : StepConfigConfig
+) {
+  val configConfig = c
 }
 
 

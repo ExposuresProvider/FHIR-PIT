@@ -26,9 +26,7 @@ case class PreprocCSVTableConfig(
   start_date : DateTime = new DateTime(0),
   end_date : DateTime = new DateTime(0),
   deidentify : Seq[String] = Seq()
-) extends StepConfig {
-  val configConfig = PreprocCSVTable
-}
+) extends StepConfig(PreprocCSVTable)
 
 object CSVTableYamlProtocol extends SharedYamlProtocol {
   implicit val csvTableYamlFormat = yamlFormat7(PreprocCSVTableConfig)

@@ -18,9 +18,7 @@ case class PreprocPerPatSeriesACS2Config(
                    acs_data : String = "",
                    geoid_data : String = "",
                    output_file : String = ""
-                 ) extends StepConfig {
-  val configConfig = PreprocPerPatSeriesACS2
-}
+                 ) extends StepConfig (PreprocPerPatSeriesACS2)
 
 object PerPatSeriesACS2YamlProtocol extends DefaultYamlProtocol {
   implicit val perPatSeriesACS2YamlFormat = yamlFormat4(PreprocPerPatSeriesACS2Config)
