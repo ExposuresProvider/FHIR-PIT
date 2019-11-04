@@ -35,7 +35,7 @@ object Config {
   val stepConfigConfigMap: Map[String, StepConfigConfig] = Seq(PreprocFHIR, PreprocPerPatSeriesToVector, PreprocPerPatSeriesEnvData, PreprocPerPatSeriesNearestRoad, PreprocPerPatSeriesACS, PreprocPerPatSeriesACS2, PreprocCSVTable, Noop).map(c => (c.configType, c)).toMap
 }
 
-trait StepConfigConfig {
+trait StepConfigConfig extends Serializable {
   type ConfigType
   val yamlFormat : YamlFormat[ConfigType]
   val configType : String
