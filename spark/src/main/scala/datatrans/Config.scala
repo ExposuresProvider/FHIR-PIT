@@ -90,7 +90,7 @@ object StepYamlProtocol extends DefaultYamlProtocol {
 
     def read(value: YamlValue) = {
       val config = value.asYamlObject.getFields(YamlString("arguments")).head
-      val stepConfigConfig = Config.stepConfigConfigMap(value.asYamlObject.getFields(YamlString("function")).head)
+      val stepConfigConfig = Config.stepConfigConfigMap(value.asYamlObject.getFields(YamlString("function")).head.convertTo[String])
       stepConfigConfig.yamlFormat.read(config).asInstanceOf[StepConfig]
     }
   }
