@@ -27,8 +27,8 @@ import datatrans._
 case class PreprocPerPatSeriesToVectorConfig(
   input_directory : String,
   output_directory : String,
-  start_date : DateTime,
-  end_date : DateTime,
+  start_date : org.joda.time.DateTime,
+  end_date : org.joda.time.DateTime,
   med_map : Option[String]
 ) extends StepConfig(PreprocPerPatSeriesToVector)
 

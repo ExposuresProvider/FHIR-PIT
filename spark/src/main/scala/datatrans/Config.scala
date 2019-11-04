@@ -60,14 +60,16 @@ case class Step(
 
 trait SharedYamlProtocol extends DefaultYamlProtocol {
   val fmt = ISODateTimeFormat.dateTime()
-  implicit val dateTimeFormat = new YamlFormat[DateTime] {
-    def write(x: DateTime) =
+  implicit val dateTimeFormat = new YamlFormat[org.joda.time.DateTime] {
+    def write(x: org.joda.time.DateTime) =
       YamlString(fmt.print(x))
 
     def read(value: YamlValue) =
       value match {
         case YamlString(s) =>
           fmt.parseDateTime(s)
+        case YamlDate(d) =>
+          d
         case _ =>
           throw new RuntimeException("cannot parse date time from YamlValue " + value)
       }
