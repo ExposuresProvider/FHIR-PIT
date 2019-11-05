@@ -87,6 +87,7 @@ class GeoidFinder(blockgrpShapefilePath : String, geoidPrefix: String = "")  {
     }
     catch {
       case e : Exception  =>
+        System.out.println("error finding geoid for lat lon " + (lat, lon)) 
         System.out.println(e)
         None
     }
