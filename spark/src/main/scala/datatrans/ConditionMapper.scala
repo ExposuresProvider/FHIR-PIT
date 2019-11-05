@@ -75,7 +75,7 @@ object ConditionMapper {
     }
   }
 
-  val dx = icd9CondMap.keys.toSeq.union(icd10CondMap.keys.toSeq).map(_ + "Dx")
+  val dx = ((dx9:Seq[String]) => (dx9 ++ icd10CondMap.keys.toSeq.diff(dx9)))(icd9CondMap.keys.toSeq).map(_ + "Dx")
 
 }
 
