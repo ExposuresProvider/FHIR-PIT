@@ -17,7 +17,7 @@ case class PreprocPerPatSeriesNearestRoadConfig(
   nearestroad_data : String,
   maximum_search_radius : Double, // = 500,
   output_file : String
-) extends StepConfig(PreprocPerPatSeriesNearestRoad)
+) extends StepConfig
 
 object PerPatSeriesNearestRoadYamlProtocol extends DefaultYamlProtocol {
   implicit val perPatSeriesNearestRoadYamlFormat = yamlFormat4(PreprocPerPatSeriesNearestRoadConfig)
@@ -29,7 +29,7 @@ object PreprocPerPatSeriesNearestRoad extends StepConfigConfig {
 
   val yamlFormat = PerPatSeriesNearestRoadYamlProtocol.perPatSeriesNearestRoadYamlFormat
 
-  val configType = "PerPatSeriesNearestRoad"
+  val configType = classOf[PreprocPerPatSeriesNearestRoadConfig].getName()
 
   def main(args: Array[String]) {
     val parser = new OptionParser[PreprocPerPatSeriesNearestRoadConfig]("series_to_vector") {

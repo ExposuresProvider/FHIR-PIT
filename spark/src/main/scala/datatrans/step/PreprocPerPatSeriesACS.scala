@@ -18,7 +18,7 @@ case class PreprocPerPatSeriesACSConfig(
                    acs_data : String = "",
                    geoid_data : String = "",
                    output_file : String = ""
-) extends StepConfig(PreprocPerPatSeriesACS)
+) extends StepConfig
 
 object PerPatSeriesACSYamlProtocol extends DefaultYamlProtocol {
   implicit val perPatSeriesACSYamlFormat = yamlFormat4(PreprocPerPatSeriesACSConfig)
@@ -30,7 +30,7 @@ object PreprocPerPatSeriesACS extends StepConfigConfig {
 
   val yamlFormat = PerPatSeriesACSYamlProtocol.perPatSeriesACSYamlFormat
 
-  val configType = "PerPatSeriesACS"
+  val configType = classOf[PreprocPerPatSeriesACSConfig].getName()
 
   def step(spark: SparkSession, config: PreprocPerPatSeriesACSConfig) : Unit = {
 

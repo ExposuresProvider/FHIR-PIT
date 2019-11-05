@@ -80,7 +80,7 @@ object PreprocPipeline {
                   skip.add(step.name)
                 } else {
                   try {
-                    val stepConfigConfig = step.step.configConfig
+                    val stepConfigConfig = stepConfigConfigMap(step.step.getClass().getName())
                     stepConfigConfig.step(spark, step.step.asInstanceOf[stepConfigConfig.ConfigType])
                     println("success: " + step.name)
                     success.add(step.name)

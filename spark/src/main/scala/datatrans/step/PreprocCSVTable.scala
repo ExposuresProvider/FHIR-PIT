@@ -26,7 +26,7 @@ case class PreprocCSVTableConfig(
   start_date : DateTime = new DateTime(0),
   end_date : DateTime = new DateTime(0),
   deidentify : Seq[String] = Seq()
-) extends StepConfig(PreprocCSVTable)
+) extends StepConfig
 
 object CSVTableYamlProtocol extends SharedYamlProtocol {
   implicit val csvTableYamlFormat = yamlFormat7(PreprocCSVTableConfig)
@@ -38,7 +38,7 @@ object PreprocCSVTable extends StepConfigConfig {
 
   val yamlFormat = CSVTableYamlProtocol.csvTableYamlFormat
 
-  val configType = "CSVTable"
+  val configType = classOf[PreprocCSVTableConfig].getName()
 
   def step(spark: SparkSession, config:PreprocCSVTableConfig) : Unit = {
     import spark.implicits._

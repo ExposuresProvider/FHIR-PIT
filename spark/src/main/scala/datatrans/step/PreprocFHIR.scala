@@ -88,7 +88,7 @@ case class PreprocFHIRConfig(
   output_directory : String = "", // output directory of patient data
   resc_types : Map[JsonifiableType, String], // map resource type to directory, these are resources included in patient data
   skip_preproc : Seq[String] // skip preprocessing these resource as they have already benn preprocessed
-) extends StepConfig(PreprocFHIR)
+) extends StepConfig
 
 object FHIRYamlProtocol extends DefaultYamlProtocol {
   implicit val resourceTypeFormat = new YamlFormat[JsonifiableType] {
@@ -139,7 +139,7 @@ object PreprocFHIR extends StepConfigConfig {
 
   val yamlFormat = FHIRYamlProtocol.fhirYamlFormat
 
-  val configType = "FHIR"
+  val configType = classOf[PreprocFHIRConfig].getName()
 
   def step(spark: SparkSession, config: PreprocFHIRConfig): Unit = {
     Utils.time {

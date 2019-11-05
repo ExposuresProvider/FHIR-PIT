@@ -14,7 +14,7 @@ object Noop extends StepConfigConfig {
 
   val yamlFormat = UnitYamlFormat
 
-  val configType = "Noop"
+  val configType = classOf[Unit].getName()
 
   def step(spark: SparkSession, config: Unit): Unit = ()
 

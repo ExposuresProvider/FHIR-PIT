@@ -22,7 +22,7 @@ case class EnvDataSourceConfig(
   indices : Seq[String], // = Seq("o3", "pm25"),
   statistics : Seq[String], // = Seq("avg", "max"),
   indices2 : Seq[String] // = Seq("ozone_daily_8hour_maximum", "pm25_daily_average")
-) extends StepConfig (PreprocPerPatSeriesEnvData)
+) extends StepConfig
 
 object PreprocPerPatSeriesEnvDataYamlProtocol extends SharedYamlProtocol {
   implicit val preprocPerPatSeriesEnvDataYamlFormat = yamlFormat9(EnvDataSourceConfig)
@@ -34,7 +34,7 @@ object PreprocPerPatSeriesEnvData extends StepConfigConfig {
 
   val yamlFormat = PreprocPerPatSeriesEnvDataYamlProtocol.preprocPerPatSeriesEnvDataYamlFormat
 
-  val configType = "EnvDataSource"
+  val configType = classOf[EnvDataSourceConfig].getName()
 
   def main(args: Array[String]) {
 

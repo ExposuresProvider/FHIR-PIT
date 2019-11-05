@@ -30,7 +30,7 @@ case class PreprocPerPatSeriesToVectorConfig(
   start_date : org.joda.time.DateTime,
   end_date : org.joda.time.DateTime,
   med_map : Option[String]
-) extends StepConfig(PreprocPerPatSeriesToVector)
+) extends StepConfig
 
 object PreprocPerPatSeriesToVectorYamlProtocol extends SharedYamlProtocol {
   implicit val preprocPerPatSeriesToVectorYamlFormat = yamlFormat5(PreprocPerPatSeriesToVectorConfig)
@@ -41,7 +41,7 @@ object PreprocPerPatSeriesToVector extends StepConfigConfig {
 
   val yamlFormat = PreprocPerPatSeriesToVectorYamlProtocol.preprocPerPatSeriesToVectorYamlFormat
 
-  val configType = "PerPatSeriesToVector"
+  val configType = classOf[PreprocPerPatSeriesToVectorConfig].getName()
 
   def map_condition(coding: Coding) : Seq[String] =
     ConditionMapper.map_condition(coding.system, coding.code)

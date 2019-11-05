@@ -35,15 +35,14 @@ object Config {
   val stepConfigConfigMap: Map[String, StepConfigConfig] = Seq(PreprocFHIR, PreprocPerPatSeriesToVector, PreprocPerPatSeriesEnvData, PreprocPerPatSeriesNearestRoad, PreprocPerPatSeriesACS, PreprocPerPatSeriesACS2, PreprocCSVTable, Noop).map(c => (c.configType, c)).toMap
 }
 
-trait StepConfigConfig extends Serializable {
+trait StepConfigConfig {
   type ConfigType
   val yamlFormat : YamlFormat[ConfigType]
   val configType : String
   def step(spark: SparkSession, config: ConfigType)
 }
 
-abstract class StepConfig (c : StepConfigConfig) extends Serializable {
-  @transient lazy val configConfig = c
+abstract class StepConfig extends Serializable {
 }
 
 
@@ -81,9 +80,9 @@ object StepYamlProtocol extends DefaultYamlProtocol {
 
   implicit val configFormat = new YamlFormat[StepConfig] {
     def write(x: StepConfig) = {
-      val stepConfigConfig = Config.stepConfigConfigMap(x.configConfig.configType)
+      val stepConfigConfig = Config.stepConfigConfigMap(x.getClass().getName())
       YamlObject(
-        YamlString("function") -> YamlString(x.configConfig.configType),
+        YamlString("function") -> YamlString(stepConfigConfig.configType),
         YamlString("arguments") -> stepConfigConfig.yamlFormat.write(x.asInstanceOf[stepConfigConfig.ConfigType])
       )
     }
