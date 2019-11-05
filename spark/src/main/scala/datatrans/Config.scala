@@ -43,7 +43,7 @@ trait StepConfigConfig extends Serializable {
 }
 
 abstract class StepConfig (c : StepConfigConfig) extends Serializable {
-  val configConfig = c
+  @transient lazy val configConfig = c
 }
 
 
