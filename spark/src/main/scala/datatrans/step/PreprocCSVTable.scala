@@ -151,7 +151,7 @@ object PreprocCSVTable extends StepConfigConfig {
           override def update(buffer: MutableAggregationBuffer, input: Row): Unit = {
             val visitType = input.getAs[String](0)
             val respiratoryDx = input.getAs[Boolean](1)
-            if(respiratoryDx && visitType.contains(vtype)) {
+            if(respiratoryDx && visitType != null && visitType.contains(vtype)) {
               buffer(0) = buffer.getAs[Int](0) + 1
             }
           }
