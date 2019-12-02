@@ -1,5 +1,4 @@
 ### run
-in `spark` dir,
 ```
 python src/main/python/runPreprocPipeline.py local <config file>
 ```
