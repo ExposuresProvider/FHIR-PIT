@@ -1,6 +1,6 @@
 ### run
 ```
-python src/main/python/runPreprocPipeline.py local <config file>
+python src/main/python/runPreprocPipeline.py <master url> <config file>
 ```
 
 ### config file format
