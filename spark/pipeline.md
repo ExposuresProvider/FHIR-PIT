@@ -9,7 +9,7 @@ python src/main/python/runPreprocPipeline.py local <config file>
 - name: <name>
   dependsOn: 
   - <name>
-  skip: <boolean>
+  skip: <skip>
   step:
     function: <functional name>
     arguments:
