@@ -20,35 +20,20 @@ import com.vividsolutions.jts.geom.Point
 object NearestRoad {
   private val ff = CommonFactoryFinder.getFilterFactory2()
   private val gf = new GeometryFactory()
-  var index : SpatialIndexFeatureCollection = _
-  var lastMatched : SimpleFeature = _
-  var maximum_search_radius: Double = 0
 }
 
 class NearestRoad(roadShapefilePath : String, maximum_search_radius : Double) {
 
-  try {
-    NearestRoad.maximum_search_radius = maximum_search_radius
-    val shp = new ShapefileHandler(roadShapefilePath)
-    val features = shp.getFeatureCollection
-    NearestRoad.index = new SpatialIndexFeatureCollection(features.getSchema)
-    NearestRoad.index.addAll(features)
-  }
-  catch {
-    case e : Exception => System.out.println(e)
-  }
+  val shp = new ShapefileHandler(roadShapefilePath)
+  val features = shp.getFeatureCollection
+  val index : SpatialIndexFeatureCollection = new SpatialIndexFeatureCollection(features.getSchema)
+  var lastMatched : Option[SimpleFeature] = None
+  index.addAll(features)
 
   def getMinimumDistance(lat : Double, lon : Double) : Double = {
 
-    try {
-      val p = createPointLCC(lat, lon)
-      findMinimumDistance(p)
-    }
-    catch {
-      case e : Exception =>
-        System.out.println(e)
-        None.asInstanceOf[Double]
-    }
+    val p = createPointLCC(lat, lon)
+    findMinimumDistance(p)
 
   }
 
@@ -56,51 +41,38 @@ class NearestRoad(roadShapefilePath : String, maximum_search_radius : Double) {
 
     val coordinate = p.getCoordinate
     val search = new ReferencedEnvelope(new Envelope(coordinate),
-      NearestRoad.index.getSchema.getCoordinateReferenceSystem)
-    search.expandBy(NearestRoad.maximum_search_radius)
-    val bbox = NearestRoad.ff.bbox(NearestRoad.ff.property(NearestRoad.index.getSchema.getGeometryDescriptor.getName),
+      index.getSchema.getCoordinateReferenceSystem)
+    search.expandBy(maximum_search_radius)
+    val bbox = NearestRoad.ff.bbox(NearestRoad.ff.property(index.getSchema.getGeometryDescriptor.getName),
       search.asInstanceOf[BoundingBox])
 
-    val candidates = NearestRoad.index.subCollection(bbox)
+    val candidates = index.subCollection(bbox)
 
     var minDist: Double = -1
-    var minDistPoint: Coordinate = null
-    var feature: SimpleFeature = null
 
-    try {
+    val itr = candidates.features()
 
-      val itr = candidates.features()
+    while (itr.hasNext) {
+      val feature = itr.next()
 
-      while (itr.hasNext) {
-        feature = itr.next()
+      // use following 2 lines to get road name
+      //attribute = feature.getAttribute("FULLNAME").asInstanceOf[String]
+      //System.out.println(attribute)
 
-        // use following 2 lines to get road name
-        //attribute = feature.getAttribute("FULLNAME").asInstanceOf[String]
-        //System.out.println(attribute)
-
-        val line = new LocationIndexedLine(feature.getDefaultGeometry.asInstanceOf[Geometry])
-        val here = line.project(coordinate)
-        val point = line.extractPoint(here)
-        val dist = point.distance(coordinate)
-        if (dist <= maximum_search_radius && (minDist < 0 || dist < minDist)) {
-          minDist = dist
-          minDistPoint = point
-          NearestRoad.lastMatched = feature
-        }
+      val line = new LocationIndexedLine(feature.getDefaultGeometry.asInstanceOf[Geometry])
+      val here = line.project(coordinate)
+      val point = line.extractPoint(here)
+      val dist = point.distance(coordinate)
+      if (dist <= maximum_search_radius && (minDist < 0 || dist < minDist)) {
+        minDist = dist
+        lastMatched = Some(feature)
       }
-    }
-    catch {
-      case e: Exception =>
-        System.out.println(e)
-        None.asInstanceOf[Double]
     }
 
     minDist
   }
 
-  def  getLastMatched : SimpleFeature = {
-    NearestRoad.lastMatched
-  }
+  def getLastMatched : Option[SimpleFeature] = lastMatched
 
   @throws(classOf[TransformException])
   @throws(classOf[FactoryException])
@@ -125,14 +97,15 @@ class NearestRoad(roadShapefilePath : String, maximum_search_radius : Double) {
 
   }
 
-  def getMatchedRoadName : String = {
+  def getMatchedRoadName : Option[String] = lastMatched.map(_.getAttribute("FULLNAME").asInstanceOf[String])
 
-    var roadName : String = null
+  def getMatchedRouteId : Option[String] = lastMatched.map(_.getAttribute("ROUTE_ID").asInstanceOf[String])
+  
+  def getMatchedNumLanes : Option[String] = lastMatched.map(_.getAttribute("THROUGH_LA").asInstanceOf[String])
+  
+  def getMatchedSpeed : Option[String] = lastMatched.map(_.getAttribute("SPEED").asInstanceOf[String])
+  
+  def getMatchedRoadType : Option[String] = lastMatched.map(_.getAttribute("ROADTYPE").asInstanceOf[String])
 
-    if (NearestRoad.lastMatched != null) {
-      roadName = NearestRoad.lastMatched.getAttribute("FULLNAME").asInstanceOf[String]
-    }
 
-    roadName
-  }
 }
