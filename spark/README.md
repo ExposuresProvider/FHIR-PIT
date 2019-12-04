@@ -6,30 +6,34 @@
 sbt assembly
 ```
 
+### generate config file
 
+install dhall, dhall-to-json from
 
-## build singularity container
+https://github.com/dhall-lang/dhall-haskell/releases
+
+modify config/example.dhall
 
 ```
-singularity build spark.img Singularity
+dhall-to-yaml --file config/example.dhall --output config/example.yaml
 ```
 
+### run
 ```
-singularity build spark2.img Singularity2
+python src/main/python/runPreprocPipeline.py <master url> <config file>
 ```
 
-## usage ##
+### config file format
+```
+- name: <name>
+  dependsOn: 
+  - <name>
+  skip: <skip>
+  step:
+    function: <functional name>
+    arguments:
+      <arg>: <value>
+```
 
-See `pipeline.md`
-
- * input format: csv with header
-
- * output format: json or csv sparse format
-
-   * the json format: each line is a json object 
-
-     * simple object `col` 
-
-     * compound object `table`, `instance_num`, `modifier_cd`, `col`
 
 
