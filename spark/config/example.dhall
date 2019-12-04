@@ -11,7 +11,7 @@ let resc_types1 = {
 
 let resc_types2 = {
     Condition = "Condition",
-    Lab = "Labs",
+    Lab = "Lab",
     Encounter = "Encounter",
     MedicationRequest = "MedicationRequest",
     Patient = "Patient",

@@ -21,9 +21,9 @@ let YearSkip : Type = {
     resourceTypes: ResourceTypes
 }
 
-in λ(basedirinput : Text) → λ(basedir : Text) → λ(basediroutput : Text) → λ(skipList : List YearSkip) ->
+in λ(basedirinput : Text) → λ(basedir : Text) → λ(basediroutput : Text) → λ(skipList : List YearSkip) →
 
-let GenericStep : Type -> Type = \(a : Type) -> {
+let GenericStep : Type → Type = λ(a : Type) → {
     name : Text,
     dependsOn: List Text,
     skip : Bool,
@@ -100,12 +100,12 @@ let Step : Type = <
     EnvCSVTable : EnvCSVTableStep
 >
 
-let start_year = λ(year : Natural) -> "${Natural/show year}-01-01T00:00:00-05:00"
-let end_year = λ(year : Natural) -> start_year (year + 1)
-let patgeo = λ(year : Natural) -> "${basedir}/FHIR_processed/${Natural/show year}/geo.csv"
-let acs = λ(year : Natural) -> "${basedir}/other_processed/${Natural/show year}/acs.csv"
-let acs2 = λ(year : Natural) -> "${basedir}/other_processed/${Natural/show year}/acs2.csv"
-let nearestroad = λ(year : Natural) -> "${basedir}/other_processed/${Natural/show year}/nearestroad.csv"
+let start_year = λ(year : Natural) → "${Natural/show year}-01-01T00:00:00-05:00"
+let end_year = λ(year : Natural) → start_year (year + 1)
+let patgeo = λ(year : Natural) → "${basedir}/FHIR_processed/${Natural/show year}/geo.csv"
+let acs = λ(year : Natural) → "${basedir}/other_processed/${Natural/show year}/acs.csv"
+let acs2 = λ(year : Natural) → "${basedir}/other_processed/${Natural/show year}/acs2.csv"
+let nearestroad = λ(year : Natural) → "${basedir}/other_processed/${Natural/show year}/nearestroad.csv"
 
 let fhirStep = λ(skip : Bool) → λ(year : Natural) → λ(resc_types : ResourceTypes) → Step.FHIR {
     name = "FHIR${Natural/show year}",
@@ -122,7 +122,7 @@ let fhirStep = λ(skip : Bool) → λ(year : Natural) → λ(resc_types : Resour
     }
 }
 
-let toVectorStep = \(skip : Bool) -> \(year : Natural) -> Step.ToVector {
+let toVectorStep = λ(skip : Bool) → λ(year : Natural) → Step.ToVector {
   name = "PerPatSeriesToVector${Natural/show year}",
   dependsOn = [
     "FHIR${Natural/show year}"
@@ -164,7 +164,7 @@ let envDataSourceStep = λ(skip : Bool) → λ(year : Natural) → Step.EnvDataS
   }
 }
 
-let acsStep = \(skip : Bool) -> \(year : Natural) -> Step.ACS {
+let acsStep = λ(skip : Bool) → λ(year : Natural) → Step.ACS {
   name = "PerPatSeriesACS${Natural/show year}",
   dependsOn = [
     "PerPatSeriesToVector${Natural/show year}"
@@ -181,7 +181,7 @@ let acsStep = \(skip : Bool) -> \(year : Natural) -> Step.ACS {
   }
 }
 
-let acs2Step = \(skip : Bool) -> \(year : Natural) -> Step.ACS2 {
+let acs2Step = λ(skip : Bool) → λ(year : Natural) → Step.ACS2 {
   name = "PerPatSeriesACS2${Natural/show year}",
   dependsOn = [
     "PerPatSeriesToVector${Natural/show year}"
@@ -198,7 +198,7 @@ let acs2Step = \(skip : Bool) -> \(year : Natural) -> Step.ACS2 {
   }
 }
 
-let nearestRoadStep = \(skip : Bool) -> \(year : Natural) -> Step.NearestRoad {
+let nearestRoadStep = λ(skip : Bool) → λ(year : Natural) → Step.NearestRoad {
   name = "PerPatSeriesNearestRoad${Natural/show year}",
   dependsOn = [
     "PerPatSeriesToVector${Natural/show year}"
@@ -215,7 +215,7 @@ let nearestRoadStep = \(skip : Bool) -> \(year : Natural) -> Step.NearestRoad {
   }
 }
 
-let envCSVTableStep = \(skip : Bool) -> \(year : Natural) -> Step.EnvCSVTable {
+let envCSVTableStep = λ(skip : Bool) → λ(year : Natural) → Step.EnvCSVTable {
   name = "EnvCSVTable${Natural/show year}",
   dependsOn = [
     "PerPatSeriesToVector${Natural/show year}",
@@ -243,7 +243,7 @@ let envCSVTableStep = \(skip : Bool) -> \(year : Natural) -> Step.EnvCSVTable {
   }
 }
 
-in List/fold YearSkip skipList (List Step) (λ(yearSkip : YearSkip) -> λ(stepList : List Step) -> [
+in List/fold YearSkip skipList (List Step) (λ(yearSkip : YearSkip) → λ(stepList : List Step) → [
    fhirStep yearSkip.skip.fhir yearSkip.year yearSkip.resourceTypes,
    toVectorStep yearSkip.skip.toVector yearSkip.year,
    envDataSourceStep yearSkip.skip.envDataSource yearSkip.year,
