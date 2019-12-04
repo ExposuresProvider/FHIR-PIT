@@ -18,7 +18,7 @@ let resc_types2 = {
     Procedure = "Procedure"
 }
 
-in pipeline "/share/spark/hao/data" [{
+in pipeline "/share/spark/hao/data" "/share/spark/hao/data" "/share/spark/hao/data" [{
   year = 2012,
   skip = {
     fhir = True,

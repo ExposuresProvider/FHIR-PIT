@@ -21,7 +21,7 @@ let YearSkip : Type = {
     resourceTypes: ResourceTypes
 }
 
-in λ(basedir : Text) → λ(skipList : List YearSkip) ->
+in λ(basedirinput : Text) → λ(basedir : Text) → λ(basediroutput : Text) → λ(skipList : List YearSkip) ->
 
 let GenericStep : Type -> Type = \(a : Type) -> {
     name : Text,
@@ -114,7 +114,7 @@ let fhirStep = λ(skip : Bool) → λ(year : Natural) → λ(resc_types : Resour
     step = {
         function = "datatrans.step.PreprocFHIRConfig",
         arguments = {
-            input_directory = "${basedir}/FHIR/${Natural/show year}",
+            input_directory = "${basedirinput}/FHIR/${Natural/show year}",
             output_directory = "${basedir}/FHIR_processed/${Natural/show year}",
             resc_types = resc_types,
             skip_preproc = [] : List Text
@@ -149,8 +149,8 @@ let envDataSourceStep = λ(skip : Bool) → λ(year : Natural) → Step.EnvDataS
     function = "datatrans.step.EnvDataSourceConfig",
     arguments = {
       patgeo_data = patgeo year,
-      environmental_data = "${basedir}/other/env",
-      fips_data = "${basedir}/other/spatial/env/US_Census_Tracts_LCC/US_Census_Tracts_LCC.shp",
+      environmental_data = "${basedirinput}/other/env",
+      fips_data = "${basedirinput}/other/spatial/env/US_Census_Tracts_LCC/US_Census_Tracts_LCC.shp",
       output_file = "${basedir}/other_processed/${Natural/show year}/env/%i",
       indices = [] : List Text,
       statistics = [] : List Text,
@@ -174,8 +174,8 @@ let acsStep = \(skip : Bool) -> \(year : Natural) -> Step.ACS {
     function = "datatrans.step.PreprocPerPatSeriesACSConfig",
     arguments = {
       time_series = patgeo year,
-      acs_data = "${basedir}/other/spatial/acs/ACS_NC_2016_with_column_headers.csv",
-      geoid_data = "${basedir}/other/spatial/acs/tl_2016_37_bg_lcc.shp",
+      acs_data = "${basedirinput}/other/spatial/acs/ACS_NC_2016_with_column_headers.csv",
+      geoid_data = "${basedirinput}/other/spatial/acs/tl_2016_37_bg_lcc.shp",
       output_file = acs year
     }
   }
@@ -191,8 +191,8 @@ let acs2Step = \(skip : Bool) -> \(year : Natural) -> Step.ACS2 {
     function = "datatrans.step.PreprocPerPatSeriesACS2Config",
     arguments = {
       time_series = patgeo year,
-      acs_data = "${basedir}/other/spatial/acs/Appold_trans_geo_cross_02.10.10 - trans_geo_cross.csv",
-      geoid_data = "${basedir}/other/spatial/acs/tl_2016_37_bg_lcc.shp",
+      acs_data = "${basedirinput}/other/spatial/acs/Appold_trans_geo_cross_02.10.10 - trans_geo_cross.csv",
+      geoid_data = "${basedirinput}/other/spatial/acs/tl_2016_37_bg_lcc.shp",
       output_file = acs2 year
     }
   }
@@ -208,7 +208,7 @@ let nearestRoadStep = \(skip : Bool) -> \(year : Natural) -> Step.NearestRoad {
     function = "datatrans.step.PreprocPerPatSeriesNearestRoadConfig",
     arguments = {
       patgeo_data = patgeo year,
-      nearestroad_data = "${basedir}/other/spatial/nearestroad/tl_2015_allstates_prisecroads_lcc.shp",
+      nearestroad_data = "${basedirinput}/other/spatial/nearestroad/tl_2015_allstates_prisecroads_lcc.shp",
       maximum_search_radius = Integer/toDouble (Natural/toInteger 500),
       output_file = nearestroad 2012
     }
@@ -235,7 +235,7 @@ let envCSVTableStep = \(skip : Bool) -> \(year : Natural) -> Step.EnvCSVTable {
         acs2 year,
         nearestroad year
       ],
-      output_file = "${basedir}/icees/${Natural/show year}",
+      output_file = "${basediroutput}/icees/${Natural/show year}",
       start_date = start_year year,
       end_date = end_year year,
       deidentify = [] : List Text
