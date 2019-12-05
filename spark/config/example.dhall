@@ -27,6 +27,7 @@ in pipeline "/share/spark/hao/data" "/share/spark/hao/data" "/share/spark/hao/da
     acs = True,
     acs2 = True,
     nearestRoad = True,
+    nearestRoad2 = True,
     envCSVTable = True
   },
   resourceTypes = resc_types1
@@ -39,6 +40,7 @@ in pipeline "/share/spark/hao/data" "/share/spark/hao/data" "/share/spark/hao/da
     acs = True,
     acs2 = True,
     nearestRoad = True,
+    nearestRoad2 = True,
     envCSVTable = True
   },
   resourceTypes = resc_types1
@@ -51,6 +53,7 @@ in pipeline "/share/spark/hao/data" "/share/spark/hao/data" "/share/spark/hao/da
     acs = True,
     acs2 = True,
     nearestRoad = True,
+    nearestRoad2 = True,
     envCSVTable = True
   },
   resourceTypes = resc_types1
@@ -63,6 +66,7 @@ in pipeline "/share/spark/hao/data" "/share/spark/hao/data" "/share/spark/hao/da
     acs = True,
     acs2 = True,
     nearestRoad = True,
+    nearestRoad2 = True,
     envCSVTable = True
   },
   resourceTypes = resc_types2
@@ -75,6 +79,7 @@ in pipeline "/share/spark/hao/data" "/share/spark/hao/data" "/share/spark/hao/da
     acs = True,
     acs2 = True,
     nearestRoad = True,
+    nearestRoad2 = True,
     envCSVTable = True
   },
   resourceTypes = resc_types2

@@ -49,7 +49,6 @@ class NearestRoad(roadShapefilePath : String, maximum_search_radius : Double) {
     val candidates = index.subCollection(bbox)
 
     var minDist: Double = -1
-
     val itr = candidates.features()
 
     while (itr.hasNext) {
@@ -106,6 +105,5 @@ class NearestRoad(roadShapefilePath : String, maximum_search_radius : Double) {
   def getMatchedSpeed : Option[String] = lastMatched.map(_.getAttribute("SPEED").asInstanceOf[String])
   
   def getMatchedRoadType : Option[String] = lastMatched.map(_.getAttribute("ROADTYPE").asInstanceOf[String])
-
 
 }
