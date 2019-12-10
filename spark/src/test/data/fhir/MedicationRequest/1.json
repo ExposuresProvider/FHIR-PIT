@@ -17,6 +17,9 @@
 		"subject": {
 		    "reference": "Patient/0"
 		},
+		"context": {
+		    "referecne": "Encounter/0"
+		},
 		"authoredOn": "2010-01-01T00:00:00Z",
 		"dispenseRequest": {
 		    "validityPeriod": {

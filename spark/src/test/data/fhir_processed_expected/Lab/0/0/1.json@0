@@ -1,0 +1,1 @@
+{"type":"Lab","id":"0","subjectReference":"Patient/0","contextReference":"Encounter/0","coding":[{"system":"http://loinc.org","code":"LOINC:29463-7","display":"weight"}],"value":{"type":"ValueQuantity","valueNumber":90.0,"unit":"kg"},"effectiveDateTime":"2010-01-01T00:00:00Z"}

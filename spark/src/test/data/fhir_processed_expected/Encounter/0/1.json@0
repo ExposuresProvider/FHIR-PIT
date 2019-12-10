@@ -1,0 +1,1 @@
+{"id":"0","subjectReference":"Patient/0","classAttr":{"system":"http://hl7.org/fhir/ValueSet/v3-ActEncounterCode","code":"AMB","display":"ambulatory"},"startDate":"2010-01-01T00:00:00Z"}

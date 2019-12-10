@@ -1,0 +1,1 @@
+{"type":"Procedure","id":"0","subjectReference":"Patient/0","contextReference":"Encounter/0","coding":[{"system":"http://www.ama-assn.org/go/cpt/","code":"xxxxx"}],"performedDateTime":"2010-01-01T00:00:00Z"}

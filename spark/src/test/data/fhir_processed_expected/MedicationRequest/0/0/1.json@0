@@ -1,0 +1,1 @@
+{"type":"Medication","id":"0","subjectReference":"Patient/0","coding":[{"system":"http://www.nlm.nih.gov/research/umls/rxnorm","code":"xxxxxx","display":"Theophylline"}],"authoredOn":"2010-01-01T00:00:00Z","start":"2010-01-01T00:00:00Z","end":"2010-01-01T00:00:00Z"}
