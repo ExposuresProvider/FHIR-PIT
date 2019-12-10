@@ -32,6 +32,9 @@ libraryDependencies ++= Seq(
 // https://mvnrepository.com/artifact/com.jsoniter/jsoniter
 libraryDependencies += "com.jsoniter" % "jsoniter" % "0.9.23"
 
+libraryDependencies += "org.scalactic" %% "scalactic" % "3.1.0" % Test
+libraryDependencies += "org.scalatest" %% "scalatest" % "3.1.0" % Test
+
 assemblyMergeStrategy in assembly := {
   case PathList("com", "vividsolutions", _*) => MergeStrategy.last
   case PathList("javax", "inject", _*) => MergeStrategy.last

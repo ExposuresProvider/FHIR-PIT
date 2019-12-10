@@ -157,7 +157,7 @@ object PreprocFHIR extends StepConfigConfig {
       }
 
       println("loading Encounter ids")
-      val encounter_ids = load_encounter_ids(input_dir_file_system, config.input_directory, config.resc_types(EncounterResourceType))
+      val encounter_ids = load_encounter_ids(output_dir_file_system, config.output_directory, config.resc_types(EncounterResourceType))
       println("processing Resources")
       config.resc_types.keys.foreach(resc_type =>
         resc_type match {
@@ -218,7 +218,7 @@ object PreprocFHIR extends StepConfigConfig {
         println("processing " + resc_type + " " + count.incrementAndGet + " / " + n + " " + id)
 
         val valid_encounter_id = encounter_id.filter(eid => if (encounter_ids.contains(eid)) true else {
-          println("invalid encounter id " + eid)
+          println("invalid encounter id " + eid + " available " + encounter_ids)
           false
         })
 
@@ -293,11 +293,12 @@ object PreprocFHIR extends StepConfigConfig {
   private def load_encounter_ids(input_dir_file_system: FileSystem, input_dir0: String, resc_dir: String) : Set[String] = {
     val input_dir = input_dir0 + "/" + resc_dir
     val input_dir_path = new Path(input_dir)
-    val itr = input_dir_file_system.listFiles(input_dir_path, false)
+    val itr = input_dir_file_system.listFiles(input_dir_path, true)
     val encounter_ids = ListBuffer[String]()
     while(itr.hasNext) {
       val input_file_name = itr.next().getPath().getName()
-      encounter_ids.append(input_file_name)
+      println(input_file_name)
+      encounter_ids.append(input_file_name.split("@")(1))
     }
     encounter_ids.toSet
   }

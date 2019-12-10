@@ -1,0 +1,50 @@
+{
+    "resourceType": "Bundle",
+    "type": "collection",
+    "entry": [
+	{
+	    "resource": {
+		"resourceType": "Patient",
+		"birthDate": "2001-01-01",
+		"gender": "male",
+		"id": "0",
+		"address": [
+		    {
+			"extension": [
+			    {
+				"extension" : [
+				    {
+					"url" : "Latitude",
+					"valueDecimal" : 0.0
+				    },
+				    {
+					"url" : "Longitude",
+					"valueDecimal" : 0.0
+				    }
+				]
+			    }
+			]
+		    }
+		],
+		"extension": [
+		    {
+			"url": "http://hl7.org/fhir/StructureDefinition/us-core-race",
+			"extension": [
+			    {
+				"valueString": "2028-9"
+			    }
+			]
+		    },
+		    {
+			"url": "http://hl7.org/fhir/StructureDefinition/us-core-ethnicity",
+			"extension": [
+			    {
+				"valueString": "2186-5"
+			    }
+			]
+		    }
+		]
+	    }
+	}
+    ]
+}

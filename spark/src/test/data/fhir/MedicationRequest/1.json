@@ -1,0 +1,30 @@
+{
+    "resourceType": "Bundle",
+    "type": "collection",
+    "entry": [
+	{
+	    "resource": {
+		"id": "0",
+		"medicationCodeableConcept": {
+		    "coding": [
+			{
+			    "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+			    "code": "xxxxxx",
+			    "display": "Theophylline"
+			}
+		    ]
+		},
+		"subject": {
+		    "reference": "Patient/0"
+		},
+		"authoredOn": "2010-01-01T00:00:00Z",
+		"dispenseRequest": {
+		    "validityPeriod": {
+			"start": "2010-01-01T00:00:00Z",
+			"end": "2010-01-01T00:00:00Z"
+		    }
+		}
+	    }
+	}
+    ]
+}
