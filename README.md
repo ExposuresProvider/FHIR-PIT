@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/NCATS-Tangerine/FHIR-PIT.svg?branch=master)](https://travis-ci.com/NCATS-Tangerine/FHIR-PIT)
+
 # FHIR PIT
 
 
