@@ -2,7 +2,7 @@ name := "Preproc"
 
 version := "1.0"
 
-scalaVersion := "2.11.8"
+scalaVersion := "2.11.12"
 
 resolvers ++= Seq(
   "Open Source Geospatial Foundation Repository" at "http://download.osgeo.org/webdav/geotools/",
@@ -10,19 +10,19 @@ resolvers ++= Seq(
   "Java.net repository" at "http://download.java.net/maven/2"
 )
 
-libraryDependencies += "org.apache.spark" % "spark-core_2.11" % "2.2.1"
-libraryDependencies += "org.apache.spark" % "spark-sql_2.11" % "2.2.1"
+libraryDependencies += "org.apache.spark" % "spark-core_2.11" % "2.4.4"
+libraryDependencies += "org.apache.spark" % "spark-sql_2.11" % "2.4.4"
 libraryDependencies += "org.apache.commons" % "commons-text" % "1.3"
 libraryDependencies += "com.typesafe.play" %% "play-json" % "2.6.7"
-libraryDependencies += "com.github.scopt" %% "scopt" % "3.7.0"
-libraryDependencies += "org.locationtech.geotrellis" %% "geotrellis-proj4" % "1.1.0"
+libraryDependencies += "com.github.scopt" %% "scopt" % "3.7.1"
+libraryDependencies += "org.locationtech.geotrellis" %% "geotrellis-proj4" % "3.2.0"
 libraryDependencies += "org.geotools" % "gt-shapefile" % "19.0"
 libraryDependencies += "org.geotools" % "gt-epsg-hsql" % "19.0"
 libraryDependencies += "com.vividsolutions" % "jts" % "1.13"
 libraryDependencies += "junit" % "junit" % "4.11" % Test
 libraryDependencies += "javax.media" % "jai_core" % "1.1.3" from "http://download.osgeo.org/webdav/geotools/javax/media/jai_core/1.1.3/jai_core-1.1.3.jar"
 libraryDependencies += "org.apache.commons" % "commons-csv" % "1.6"
-libraryDependencies += "org.typelevel" %% "squants" % "1.4.0"
+libraryDependencies += "org.typelevel" %% "squants" % "1.6.0"
 libraryDependencies += "net.jcazevedo" %% "moultingyaml" % "0.4.1"
 libraryDependencies += "io.suzaku" %% "boopickle" % "1.3.1"
 libraryDependencies += "com.fasterxml.jackson.core" % "jackson-core" % "2.8.9"
@@ -37,6 +37,15 @@ libraryDependencies += "com.jsoniter" % "jsoniter" % "0.9.23"
 
 libraryDependencies += "org.scalactic" %% "scalactic" % "3.1.0" % Test
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.1.0" % Test
+val circeVersion = "0.11.2"
+
+libraryDependencies ++= Seq(
+  "io.circe" %% "circe-core",
+  "io.circe" %% "circe-generic",
+  "io.circe" %% "circe-parser"
+).map(_ % circeVersion % Test)
+
+libraryDependencies += "org.gnieh" %% "diffson-circe" % "3.1.1" % Test
 
 testOptions += Tests.Argument("-oF")
 
