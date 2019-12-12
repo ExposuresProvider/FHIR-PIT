@@ -24,7 +24,7 @@ object PreprocFHIRResourceType {
     def fromJson(obj : JsValue):JsonType
   }
   sealed trait ResourceType extends JsonifiableType {
-    def setEncounter(enc: Encounter, objs: Seq[JsValue]): Encounter
+    def setEncounter(enc: Encounter, objs: Seq[Resource]): Encounter
   }
   case object EncounterResourceType extends JsonifiableType {
     type JsonType = Encounter
@@ -42,40 +42,40 @@ object PreprocFHIRResourceType {
     type JsonType = Lab
     override def fromJson(obj : JsValue):JsonType =
       obj.as[JsonType]
-    override def setEncounter(enc: Encounter, objs: Seq[JsValue]) : Encounter =
-      enc.copy(lab = objs.map(obj => obj.as[Lab]))
+    override def setEncounter(enc: Encounter, objs: Seq[Resource]) : Encounter =
+      enc.copy(lab = objs.map(obj => obj.asInstanceOf[Lab]))
     override def toString() = "Lab"
   }
   case object ConditionResourceType extends ResourceType {
     type JsonType = Condition
     override def fromJson(obj : JsValue):JsonType =
       obj.as[JsonType]
-    override def setEncounter(enc: Encounter, objs: Seq[JsValue]) : Encounter =
-      enc.copy(condition = objs.map(obj => obj.as[Condition]))
+    override def setEncounter(enc: Encounter, objs: Seq[Resource]) : Encounter =
+      enc.copy(condition = objs.map(obj => obj.asInstanceOf[Condition]))
     override def toString() = "Condition"
   }
   case object MedicationRequestResourceType extends ResourceType {
     type JsonType = Medication
     override def fromJson(obj : JsValue):JsonType =
       obj.as[JsonType]
-    override def setEncounter(enc: Encounter, objs: Seq[JsValue]) : Encounter =
-      enc.copy(medication = objs.map(obj => obj.as[Medication]))
+    override def setEncounter(enc: Encounter, objs: Seq[Resource]) : Encounter =
+      enc.copy(medication = objs.map(obj => obj.asInstanceOf[Medication]))
     override def toString() = "MedicationRequest"
   }
   case object ProcedureResourceType extends ResourceType {
     type JsonType = Procedure
     override def fromJson(obj : JsValue):JsonType =
       obj.as[JsonType]
-    override def setEncounter(enc: Encounter, objs: Seq[JsValue]) : Encounter =
-      enc.copy(procedure = objs.map(obj => obj.as[Procedure]))
+    override def setEncounter(enc: Encounter, objs: Seq[Resource]) : Encounter =
+      enc.copy(procedure = objs.map(obj => obj.asInstanceOf[Procedure]))
     override def toString() = "Procedure"
   }
   case object BMIResourceType extends ResourceType {
     type JsonType = BMI
     override def fromJson(obj : JsValue):JsonType =
       obj.as[JsonType]
-    override def setEncounter(enc: Encounter, objs: Seq[JsValue]) : Encounter =
-      enc.copy(bmi = objs.map(obj => obj.as[BMI]))
+    override def setEncounter(enc: Encounter, objs: Seq[Resource]) : Encounter =
+      enc.copy(bmi = objs.map(obj => obj.asInstanceOf[BMI]))
     override def toString() = "BMI"
   }
 
@@ -223,14 +223,15 @@ object PreprocFHIR extends StepConfigConfig {
         })
 
         val output_file = valid_encounter_id match {
-          case Some(eid) => config.output_directory + "/" + resc_type + "/" + patient_num + "/" + eid + "/" + f + "@" + i
-          case None => config.output_directory + "/" + resc_type + "/" + patient_num + "/" + f + "@" + i
+          case Some(eid) => config.output_directory + "/" + config.resc_types(resc_type) + "/" + patient_num + "/" + eid + "/" + f + "@" + i
+          case None => config.output_directory + "/" + config.resc_types(resc_type) + "/" + patient_num + "/" + f + "@" + i
         }
 
         val output_file_path = new Path(output_file)
         if (output_dir_file_system.exists(output_file_path)) {
           println(id ++ " file " ++ output_file + " exists")
         } else {
+          println("saving json " + obj)
           Utils.saveJson(hc, output_file_path, obj)
         }
 
@@ -339,8 +340,7 @@ object PreprocFHIR extends StepConfigConfig {
                       println("found resource " + config.resc_types(resc_type) + "/" + patient_num + "/" + encounter_id)
                       val objs = Utils.HDFSCollection(hc, input_resc_dir_path).map(input_resc_file_path =>
                         try {
-                          val input_resc_file_input_stream = output_dir_file_system.open(input_resc_file_path)
-                          Json.parse(input_resc_file_input_stream)
+                          Utils.loadJson[Resource](hc, input_resc_file_path)
                         } catch {
                           case e : Exception =>
                             throw new Exception("error processing " + resc_type + " " + input_resc_file_path, e)

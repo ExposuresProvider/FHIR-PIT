@@ -38,6 +38,8 @@ libraryDependencies += "com.jsoniter" % "jsoniter" % "0.9.23"
 libraryDependencies += "org.scalactic" %% "scalactic" % "3.1.0" % Test
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.1.0" % Test
 
+testOptions += Tests.Argument("-oF")
+
 assemblyMergeStrategy in assembly := {
   case PathList("com", "vividsolutions", _*) => MergeStrategy.last
   case PathList("javax", "inject", _*) => MergeStrategy.last
