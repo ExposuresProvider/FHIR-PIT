@@ -1,0 +1,9 @@
+.ensime
+.ensime_cache
+.idea
+sing
+target
+project/project
+project/target
+spark-warehouse
+**/*~
