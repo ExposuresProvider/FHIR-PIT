@@ -5,10 +5,14 @@ import java.util.concurrent.atomic.AtomicInteger
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{ FileSystem, Path, PathFilter }
 import org.apache.spark.sql.SparkSession
-import play.api.libs.json._
+import cats.syntax.either._
+import io.circe._
+import io.circe.syntax._
+import io.circe.parser._
 import scala.collection.mutable.ListBuffer
 import scopt._
 import java.util.Base64
+import java.io.InputStream
 import java.nio.charset.StandardCharsets
 import datatrans.Config._
 import net.jcazevedo.moultingyaml._
@@ -19,63 +23,64 @@ import datatrans.Implicits._
 import datatrans._
 
 object PreprocFHIRResourceType {
+  import Utils._
   sealed trait JsonifiableType {
     type JsonType
-    def fromJson(obj : JsValue):JsonType
+    def fromJson(obj : Json):JsonType
   }
   sealed trait ResourceType extends JsonifiableType {
     def setEncounter(enc: Encounter, objs: Seq[Resource]): Encounter
   }
   case object EncounterResourceType extends JsonifiableType {
     type JsonType = Encounter
-    override def fromJson(obj : JsValue):JsonType =
-      obj.as[JsonType]
+    override def fromJson(obj : Json): JsonType =
+      decode[JsonType](obj)
     override def toString() = "Encounter"
   }
   case object PatientResourceType extends JsonifiableType {
     type JsonType = Patient
-    override def fromJson(obj : JsValue):JsonType =
-      obj.as[JsonType]
+    override def fromJson(obj : Json):JsonType =
+      decode[JsonType](obj)
     override def toString() = "Patient"
   }
   case object LabResourceType extends ResourceType {
     type JsonType = Lab
-    override def fromJson(obj : JsValue):JsonType =
-      obj.as[JsonType]
+    override def fromJson(obj : Json):JsonType =
+      decode[JsonType](obj)
     override def setEncounter(enc: Encounter, objs: Seq[Resource]) : Encounter =
       enc.copy(lab = objs.map(obj => obj.asInstanceOf[Lab]))
     override def toString() = "Lab"
   }
   case object ConditionResourceType extends ResourceType {
     type JsonType = Condition
-    override def fromJson(obj : JsValue):JsonType =
-      obj.as[JsonType]
+    override def fromJson(obj : Json):JsonType =
+      decode[JsonType](obj)
     override def setEncounter(enc: Encounter, objs: Seq[Resource]) : Encounter =
       enc.copy(condition = objs.map(obj => obj.asInstanceOf[Condition]))
     override def toString() = "Condition"
   }
   case object MedicationRequestResourceType extends ResourceType {
     type JsonType = Medication
-    override def fromJson(obj : JsValue):JsonType =
-      obj.as[JsonType]
+    override def fromJson(obj : Json):JsonType =
+      decode[JsonType](obj)
     override def setEncounter(enc: Encounter, objs: Seq[Resource]) : Encounter =
       enc.copy(medication = objs.map(obj => obj.asInstanceOf[Medication]))
     override def toString() = "MedicationRequest"
   }
   case object ProcedureResourceType extends ResourceType {
     type JsonType = Procedure
-    override def fromJson(obj : JsValue):JsonType =
-      obj.as[JsonType]
+    override def fromJson(obj : Json):JsonType =
+      decode[JsonType](obj)
     override def setEncounter(enc: Encounter, objs: Seq[Resource]) : Encounter =
       enc.copy(procedure = objs.map(obj => obj.asInstanceOf[Procedure]))
     override def toString() = "Procedure"
   }
   case object BMIResourceType extends ResourceType {
-    type JsonType = BMI
-    override def fromJson(obj : JsValue):JsonType =
-      obj.as[JsonType]
+    type JsonType = Lab
+    override def fromJson(obj : Json):JsonType =
+      decode[JsonType](obj)
     override def setEncounter(enc: Encounter, objs: Seq[Resource]) : Encounter =
-      enc.copy(bmi = objs.map(obj => obj.asInstanceOf[BMI]))
+      enc.copy(bmi = objs.map(obj => obj.asInstanceOf[Lab]))
     override def toString() = "BMI"
   }
 
@@ -116,6 +121,8 @@ object FHIRYamlProtocol extends DefaultYamlProtocol {
 }
 
 object PreprocFHIR extends StepConfigConfig {
+
+  import Utils._
 
   def main(args: Array[String]) {    
 
@@ -175,7 +182,16 @@ object PreprocFHIR extends StepConfigConfig {
     }
   }
 
-  private def proc_gen(input_dir_file_system: FileSystem, input_dir0: String, resc_dir: String, proc : ((JsObject, String, Int)) => Unit) : Unit = {
+  private def parseInputStream(input_file_input_stream : InputStream) : Json = {
+    val str = scala.io.Source.fromInputStream(input_file_input_stream).mkString
+
+    parse(str) match {
+      case Left(error) => throw new RuntimeException(error)
+      case Right(obj) => obj
+    }
+  }
+
+  private def proc_gen(input_dir_file_system: FileSystem, input_dir0: String, resc_dir: String, proc : ((Json, String, Int)) => Unit) : Unit = {
     val input_dir = input_dir0 + "/" + resc_dir
     val input_dir_path = new Path(input_dir)
     val itr = input_dir_file_system.listFiles(input_dir_path, false)
@@ -185,16 +201,16 @@ object PreprocFHIR extends StepConfigConfig {
 
       println("loading " + input_file_path.getName)
 
-      val obj = Json.parse(input_file_input_stream)
-
-      if (!(obj \ "resourceType").isDefined) {
-        proc((obj.as[JsObject], input_file_path.getName, 0))
+      val obj = parseInputStream(input_file_input_stream)
+      if (obj.hcursor.downField("resourceType").failed) {
+        proc((obj, input_file_path.getName, 0))
       } else {
-        if((obj \ "entry").isDefined) {
-          val entry = (obj \ "entry").get.as[List[JsObject]]
-          val n = entry.size
-
-          entry.par.zipWithIndex.map({case (o,i) => (o,input_file_path.getName,i)}).foreach(proc)
+        val entry0 = obj.hcursor.downField("entry")
+        if(entry0.succeeded) {
+          for(
+            entry <- entry0.as[List[Json]];
+            n = entry.size
+          ) yield entry.par.zipWithIndex.map({case (o,i) => (o,input_file_path.getName,i)}).foreach(proc)
         } else {
           println("cannot find entry field " + input_file_path.getName)
         }
@@ -209,6 +225,7 @@ object PreprocFHIR extends StepConfigConfig {
 
     proc_gen(input_dir_file_system, config.input_directory, resc_dir, {
       case (obj1, f, i) =>
+        println("decoding json " + obj1)
         val obj : Resource = resc_type.fromJson(obj1).asInstanceOf[Resource]
 
         val id = obj.id
@@ -246,8 +263,7 @@ object PreprocFHIR extends StepConfigConfig {
 
     proc_gen(input_dir_file_system, config.input_directory, resc_dir, {
       case (obj1, f, i) =>
-        val obj = obj1.as[Encounter]
-
+        val obj = decode[Encounter](obj1)
         val id = obj.id
         val patient_num = obj.subjectReference.split("/")(1)
 
@@ -257,11 +273,11 @@ object PreprocFHIR extends StepConfigConfig {
         val output_file_path = new Path(output_file)
 
         if (output_dir_file_system.exists(output_file_path)) {
-            println(output_file + " exists")
+          println(output_file + " exists")
         } else {
           Utils.saveJson(hc, output_file_path, obj)
         }
-
+        
     })
   }
 
@@ -276,13 +292,14 @@ object PreprocFHIR extends StepConfigConfig {
 
       println("loading " + input_file_path.getName)
 
-      val obj = Json.parse(input_file_input_stream)
+      val obj = parseInputStream(input_file_input_stream)
 
-      if (!(obj \ "resourceType").isDefined) {
+      if (obj.hcursor.downField("resourceType").failed) {
         count += 1
       } else {
-        if((obj \ "entry").isDefined) {
-          count += (obj \ "entry").get.as[JsArray].value.size
+        val entry0 = obj.hcursor.downField("entry")
+        if(entry0.succeeded) {
+          count += entry0.values.get.size
         } else {
           println("cannot find entry field " + input_file_path.getName)
         }
@@ -313,7 +330,7 @@ object PreprocFHIR extends StepConfigConfig {
 
     proc_gen(input_dir_file_system, config.input_directory, resc_dir, {
       case (obj, f, i) =>
-        var pat = obj.as[Patient]
+        var pat = decode[Patient](obj)
         val patient_num = pat.id
         try {
 
@@ -344,7 +361,7 @@ object PreprocFHIR extends StepConfigConfig {
                         } catch {
                           case e : Exception =>
                             throw new Exception("error processing " + resc_type + " " + input_resc_file_path, e)
-                        }).toSeq
+                       }).toSeq
                       enc = resc_type.setEncounter(enc, objs)
                     } else {
                       println("cannot find resource " + config.resc_types(resc_type) + "/" + patient_num + "/" + encounter_id)
@@ -379,7 +396,7 @@ object PreprocFHIR extends StepConfigConfig {
               case ProcedureResourceType =>
                 combineRescWithoutValidEncounterNumber(ProcedureResourceType, (meds: Seq[Procedure]) => { pat = pat.copy(procedure = meds) })
               case BMIResourceType =>
-                combineRescWithoutValidEncounterNumber(BMIResourceType, (meds: Seq[BMI]) => { pat = pat.copy(bmi = meds) })
+                combineRescWithoutValidEncounterNumber(BMIResourceType, (meds: Seq[Lab]) => { pat = pat.copy(bmi = meds) })
               case PatientResourceType =>
               case EncounterResourceType =>
             }

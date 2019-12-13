@@ -5,9 +5,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import datatrans.Utils._
 import org.apache.spark.sql.{DataFrame, SparkSession, Column}
 import org.apache.spark.sql.types._
-import play.api.libs.json._
 import org.joda.time._
-import play.api.libs.json.Json.JsValueWrapper
 import datatrans.step.EnvDataSourceConfig
 
 import org.apache.spark.sql.functions._

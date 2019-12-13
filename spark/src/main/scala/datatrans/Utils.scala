@@ -8,10 +8,10 @@ import org.apache.hadoop.fs._
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.types._
+import io.circe._
 import geotrellis.proj4._
 import org.apache.commons.lang.StringEscapeUtils
 import org.joda.time.DateTime
-import play.api.libs.json._
 import org.apache.commons.csv._
 
 import scala.collection.mutable
@@ -335,40 +335,40 @@ object Utils {
       None
 
   }
-  def insertOrUpdate(mmap: mutable.Map[DateTime, JsObject], key: DateTime, col: String, value: JsValue): Unit = {
-    mmap.get(key) match {
-      case Some(_) =>
-        val json = mmap(key)
-        json \ col match {
-          case JsDefined(value0) =>
-            value0 match {
-              case JsArray(arr) =>
-                mmap(key) ++= Json.obj(col -> (arr ++ value.asInstanceOf[JsArray].value))
-              case JsNumber(n) =>
-                mmap(key) ++= Json.obj(col -> (n + value.asInstanceOf[JsNumber].value))
-              case _ =>
-                if (value0 != value) {
-                  throw new RuntimeException("the key " + col + " is mapped to different values " + value0 + " " + value)
-                }
-            }
-          case _ =>
-            mmap(key) ++= Json.obj(col -> value)
-        }
-      case None =>
-        mmap(key) = Json.obj(col -> value)
-    }
-  }
+  // def insertOrUpdate(mmap: mutable.Map[DateTime, JsObject], key: DateTime, col: String, value: JsValue): Unit = {
+  //   mmap.get(key) match {
+  //     case Some(_) =>
+  //       val json = mmap(key)
+  //       json \ col match {
+  //         case JsDefined(value0) =>
+  //           value0 match {
+  //             case JsArray(arr) =>
+  //               mmap(key) ++= Json.obj(col -> (arr ++ value.asInstanceOf[JsArray].value))
+  //             case JsNumber(n) =>
+  //               mmap(key) ++= Json.obj(col -> (n + value.asInstanceOf[JsNumber].value))
+  //             case _ =>
+  //               if (value0 != value) {
+  //                 throw new RuntimeException("the key " + col + " is mapped to different values " + value0 + " " + value)
+  //               }
+  //           }
+  //         case _ =>
+  //           mmap(key) ++= Json.obj(col -> value)
+  //       }
+  //     case None =>
+  //       mmap(key) = Json.obj(col -> value)
+  //   }
+  // }
   val DATE_FORMAT = "yyyy-MM-dd"
   val BUFFER_SIZE : Int = 4 * 1024
 
-  def extractField(jsvalue: JsValue, field: String) : Option[JsValue] = {
-    jsvalue \ field match {
-      case JsUndefined() =>
-        None
-      case JsDefined(lat) =>
-        Some(lat)
-    }
-  }
+  // def extractField(jsvalue: JsValue, field: String) : Option[JsValue] = {
+  //   jsvalue \ field match {
+  //     case JsUndefined() =>
+  //       None
+  //     case JsDefined(lat) =>
+  //       Some(lat)
+  //   }
+  // }
 
   def patientDimension(spark: SparkSession, hc: Configuration, patient_dimension: Option[String], time_series: String) = {
     patient_dimension match {
@@ -557,5 +557,11 @@ class Cache[K,V <: AnyRef](fun : K => V) {
     "Sex",
     "Race",
     "Ethnicity")
+
+  def decode[T](obj1: Json)(implicit decoder : Decoder[T]): T =
+    obj1.as[T] match {
+      case Left(error) => throw new RuntimeException(error)
+      case Right(obj) => obj
+    }
 
 }

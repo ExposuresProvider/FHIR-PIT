@@ -13,7 +13,6 @@ resolvers ++= Seq(
 libraryDependencies += "org.apache.spark" % "spark-core_2.11" % "2.4.4"
 libraryDependencies += "org.apache.spark" % "spark-sql_2.11" % "2.4.4"
 libraryDependencies += "org.apache.commons" % "commons-text" % "1.3"
-libraryDependencies += "com.typesafe.play" %% "play-json" % "2.6.7"
 libraryDependencies += "com.github.scopt" %% "scopt" % "3.7.1"
 libraryDependencies += "org.locationtech.geotrellis" %% "geotrellis-proj4" % "3.2.0"
 libraryDependencies += "org.geotools" % "gt-shapefile" % "19.0"
@@ -43,7 +42,7 @@ libraryDependencies ++= Seq(
   "io.circe" %% "circe-core",
   "io.circe" %% "circe-generic",
   "io.circe" %% "circe-parser"
-).map(_ % circeVersion % Test)
+).map(_ % circeVersion)
 
 libraryDependencies += "org.gnieh" %% "diffson-circe" % "3.1.1" % Test
 

@@ -9,7 +9,6 @@ import org.apache.hadoop.fs.Path
 import org.apache.spark.sql.SparkSession
 import org.joda.time._
 import org.joda.time.format.{DateTimeFormat, ISODateTimeFormat}
-import play.api.libs.json._
 import scala.collection.mutable.{ ListBuffer, MultiMap }
 import scopt._
 import scala.collection.JavaConverters._
@@ -56,7 +55,7 @@ object PreprocPerPatSeriesToVector extends StepConfigConfig {
       at.isBefore(bt)
     })
 
-  def map_lab(lab : Seq[Lab]) : Seq[(String, JsValue)] = {
+  def map_lab(lab : Seq[Lab]) : Seq[(String, Any)] = {
     def filter_by_code(code : String) =
       sort_by_effectiveDateTime(lab.filter(lab => lab.coding.exists((x) => x.code == code)))
     val wbc = filter_by_code("6690-2") // 26464-8
@@ -65,10 +64,10 @@ object PreprocPerPatSeriesToVector extends StepConfigConfig {
     val fev1 = filter_by_code("20150-9") // 52485-0
     val fvc = filter_by_code("19870-5") // 52485-0
     val fev1fvc = filter_by_code("19926-5") // 52485-0
-    val listBuf = new ListBuffer[(String, JsValue)]()
+    val listBuf = new ListBuffer[(String, Any)]()
 
-    def extractValue(lab: Lab) = lab.value.map(x => JsNumber(x.asInstanceOf[ValueQuantity].valueNumber)).getOrElse(JsNull)
-    def extractFlag(lab: Lab) = lab.flag.map(JsString).getOrElse(JsNull)
+    def extractValue(lab: Lab) = lab.value.map(x => x.asInstanceOf[ValueQuantity].valueNumber).getOrElse(null)
+    def extractFlag(lab: Lab) = lab.flag.getOrElse(null)
     def extractColumns(lab: Seq[Lab], prefix: String) = {
       if(!lab.isEmpty) {
         Seq(
@@ -199,7 +198,7 @@ object PreprocPerPatSeriesToVector extends StepConfigConfig {
       case _ => "Unknown"
     }
 
-  def map_bmi(bmi : Seq[BMI]) : Option[Double] = {
+  def map_bmi(bmi : Seq[Lab]) : Option[Double] = {
     def filter_by_code(code : String) =
       bmi.filter(bmi => bmi.coding.exists((x) => x.code == code))
     val bmiQuas = filter_by_code(LOINC.BMI)
@@ -429,11 +428,7 @@ object PreprocPerPatSeriesToVector extends StepConfigConfig {
           val output_file_csv_writer = new CSVPrinter( new OutputStreamWriter(output_file_file_system.create(output_file_path), "UTF-8" ) , CSVFormat.DEFAULT.withHeader(colnames:_*))
           
           recs.foreach(m => {
-            val row = colnames.map(colname => m.get(colname).map({
-              case JsString(s) => s
-              case JsNumber(n) => n
-              case default => default
-            }).getOrElse(""))
+            val row = colnames.map(colname => m.get(colname).getOrElse(""))
             output_file_csv_writer.printRecord(row.asJava)
           })
           output_file_csv_writer.close()

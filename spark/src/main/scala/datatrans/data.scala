@@ -5,12 +5,14 @@ import java.util.concurrent.atomic.AtomicInteger
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.SparkSession
-import play.api.libs.json._
 import scopt._
 import java.util.Base64
 import java.nio.charset.StandardCharsets
 import com.github.plokhotnyuk.jsoniter_scala.macros._
 import com.github.plokhotnyuk.jsoniter_scala.core._
+import cats.syntax.either._
+import io.circe._
+import io.circe.parser._
 
 
 case class Patient(
@@ -25,7 +27,7 @@ case class Patient(
   condition : Seq[Condition], // some conditions don't have valid encounter id, add them here
   lab : Seq[Lab], // some lab don't have valid encounter id, add them here
   procedure : Seq[Procedure], // some procedures don't have valid encounter id, add them here
-  bmi : Seq[BMI] // some bmis don't have valid encounter id, add them here
+  bmi : Seq[Lab] // some bmis don't have valid encounter id, add them here
 )
 
 case class Address(
@@ -33,7 +35,7 @@ case class Address(
   lon : Double
 )
 
-case class Encounter(id : String, subjectReference : String, classAttr : Option[Coding], startDate : Option[String], endDate : Option[String], condition: Seq[Condition], lab: Seq[Lab], medication: Seq[Medication], procedure: Seq[Procedure], bmi: Seq[BMI])
+case class Encounter(id : String, subjectReference : String, classAttr : Option[Coding], startDate : Option[String], endDate : Option[String], condition: Seq[Condition], lab: Seq[Lab], medication: Seq[Medication], procedure: Seq[Procedure], bmi: Seq[Lab])
 
 sealed trait Resource {
   val id : String
@@ -45,7 +47,6 @@ case class Condition(override val id : String, override val subjectReference : S
 case class Lab(override val id : String, override val subjectReference : String, override val contextReference : Option[String], coding : Seq[Coding], value : Option[Value], flag : Option[String], effectiveDateTime : String) extends Resource
 case class Medication(override val id : String, override val subjectReference : String, override val contextReference : Option[String], coding : Seq[Coding], authoredOn : Option[String], start: String, end: Option[String]) extends Resource
 case class Procedure(override val id : String, override val subjectReference : String, override val contextReference : Option[String], coding : Seq[Coding], performedDateTime : String) extends Resource
-case class BMI(override val id : String, override val subjectReference : String, override val contextReference : Option[String], coding : Seq[Coding], value : Value) extends Resource
 
 case class Coding(system: String, code: String, display: Option[String])
 
@@ -62,135 +63,167 @@ object Implicits{
   implicit val addressCodec: JsonValueCodec[Address] = JsonCodecMaker.make[Address](CodecMakerConfig())
   implicit val patientCodec: JsonValueCodec[Patient] = JsonCodecMaker.make[Patient](CodecMakerConfig())
 
-  implicit val quantityReads: Reads[Value] = new Reads[Value] {
-    override def reads(json: JsValue): JsResult[Value] = {
-      json \ "valueQuantity" match {
-        case JsDefined(vq) =>
-          val value = (vq \ "value").as[Double]
-          val unit = (vq \ "code").asOpt[String]
-          JsSuccess(ValueQuantity(value, unit))
-        case JsUndefined() =>
-          json \ "valueString" match {
-            case JsDefined(s) => JsSuccess(ValueString(s.as[String]))
-            case _ => JsError(Seq())
-          }
+  implicit val quantityDecoder: Decoder[Value] = new Decoder[Value] {
+    override def apply(json: HCursor): Decoder.Result[Value] = {
+      val vq = json.downField("valueQuantity")
+      if (vq.succeeded) {
+        for(
+          value <- vq.downField("value").as[Double];
+          unit = vq.downField("code").as[String].right.toOption
+        ) yield ValueQuantity(value, unit)
+      } else {
+        for(
+          value <- json.downField("valueString").as[String]
+        ) yield ValueString(value)
       }
     }
   }
-  implicit val codingReads: Reads[Coding] = new Reads[Coding] {
-    override def reads(json: JsValue): JsResult[Coding] = {
-      val code = (json \ "code").as[String]
-      // set system to empty string if code is 99999
-      val system = if(code == "99999") "" else (json \ "system").as[String]
-      val display = (json \ "display").asOpt[String]
-      JsSuccess(Coding(system, code, display))
+
+  implicit val codingDecoder: Decoder[Coding] = new Decoder[Coding] {
+    override def apply(json: HCursor): Decoder.Result[Coding] = 
+      for (
+        code <- json.downField("code").as[String];
+        // set system to empty string if code is 99999
+        system <- if (code == "99999") Right("") else json.downField("system").as[String];
+        display = json.downField("display").as[String].right.toOption
+      ) yield Coding(system, code, display)
+
+  }
+
+  def findJsonByUrl(jsons : Iterable[Json], url : String) : Option[Json] =
+    jsons.find(json => (for(s <- json.hcursor.downField("url").as[String].map(_.toLowerCase)) yield s == url).getOrElse(false))
+
+  implicit val addressDecoder: Decoder[Address] = new Decoder[Address] {
+    override def apply(json: HCursor): Decoder.Result[Address] = 
+      for (
+        latlon <- json.downField("extension").as[Seq[Json]];
+        lat <- findJsonByUrl(latlon, "latitude").get.hcursor.downField("valueDecimal").as[Double];
+        lon <- findJsonByUrl(latlon, "longitude").get.hcursor.downField("valueDecimal").as[Double]
+      ) yield (Address(lat, lon))
+  }
+
+  implicit val patientDecoder: Decoder[Patient] = new Decoder[Patient] {
+    override def apply(json: HCursor): Decoder.Result[Patient] = {
+      val resource = json.downField("resource");
+      for (
+        id <- resource.downField("id").as[String];
+        birthDate <- resource.downField("birthDate").as[String];
+        extension = resource.downField("extension").values.getOrElse(Seq());
+        race =
+          (for(
+            json <- extension;
+            s <- json.hcursor.downField("url").as[String].right.toOption
+            if s == "http://hl7.org/fhir/v3/Race";
+            s <- json.hcursor.downField("valueString").as[String].right.toOption
+          ) yield s).toSeq;
+        ethnicity =
+          (for(
+            json <- extension;
+            s <- json.hcursor.downField("url").as[String].right.toOption;
+            if s == "http://hl7.org/fhir/v3/Ethnicity";
+            s <- json.hcursor.downField("valueString").as[String].right.toOption
+          ) yield s).toSeq;
+        gender = resource.downField("gender").as[String].right.getOrElse("Unknown");
+        address =
+          (for(
+            x <- resource.downField("address").values.getOrElse(Seq());
+            y <- x.hcursor.downField("extension").as[Seq[Address]].right.toOption
+          ) yield y).toSeq.flatten
+      ) yield Patient(id, race, ethnicity, gender, birthDate, address, Seq(), Seq(), Seq(), Seq(), Seq(), Seq())
     }
   }
-  implicit val addressReads: Reads[Address] = new Reads[Address] {
-    override def reads(json: JsValue): JsResult[Address] = {
-      val latlon = (json \ "extension").as[Seq[JsValue]]
-      val lat = (latlon.filter(json => (json \ "url").as[String].toLowerCase == "latitude")(0) \ "valueDecimal").as[Double]
-      val lon = (latlon.filter(json => (json \ "url").as[String].toLowerCase == "longitude")(0) \ "valueDecimal").as[Double]
-      JsSuccess(Address(lat, lon))
+
+  def filterCoding(coding: Json) : Boolean =
+    if(coding.hcursor.downField("code").succeeded) 
+      true
+    else {
+      println(f"cannot find code field in JsValue ${coding}")
+      false
     }
-  }
-  implicit val patientReads: Reads[Patient] = new Reads[Patient] {
-    override def reads(json: JsValue): JsResult[Patient] = {
-      val resource = json \ "resource"
-      val id = (resource \ "id").as[String]
-      val extension = (resource \ "extension").asOpt[Seq[JsValue]]
-      val race = extension.map(x => x.filter(json => (json \ "url").as[String] == "http://hl7.org/fhir/v3/Race").map(json => (json \ "valueString").as[String])).getOrElse(Seq())
-      val ethnicity = extension.map(x => x.filter(json => (json \ "url").as[String] == "http://hl7.org/fhir/v3/Ethnicity").map(json => (json \ "valueString").as[String])).getOrElse(Seq())
-      val gender = resource \ "gender" match {
-        case JsDefined(x) => x.as[String]
-        case JsUndefined() => "Unknown"
+
+  def getCoding(code : ACursor) : Decoder.Result[Seq[Coding]] =
+    for(
+      codingJson <- code.downField("coding").as[Seq[Json]]
+    ) yield (for(
+      json <- codingJson
+      if filterCoding(json)
+    ) yield {
+      val codeResult = json.as[Coding]
+      codeResult match {
+        case Left(error) => return Left(error)
+        case Right(code) => code
       }
-      val birthDate = (resource \ "birthDate").as[String]
-      val address = (resource \ "address").asOpt[Seq[JsValue]].map(x=>x.flatMap(x => (x \ "extension").as[Seq[Address]])).getOrElse(Seq())
-      JsSuccess(Patient(id, race, ethnicity, gender, birthDate, address, Seq(), Seq(), Seq(), Seq(), Seq(), Seq()))
-    }
-  }
-  implicit val conditionReads: Reads[Condition] = new Reads[Condition] {
-    override def reads(json: JsValue): JsResult[Condition] = {
-      val resource = json \ "resource"
-      val id = (resource \ "id").as[String]
-      val subjectReference = (resource \ "subject" \ "reference").as[String]
-      val contextReference = (resource \ "context" \ "reference").asOpt[String]
-      val coding = (resource \ "code" \ "coding").as[Seq[Coding]]
-      val assertedDate = (resource \ "assertedDate").as[String]
-      JsSuccess(Condition(id, subjectReference, contextReference, coding, assertedDate))
-    }
-  }
-  implicit val encounterReads: Reads[Encounter] = new Reads[Encounter] {
-    override def reads(json: JsValue): JsResult[Encounter] = {
-      val resource = json \ "resource"
-      val id = (resource \ "id").as[String]
-      val subjectReference = (resource \ "subject" \ "reference").as[String]
-      val classAttr = (resource \ "class").asOpt[Coding]
-      val period = resource \ "period"
-      val startDate = (period \ "start").asOpt[String]
-      val endDate = (period \ "end").asOpt[String]
-      JsSuccess(Encounter(id, subjectReference, classAttr, startDate, endDate, Seq(), Seq(), Seq(), Seq(), Seq()))
+    }).toSeq
+
+  implicit val conditionDecoder: Decoder[Condition] = new Decoder[Condition] {
+    override def apply(json: HCursor): Decoder.Result[Condition] = {
+      val resource = json.downField("resource");
+      for(
+        id <- resource.downField("id").as[String];
+        subjectReference <- resource.downField("subject").downField("reference").as[String];
+        contextReference = resource.downField("context").downField("reference").as[String].right.toOption;
+        coding <- getCoding(resource.downField("code"));
+        assertedDate <- resource.downField("assertedDate").as[String]
+      ) yield Condition(id, subjectReference, contextReference, coding, assertedDate)
     }
   }
 
-  def filterCoding(coding: JsValue) : Boolean = {
-    coding \ "code" match {
-      case JsDefined(_) => true
-      case JsUndefined() =>
-        println(f"cannot find code field in JsValue ${coding}")
-        false
+  implicit val encounterDecoder: Decoder[Encounter] = new Decoder[Encounter] {
+    override def apply(json: HCursor): Decoder.Result[Encounter] = {
+      val resource = json.downField("resource");
+      for(
+        id <- resource.downField("id").as[String];
+        subjectReference <- resource.downField("subject").downField("reference").as[String];
+        classAttr = resource.downField("class").as[Coding].right.toOption;
+        period = resource.downField("period");
+        startDate = period.downField("start").as[String].right.toOption;
+        endDate = period.downField("end").as[String].right.toOption
+      ) yield Encounter(id, subjectReference, classAttr, startDate, endDate, Seq(), Seq(), Seq(), Seq(), Seq())
     }
   }
 
-  implicit val labReads: Reads[Lab] = new Reads[Lab] {
-    override def reads(json: JsValue): JsResult[Lab] = {
-      val resource = json \ "resource"
-      val id = (resource \ "id").as[String]
-      val subjectReference = (resource \ "subject" \ "reference").as[String]
-      val contextReference = (resource \ "context" \ "reference").asOpt[String]
-      // val coding = (resource \ "code" \ "coding").as[Seq[Coding]]
-      val coding = (resource \ "code" \ "coding").as[Seq[JsValue]].filter(filterCoding).map(x => x.as[Coding])
-      val value = resource.asOpt[Value]
-      val flag = None
-      val effectiveDateTime = (resource \ "effectiveDateTime").asOpt[String].getOrElse((resource \ "issued").as[String])
-      JsSuccess(Lab(id, subjectReference, contextReference, coding, value, flag, effectiveDateTime))
+  implicit val labDecoder: Decoder[Lab] = new Decoder[Lab] {
+    override def apply(json: HCursor): Decoder.Result[Lab] = {
+      val resource = json.downField("resource");
+      for(
+        id <- resource.downField("id").as[String];
+        subjectReference <- resource.downField("subject").downField("reference").as[String];
+        contextReference = resource.downField("context").downField("reference").as[String].right.toOption;
+        coding <- getCoding(resource.downField("code"));
+        value = resource.as[Value].right.toOption;
+        flag = None;
+        effectiveDateTime0 = resource.downField("effectiveDateTime");
+        effectiveDateTime <- if (effectiveDateTime0.succeeded) effectiveDateTime0.as[String] else resource.downField("issued").as[String]
+      ) yield Lab(id, subjectReference, contextReference, coding, value, flag, effectiveDateTime)
     }
   }
-  implicit val bmiReads: Reads[BMI] = new Reads[BMI] {
-    override def reads(json: JsValue): JsResult[BMI] = {
-      val resource = json \ "resource"
-      val id = (resource \ "id").as[String]
-      val subjectReference = (resource \ "subject" \ "reference").as[String]
-      val contextReference = (resource \ "context" \ "reference").asOpt[String]
-      val coding = (resource \ "code" \ "coding").as[Seq[Coding]]
-      val value = resource.as[Value]
-      JsSuccess(BMI(id, subjectReference, contextReference, coding, value))
+
+  implicit val medicationDecoder: Decoder[Medication] = new Decoder[Medication] {
+    override def apply(json: HCursor): Decoder.Result[Medication] = {
+      val resource = json.downField("resource")
+      for(
+        id <- resource.downField("id").as[String];
+        subjectReference <- resource.downField("subject").downField("reference").as[String];
+        contextReference = resource.downField("context").downField("reference").as[String].right.toOption;
+        coding <- getCoding(resource.downField("medicationCodeableConcept"));
+        authoredOn = resource.downField("authoredOn").as[String].right.toOption;
+        validityPeriod = resource.downField("dispenseRequest").downField("validityPeriod");
+        start <- validityPeriod.downField("start").as[String];
+        end = validityPeriod.downField("end").as[String].right.toOption
+      ) yield (Medication(id, subjectReference, contextReference, coding, authoredOn, start, end))
     }
   }
-  implicit val medicationReads: Reads[Medication] = new Reads[Medication] {
-    override def reads(json: JsValue): JsResult[Medication] = {
-      val resource = json \ "resource"
-      val id = (resource \ "id").as[String]
-      val subjectReference = (resource \ "subject" \ "reference").as[String]
-      val contextReference = (resource \ "context" \ "reference").asOpt[String]
-      val coding = (resource \ "medicationCodeableConcept" \ "coding").as[Seq[Coding]]
-      val authoredOn = (resource \ "authoredOn").asOpt[String]
-      val validityPeriod = resource \ "dispenseRequest" \ "validityPeriod"
-      val start = (validityPeriod \ "start").as[String]
-      val end = (validityPeriod \ "end").asOpt[String]
-      JsSuccess(Medication(id, subjectReference, contextReference, coding, authoredOn, start, end))
-    }
-  }
-  implicit val procedureReads: Reads[Procedure] = new Reads[Procedure] {
-    override def reads(json: JsValue): JsResult[Procedure] = {
-      val resource = json \ "resource"
-      val id = (resource \ "id").as[String]
-      val subjectReference = (resource \ "subject" \ "reference").as[String]
-      val contextReference = (resource \ "context" \ "reference").asOpt[String]
-      val coding = (resource \ "code" \ "coding").as[Seq[Coding]]
-      val performedDateTime = (resource \ "performedDateTime").as[String]
-      JsSuccess(Procedure(id, subjectReference, contextReference, coding, performedDateTime))
+
+  implicit val procedureDecoder: Decoder[Procedure] = new Decoder[Procedure] {
+    override def apply(json: HCursor): Decoder.Result[Procedure] = {
+      val resource = json.downField("resource")
+      for(
+        id <- resource.downField("id").as[String];
+        subjectReference <- resource.downField("subject").downField("reference").as[String];
+        contextReference = resource.downField("context").downField("reference").as[String].right.toOption;
+        coding <- getCoding(resource.downField("code"));
+        performedDateTime <- resource.downField("performedDateTime").as[String]
+      ) yield (Procedure(id, subjectReference, contextReference, coding, performedDateTime))
     }
   }
 
