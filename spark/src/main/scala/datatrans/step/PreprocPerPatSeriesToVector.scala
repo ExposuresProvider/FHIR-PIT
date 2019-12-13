@@ -18,6 +18,7 @@ import datatrans.Config._
 import net.jcazevedo.moultingyaml._
 import com.github.plokhotnyuk.jsoniter_scala.macros._
 import com.github.plokhotnyuk.jsoniter_scala.core._
+import io.circe._
 
 import datatrans.Implicits._
 import datatrans.Config._
@@ -28,7 +29,7 @@ case class PreprocPerPatSeriesToVectorConfig(
   output_directory : String,
   start_date : org.joda.time.DateTime,
   end_date : org.joda.time.DateTime,
-  med_map : Option[String]
+  med_map : String
 ) extends StepConfig
 
 object PreprocPerPatSeriesToVectorYamlProtocol extends SharedYamlProtocol {
@@ -139,32 +140,16 @@ object PreprocPerPatSeriesToVector extends StepConfigConfig {
     }
   } */
 
-  def map_medication(medmap : Option[Map[String, String]], coding : Coding) : Seq[String] = {
-    coding.display match {
+  def map_medication(medmap : Map[String, String], coding : Coding) : Option[String] =
+    medmap.get(coding.code) match {
+      case Some(ms) =>
+        val medfiltered = meds.find(med => ms.toLowerCase == med.toLowerCase)
+        // println("medication " + ms + " " + meds + " " + medfiltered)
+        medfiltered
       case None =>
-        medmap match {
-          case Some(mm) =>
-            mm.get(coding.code.stripPrefix("Medication/").stripSuffix("|ADS")) match {
-              case Some(ms) =>
-                val medfiltered = meds.filter(med => ms.toLowerCase.contains(med.toLowerCase))
-                // println("medication " + ms + " " + meds + " " + medfiltered)
-                medfiltered
-              case None =>
-                println("cannot find medication name for code " + coding.code)
-                Seq()
-            }
-          case None =>
-
-            println("no display attribute and no medication map")
-
-
-
-            Seq()
-        }
-      case Some(s) =>
-        meds.filter(med => s.toLowerCase.contains(med.toLowerCase))
+        println("cannot find medication name for code " + coding.code)
+        None
     }
-  }
 
   def map_race(race : Seq[String]) : String =
     if(race.isEmpty) {
@@ -245,7 +230,7 @@ object PreprocPerPatSeriesToVector extends StepConfigConfig {
     }
   }
 
-  def proc_pid(config : PreprocPerPatSeriesToVectorConfig, hc : Configuration, p:String, start_date : DateTime, end_date : DateTime, medmap : Option[Map[String, String]]): Unit =
+  def proc_pid(config : PreprocPerPatSeriesToVectorConfig, hc : Configuration, p:String, start_date : DateTime, end_date : DateTime, medmap : Map[String, String]): Unit =
     time {
 
 
@@ -441,17 +426,9 @@ object PreprocPerPatSeriesToVector extends StepConfigConfig {
     val med_map_path = new Path(med_map)
     val input_directory_file_system = med_map_path.getFileSystem(hc)
 
-    val csvParser = new CSVParser(new InputStreamReader(input_directory_file_system.open(med_map_path), "UTF-8"), CSVFormat.DEFAULT
-      .withDelimiter('|')
-      .withTrim()
-      .withFirstRecordAsHeader())
+    val json = Utils.parseInputStream(input_directory_file_system.open(med_map_path))
+    Utils.decode[Map[String, String]](json)
 
-    try {
-      Map(csvParser.asScala.map(rec => (rec.get(0), rec.get(1))).toSeq : _*)
-    } finally {
-      csvParser.close()
-    }
-   
   }
 
   def step(spark: SparkSession, config: PreprocPerPatSeriesToVectorConfig): Unit = {
@@ -467,7 +444,7 @@ object PreprocPerPatSeriesToVector extends StepConfigConfig {
       val input_directory_path = new Path(config.input_directory)
       val input_directory_file_system = input_directory_path.getFileSystem(hc)
 
-      val medmap = config.med_map.map(med_map => loadMedMap(hc, med_map))
+      val medmap = loadMedMap(hc, config.med_map)
 
 
       withCounter(count =>

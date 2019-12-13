@@ -2,7 +2,6 @@ package datatrans
 
 import scopt._
 import net.jcazevedo.moultingyaml._
-import play.api.libs.json._
 import org.joda.time._
 import org.joda.time.format.{DateTimeFormat, ISODateTimeFormat}
 import org.apache.spark.sql.SparkSession

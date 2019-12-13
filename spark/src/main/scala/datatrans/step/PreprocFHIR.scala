@@ -182,15 +182,6 @@ object PreprocFHIR extends StepConfigConfig {
     }
   }
 
-  private def parseInputStream(input_file_input_stream : InputStream) : Json = {
-    val str = scala.io.Source.fromInputStream(input_file_input_stream).mkString
-
-    parse(str) match {
-      case Left(error) => throw new RuntimeException(error)
-      case Right(obj) => obj
-    }
-  }
-
   private def proc_gen(input_dir_file_system: FileSystem, input_dir0: String, resc_dir: String, proc : ((Json, String, Int)) => Unit) : Unit = {
     val input_dir = input_dir0 + "/" + resc_dir
     val input_dir_path = new Path(input_dir)

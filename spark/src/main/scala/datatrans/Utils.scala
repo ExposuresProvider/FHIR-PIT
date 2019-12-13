@@ -9,6 +9,7 @@ import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.types._
 import io.circe._
+import io.circe.parser._
 import geotrellis.proj4._
 import org.apache.commons.lang.StringEscapeUtils
 import org.joda.time.DateTime
@@ -557,6 +558,15 @@ class Cache[K,V <: AnyRef](fun : K => V) {
     "Sex",
     "Race",
     "Ethnicity")
+
+  def parseInputStream(input_file_input_stream : InputStream) : Json = {
+    val str = scala.io.Source.fromInputStream(input_file_input_stream).mkString
+
+    parse(str) match {
+      case Left(error) => throw new RuntimeException(error)
+      case Right(obj) => obj
+    }
+  }
 
   def decode[T](obj1: Json)(implicit decoder : Decoder[T]): T =
     obj1.as[T] match {

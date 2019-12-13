@@ -128,7 +128,8 @@ let toVectorStep = λ(skip : Bool) → λ(year : Natural) → Step.ToVector {
       input_directory = "${basedir}/FHIR_processed/${Natural/show year}/Patient",
       output_directory = "${basedir}/FHIR_processed/${Natural/show year}/PatVec",
       start_date = start_year year,
-      end_date = end_year year
+      end_date = end_year year,
+      med_map = "src/main/data/ICEES_Identifiers_v7 06.03.19_rxcui.json"
     }
   }
 }
