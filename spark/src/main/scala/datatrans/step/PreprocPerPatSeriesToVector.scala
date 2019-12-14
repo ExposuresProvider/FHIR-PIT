@@ -29,11 +29,12 @@ case class PreprocPerPatSeriesToVectorConfig(
   output_directory : String,
   start_date : org.joda.time.DateTime,
   end_date : org.joda.time.DateTime,
+  offset_hours: Int,
   med_map : String
 ) extends StepConfig
 
 object PreprocPerPatSeriesToVectorYamlProtocol extends SharedYamlProtocol {
-  implicit val preprocPerPatSeriesToVectorYamlFormat = yamlFormat5(PreprocPerPatSeriesToVectorConfig)
+  implicit val preprocPerPatSeriesToVectorYamlFormat = yamlFormat6(PreprocPerPatSeriesToVectorConfig)
 }
 
 object PreprocPerPatSeriesToVector extends StepConfigConfig {
@@ -256,7 +257,8 @@ object PreprocPerPatSeriesToVector extends StepConfigConfig {
           val recs = new ListBuffer[Map[String, Any]]() // a list of encounters, start_time
 
           val encounter = pat.encounter
-          val birth_date_joda = DateTime.parse(pat.birthDate, ISODateTimeFormat.dateParser())
+          val timeZone = DateTimeZone.forOffsetHours(config.offset_hours)
+          val birth_date_joda = LocalDateTime.parse(pat.birthDate, ISODateTimeFormat.dateParser()).toDateTime(timeZone)
           val sex = pat.gender
           val race = pat.race
           val ethnicity = pat.ethnicity
@@ -332,7 +334,7 @@ object PreprocPerPatSeriesToVector extends StepConfigConfig {
             case (encounter_start_date_joda, encset) =>
               var rec0 = demographic
               val age = Years.yearsBetween (birth_date_joda, encounter_start_date_joda).getYears
-              rec0 += ("start_date" -> encounter_start_date_joda.toString("yyyy-MM-dd"), "AgeVisit" -> age) 
+              rec0 += ("start_date" -> encounter_start_date_joda.toDateTime(timeZone).toString("yyyy-MM-dd"), "AgeVisit" -> age) 
 
               def toVector(enc : Encounter) = {
                 var rec = rec0 + ("encounter_num" -> enc.id, "VisitType" -> enc.classAttr.map(_.code).getOrElse(""))

@@ -28,6 +28,7 @@ class VectorSpec extends FlatSpec {
       output_directory = tempDir.toString,
       start_date = parser.parseDateTime("2010-01-01T00:00:00Z"),
       end_date = parser.parseDateTime("2011-01-01T00:00:00Z"),
+      offset_hours = 0,
       med_map = "src/main/data/ICEES_Identifiers_v7 06.03.19_rxcui.json"
     )
 

@@ -1,13 +1,12 @@
 package datatrans.step
 
-import org.scalatest.FlatSpec
-import org.apache.spark.sql._
+import org.scalatest._
+import Matchers._
 import datatrans.step.PreprocFHIRResourceType._
 import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 import java.io.{File, FileInputStream, InputStreamReader}
 import java.nio.file.{Files, Paths, Path}
-import org.scalatest.Assertions._
 import java.nio.file.Files
 import gnieh.diffson.circe._
 import io.circe.parser._
@@ -42,7 +41,7 @@ object TestUtils {
     val csvParser = new CSVParser(
       new InputStreamReader(new FileInputStream(f), "UTF-8"), CSVFormat.DEFAULT.withFirstRecordAsHeader())
 
-    csvParser.getRecords().map(_.toMap().toMap)
+    Seq(csvParser.getRecords(): _*).map(_.toMap().toMap)
   }
 
   def compareFileTree(src: String, tgt: String) = {
@@ -69,7 +68,7 @@ object TestUtils {
         println("csv2 = " + csv2)
         val strdiff = csv2 diff csv2
         println("diff = " + strdiff)
-        assert(csv1 == csv2)
+        csv1 should equal (csv2)
       } else {
         println("f1 = " + f1)
         println("f2 = " + f2)
