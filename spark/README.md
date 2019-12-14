@@ -6,6 +6,19 @@
 sbt assembly
 ```
 
+## build docker container
+
+```
+docker build spark -t fhir-pit:0.1.0
+```
+
+## test
+
+```
+sbt test
+```
+
+
 ### generate config file
 
 install dhall, dhall-to-json from
