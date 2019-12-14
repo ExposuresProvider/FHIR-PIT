@@ -5,7 +5,6 @@ import java.util.concurrent.atomic.AtomicInteger
 import datatrans.Utils._
 import org.apache.hadoop.fs.Path
 import org.apache.spark.sql.SparkSession
-import play.api.libs.json._
 import scopt._
 import org.apache.hadoop.fs.{FileStatus, FileSystem, Path, PathFilter}
 import net.jcazevedo.moultingyaml._
