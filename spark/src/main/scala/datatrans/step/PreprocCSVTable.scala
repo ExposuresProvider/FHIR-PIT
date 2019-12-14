@@ -72,7 +72,7 @@ object PreprocCSVTable extends StepConfigConfig {
       val per_pat_output_dir = config.output_file + "/per_patient"
       withCounter(count =>
         new HDFSCollection(hc, new Path(config.patient_file)).foreach(f => {
-          val p = f.getName()
+          val p = f.getName().stripSuffix(".csv")
           println("processing patient " + count.incrementAndGet() + " " + p)
           val output_file = per_pat_output_dir + "/" + p
           if(fileExists(hc, output_file)) {

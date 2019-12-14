@@ -239,7 +239,7 @@ object PreprocPerPatSeriesToVector extends StepConfigConfig {
       val input_file_path = new Path(input_file)
       val input_file_file_system = input_file_path.getFileSystem(hc)
 
-      val output_file = config.output_directory + "/" + p
+      val output_file = config.output_directory + "/" + p + ".csv"
       val output_file_path = new Path(output_file)
       val output_file_file_system = output_file_path.getFileSystem(hc)
 
