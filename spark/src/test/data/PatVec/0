@@ -1,0 +1,2 @@
+patient_num,Theophylline,start_date,ObesityDx,Ethnicity,AgeVisit,ObesityBMIVisit,encounter_num,VisitType,Sex,birth_date,Race
+0,1,2009-12-31,1,Not Hispanic,8,-1,0,AMB,Male,2001-01-01,Asian

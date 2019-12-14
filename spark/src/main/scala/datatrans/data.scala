@@ -13,6 +13,7 @@ import com.github.plokhotnyuk.jsoniter_scala.core._
 import cats.syntax.either._
 import io.circe._
 import io.circe.parser._
+import io.circe.optics.JsonPath._
 
 
 case class Patient(
@@ -112,16 +113,16 @@ object Implicits{
         race =
           (for(
             json <- extension;
-            s <- json.hcursor.downField("url").as[String].right.toOption
+            s <- json.hcursor.downField("url").as[String].right.toSeq
             if s == "http://hl7.org/fhir/v3/Race";
-            s <- json.hcursor.downField("valueString").as[String].right.toOption
+            s <- root.extension.each.valueString.string.getAll(json)
           ) yield s).toSeq;
         ethnicity =
           (for(
             json <- extension;
-            s <- json.hcursor.downField("url").as[String].right.toOption;
+            s <- json.hcursor.downField("url").as[String].right.toSeq
             if s == "http://hl7.org/fhir/v3/Ethnicity";
-            s <- json.hcursor.downField("valueString").as[String].right.toOption
+            s <- root.extension.each.valueString.string.getAll(json)
           ) yield s).toSeq;
         gender = resource.downField("gender").as[String].right.getOrElse("Unknown");
         address =
@@ -129,7 +130,9 @@ object Implicits{
             x <- resource.downField("address").values.getOrElse(Seq());
             y <- x.hcursor.downField("extension").as[Seq[Address]].right.toOption
           ) yield y).toSeq.flatten
-      ) yield Patient(id, race, ethnicity, gender, birthDate, address, Seq(), Seq(), Seq(), Seq(), Seq(), Seq())
+      ) yield {
+        Patient(id, race, ethnicity, gender, birthDate, address, Seq(), Seq(), Seq(), Seq(), Seq(), Seq())
+      }
     }
   }
 

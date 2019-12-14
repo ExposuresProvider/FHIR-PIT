@@ -36,12 +36,13 @@ libraryDependencies += "com.jsoniter" % "jsoniter" % "0.9.23"
 
 libraryDependencies += "org.scalactic" %% "scalactic" % "3.1.0" % Test
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.1.0" % Test
-val circeVersion = "0.11.2"
+val circeVersion = "0.11.0"
 
 libraryDependencies ++= Seq(
   "io.circe" %% "circe-core",
   "io.circe" %% "circe-generic",
-  "io.circe" %% "circe-parser"
+  "io.circe" %% "circe-parser",
+  "io.circe" %% "circe-optics"
 ).map(_ % circeVersion)
 
 libraryDependencies += "org.gnieh" %% "diffson-circe" % "3.1.1" % Test
