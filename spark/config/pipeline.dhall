@@ -130,7 +130,7 @@ let toVectorStep = λ(skip : Bool) → λ(year : Natural) → Step.ToVector {
       start_date = start_year year,
       end_date = end_year year,
       time_zone = -5,
-      med_map = "src/main/data/ICEES_Identifiers_v7 06.03.19_rxcui.json"
+      med_map = "${basedir}/other/medical/ICEES_Identifiers_v7 06.03.19_rxcui.json"
     }
   }
 }

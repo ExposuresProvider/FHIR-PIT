@@ -11,7 +11,7 @@ tf.close()
 
 tfname = tf.name
 
-subprocess.call(["dhall-to-yaml", config, tfname)
+subprocess.call(["dhall-to-yaml", config, tfname])
 
 submit(host_name, "datatrans.PreprocPipeline", "--config=" + tfname)
 

@@ -1,8 +1,6 @@
 services:
   - docker
 
-before_install:
-  - docker build spark -t fhir-pit:0.1.0
-
 script:
-  - docker run --entrypoint sbt fhir-pit:0.1.0 test
+  - docker build spark -t fhir-pit:0.1.0
+  
