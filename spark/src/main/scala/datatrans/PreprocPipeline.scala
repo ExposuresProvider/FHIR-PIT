@@ -5,7 +5,6 @@ import java.util.concurrent.atomic.AtomicInteger
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{ FileSystem, Path, PathFilter }
 import org.apache.spark.sql.SparkSession
-import play.api.libs.json._
 import scala.collection.mutable.ListBuffer
 import scopt._
 import java.util.Base64
