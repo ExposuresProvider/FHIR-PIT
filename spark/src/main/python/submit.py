@@ -1,19 +1,13 @@
-import sys
-from submit import submit
 import subprocess
+import os.path
+import re
+
+from timeit import default_timer as timer
 import os
-import tempfile
-
-host_name, config = sys.argv[1:]
-
-tf = tempfile.NamedTemporaryFile(delete=False)
-tf.close()
-
-tfname = tf.name
-
-subprocess.call(["dhall-to-yaml-ng", config, tfname])
 
 def submit(host_name, cls, *args, **kwargs):
+    start = timer()
+
     if host_name == "local":
         submit_2_target_nodet = "local[*]"
     else:
@@ -46,8 +40,7 @@ def submit(host_name, cls, *args, **kwargs):
         err = proc.wait()
     if err:
         print("error:", err)
+    end = timer()
+    print(end - start)
 
-submit(host_name, "datatrans.PreprocPipeline", "--config=" + tfname)
-
-os.unlink(tfname)
 

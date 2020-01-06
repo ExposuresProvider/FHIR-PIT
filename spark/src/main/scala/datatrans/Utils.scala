@@ -511,6 +511,23 @@ class Cache[K,V <: AnyRef](fun : K => V) {
 
   }
 
+  def readFile(hc: Configuration, file : String) : String = {
+    val path = new Path(file)
+    val file_system = path.getFileSystem(hc)
+    val input_stream = file_system.open(path)
+    val source = scala.io.Source.fromInputStream(input_stream)
+    try source.mkString finally {
+      source.close()
+      input_stream.close()
+    }
+  }
+
+  def addColumnIndex(spark: SparkSession, df: DataFrame) = spark.createDataFrame(
+    // Add Column index
+    df.rdd.zipWithIndex.map{case (row, columnindex) => Row.fromSeq(row.toSeq :+ columnindex)},
+    // Create schema
+    StructType(df.schema.fields :+ StructField("columnindex", LongType, false))
+  )
 
   def md5(s: String) = {
     MessageDigest.getInstance("MD5").digest(s.getBytes)

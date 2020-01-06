@@ -23,6 +23,7 @@ RUN mkdir /app
 RUN mkdir /app/src/
 RUN mkdir /app/src/main
 RUN mkdir /app/src/main/python
+COPY ["src/main/python/submit.py", "/app/src/main/python"]
 COPY ["src/main/python/runPreprocPipeline.py", "/app/src/main/python"]
 COPY ["config", "/app/config"]
 WORKDIR /app
