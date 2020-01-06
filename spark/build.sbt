@@ -13,7 +13,7 @@ resolvers ++= Seq(
 libraryDependencies += "org.apache.spark" % "spark-core_2.11" % "2.4.4"
 libraryDependencies += "org.apache.spark" % "spark-sql_2.11" % "2.4.4"
 libraryDependencies += "org.deeplearning4j" % "deeplearning4j-core" % "1.0.0-beta4"
-// libraryDependencies += "org.nd4j" % "nd4j-native-platform" % "1.0.0-beta6"
+libraryDependencies += "org.nd4j" % "nd4j-native-platform" % "1.0.0-beta4"
 libraryDependencies += "org.nd4j" %% "nd4j-parameter-server-node" % "1.0.0-beta4"
 libraryDependencies += "org.deeplearning4j" %% "dl4j-spark-parameterserver" % "1.0.0-beta4_spark_2"
 libraryDependencies += "org.datavec" %% "datavec-spark" % "1.0.0-beta4_spark_2"
@@ -38,6 +38,8 @@ libraryDependencies ++= Seq(
 )
 // https://mvnrepository.com/artifact/com.jsoniter/jsoniter
 libraryDependencies += "com.jsoniter" % "jsoniter" % "0.9.23"
+libraryDependencies += "org.apache.hadoop" % "hadoop-mapreduce-client-core" % "2.7.7"
+libraryDependencies += "org.apache.hadoop" % "hadoop-common" % "2.7.7"
 
 libraryDependencies += "org.scalactic" %% "scalactic" % "3.1.0" % Test
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.1.0" % Test
@@ -58,6 +60,9 @@ assemblyMergeStrategy in assembly := {
   case PathList("com", "vividsolutions", _*) => MergeStrategy.last
   case PathList("javax", "inject", _*) => MergeStrategy.last
   case PathList("javax", "xml", _*) => MergeStrategy.last
+  case PathList("javax", "ws", _*) => MergeStrategy.last
+  case PathList("javax", "servlet", _*) => MergeStrategy.last
+  case PathList("com", "sun", _*) => MergeStrategy.last
   case PathList("org", "aopalliance", _*) => MergeStrategy.last
   case PathList("org", "apache", _*) => MergeStrategy.last
   case PathList("com", "google", _*) => MergeStrategy.last

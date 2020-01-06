@@ -11,7 +11,8 @@ import org.datavec.spark.transform.misc._
 import org.datavec.api.records.reader.impl.csv._
 import org.nd4j.parameterserver.distributed.conf._
 import org.deeplearning4j.util._
-import org.deeplearning4j.spark.parameterserver.training._
+// import org.deeplearning4j.spark.parameterserver.training._
+import org.deeplearning4j.spark.impl.paramavg._
 import org.deeplearning4j.nn.conf._
 import org.deeplearning4j.spark.impl.multilayer._
 import org.deeplearning4j.spark.impl.graph._
@@ -58,12 +59,14 @@ object Train extends StepConfigConfig {
       val sparkContext = spark.sparkContext
       val hc = sparkContext.hadoopConfiguration
 
-      val rddString = sparkContext.textFile(config.input_file);
+      val rddString0 = sparkContext.textFile(config.input_file);
+      val rddString = rddString0.mapPartitionsWithIndex{ (id_x, iter) => if (id_x == 0) iter.drop(3) else iter }
       val recordReader = new CSVRecordReader(config.num_lines_to_skip, ",");
       val rddWritables = rddString.map(new StringToWritablesFunction(recordReader).call _);
-      val trainingData = rddWritables.map(new DataVecDataSetFunction(config.first_column_label, config.last_column_label, true, null, null).call _);
+      val trainingData = rddWritables.map(new DataVecDataSetFunction(config.first_column_label, config.last_column_label, 2, true, null, null).call _);
 
-      // Configure distributed training required for gradient sharing implementation
+      // SharedTrainingMaster NPE when running on local
+/*      // Configure distributed training required for gradient sharing implementation
       val conf = VoidConfiguration.builder()
 	                        .unicastPort(40123)             //Port that workers will use to communicate. Use any free port
 				.networkMask(config.network_mask)     //Network mask for communication. Examples 10.0.0.0/24, or 192.168.0.0/16 etc
@@ -76,7 +79,12 @@ object Train extends StepConfigConfig {
 				.batchSizePerWorker(batchSizePerWorker) //Batch size for training
 				.updatesThreshold(1e-3)                 //Update threshold for quantization/compression. See technical explanation page
 				.workersPerNode(config.num_workers_per_node)      // equal to number of GPUs. For CPUs: use 1; use > 1 for large core count CPUs
-                                .build()
+                                .build()*/
+
+      val batchSizePerWorker = config.batch_size_per_worker
+      //Create the TrainingMaster instance
+      val trainingMaster = new ParameterAveragingTrainingMaster.Builder(batchSizePerWorker)
+        .build()
 
       //Model setup as on a single node. Either a MultiLayerConfiguration or a ComputationGraphConfiguration
       val sparkNet = config.model_type match {
