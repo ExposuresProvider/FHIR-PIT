@@ -13,7 +13,7 @@ COPY ["build.sbt", "/app/"]
 COPY ["project/build.properties", "/app/project"]
 COPY ["project/plugins.sbt", "/app/project"]
 WORKDIR /app
-RUN sbt assembly
+RUN sbt -J-Xmx2G assembly
 
 FROM alpine:3.10.3
 
