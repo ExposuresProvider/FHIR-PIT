@@ -45,7 +45,9 @@ let PerPatSeriesToVectorStep : Type = GenericStep {
     input_directory: Text,
     output_directory: Text,
     start_date: Text,
-    end_date: Text
+    end_date: Text,
+    offset_hours: Integer,
+    med_map: Text
 }
 
 let EnvDataSourceStep : Type = GenericStep {
@@ -129,7 +131,7 @@ let toVectorStep = λ(skip : Bool) → λ(year : Natural) → Step.ToVector {
       output_directory = "${basedir}/FHIR_processed/${Natural/show year}/PatVec",
       start_date = start_year year,
       end_date = end_year year,
-      time_zone = -5,
+      offset_hours = -5,
       med_map = "${basedir}/other/medical/ICEES_Identifiers_v7 06.03.19_rxcui.json"
     }
   }
