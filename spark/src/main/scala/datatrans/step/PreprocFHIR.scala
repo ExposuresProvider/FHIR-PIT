@@ -226,7 +226,7 @@ object PreprocFHIR extends StepConfigConfig {
     log.info(s"encounter ids $encounter_ids")
 
     proc_gen(input_dir_file_system, config.input_directory, resc_dir, (obj1, f, i) => {
-      log.info(s"decoding json $obj1")
+      log.debug(s"decoding json $obj1")
       val obj : Resource = resc_type.fromJson(obj1).asInstanceOf[Resource]
 
       val id = obj.id
