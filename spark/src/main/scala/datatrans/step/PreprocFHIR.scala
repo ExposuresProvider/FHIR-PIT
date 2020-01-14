@@ -307,7 +307,9 @@ object PreprocFHIR extends StepConfigConfig {
     while(itr.hasNext) {
       val input_file_name = itr.next().getPath().getName()
       println(input_file_name)
-      encounter_ids.append(input_file_name.split("@")(1))
+      var enc = Utils.loadJson[Encounter](hc, encounter_dir)
+      val encounter_id = enc.id
+      encounter_ids.append(encounter_id)
     }
     encounter_ids.toSet
   }
