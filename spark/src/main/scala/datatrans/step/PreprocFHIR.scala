@@ -164,7 +164,7 @@ object PreprocFHIR extends StepConfigConfig {
       }
 
       println("loading Encounter ids")
-      val encounter_ids = load_encounter_ids(output_dir_file_system, config.output_directory, config.resc_types(EncounterResourceType))
+      val encounter_ids = load_encounter_ids(hc, output_dir_file_system, config.output_directory, config.resc_types(EncounterResourceType))
       println("processing Resources")
       config.resc_types.keys.foreach(resc_type =>
         resc_type match {
@@ -299,15 +299,14 @@ object PreprocFHIR extends StepConfigConfig {
     count
   }
 
-  private def load_encounter_ids(input_dir_file_system: FileSystem, input_dir0: String, resc_dir: String) : Set[String] = {
+  private def load_encounter_ids(hc: Configuration, input_dir_file_system: FileSystem, input_dir0: String, resc_dir: String) : Set[String] = {
     val input_dir = input_dir0 + "/" + resc_dir
     val input_dir_path = new Path(input_dir)
     val itr = input_dir_file_system.listFiles(input_dir_path, true)
     val encounter_ids = ListBuffer[String]()
     while(itr.hasNext) {
-      val input_file_name = itr.next().getPath().getName()
-      println(input_file_name)
-      var enc = Utils.loadJson[Encounter](hc, encounter_dir)
+      val input_file_path = itr.next().getPath()
+      val enc = Utils.loadJson[Encounter](hc, input_file_path)
       val encounter_id = enc.id
       encounter_ids.append(encounter_id)
     }
