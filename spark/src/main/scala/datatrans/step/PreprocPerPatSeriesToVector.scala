@@ -19,6 +19,7 @@ import net.jcazevedo.moultingyaml._
 import com.github.plokhotnyuk.jsoniter_scala.macros._
 import com.github.plokhotnyuk.jsoniter_scala.core._
 import io.circe._
+import org.apache.log4j.{Logger, Level}
 
 import datatrans.Implicits._
 import datatrans.Config._
@@ -38,6 +39,9 @@ object PreprocPerPatSeriesToVectorYamlProtocol extends SharedYamlProtocol {
 }
 
 object PreprocPerPatSeriesToVector extends StepConfigConfig {
+  val log = Logger.getLogger(getClass.getName)
+
+  log.setLevel(Level.INFO)
   type ConfigType = PreprocPerPatSeriesToVectorConfig
 
   val yamlFormat = PreprocPerPatSeriesToVectorYamlProtocol.preprocPerPatSeriesToVectorYamlFormat
@@ -52,7 +56,7 @@ object PreprocPerPatSeriesToVector extends StepConfigConfig {
       val at = DateTime.parse(a.effectiveDateTime, ISODateTimeFormat.dateTimeParser())
       val bt = DateTime.parse(b.effectiveDateTime, ISODateTimeFormat.dateTimeParser())
       if(at == bt && a.value != b.value) {
-        println("warning: two labs in one encounter has same effectiveDateTime but different values")
+        log.info("warning: two labs in one encounter has same effectiveDateTime but different values")
       }
       at.isBefore(bt)
     })
@@ -145,10 +149,10 @@ object PreprocPerPatSeriesToVector extends StepConfigConfig {
     medmap.get(coding.code) match {
       case Some(ms) =>
         val medfiltered = meds.find(med => ms.toLowerCase == med.toLowerCase)
-        // println("medication " + ms + " " + meds + " " + medfiltered)
+        // log.info("medication " + ms + " " + meds + " " + medfiltered)
         medfiltered
       case None =>
-        println("cannot find medication name for code " + coding.code)
+        log.info("cannot find medication name for code " + coding.code)
         None
     }
 
@@ -245,13 +249,13 @@ object PreprocPerPatSeriesToVector extends StepConfigConfig {
       val output_file_file_system = output_file_path.getFileSystem(hc)
 
       if(output_file_file_system.exists(output_file_path)) {
-        println(output_file + " exists")
+        log.info(output_file + " exists")
       } else {
 
         if(!input_file_file_system.exists(input_file_path)) {
-          println("json not found, skipped " + p)
+          log.info("json not found, skipped " + p)
         } else {
-          println("loading json from " + input_file)
+          log.info("loading json from " + input_file)
           val pat = loadJson[Patient](hc, new Path(input_file))
 
           val recs = new ListBuffer[Map[String, Any]]() // a list of encounters, start_time
@@ -287,7 +291,7 @@ object PreprocPerPatSeriesToVector extends StepConfigConfig {
                   Some(DateTime.parse(proc(0).performedDateTime, ISODateTimeFormat.dateTimeParser()))
                 } else {
                   if(!med.isEmpty || !cond.isEmpty || !lab.isEmpty || !proc.isEmpty || !bmi.isEmpty) {
-                    println("non empty encountner has no start date " + p + " " + enc.id)
+                    log.info("non empty encountner has no start date " + p + " " + enc.id)
                   }
                   None
                 }
@@ -405,7 +409,7 @@ object PreprocPerPatSeriesToVector extends StepConfigConfig {
               }
 
               if(encset.size > 1) {
-                println("merge encounters " + p + " " + encset.map(enc => enc.id))
+                log.info("merge encounters " + p + " " + encset.map(enc => enc.id))
               }
               toVector(encset.reduce(mergeEncounter))
 
@@ -452,7 +456,7 @@ object PreprocPerPatSeriesToVector extends StepConfigConfig {
       withCounter(count =>
         new HDFSCollection(hc, input_directory_path).foreach(f => {
           val p = f.getName
-          println("processing " + count.incrementAndGet + " " + p)
+          log.info("processing " + count.incrementAndGet + " " + p)
           proc_pid(config, hc, p, start_date_joda, end_date_joda, medmap)
         })
       )

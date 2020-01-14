@@ -19,12 +19,17 @@ import scala.collection.mutable.{Set, Queue}
 import scala.util.control._
 import Breaks._
 import java.io.{StringWriter, PrintWriter}
+import org.apache.log4j.{Logger, Level}
 
 import datatrans.Config._
 
 import StepYamlProtocol._
 
 object PreprocPipeline {
+
+  val log = Logger.getLogger(getClass.getName)
+
+  log.setLevel(Level.INFO)
 
 
   def safely[T](handler: PartialFunction[Throwable, T]): PartialFunction[Throwable, T] = {
@@ -64,7 +69,7 @@ object PreprocPipeline {
                   case None => break
                   case Some(step) =>
                     notRun.add(step.name)
-                    println("not run: " + step.name)
+                    log.info("not run: " + step.name)
                 }
               }
             }
@@ -73,15 +78,15 @@ object PreprocPipeline {
               case None => break
               case Some(step) =>
 
-                println(step)
+                log.info(step)
                 if(step.skip) {
-                  println("skipped: " + step.name)
+                  log.info("skipped: " + step.name)
                   skip.add(step.name)
                 } else {
                   try {
                     val stepConfigConfig = stepConfigConfigMap(step.step.getClass().getName())
                     stepConfigConfig.step(spark, step.step.asInstanceOf[stepConfigConfig.ConfigType])
-                    println("success: " + step.name)
+                    log.info("success: " + step.name)
                     success.add(step.name)
                   } catch safely {
                     case e: Throwable =>
@@ -90,7 +95,7 @@ object PreprocPipeline {
                       val pw = new PrintWriter(sw)
                       e.printStackTrace(pw)
                       pw.flush()
-                      println("failure: " + step.name + " by " + e + " at " + sw.toString)
+                      log.info("failure: " + step.name + " by " + e + " at " + sw.toString)
                   }
                 }
             }
@@ -98,15 +103,15 @@ object PreprocPipeline {
         }
         queued.foreach(step => notRun.add(step.name))
         def printSeq[T](title: String, success: Iterable[T], indent: String = "  ") = {
-          println(title)
+          log.info(title)
           for (s <- success) {
             s match {
               case (a, b) =>
-                println(indent + "(")
-                println(indent + indent + a + ",")
-                println(indent + indent + b)
-                println(indent + ")")
-              case _ => println(indent + s)
+                log.info(indent + "(")
+                log.info(indent + indent + a + ",")
+                log.info(indent + indent + b)
+                log.info(indent + ")")
+              case _ => log.info(indent + s)
             }
           }
         }
