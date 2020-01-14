@@ -30,7 +30,8 @@ in pipeline "/share/spark/hao/data" "/share/spark/hao/data" "/share/spark/hao/da
     nearestRoad2 = True,
     envCSVTable = True
   },
-  resourceTypes = resc_types1
+  resourceTypes = resc_types1,
+  skip_preproc = [] : List Text
 }, {
   year = 2013,
   skip = {
@@ -43,7 +44,8 @@ in pipeline "/share/spark/hao/data" "/share/spark/hao/data" "/share/spark/hao/da
     nearestRoad2 = True,
     envCSVTable = True
   },
-  resourceTypes = resc_types1
+  resourceTypes = resc_types1,
+  skip_preproc = [] : List Text
 }, {
   year = 2014,
   skip = {
@@ -56,7 +58,8 @@ in pipeline "/share/spark/hao/data" "/share/spark/hao/data" "/share/spark/hao/da
     nearestRoad2 = True,
     envCSVTable = True
   },
-  resourceTypes = resc_types1
+  resourceTypes = resc_types1,
+  skip_preproc = [] : List Text
 }, {
   year = 2015,
   skip = {
@@ -69,7 +72,8 @@ in pipeline "/share/spark/hao/data" "/share/spark/hao/data" "/share/spark/hao/da
     nearestRoad2 = True,
     envCSVTable = True
   },
-  resourceTypes = resc_types2
+  resourceTypes = resc_types2,
+  skip_preproc = [] : List Text
 }, {
   year = 2016,
   skip = {
@@ -82,5 +86,6 @@ in pipeline "/share/spark/hao/data" "/share/spark/hao/data" "/share/spark/hao/da
     nearestRoad2 = True,
     envCSVTable = True
   },
-  resourceTypes = resc_types2
+  resourceTypes = resc_types2,
+  skip_preproc = [] : List Text
 }]

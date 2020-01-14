@@ -19,7 +19,8 @@ let YearSkip : Type = {
       nearestRoad2 : Bool,
       envCSVTable : Bool
     },
-    resourceTypes: ResourceTypes
+    resourceTypes: ResourceTypes,
+    skip_preproc: List Text
 }
 
 in λ(basedirinput : Text) → λ(basedir : Text) → λ(basediroutput : Text) → λ(skipList : List YearSkip) →
@@ -103,7 +104,7 @@ let acs2 = λ(year : Natural) → "${basedir}/other_processed/${Natural/show yea
 let nearestroad = λ(year : Natural) → "${basedir}/other_processed/${Natural/show year}/nearestroad.csv"
 let nearestroad2 = λ(year : Natural) → "${basedir}/other_processed/${Natural/show year}/nearestroad2.csv"
 
-let fhirStep = λ(skip : Bool) → λ(year : Natural) → λ(resc_types : ResourceTypes) → Step.FHIR {
+let fhirStep = λ(skip : Bool) → λ(year : Natural) → λ(resc_types : ResourceTypes) → λ(skip_preproc : List Text) → Step.FHIR {
     name = "FHIR${Natural/show year}",
     dependsOn = [] : List Text,
     skip = skip,
@@ -113,7 +114,7 @@ let fhirStep = λ(skip : Bool) → λ(year : Natural) → λ(resc_types : Resour
             input_directory = "${basedirinput}/FHIR/${Natural/show year}",
             output_directory = "${basedir}/FHIR_processed/${Natural/show year}",
             resc_types = resc_types,
-            skip_preproc = [] : List Text
+            skip_preproc = skip_preproc
         }
     }
 }
@@ -261,7 +262,7 @@ let envCSVTableStep = λ(skip : Bool) → λ(year : Natural) → Step.EnvCSVTabl
 }
 
 in List/fold YearSkip skipList (List Step) (λ(yearSkip : YearSkip) → λ(stepList : List Step) → [
-   fhirStep yearSkip.skip.fhir yearSkip.year yearSkip.resourceTypes,
+   fhirStep yearSkip.skip.fhir yearSkip.year yearSkip.resourceTypes yearSkip.skip_preproc,
    toVectorStep yearSkip.skip.toVector yearSkip.year,
    envDataSourceStep yearSkip.skip.envDataSource yearSkip.year,
    acsStep yearSkip.skip.acs yearSkip.year,
