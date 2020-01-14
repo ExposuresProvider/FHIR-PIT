@@ -309,8 +309,11 @@ object PreprocFHIR extends StepConfigConfig {
     val input_dir_path = new Path(input_dir)
     val itr = input_dir_file_system.listFiles(input_dir_path, true)
     val encounter_ids = ListBuffer[String]()
+    val count = new AtomicInteger(0)
+
     while(itr.hasNext) {
       val input_file_path = itr.next().getPath()
+      log.info(s"loading encouter id from ${input_file_path} ${count.incrementAndGet}")
       val enc = Utils.loadJson[Encounter](hc, input_file_path)
       val encounter_id = enc.id
       encounter_ids.append(encounter_id)
