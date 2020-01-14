@@ -18,6 +18,7 @@ import datatrans.Config._
 import net.jcazevedo.moultingyaml._
 import com.github.plokhotnyuk.jsoniter_scala.macros._
 import com.github.plokhotnyuk.jsoniter_scala.core._
+import org.apache.spark.internal.Logging
 
 import datatrans.Implicits._
 import datatrans._
@@ -120,7 +121,7 @@ object FHIRYamlProtocol extends DefaultYamlProtocol {
   implicit val fhirYamlFormat = yamlFormat4(PreprocFHIRConfig)
 }
 
-object PreprocFHIR extends StepConfigConfig {
+object PreprocFHIR extends StepConfigConfig with Logging {
 
   import Utils._
 
@@ -158,14 +159,14 @@ object PreprocFHIR extends StepConfigConfig {
       val output_dir_path = new Path(config.output_directory)
       val output_dir_file_system = output_dir_path.getFileSystem(hc)
 
-      println("processing Encounter")
+      logInfo("processing Encounter")
       if (!config.skip_preproc.contains(EncounterResourceType.toString)) {
         proc_enc(config, hc, input_dir_file_system, output_dir_file_system)
       }
 
-      println("loading Encounter ids")
+      logInfo("loading Encounter ids")
       val encounter_ids = load_encounter_ids(hc, output_dir_file_system, config.output_directory, config.resc_types(EncounterResourceType))
-      println("processing Resources")
+      logInfo("processing Resources")
       config.resc_types.keys.foreach(resc_type =>
         resc_type match {
           case ty : ResourceType =>
@@ -174,9 +175,9 @@ object PreprocFHIR extends StepConfigConfig {
           case _ =>
         }
       )
-      println("combining Patient")
+      logInfo("combining Patient")
       combine_pat(config, hc, input_dir_file_system, output_dir_file_system)
-      println("generating geodata")
+      logInfo("generating geodata")
       gen_geodata(spark, config, hc, output_dir_file_system)
 
     }
@@ -190,7 +191,7 @@ object PreprocFHIR extends StepConfigConfig {
       val input_file_path = itr.next().getPath()
       val input_file_input_stream = input_dir_file_system.open(input_file_path)
 
-      println("loading " + input_file_path.getName)
+      logInfo("loading " + input_file_path.getName)
 
       val obj = parseInputStream(input_file_input_stream)
       if (obj.hcursor.downField("resourceType").failed) {
@@ -203,7 +204,7 @@ object PreprocFHIR extends StepConfigConfig {
             n = entry.size
           ) yield entry.par.zipWithIndex.map({case (o,i) => (o,input_file_path.getName,i)}).foreach(proc)
         } else {
-          println("cannot find entry field " + input_file_path.getName)
+          logInfo("cannot find entry field " + input_file_path.getName)
         }
       }
     }
@@ -216,17 +217,17 @@ object PreprocFHIR extends StepConfigConfig {
 
     proc_gen(input_dir_file_system, config.input_directory, resc_dir, {
       case (obj1, f, i) =>
-        println("decoding json " + obj1)
+        logInfo("decoding json " + obj1)
         val obj : Resource = resc_type.fromJson(obj1).asInstanceOf[Resource]
 
         val id = obj.id
         val patient_num = obj.subjectReference.split("/")(1)
         val encounter_id = obj.contextReference.map(_.split("/")(1))
 
-        println("processing " + resc_type + " " + count.incrementAndGet + " / " + n + " " + id)
+        logInfo("processing " + resc_type + " " + count.incrementAndGet + " / " + n + " " + id)
 
         val valid_encounter_id = encounter_id.filter(eid => if (encounter_ids.contains(eid)) true else {
-          println("invalid encounter id " + eid + " available " + encounter_ids)
+          logInfo("invalid encounter id " + eid + " available " + encounter_ids)
           false
         })
 
@@ -237,9 +238,9 @@ object PreprocFHIR extends StepConfigConfig {
 
         val output_file_path = new Path(output_file)
         if (output_dir_file_system.exists(output_file_path)) {
-          println(id ++ " file " ++ output_file + " exists")
+          logInfo(id ++ " file " ++ output_file + " exists")
         } else {
-          println("saving json " + obj)
+          logInfo("saving json " + obj)
           Utils.saveJson(hc, output_file_path, obj)
         }
 
@@ -258,13 +259,13 @@ object PreprocFHIR extends StepConfigConfig {
         val id = obj.id
         val patient_num = obj.subjectReference.split("/")(1)
 
-        println("processing " + resc_type + " " + count.incrementAndGet + " / " + n + " " + id)
+        logInfo("processing " + resc_type + " " + count.incrementAndGet + " / " + n + " " + id)
 
         val output_file = config.output_directory + "/" + resc_type + "/" + patient_num + "/" + f + "@" + i
         val output_file_path = new Path(output_file)
 
         if (output_dir_file_system.exists(output_file_path)) {
-          println(output_file + " exists")
+          logInfo(output_file + " exists")
         } else {
           Utils.saveJson(hc, output_file_path, obj)
         }
@@ -281,7 +282,7 @@ object PreprocFHIR extends StepConfigConfig {
       val input_file_path = itr.next().getPath()
       val input_file_input_stream = input_dir_file_system.open(input_file_path)
 
-      println("loading " + input_file_path.getName)
+      logInfo("loading " + input_file_path.getName)
 
       val obj = parseInputStream(input_file_input_stream)
 
@@ -292,7 +293,7 @@ object PreprocFHIR extends StepConfigConfig {
         if(entry0.succeeded) {
           count += entry0.values.get.size
         } else {
-          println("cannot find entry field " + input_file_path.getName)
+          logInfo("cannot find entry field " + input_file_path.getName)
         }
       }
     }
@@ -326,12 +327,12 @@ object PreprocFHIR extends StepConfigConfig {
         val patient_num = pat.id
         try {
 
-          println("processing " + resc_type + " " + count.incrementAndGet + " / " + n + " " + patient_num)
+          logInfo("processing " + resc_type + " " + count.incrementAndGet + " / " + n + " " + patient_num)
 
           val output_file = config.output_directory + "/" + config.resc_types(PatientResourceType) + "/" + patient_num
           val output_file_path = new Path(output_file)
           if (output_dir_file_system.exists(output_file_path)) {
-            println(output_file + " exists")
+            logInfo(output_file + " exists")
           } else {
             // encounter 
             val input_enc_dir = config.output_directory + "/" + config.resc_types(EncounterResourceType) + "/" + patient_num
@@ -346,7 +347,7 @@ object PreprocFHIR extends StepConfigConfig {
                     val input_resc_dir = config.output_directory + "/" + config.resc_types(resc_type) + "/" + patient_num + "/" + encounter_id
                     val input_resc_dir_path = new Path(input_resc_dir)
                     if(output_dir_file_system.exists(input_resc_dir_path)) {
-                      println("found resource " + config.resc_types(resc_type) + "/" + patient_num + "/" + encounter_id)
+                      logInfo("found resource " + config.resc_types(resc_type) + "/" + patient_num + "/" + encounter_id)
                       val objs = Utils.HDFSCollection(hc, input_resc_dir_path).map(input_resc_file_path =>
                         try {
                           Utils.loadJson[Resource](hc, input_resc_file_path)
@@ -356,7 +357,7 @@ object PreprocFHIR extends StepConfigConfig {
                        }).toSeq
                       enc = resc_type.setEncounter(enc, objs)
                     } else {
-                      println("cannot find resource " + config.resc_types(resc_type) + "/" + patient_num + "/" + encounter_id)
+                      logInfo("cannot find resource " + config.resc_types(resc_type) + "/" + patient_num + "/" + encounter_id)
                     }
                   case _ =>
                 }
@@ -417,16 +418,16 @@ object PreprocFHIR extends StepConfigConfig {
     }).map(fs => fs.getPath.getName).toSeq.toDS
 
     val out_df = pat_dir_df.map(patient_num => {
-      println("processing " + patient_num)
+      logInfo("processing " + patient_num)
       try {
         val output_file = config.output_directory + "/" + config.resc_types(PatientResourceType) + "/" + patient_num
         val pat = Utils.loadJson[Patient](new Configuration(), new Path(output_file))
         if (pat.address.length == 0) {
-          println("no lat lon")
+          logInfo("no lat lon")
           PatientGeo(patient_num, 0xffff, 0xffff)
         } else {
           if(pat.address.length > 1) {
-            println("more than one lat lon using first")
+            logInfo("more than one lat lon using first")
           }
           PatientGeo(patient_num, pat.address(0).lat, pat.address(0).lon)
         }
