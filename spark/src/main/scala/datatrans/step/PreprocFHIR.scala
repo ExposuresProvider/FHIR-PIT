@@ -115,7 +115,7 @@ object FHIRYamlProtocol extends DefaultYamlProtocol {
       case "Patient" =>
         PatientResourceType
       case a =>
-        throw new RuntimeException("unsupported resource type " + a)
+        throw new RuntimeException(s"unsupported resource type $a")
     }
   }
   implicit val fhirYamlFormat = yamlFormat4(PreprocFHIRConfig)
@@ -187,7 +187,7 @@ object PreprocFHIR extends StepConfigConfig {
   }
 
   private def proc_gen(input_dir_file_system: FileSystem, input_dir0: String, resc_dir: String, proc : (Json, String, Int) => Seq[String]) : Seq[String] = {
-    val input_dir = input_dir0 + "/" + resc_dir
+    val input_dir = s"$input_dir0/$resc_dir"
     val input_dir_path = new Path(input_dir)
     val itr = input_dir_file_system.listFiles(input_dir_path, false)
     var ids : Seq[String] = Seq()
@@ -195,7 +195,7 @@ object PreprocFHIR extends StepConfigConfig {
       val input_file_path = itr.next().getPath()
       val input_file_input_stream = input_dir_file_system.open(input_file_path)
 
-      log.info("loading " + input_file_path.getName)
+      log.info(s"loading ${input_file_path.getName}")
 
       val obj = parseInputStream(input_file_input_stream)
       if (obj.hcursor.downField("resourceType").failed) {
@@ -211,7 +211,7 @@ object PreprocFHIR extends StepConfigConfig {
             case Right(xs) => ids ++= xs
           }
         } else {
-          log.info("cannot find entry field " + input_file_path.getName)
+          log.error(s"cannot find entry field ${input_file_path.getName}")
         }
       }
     }
@@ -223,28 +223,30 @@ object PreprocFHIR extends StepConfigConfig {
     val resc_dir = config.resc_types(resc_type)
     val n = resc_count(input_dir_file_system, config.input_directory, resc_dir)
 
+    log.info(s"encounter ids $encounter_ids")
+
     proc_gen(input_dir_file_system, config.input_directory, resc_dir, (obj1, f, i) => {
-      log.info("decoding json " + obj1)
+      log.info(s"decoding json $obj1")
       val obj : Resource = resc_type.fromJson(obj1).asInstanceOf[Resource]
 
       val id = obj.id
       val patient_num = obj.subjectReference.split("/")(1)
       val encounter_id = obj.contextReference.map(_.split("/")(1))
 
-      log.info("processing " + resc_type + " " + count.incrementAndGet + " / " + n + " " + id)
+      log.info(s"processing $resc_type ${count.incrementAndGet} / $n $id")
 
       val valid_encounter_id = encounter_id.filter(eid => if (encounter_ids.contains(eid)) true else {
-        log.info("invalid encounter id " + eid + " available " + encounter_ids)
+        log.warn(s"invalid encounter id $eid")
         false
       })
 
       val output_file = valid_encounter_id match {
-        case Some(eid) => config.output_directory + "/" + config.resc_types(resc_type) + "/" + patient_num + "/" + eid + "/" + f + "@" + i
-        case None => config.output_directory + "/" + config.resc_types(resc_type) + "/" + patient_num + "/" + f + "@" + i
+        case Some(eid) => s"${config.output_directory}/${config.resc_types(resc_type)}/$patient_num/$eid/$f@$i"
+        case None => s"${config.output_directory}/${config.resc_types(resc_type)}/$patient_num/$f@$i"
       }
 
       val output_file_path = new Path(output_file)
-      log.info("saving json " + obj)
+      log.info(s"saving json $obj")
       Utils.saveJson(hc, output_file_path, obj)
       Seq(id)
     })
@@ -261,9 +263,9 @@ object PreprocFHIR extends StepConfigConfig {
       val id = obj.id
       val patient_num = obj.subjectReference.split("/")(1)
 
-      log.info("processing " + resc_type + " " + count.incrementAndGet + " / " + n + " " + id)
+      log.info(s"processing $resc_type ${count.incrementAndGet} / $n $id")
 
-      val output_file = config.output_directory + "/" + resc_type + "/" + patient_num + "/" + f + "@" + i
+      val output_file = s"${config.output_directory}/$resc_type/$patient_num/$f@$i"
       val output_file_path = new Path(output_file)
 
       Utils.saveJson(hc, output_file_path, obj)
@@ -272,7 +274,7 @@ object PreprocFHIR extends StepConfigConfig {
   }
 
   private def resc_count(input_dir_file_system: FileSystem, input_dir0: String, resc_dir: String) : Int = {
-    val input_dir = input_dir0 + "/" + resc_dir
+    val input_dir = s"$input_dir0/$resc_dir"
     val input_dir_path = new Path(input_dir)
     val itr = input_dir_file_system.listFiles(input_dir_path, false)
     var count = 0
@@ -291,7 +293,7 @@ object PreprocFHIR extends StepConfigConfig {
         if(entry0.succeeded) {
           count += entry0.values.get.size
         } else {
-          log.info("cannot find entry field " + input_file_path.getName)
+          log.error(s"cannot find entry field ${input_file_path.getName}")
         }
       }
     }
@@ -299,7 +301,7 @@ object PreprocFHIR extends StepConfigConfig {
   }
 
   private def load_encounter_ids(hc: Configuration, input_dir_file_system: FileSystem, input_dir0: String, resc_dir: String) : Set[String] = {
-    val input_dir = input_dir0 + "/" + resc_dir
+    val input_dir = s"$input_dir0/$resc_dir"
     val input_dir_path = new Path(input_dir)
     val itr = input_dir_file_system.listFiles(input_dir_path, true)
     val encounter_ids = ListBuffer[String]()
@@ -327,79 +329,74 @@ object PreprocFHIR extends StepConfigConfig {
       val patient_num = pat.id
       try {
 
-        log.info("processing " + resc_type + " " + count.incrementAndGet + " / " + n + " " + patient_num)
+        log.info(s"processing $resc_type ${count.incrementAndGet} / $n $patient_num")
 
-        val output_file = config.output_directory + "/" + config.resc_types(PatientResourceType) + "/" + patient_num
+        val output_file = s"${config.output_directory}/${config.resc_types(PatientResourceType)}/$patient_num"
         val output_file_path = new Path(output_file)
-        if (output_dir_file_system.exists(output_file_path)) {
-          log.info(output_file + " exists")
-        } else {
-          // encounter
-          val input_enc_dir = config.output_directory + "/" + config.resc_types(EncounterResourceType) + "/" + patient_num
-          val input_enc_dir_path = new Path(input_enc_dir)
-          val encs = ListBuffer[Encounter]()
-          if(output_dir_file_system.exists(input_enc_dir_path)) {
-            Utils.HDFSCollection(hc, input_enc_dir_path).foreach(encounter_dir => {
-              var enc = Utils.loadJson[Encounter](hc, encounter_dir)
-              val encounter_id = enc.id
-              config.resc_types.keys.foreach{
-                case resc_type : ResourceType =>
-                  val input_resc_dir = config.output_directory + "/" + config.resc_types(resc_type) + "/" + patient_num + "/" + encounter_id
-                  val input_resc_dir_path = new Path(input_resc_dir)
-                  if(output_dir_file_system.exists(input_resc_dir_path)) {
-                    log.info("found resource " + config.resc_types(resc_type) + "/" + patient_num + "/" + encounter_id)
-                    val objs = Utils.HDFSCollection(hc, input_resc_dir_path).map(input_resc_file_path =>
-                      try {
-                        Utils.loadJson[Resource](hc, input_resc_file_path)
-                      } catch {
-                        case e : Exception =>
-                          throw new Exception("error processing " + resc_type + " " + input_resc_file_path, e)
-                      }).toSeq
-                    enc = resc_type.setEncounter(enc, objs)
-                  } else {
-                    log.info("cannot find resource " + config.resc_types(resc_type) + "/" + patient_num + "/" + encounter_id)
-                  }
-                case _ =>
-              }
-              encs += enc
+        // encounter
+        val input_enc_dir = s"${config.output_directory}/${config.resc_types(EncounterResourceType)}/$patient_num"
+        val input_enc_dir_path = new Path(input_enc_dir)
+        val encs = ListBuffer[Encounter]()
+        if(output_dir_file_system.exists(input_enc_dir_path)) {
+          Utils.HDFSCollection(hc, input_enc_dir_path).foreach(encounter_dir => {
+            var enc = Utils.loadJson[Encounter](hc, encounter_dir)
+            val encounter_id = enc.id
+            config.resc_types.keys.foreach{
+              case resc_type : ResourceType =>
+                val input_resc_dir = s"${config.output_directory}/${config.resc_types(resc_type)}/$patient_num/$encounter_id"
+                val input_resc_dir_path = new Path(input_resc_dir)
+                if(output_dir_file_system.exists(input_resc_dir_path)) {
+                  log.info(s"found resource ${config.resc_types(resc_type)}/$patient_num/$encounter_id")
+                  val objs = Utils.HDFSCollection(hc, input_resc_dir_path).map(input_resc_file_path =>
+                    try {
+                      Utils.loadJson[Resource](hc, input_resc_file_path)
+                    } catch {
+                      case e : Exception =>
+                        throw new Exception(s"error processing $resc_type $input_resc_file_path", e)
+                    }).toSeq
+                  enc = resc_type.setEncounter(enc, objs)
+                } else {
+                  log.info(s"cannot find resource ${config.resc_types(resc_type)}/$patient_num/$encounter_id")
+                }
+              case _ =>
+            }
+            encs += enc
+          })
+        }
+        pat = pat.copy(encounter = encs)
+        def combineRescWithoutValidEncounterNumber[R](rt: ResourceType, update: Seq[R] => Unit) = {
+          // medication
+          val input_med_dir = s"${config.output_directory}/${config.resc_types(rt)}/$patient_num"
+          val input_med_dir_path = new Path(input_med_dir)
+          val meds = ListBuffer[R]()
+          if(output_dir_file_system.exists(input_med_dir_path)) {
+            Utils.HDFSCollection(hc, input_med_dir_path).foreach(med_dir => {
+              val med = Utils.loadJson[Resource](hc, med_dir).asInstanceOf[R]
+              meds += med
             })
           }
-          pat = pat.copy(encounter = encs)
-          def combineRescWithoutValidEncounterNumber[R](rt: ResourceType, update: Seq[R] => Unit) = {
-            // medication
-            val input_med_dir = config.output_directory + "/" + config.resc_types(rt) + "/" + patient_num
-            val input_med_dir_path = new Path(input_med_dir)
-            val meds = ListBuffer[R]()
-            if(output_dir_file_system.exists(input_med_dir_path)) {
-              Utils.HDFSCollection(hc, input_med_dir_path).foreach(med_dir => {
-                val med = Utils.loadJson[Resource](hc, med_dir).asInstanceOf[R]
-                meds += med
-              })
-            }
-            update(meds)
-          }
-
-          config.resc_types.keys.foreach{
-            case MedicationRequestResourceType =>
-              combineRescWithoutValidEncounterNumber(MedicationRequestResourceType, (meds : Seq[Medication]) => { pat = pat.copy(medication = meds) })
-            case ConditionResourceType =>
-              combineRescWithoutValidEncounterNumber(ConditionResourceType, (meds: Seq[Condition]) => { pat = pat.copy(condition = meds) })
-            case LabResourceType =>
-              combineRescWithoutValidEncounterNumber(LabResourceType, (meds: Seq[Lab]) => { pat = pat.copy(lab = meds) })
-            case ProcedureResourceType =>
-              combineRescWithoutValidEncounterNumber(ProcedureResourceType, (meds: Seq[Procedure]) => { pat = pat.copy(procedure = meds) })
-            case BMIResourceType =>
-              combineRescWithoutValidEncounterNumber(BMIResourceType, (meds: Seq[Lab]) => { pat = pat.copy(bmi = meds) })
-            case PatientResourceType =>
-            case EncounterResourceType =>
-          }
-
-          val output_file_path = new Path(output_file)
-          Utils.saveJson(hc, output_file_path, pat)
+          update(meds)
         }
+
+        config.resc_types.keys.foreach{
+          case MedicationRequestResourceType =>
+            combineRescWithoutValidEncounterNumber(MedicationRequestResourceType, (meds : Seq[Medication]) => { pat = pat.copy(medication = meds) })
+          case ConditionResourceType =>
+            combineRescWithoutValidEncounterNumber(ConditionResourceType, (meds: Seq[Condition]) => { pat = pat.copy(condition = meds) })
+          case LabResourceType =>
+            combineRescWithoutValidEncounterNumber(LabResourceType, (meds: Seq[Lab]) => { pat = pat.copy(lab = meds) })
+          case ProcedureResourceType =>
+            combineRescWithoutValidEncounterNumber(ProcedureResourceType, (meds: Seq[Procedure]) => { pat = pat.copy(procedure = meds) })
+          case BMIResourceType =>
+            combineRescWithoutValidEncounterNumber(BMIResourceType, (meds: Seq[Lab]) => { pat = pat.copy(bmi = meds) })
+          case PatientResourceType =>
+          case EncounterResourceType =>
+        }
+
+        Utils.saveJson(hc, output_file_path, pat)
       } catch {
         case e : Exception =>
-          throw new Exception("error processing Patient " + patient_num, e)
+          throw new Exception(s"error processing Patient $patient_num", e)
       }
       Seq(patient_num)
 
@@ -412,16 +409,16 @@ object PreprocFHIR extends StepConfigConfig {
     import spark.implicits._
 
     val resc_type = "Patient"
-    val pat_dir = config.output_directory + "/" + config.resc_types(PatientResourceType)
+    val pat_dir = s"${config.output_directory}/${config.resc_types(PatientResourceType)}"
     val pat_dir_path = new Path(pat_dir)
     val pat_dir_df = output_dir_file_system.listStatus(pat_dir_path, new PathFilter {
       override def accept(path : Path): Boolean = output_dir_file_system.isFile(path)
     }).map(fs => fs.getPath.getName).toSeq.toDS
 
     val out_df = pat_dir_df.map(patient_num => {
-      log.info("processing " + patient_num)
+      log.info(s"processing $patient_num")
       try {
-        val output_file = config.output_directory + "/" + config.resc_types(PatientResourceType) + "/" + patient_num
+        val output_file = s"${config.output_directory}/${config.resc_types(PatientResourceType)}/$patient_num"
         val pat = Utils.loadJson[Patient](new Configuration(), new Path(output_file))
         if (pat.address.length == 0) {
           log.info("no lat lon")
@@ -434,11 +431,11 @@ object PreprocFHIR extends StepConfigConfig {
         }
       } catch {
         case e : Exception =>
-          throw new Exception("error processing Patient " + patient_num, e)
+          throw new Exception(s"error processing Patient $patient_num", e)
       }
     })
 
-    val out_file = config.output_directory + "/geo.csv"
+    val out_file = s"${config.output_directory}/geo.csv"
     Utils.writeDataframe(hc, out_file, out_df.toDF())
 
 
