@@ -246,7 +246,7 @@ object PreprocFHIR extends StepConfigConfig {
       }
 
       val output_file_path = new Path(output_file)
-      log.info(s"saving json $obj")
+      log.debug(s"saving json $obj")
       Utils.saveJson(hc, output_file_path, obj)
       Seq(id)
     })
