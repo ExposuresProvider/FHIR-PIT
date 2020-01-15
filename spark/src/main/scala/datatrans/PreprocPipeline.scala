@@ -11,8 +11,6 @@ import java.util.Base64
 import java.nio.charset.StandardCharsets
 import datatrans.Config._
 import net.jcazevedo.moultingyaml._
-import com.github.plokhotnyuk.jsoniter_scala.macros._
-import com.github.plokhotnyuk.jsoniter_scala.core._
 import org.joda.time._
 import org.joda.time.format.{DateTimeFormat, ISODateTimeFormat}
 import scala.collection.mutable.{Set, Queue}
@@ -20,17 +18,37 @@ import scala.util.control._
 import Breaks._
 import java.io.{StringWriter, PrintWriter}
 import org.apache.log4j.{Logger, Level}
-
-import datatrans.Config._
-
-import StepYamlProtocol._
+import io.circe._, io.circe.generic.semiauto._, io.circe.parser._, io.circe.syntax._
 
 object PreprocPipeline {
+
+  import Config._
+
+  import Utils._
+
+  import StepYamlProtocol._
+
+  case class PreprocPipelineConfig(
+    progress_output : String,
+    report_output: String,
+    steps : Seq[Step]
+  )
+
+  implicit val preprocPipelineYamlFormat = yamlFormat3(PreprocPipelineConfig)
+
+  case class Report(
+    success: Set[String],
+    skip: Set[String],
+    failure: Set[(String, String)],
+    notRun: Set[String]
+  )
+
+  implicit val reportDecoder: Decoder[Report] = deriveDecoder
+  implicit val reportEncoder: Encoder[Report] = deriveEncoder
 
   val log = Logger.getLogger(getClass.getName)
 
   log.setLevel(Level.INFO)
-
 
   def safely[T](handler: PartialFunction[Throwable, T]): PartialFunction[Throwable, T] = {
     case ex: ControlThrowable => throw ex
@@ -52,8 +70,10 @@ object PreprocPipeline {
     // For implicit conversions like converting RDDs to DataFrames
     // import spark.implicits._
 
-    parseInput[Seq[Step]](args) match {
-      case Some(steps) =>
+    parseInput[PreprocPipelineConfig](args) match {
+      case Some(config) =>
+        val steps = config.steps
+        val hc = spark.sparkContext.hadoopConfiguration
         val queued = Queue[Step]()
         val success = Set[String]()
         val failure = Set[(String, Throwable)]()
@@ -99,6 +119,8 @@ object PreprocPipeline {
                   }
                 }
             }
+            val report = Report(success, skip, failure.map{case (step, err) => (step, err.toString)}, notRun)
+            writeToFile(hc, config.progress_output, report.asJson.noSpaces)
           }
         }
         queued.foreach(step => notRun.add(step.name))
@@ -119,6 +141,8 @@ object PreprocPipeline {
         printSeq("===skipped===", skip)
         printSeq("===failure===", failure)
         printSeq("===not run===", notRun)
+        val report = Report(success, skip, failure.map{case (step, err) => (step, err.toString)}, notRun)
+        writeToFile(hc, config.report_output, report.asJson.noSpaces)
       case None =>
 
     }
