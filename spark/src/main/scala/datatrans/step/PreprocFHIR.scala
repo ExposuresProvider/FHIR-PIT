@@ -163,6 +163,7 @@ object PreprocFHIR extends StepConfigConfig {
       val output_dir_path = new Path(config.output_directory)
       val output_dir_file_system = output_dir_path.getFileSystem(hc)
 
+      log.info(s"skip preprocessing ${config.skip_preproc}")
       log.info("processing Encounter")
       val encounter_ids = if (!config.skip_preproc.contains(EncounterResourceType.toString)) {
         proc_enc(config, hc, input_dir_file_system, output_dir_file_system).toSet
