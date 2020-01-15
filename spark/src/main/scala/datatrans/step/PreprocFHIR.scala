@@ -274,6 +274,7 @@ object PreprocFHIR extends StepConfigConfig {
   }
 
   private def resc_count(input_dir_file_system: FileSystem, input_dir0: String, resc_dir: String) : Int = {
+    log.info(s"counting $resc_dir")
     val input_dir = s"$input_dir0/$resc_dir"
     val input_dir_path = new Path(input_dir)
     val itr = input_dir_file_system.listFiles(input_dir_path, false)
@@ -282,7 +283,7 @@ object PreprocFHIR extends StepConfigConfig {
       val input_file_path = itr.next().getPath()
       val input_file_input_stream = input_dir_file_system.open(input_file_path)
 
-      log.info("loading " + input_file_path.getName)
+      log.info(s"loading ${input_file_path.getName}")
 
       val obj = parseInputStream(input_file_input_stream)
 
