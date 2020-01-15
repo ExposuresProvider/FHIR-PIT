@@ -154,6 +154,7 @@ object PreprocFHIR extends StepConfigConfig {
   val configType = classOf[PreprocFHIRConfig].getName()
 
   def step(spark: SparkSession, config: PreprocFHIRConfig): Unit = {
+    import spark.implicits._
     Utils.time {
 
       val hc = spark.sparkContext.hadoopConfiguration
@@ -165,10 +166,14 @@ object PreprocFHIR extends StepConfigConfig {
 
       log.info(s"skip preprocessing ${config.skip_preproc}")
       log.info("processing Encounter")
+      val encounters_file = s"${config.output_directory}/encounters"
       val encounter_ids = if (!config.skip_preproc.contains(EncounterResourceType.toString)) {
-        proc_enc(config, hc, input_dir_file_system, output_dir_file_system).toSet
+        val encounter_ids = proc_enc(config, hc, input_dir_file_system, output_dir_file_system)
+        writeDataframe(hc, encounters_file, encounter_ids.toDF("encounter_num"))
+        encounter_ids.toSet
       } else {
-        load_encounter_ids(hc, output_dir_file_system, config.output_directory, config.resc_types(EncounterResourceType))
+        val df = spark.read.format("csv").option("header", value = true).load(encounters_file)
+        df.map(r => r.getString(0)).collect.toSet
       }
       log.info("processing Resources")
       config.resc_types.keys.foreach(resc_type =>
