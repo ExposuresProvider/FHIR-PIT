@@ -166,7 +166,7 @@ object PreprocFHIR extends StepConfigConfig {
 
       log.info(s"skip preprocessing ${config.skip_preproc}")
       log.info("processing Encounter")
-      val encounters_file = s"${config.output_directory}/encounters"
+      val encounters_file = s"${config.output_directory}/encounters.csv"
       val encounter_ids = if (!config.skip_preproc.contains(EncounterResourceType.toString)) {
         val encounter_ids = proc_enc(config, hc, input_dir_file_system, output_dir_file_system)
         writeDataframe(hc, encounters_file, encounter_ids.toDF("encounter_num"))
