@@ -86,6 +86,6 @@ in pipeline "/share/spark/hao/data" "/share/spark/hao/data" "/share/spark/hao/da
     nearestRoad2 = True,
     envCSVTable = True
   },
-  resourceTypes = resc_types2,
+  resourceTypes = resc_types1,
   skip_preproc = [] : List Text
 }]
