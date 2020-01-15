@@ -515,7 +515,7 @@ class Cache[K,V <: AnyRef](fun : K => V) {
     val path = new Path(file)
     val file_system = path.getFileSystem(hc)
     val input_stream = file_system.open(path)
-    val source = scala.io.Source.fromInputStream(input_stream)
+    val source = scala.io.Source.fromInputStream(input_stream, "utf-8")
     try source.mkString finally {
       source.close()
       input_stream.close()
@@ -577,7 +577,7 @@ class Cache[K,V <: AnyRef](fun : K => V) {
     "Ethnicity")
 
   def parseInputStream(input_file_input_stream : InputStream) : Json = {
-    val str = scala.io.Source.fromInputStream(input_file_input_stream).mkString
+    val str = scala.io.Source.fromInputStream(input_file_input_stream, "utf-8").mkString
 
     parse(str) match {
       case Left(error) => throw new RuntimeException(error)
