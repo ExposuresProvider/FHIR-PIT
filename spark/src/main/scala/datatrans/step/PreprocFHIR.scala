@@ -307,23 +307,6 @@ object PreprocFHIR extends StepConfigConfig {
     count
   }
 
-  private def load_encounter_ids(hc: Configuration, input_dir_file_system: FileSystem, input_dir0: String, resc_dir: String) : Set[String] = {
-    val input_dir = s"$input_dir0/$resc_dir"
-    val input_dir_path = new Path(input_dir)
-    val itr = input_dir_file_system.listFiles(input_dir_path, true)
-    val encounter_ids = ListBuffer[String]()
-    val count = new AtomicInteger(0)
-
-    while(itr.hasNext) {
-      val input_file_path = itr.next().getPath()
-      log.info(s"loading encouter id from ${input_file_path} ${count.incrementAndGet}")
-      val enc = Utils.loadJson[Encounter](hc, input_file_path)
-      val encounter_id = enc.id
-      encounter_ids.append(encounter_id)
-    }
-    encounter_ids.toSet
-  }
-
   private def combine_pat(config: PreprocFHIRConfig, hc: Configuration, input_dir_file_system: FileSystem, output_dir_file_system: FileSystem) : Seq[String] = {
     val resc_type = PatientResourceType
     val resc_dir = config.resc_types(resc_type)
@@ -377,7 +360,7 @@ object PreprocFHIR extends StepConfigConfig {
           val meds = ListBuffer[R]()
           if(output_dir_file_system.exists(input_med_dir_path)) {
             Utils.HDFSCollection(hc, input_med_dir_path).foreach(med_dir => {
-              log.debug(s"found resource 2 $med_dir")
+              log.debug(s"found resource no encounter $med_dir")
               val med = Utils.loadJson[Resource](hc, med_dir).asInstanceOf[R]
               meds += med
             })
