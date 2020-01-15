@@ -40,7 +40,9 @@ object PreprocPipeline {
     success: Set[String],
     skip: Set[String],
     failure: Set[(String, String)],
-    notRun: Set[String]
+    notRun: Set[String],
+    running: Option[String],
+    queued: Seq[String]
   )
 
   implicit val reportDecoder: Decoder[Report] = deriveDecoder
@@ -104,6 +106,8 @@ object PreprocPipeline {
                   skip.add(step.name)
                 } else {
                   try {
+                    val report = Report(success, skip, failure.map{case (step, err) => (step, err.toString)}, notRun, Some(step.name), queued.map(_.name))
+                    writeToFile(hc, config.progress_output, report.asJson.noSpaces)
                     val stepConfigConfig = stepConfigConfigMap(step.step.getClass().getName())
                     stepConfigConfig.step(spark, step.step.asInstanceOf[stepConfigConfig.ConfigType])
                     log.info("success: " + step.name)
@@ -119,8 +123,6 @@ object PreprocPipeline {
                   }
                 }
             }
-            val report = Report(success, skip, failure.map{case (step, err) => (step, err.toString)}, notRun)
-            writeToFile(hc, config.progress_output, report.asJson.noSpaces)
           }
         }
         queued.foreach(step => notRun.add(step.name))
@@ -141,7 +143,7 @@ object PreprocPipeline {
         printSeq("===skipped===", skip)
         printSeq("===failure===", failure)
         printSeq("===not run===", notRun)
-        val report = Report(success, skip, failure.map{case (step, err) => (step, err.toString)}, notRun)
+        val report = Report(success, skip, failure.map{case (step, err) => (step, err.toString)}, notRun, None, Seq())
         writeToFile(hc, config.report_output, report.asJson.noSpaces)
       case None =>
 
