@@ -23,7 +23,7 @@ let YearSkip : Type = {
     skip_preproc: List Text
 }
 
-in λ(basedirinput : Text) → λ(basedir : Text) → λ(basediroutput : Text) → λ(skipList : List YearSkip) →
+in λ(report : Text) → λ(progress : Text) → λ(basedirinput : Text) → λ(basedir : Text) → λ(basediroutput : Text) → λ(skipList : List YearSkip) →
 
 let GenericStep : Type → Type = λ(a : Type) → {
     name : Text,
@@ -95,6 +95,12 @@ let Step : Type = <
     NearestRoad : PerPatSeriesNearestRoadStep |
     EnvCSVTable : EnvCSVTableStep
 >
+
+let Config: Type = {
+    report_output : Text,
+    progress_output : Text,
+    steps : List Step
+}
 
 let start_year = λ(year : Natural) → "${Natural/show year}-01-01T00:00:00-05:00"
 let end_year = λ(year : Natural) → start_year (year + 1)
@@ -261,13 +267,18 @@ let envCSVTableStep = λ(skip : Bool) → λ(year : Natural) → Step.EnvCSVTabl
   }
 }
 
-in List/fold YearSkip skipList (List Step) (λ(yearSkip : YearSkip) → λ(stepList : List Step) → [
-   fhirStep yearSkip.skip.fhir yearSkip.year yearSkip.resourceTypes yearSkip.skip_preproc,
-   toVectorStep yearSkip.skip.toVector yearSkip.year,
-   envDataSourceStep yearSkip.skip.envDataSource yearSkip.year,
-   acsStep yearSkip.skip.acs yearSkip.year,
-   acs2Step yearSkip.skip.acs2 yearSkip.year,
-   nearestRoadStep yearSkip.skip.nearestRoad yearSkip.year,
-   nearestRoad2Step yearSkip.skip.nearestRoad2 yearSkip.year,
-   envCSVTableStep yearSkip.skip.envCSVTable yearSkip.year
-] # stepList) ([] : List Step)
+in {
+   report_output = report,
+   progress_output = progress,
+   steps =
+     List/fold YearSkip skipList (List Step) (λ(yearSkip : YearSkip) → λ(stepList : List Step) → [
+       fhirStep yearSkip.skip.fhir yearSkip.year yearSkip.resourceTypes yearSkip.skip_preproc,
+       toVectorStep yearSkip.skip.toVector yearSkip.year,
+       envDataSourceStep yearSkip.skip.envDataSource yearSkip.year,
+       acsStep yearSkip.skip.acs yearSkip.year,
+       acs2Step yearSkip.skip.acs2 yearSkip.year,
+       nearestRoadStep yearSkip.skip.nearestRoad yearSkip.year,
+       nearestRoad2Step yearSkip.skip.nearestRoad2 yearSkip.year,
+       envCSVTableStep yearSkip.skip.envCSVTable yearSkip.year
+     ] # stepList) ([] : List Step)
+} : Config
