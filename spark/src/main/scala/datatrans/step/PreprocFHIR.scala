@@ -353,7 +353,7 @@ object PreprocFHIR extends StepConfigConfig {
                 val input_resc_dir = s"${config.output_directory}/${config.resc_types(resc_type)}/$patient_num/$encounter_id"
                 val input_resc_dir_path = new Path(input_resc_dir)
                 if(output_dir_file_system.exists(input_resc_dir_path)) {
-                  log.info(s"found resource ${config.resc_types(resc_type)}/$patient_num/$encounter_id")
+                  log.debug(s"found resource ${config.resc_types(resc_type)}/$patient_num/$encounter_id")
                   val objs = Utils.HDFSCollection(hc, input_resc_dir_path).map(input_resc_file_path =>
                     try {
                       Utils.loadJson[Resource](hc, input_resc_file_path)
@@ -363,7 +363,7 @@ object PreprocFHIR extends StepConfigConfig {
                     }).toSeq
                   enc = resc_type.setEncounter(enc, objs)
                 } else {
-                  log.info(s"cannot find resource ${config.resc_types(resc_type)}/$patient_num/$encounter_id")
+                  log.debug(s"cannot find resource ${config.resc_types(resc_type)}/$patient_num/$encounter_id")
                 }
               case _ =>
             }
@@ -372,12 +372,12 @@ object PreprocFHIR extends StepConfigConfig {
         }
         pat = pat.copy(encounter = encs)
         def combineRescWithoutValidEncounterNumber[R](rt: ResourceType, update: Seq[R] => Unit) = {
-          // medication
           val input_med_dir = s"${config.output_directory}/${config.resc_types(rt)}/$patient_num"
           val input_med_dir_path = new Path(input_med_dir)
           val meds = ListBuffer[R]()
           if(output_dir_file_system.exists(input_med_dir_path)) {
             Utils.HDFSCollection(hc, input_med_dir_path).foreach(med_dir => {
+              log.debug(s"found resource 2 $med_dir")
               val med = Utils.loadJson[Resource](hc, med_dir).asInstanceOf[R]
               meds += med
             })
