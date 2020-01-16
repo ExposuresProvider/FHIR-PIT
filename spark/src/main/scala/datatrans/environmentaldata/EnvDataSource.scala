@@ -166,26 +166,22 @@ class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
         case (r, lat, lon) =>
           log.info("processing patient " + count.incrementAndGet() + " / " + n + " " + r)
           val output_file = config.output_file.replace("%i", r)
-          if(fileExists(hc, output_file)) {
-            println(output_file + " exists")
-          } else {
-            val yearseq = (config.start_date.year.get to config.end_date.minusDays(1).year.get)
-            val coors = yearseq.intersect(Seq(2010,2011)).flatMap(year => {
-              latlon2rowcol(lat, lon, year) match {
-                case Some((row, col)) =>
-                  Seq((year, (row, col)))
-                case _ =>
-                  Seq()
-              }
-            })
-            val fips = geoidfinder.getGeoidForLatLon(lat, lon)
-
-            outputCache((coors, fips, yearseq)) match {
-              case Some(df) =>
-                writeDataframe(hc, output_file, df)
-              case None =>
-                log.error(f"skipped ${r} lat ${lat} lon ${lon} neither env is found")
+          val yearseq = (config.start_date.year.get to config.end_date.minusDays(1).year.get)
+          val coors = yearseq.intersect(Seq(2010,2011)).flatMap(year => {
+            latlon2rowcol(lat, lon, year) match {
+              case Some((row, col)) =>
+                Seq((year, (row, col)))
+              case _ =>
+                Seq()
             }
+          })
+          val fips = geoidfinder.getGeoidForLatLon(lat, lon)
+
+          outputCache((coors, fips, yearseq)) match {
+            case Some(df) =>
+              writeDataframe(hc, output_file, df)
+            case None =>
+              log.error(f"skipped ${r} lat ${lat} lon ${lon} neither env is found")
           }
 
       })
