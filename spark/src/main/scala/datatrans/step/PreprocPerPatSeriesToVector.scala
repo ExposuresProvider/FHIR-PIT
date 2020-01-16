@@ -152,7 +152,7 @@ object PreprocPerPatSeriesToVector extends StepConfigConfig {
         // log.info("medication " + ms + " " + meds + " " + medfiltered)
         medfiltered
       case None =>
-        log.info("cannot find medication name for code " + coding.code)
+        log.debug("cannot find medication name for code " + coding.code)
         None
     }
 
