@@ -358,7 +358,7 @@ object PreprocPerPatSeriesToVector extends StepConfigConfig {
                     rec += (n -> 1)
                   }))
                 )
-                map_lab(lab).foreach(rec += _)
+                // map_lab(lab).foreach(rec += _)
 
                 rec += ("ObesityBMIVisit" -> (map_bmi(bmi) match {
                   case Some(x) => x
