@@ -10,8 +10,12 @@ import datatrans.step.EnvDataSourceConfig
 
 import org.apache.spark.sql.functions._
 import org.apache.hadoop.fs._
+import org.apache.log4j.{Logger, Level}
 
 class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
+  val log = Logger.getLogger(getClass.getName)
+
+  log.setLevel(Level.INFO)
   val envSchema = StructType(
     StructField("start_date", DateType) ::
       (for(j <- Seq("avg", "max", "min", "stddev"); i <- Seq("o3", "pm25")) yield i + "_" + j).map(i => StructField(i, DoubleType)).toList
@@ -36,7 +40,7 @@ class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
     if (names.forall(x => df.columns.contains(x))) {
       Some(df.cache())
     } else {
-      print(f"$filename doesn't contain all required columns")
+      log.error(f"$filename doesn't contain all required columns")
       None
     }
   }
@@ -92,7 +96,7 @@ class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
       case Some(fips) =>
         inputCache2((fips, years))
       case None =>
-        println(f"skipped fips for ${coors} geoid not found")
+        log.error(f"skipped fips for ${coors} geoid not found")
         None
     }
 
@@ -100,7 +104,7 @@ class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
       case Some(df) =>
         Some(aggregateByYear(df, names))
       case None => 
-        println(f"input env df is not available ${coors}")
+        log.error(f"input env df is not available ${coors}")
         None
     }
    
@@ -108,7 +112,7 @@ class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
       case Some(df3) =>
         Some(aggregateByYear(df3.withColumn("year", year(df3.col("start_date"))), config.indices2))
       case None =>
-        println(f"input fips df is not available ${fips}, ${years}")
+        log.error(f"input fips df is not available ${fips}, ${years}")
         None
     }
 
@@ -147,7 +151,7 @@ class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
       import spark.implicits._
 
       val patient_dimension = config.patgeo_data
-      println("loading patient_dimension from " + patient_dimension)
+      log.info("loading patient_dimension from " + patient_dimension)
       val pddf0 = spark.read.format("csv").option("header", value = true).load(patient_dimension)
 
       val patl = pddf0.select("patient_num", "lat", "lon").map(r => (r.getString(0), r.getString(1).toDouble, r.getString(2).toDouble)).collect.toList
@@ -160,7 +164,7 @@ class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
 
       patl.par.foreach{
         case (r, lat, lon) =>
-            println("processing patient " + count.incrementAndGet() + " / " + n + " " + r)
+          log.info("processing patient " + count.incrementAndGet() + " / " + n + " " + r)
           val output_file = config.output_file.replace("%i", r)
           if(fileExists(hc, output_file)) {
             println(output_file + " exists")
@@ -180,7 +184,7 @@ class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
               case Some(df) =>
                 writeDataframe(hc, output_file, df)
               case None =>
-                println(f"skipped ${r} lat ${lat} lon ${lon} neither env is found")
+                log.error(f"skipped ${r} lat ${lat} lon ${lon} neither env is found")
             }
           }
 
