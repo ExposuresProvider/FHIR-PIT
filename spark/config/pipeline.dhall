@@ -215,7 +215,7 @@ let nearestRoadStep = λ(skip : Bool) → λ(year : Natural) → Step.NearestRoa
       patgeo_data = patgeo year,
       nearestroad_data = "${basedirinput}/other/spatial/nearestroad/tl_2015_allstates_prisecroads_lcc.shp",
       maximum_search_radius = Integer/toDouble (Natural/toInteger 500),
-      output_file = nearestroad 2012
+      output_file = nearestroad year
     }
   }
 }
@@ -232,7 +232,7 @@ let nearestRoad2Step = λ(skip : Bool) → λ(year : Natural) → Step.NearestRo
       patgeo_data = patgeo year,
       nearestroad_data = "${basedirinput}/other/spatial/nearestroad2/hpms2016_major_roads.shp",
       maximum_search_radius = Integer/toDouble (Natural/toInteger 500),
-      output_file = nearestroad2 2012
+      output_file = nearestroad2 year
     }
   }
 }
