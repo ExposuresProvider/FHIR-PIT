@@ -16,6 +16,7 @@ import com.vividsolutions.jts.geom.Geometry
 import com.vividsolutions.jts.geom.GeometryFactory
 import com.vividsolutions.jts.linearref.LocationIndexedLine
 import com.vividsolutions.jts.geom.Point
+import org.apache.log4j.{Logger, Level}
 
 object NearestRoad {
   private val ff = CommonFactoryFinder.getFilterFactory2()
@@ -23,6 +24,10 @@ object NearestRoad {
 }
 
 class NearestRoad(roadShapefilePath : String, maximum_search_radius : Double) {
+
+  val log = Logger.getLogger(getClass.getName)
+
+  log.setLevel(Level.INFO)
 
   val shp = new ShapefileHandler(roadShapefilePath)
   val features = shp.getFeatureCollection
@@ -68,6 +73,7 @@ class NearestRoad(roadShapefilePath : String, maximum_search_radius : Double) {
       }
     }
 
+    log.info(s"p = $p, minDist = $minDist")
     minDist
   }
 
