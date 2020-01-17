@@ -109,7 +109,7 @@ class NearestRoad(roadShapefilePath : String, maximum_search_radius : Double) {
   
   def getMatchedNumLanes : Option[String] = lastMatched.map(_.getAttribute("THROUGH_LA").asInstanceOf[String])
   
-  def getMatchedSpeed : Option[String] = lastMatched.map(_.getAttribute("SPEED").asInstanceOf[String])
+  def getMatchedSpeed : Option[String] = lastMatched.map(_.getAttribute("SPEED").asInstanceOf[Long].toString)
   
   def getMatchedRoadType : Option[String] = lastMatched.map(_.getAttribute("ROADTYPE").asInstanceOf[String])
 
