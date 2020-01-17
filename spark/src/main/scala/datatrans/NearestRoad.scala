@@ -63,7 +63,7 @@ class NearestRoad(roadShapefilePath : String, maximum_search_radius : Double) {
       //attribute = feature.getAttribute("FULLNAME").asInstanceOf[String]
       //System.out.println(attribute)
 
-      log.info(s"feature = $feature")
+      // log.info(s"feature = $feature")
       val line = new LocationIndexedLine(feature.getDefaultGeometry.asInstanceOf[Geometry])
       val here = line.project(coordinate)
       val point = line.extractPoint(here)
