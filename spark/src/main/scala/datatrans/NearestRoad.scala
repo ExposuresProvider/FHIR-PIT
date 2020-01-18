@@ -74,7 +74,7 @@ class NearestRoad(roadShapefilePath : String, maximum_search_radius : Double, pr
       }
     }
 
-    log.info(s"p = $p, minDist = $minDist")
+    log.debug(s"p = $p, minDist = $minDist")
     minDist
   }
 
