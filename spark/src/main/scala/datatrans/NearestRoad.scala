@@ -23,7 +23,7 @@ object NearestRoad {
   private val gf = new GeometryFactory()
 }
 
-class NearestRoad(roadShapefilePath : String, maximum_search_radius : Double) {
+class NearestRoad(roadShapefilePath : String, maximum_search_radius : Double, project_lcc : Boolean) {
 
   val log = Logger.getLogger(getClass.getName)
 
@@ -37,7 +37,7 @@ class NearestRoad(roadShapefilePath : String, maximum_search_radius : Double) {
 
   def getMinimumDistance(lat : Double, lon : Double) : Double = {
 
-    val p = createPointLCC(lat, lon)
+    val p = if(project_lcc) createPointLCC(lat, lon) else createPointLatLon(lat, lon)
     findMinimumDistance(p)
 
   }
@@ -101,6 +101,12 @@ class NearestRoad(roadShapefilePath : String, maximum_search_radius : Double) {
 
     NearestRoad.gf.createPoint(targetCoordinate)
 
+  }
+
+  @throws(classOf[FactoryException])
+  private def createPointLatLon(lat: Double, lon : Double) : Point = {
+    val coor = new Coordinate(lat, lon)
+    NearestRoad.gf.createPoint(coor)
   }
 
   def getMatchedRoadName : Option[String] = lastMatched.map(_.getAttribute("FULLNAME").asInstanceOf[String])
