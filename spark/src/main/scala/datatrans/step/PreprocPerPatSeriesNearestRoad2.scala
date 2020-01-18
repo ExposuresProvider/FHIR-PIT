@@ -69,7 +69,7 @@ object PreprocPerPatSeriesNearestRoad2 extends StepConfigConfig {
       } else {
         val pddf0 = spark.read.format("csv").option("header", value = true).load(config.patgeo_data)
         val rows = pddf0.mapPartitions(partition => {
-          val nearestRoad = new NearestRoad(config.nearestroad_data, config.maximum_search_radius, false)
+          val nearestRoad = new NearestRoad(config.nearestroad_data, config.maximum_search_radius)
           partition.map(r => (r.getString(0), nearestRoad.getMinimumDistance(r.getString(1).toDouble, r.getString(2).toDouble), nearestRoad.getMatchedRoadType, nearestRoad.getMatchedRouteId, nearestRoad.getMatchedSpeed, nearestRoad.getMatchedNumLanes))
         })
 
