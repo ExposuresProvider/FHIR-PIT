@@ -433,7 +433,10 @@ object PreprocPerPatSeriesToVector extends StepConfigConfig {
     val input_directory_file_system = med_map_path.getFileSystem(hc)
 
     val json = Utils.parseInputStream(input_directory_file_system.open(med_map_path))
-    Utils.decode[Map[String, String]](json)
+    json.as[Map[String, String]] match {
+      case Left(error) => throw new RuntimeException(error)
+      case Right(obj) => obj
+    }
 
   }
 

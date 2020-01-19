@@ -22,64 +22,65 @@ import org.apache.log4j.{Logger, Level}
 
 import datatrans.Implicits._
 import datatrans._
+import Decoder.Result
 
 object PreprocFHIRResourceType {
   import Utils._
   sealed trait JsonifiableType {
     type JsonType
-    def fromJson(obj : Json):JsonType
+    def fromJson(obj : Json):Result[JsonType]
   }
   sealed trait ResourceType extends JsonifiableType {
     def setEncounter(enc: Encounter, objs: Seq[Resource]): Encounter
   }
   case object EncounterResourceType extends JsonifiableType {
     type JsonType = Encounter
-    override def fromJson(obj : Json): JsonType =
-      decode[JsonType](obj)
+    override def fromJson(obj : Json): Result[JsonType] =
+      obj.as[JsonType]
     override def toString() = "Encounter"
   }
   case object PatientResourceType extends JsonifiableType {
     type JsonType = Patient
-    override def fromJson(obj : Json):JsonType =
-      decode[JsonType](obj)
+    override def fromJson(obj : Json):Result[JsonType] =
+      obj.as[JsonType]
     override def toString() = "Patient"
   }
   case object LabResourceType extends ResourceType {
     type JsonType = Lab
-    override def fromJson(obj : Json):JsonType =
-      decode[JsonType](obj)
+    override def fromJson(obj : Json):Result[JsonType] =
+      obj.as[JsonType]
     override def setEncounter(enc: Encounter, objs: Seq[Resource]) : Encounter =
       enc.copy(lab = objs.map(obj => obj.asInstanceOf[Lab]))
     override def toString() = "Lab"
   }
   case object ConditionResourceType extends ResourceType {
     type JsonType = Condition
-    override def fromJson(obj : Json):JsonType =
-      decode[JsonType](obj)
+    override def fromJson(obj : Json):Result[JsonType] =
+      obj.as[JsonType]
     override def setEncounter(enc: Encounter, objs: Seq[Resource]) : Encounter =
       enc.copy(condition = objs.map(obj => obj.asInstanceOf[Condition]))
     override def toString() = "Condition"
   }
   case object MedicationRequestResourceType extends ResourceType {
     type JsonType = Medication
-    override def fromJson(obj : Json):JsonType =
-      decode[JsonType](obj)
+    override def fromJson(obj : Json):Result[JsonType] =
+      obj.as[JsonType]
     override def setEncounter(enc: Encounter, objs: Seq[Resource]) : Encounter =
       enc.copy(medication = objs.map(obj => obj.asInstanceOf[Medication]))
     override def toString() = "MedicationRequest"
   }
   case object ProcedureResourceType extends ResourceType {
     type JsonType = Procedure
-    override def fromJson(obj : Json):JsonType =
-      decode[JsonType](obj)
+    override def fromJson(obj : Json):Result[JsonType] =
+      obj.as[JsonType]
     override def setEncounter(enc: Encounter, objs: Seq[Resource]) : Encounter =
       enc.copy(procedure = objs.map(obj => obj.asInstanceOf[Procedure]))
     override def toString() = "Procedure"
   }
   case object BMIResourceType extends ResourceType {
     type JsonType = Lab
-    override def fromJson(obj : Json):JsonType =
-      decode[JsonType](obj)
+    override def fromJson(obj : Json):Result[JsonType] =
+      obj.as[JsonType]
     override def setEncounter(enc: Encounter, objs: Seq[Resource]) : Encounter =
       enc.copy(bmi = objs.map(obj => obj.asInstanceOf[Lab]))
     override def toString() = "BMI"
@@ -233,28 +234,34 @@ object PreprocFHIR extends StepConfigConfig {
 
     proc_gen(input_dir_file_system, config.input_directory, resc_dir, (obj1, f, i) => {
       log.debug(s"decoding json $obj1")
-      val obj : Resource = resc_type.fromJson(obj1).asInstanceOf[Resource]
+      resc_type.fromJson(obj1) match {
+        case Left(error) =>
+          log.error(f"error decoding resource file $f obj $obj1 error $error")
+          Seq()
+        case Right(obj0) =>
+          val obj : Resource = obj0.asInstanceOf[Resource]
 
-      val id = obj.id
-      val patient_num = obj.subjectReference.split("/")(1)
-      val encounter_id = obj.contextReference.map(_.split("/")(1))
+          val id = obj.id
+          val patient_num = obj.subjectReference.split("/")(1)
+          val encounter_id = obj.contextReference.map(_.split("/")(1))
 
-      log.info(s"processing $resc_type ${count.incrementAndGet} / $n $id")
+          log.info(s"processing $resc_type ${count.incrementAndGet} / $n $id")
 
-      val valid_encounter_id = encounter_id.filter(eid => if (encounter_ids.contains(eid)) true else {
-        log.warn(s"invalid encounter id $eid")
-        false
-      })
+          val valid_encounter_id = encounter_id.filter(eid => if (encounter_ids.contains(eid)) true else {
+            log.warn(s"invalid encounter id $eid")
+            false
+          })
 
-      val output_file = valid_encounter_id match {
-        case Some(eid) => s"${config.output_directory}/${config.resc_types(resc_type)}/$patient_num/$eid/$f@$i"
-        case None => s"${config.output_directory}/${config.resc_types(resc_type)}/$patient_num/$f@$i"
+          val output_file = valid_encounter_id match {
+            case Some(eid) => s"${config.output_directory}/${config.resc_types(resc_type)}/$patient_num/$eid/$f@$i"
+            case None => s"${config.output_directory}/${config.resc_types(resc_type)}/$patient_num/$f@$i"
+          }
+
+          val output_file_path = new Path(output_file)
+          log.debug(s"saving json $obj")
+          Utils.saveJson(hc, output_file_path, obj)
+          Seq(id)
       }
-
-      val output_file_path = new Path(output_file)
-      log.debug(s"saving json $obj")
-      Utils.saveJson(hc, output_file_path, obj)
-      Seq(id)
     })
   }
 
@@ -265,17 +272,22 @@ object PreprocFHIR extends StepConfigConfig {
     val n = resc_count(input_dir_file_system, config.input_directory, resc_dir)
 
     proc_gen(input_dir_file_system, config.input_directory, resc_dir, (obj1, f, i) => {
-      val obj = decode[Encounter](obj1)
-      val id = obj.id
-      val patient_num = obj.subjectReference.split("/")(1)
+      obj1.as[Encounter] match {
+        case Left(error) =>
+          log.error(f"error decoding resource f $f obj $obj1 error $error")
+          Seq()
+        case Right(obj) =>
+          val id = obj.id
+          val patient_num = obj.subjectReference.split("/")(1)
 
-      log.info(s"processing $resc_type ${count.incrementAndGet} / $n $id")
+          log.info(s"processing $resc_type ${count.incrementAndGet} / $n $id")
 
-      val output_file = s"${config.output_directory}/$resc_type/$patient_num/$f@$i"
-      val output_file_path = new Path(output_file)
+          val output_file = s"${config.output_directory}/$resc_type/$patient_num/$f@$i"
+          val output_file_path = new Path(output_file)
 
-      Utils.saveJson(hc, output_file_path, obj)
-      Seq(id)
+          Utils.saveJson(hc, output_file_path, obj)
+          Seq(id)
+      }
     })
   }
 
@@ -315,83 +327,87 @@ object PreprocFHIR extends StepConfigConfig {
     val n = resc_count(input_dir_file_system, config.input_directory, resc_dir)
 
     proc_gen(input_dir_file_system, config.input_directory, resc_dir, (obj, f, i) => {
-      var pat = decode[Patient](obj)
-      val patient_num = pat.id
-      try {
+      obj.as[Patient] match {
+        case Left(error) =>
+          log.error(f"cannot decode Patient file $f obj $obj error $error")
+          Seq()
+        case Right(pat0) =>
+          var pat = pat0
+          val patient_num = pat.id
+          try {
 
-        log.info(s"processing $resc_type ${count.incrementAndGet} / $n $patient_num")
+            log.info(s"processing $resc_type ${count.incrementAndGet} / $n $patient_num")
 
-        val output_file = s"${config.output_directory}/${config.resc_types(PatientResourceType)}/$patient_num"
-        val output_file_path = new Path(output_file)
-        // encounter
-        val input_enc_dir = s"${config.output_directory}/${config.resc_types(EncounterResourceType)}/$patient_num"
-        val input_enc_dir_path = new Path(input_enc_dir)
-        val encs = ListBuffer[Encounter]()
-        if(output_dir_file_system.exists(input_enc_dir_path)) {
-          Utils.HDFSCollection(hc, input_enc_dir_path).foreach(encounter_dir => {
-            var enc = Utils.loadJson[Encounter](hc, encounter_dir)
-            val encounter_id = enc.id
-            config.resc_types.keys.foreach{
-              case resc_type : ResourceType =>
-                val input_resc_dir = s"${config.output_directory}/${config.resc_types(resc_type)}/$patient_num/$encounter_id"
-                val input_resc_dir_path = new Path(input_resc_dir)
-                if(output_dir_file_system.exists(input_resc_dir_path)) {
-                  log.debug(s"found resource ${config.resc_types(resc_type)}/$patient_num/$encounter_id")
-                  val objs = Utils.HDFSCollection(hc, input_resc_dir_path).map(input_resc_file_path =>
-                    try {
-                      Utils.loadJson[Resource](hc, input_resc_file_path)
-                    } catch {
-                      case e : Exception =>
-                        throw new Exception(s"error processing $resc_type $input_resc_file_path", e)
-                    }).toSeq
-                  enc = resc_type.setEncounter(enc, objs)
-                } else {
-                  log.debug(s"cannot find resource ${config.resc_types(resc_type)}/$patient_num/$encounter_id")
+            val output_file = s"${config.output_directory}/${config.resc_types(PatientResourceType)}/$patient_num"
+            val output_file_path = new Path(output_file)
+            // encounter
+            val input_enc_dir = s"${config.output_directory}/${config.resc_types(EncounterResourceType)}/$patient_num"
+            val input_enc_dir_path = new Path(input_enc_dir)
+            val encs = ListBuffer[Encounter]()
+            if(output_dir_file_system.exists(input_enc_dir_path)) {
+              Utils.HDFSCollection(hc, input_enc_dir_path).foreach(encounter_dir => {
+                var enc = Utils.loadJson[Encounter](hc, encounter_dir)
+                val encounter_id = enc.id
+                config.resc_types.keys.foreach{
+                  case resc_type : ResourceType =>
+                    val input_resc_dir = s"${config.output_directory}/${config.resc_types(resc_type)}/$patient_num/$encounter_id"
+                    val input_resc_dir_path = new Path(input_resc_dir)
+                    if(output_dir_file_system.exists(input_resc_dir_path)) {
+                      log.debug(s"found resource ${config.resc_types(resc_type)}/$patient_num/$encounter_id")
+                      val objs = Utils.HDFSCollection(hc, input_resc_dir_path).map(input_resc_file_path =>
+                        try {
+                          Utils.loadJson[Resource](hc, input_resc_file_path)
+                        } catch {
+                          case e : Exception =>
+                            throw new Exception(s"error processing $resc_type $input_resc_file_path", e)
+                        }).toSeq
+                      enc = resc_type.setEncounter(enc, objs)
+                    } else {
+                      log.debug(s"cannot find resource ${config.resc_types(resc_type)}/$patient_num/$encounter_id")
+                    }
+                  case _ =>
                 }
-              case _ =>
+                encs += enc
+              })
             }
-            encs += enc
-          })
-        }
-        pat = pat.copy(encounter = encs)
-        def combineRescWithoutValidEncounterNumber[R](rt: ResourceType, update: Seq[R] => Unit) = {
-          val input_med_dir = s"${config.output_directory}/${config.resc_types(rt)}/$patient_num"
-          val input_med_dir_path = new Path(input_med_dir)
-          val meds = ListBuffer[R]()
-          if(output_dir_file_system.exists(input_med_dir_path)) {
-            Utils.HDFSCollection(hc, input_med_dir_path).foreach(med_dir => {
-              log.debug(s"found resource no encounter $med_dir")
-              val med = Utils.loadJson[Resource](hc, med_dir).asInstanceOf[R]
-              meds += med
-            })
+            pat = pat.copy(encounter = encs)
+            def combineRescWithoutValidEncounterNumber[R](rt: ResourceType, update: Seq[R] => Unit) = {
+              val input_med_dir = s"${config.output_directory}/${config.resc_types(rt)}/$patient_num"
+              val input_med_dir_path = new Path(input_med_dir)
+              val meds = ListBuffer[R]()
+              if(output_dir_file_system.exists(input_med_dir_path)) {
+                Utils.HDFSCollection(hc, input_med_dir_path).foreach(med_dir => {
+                  log.debug(s"found resource no encounter $med_dir")
+                  val med = Utils.loadJson[Resource](hc, med_dir).asInstanceOf[R]
+                  meds += med
+                })
+              }
+              update(meds)
+            }
+
+            config.resc_types.keys.foreach{
+              case MedicationRequestResourceType =>
+                combineRescWithoutValidEncounterNumber(MedicationRequestResourceType, (meds : Seq[Medication]) => { pat = pat.copy(medication = meds) })
+              case ConditionResourceType =>
+                combineRescWithoutValidEncounterNumber(ConditionResourceType, (meds: Seq[Condition]) => { pat = pat.copy(condition = meds) })
+              case LabResourceType =>
+                combineRescWithoutValidEncounterNumber(LabResourceType, (meds: Seq[Lab]) => { pat = pat.copy(lab = meds) })
+              case ProcedureResourceType =>
+                combineRescWithoutValidEncounterNumber(ProcedureResourceType, (meds: Seq[Procedure]) => { pat = pat.copy(procedure = meds) })
+              case BMIResourceType =>
+                combineRescWithoutValidEncounterNumber(BMIResourceType, (meds: Seq[Lab]) => { pat = pat.copy(bmi = meds) })
+              case PatientResourceType =>
+              case EncounterResourceType =>
+            }
+
+            Utils.saveJson(hc, output_file_path, pat)
+          } catch {
+            case e : Exception =>
+              throw new Exception(s"error processing Patient $patient_num", e)
           }
-          update(meds)
-        }
-
-        config.resc_types.keys.foreach{
-          case MedicationRequestResourceType =>
-            combineRescWithoutValidEncounterNumber(MedicationRequestResourceType, (meds : Seq[Medication]) => { pat = pat.copy(medication = meds) })
-          case ConditionResourceType =>
-            combineRescWithoutValidEncounterNumber(ConditionResourceType, (meds: Seq[Condition]) => { pat = pat.copy(condition = meds) })
-          case LabResourceType =>
-            combineRescWithoutValidEncounterNumber(LabResourceType, (meds: Seq[Lab]) => { pat = pat.copy(lab = meds) })
-          case ProcedureResourceType =>
-            combineRescWithoutValidEncounterNumber(ProcedureResourceType, (meds: Seq[Procedure]) => { pat = pat.copy(procedure = meds) })
-          case BMIResourceType =>
-            combineRescWithoutValidEncounterNumber(BMIResourceType, (meds: Seq[Lab]) => { pat = pat.copy(bmi = meds) })
-          case PatientResourceType =>
-          case EncounterResourceType =>
-        }
-
-        Utils.saveJson(hc, output_file_path, pat)
-      } catch {
-        case e : Exception =>
-          throw new Exception(s"error processing Patient $patient_num", e)
+          Seq(patient_num)
       }
-      Seq(patient_num)
-
     })
-
   }
 
   case class PatientGeo(patient_num: String, lat: Double, lon: Double)

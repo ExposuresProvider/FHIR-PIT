@@ -585,10 +585,4 @@ class Cache[K,V <: AnyRef](fun : K => V) {
     }
   }
 
-  def decode[T](obj1: Json)(implicit decoder : Decoder[T]): T =
-    obj1.as[T] match {
-      case Left(error) => throw new RuntimeException(error)
-      case Right(obj) => obj
-    }
-
 }
