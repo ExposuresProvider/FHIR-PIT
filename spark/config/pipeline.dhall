@@ -230,7 +230,7 @@ let nearestRoad2Step = λ(skip : Bool) → λ(year : Natural) → Step.NearestRo
     function = "datatrans.step.PreprocPerPatSeriesNearestRoad2Config",
     arguments = {
       patgeo_data = patgeo year,
-      nearestroad_data = "${basedirinput}/other/spatial/nearestroad2/hpms2016_major_roads.shp",
+      nearestroad_data = "${basedirinput}/other/spatial/nearestroad2/hpms2016_major_roads_lcc.shp",
       maximum_search_radius = Integer/toDouble (Natural/toInteger 500),
       output_file = nearestroad2 year
     }
