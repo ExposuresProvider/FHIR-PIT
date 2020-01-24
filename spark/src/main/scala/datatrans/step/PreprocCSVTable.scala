@@ -57,13 +57,19 @@ object PreprocCSVTable extends StepConfigConfig {
       val start_date_joda = config.start_date
       val end_date_joda = config.end_date
 
+      val year = start_date_joda.year.get
+
       val dfs = config.input_files.map(input_file => {
         spark.read.format("csv").option("header", value = true).load(input_file)
       })
 
-      val df = dfs.reduce(_.join(_, "patient_num"))
+      val df = if (config.input_files.isEmpty) None else Some(dfs.reduce(_.join(_, "patient_num")))
 
-      spark.sparkContext.broadcast(df)
+      df match {
+        case Some(df) =>
+          spark.sparkContext.broadcast(df)
+        case _ =>
+      }
 
       val plusOneDayDate = udf((x : String) =>
         DateTime.parse(x, ISODateTimeFormat.dateParser()).plusDays(1).toString("yyyy-MM-dd")
@@ -81,13 +87,23 @@ object PreprocCSVTable extends StepConfigConfig {
             val pat_df = spark.read.format("csv").option("header", value = true).load(f.toString())
 
             if(!pat_df.head(1).isEmpty) {
-              val env_file = config.environment_file + "/" + p
+              val env_file = s"${config.environment_file}/$year/$p"
+              val env_prev_year_file = s"${config.environment_file}/${year-1}/$p"
               if(fileExists(hc, env_file)) {
-                val env_df = spark.read.format("csv").option("header", value = true).schema(env_schema).load(env_file)
+                val env_df0 = readCSV(spark, env_file, env_schema)
+                val env_df = if(fileExists(hc, env_prev_year_file)) {
+                  val env_prev_year_df = readCSV(spark, env_prev_year_file, env_schema)
+                  env_prev_year_df.union(env_df0)
+                } else
+                  env_df0
+
                 val env_df2 = env_df.withColumn("next_date", plusOneDayDate(env_df.col("start_date"))).drop("start_date").withColumnRenamed("next_date", "start_date")
 
                 val patenv_df0 = pat_df.join(env_df2, Seq("start_date"), "left")
-                val patenv_df = patenv_df0.join(df, Seq("patient_num"), "left")
+                val patenv_df = df match {
+                  case Some(df) => patenv_df0.join(df, Seq("patient_num"), "left")
+                  case _ => patenv_df0
+                }
                 writeDataframe(hc, output_file, patenv_df)
               } else {
                 println("warning: no record is contructed because env file does not exist for " + p)

@@ -21,7 +21,7 @@ class FHIRSpec extends FlatSpec {
     val tempDir = Files.createTempDirectory("fhir_processed")
 
     val config = PreprocFHIRConfig(
-      input_directory = "src/test/data/fhir",
+      input_directory = "src/test/data/fhir/2010",
       output_directory = tempDir.toString,
       resc_types = Map(
         EncounterResourceType -> "Encounter",
@@ -36,7 +36,7 @@ class FHIRSpec extends FlatSpec {
 
     PreprocFHIR.step(spark, config)
 
-    compareFileTree("src/test/data/fhir_processed", tempDir.toString())
+    compareFileTree("src/test/data/fhir_processed/2010", tempDir.toString())
 
     deleteRecursively(tempDir)
 

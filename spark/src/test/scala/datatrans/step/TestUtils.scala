@@ -37,14 +37,42 @@ object TestUtils {
     }
   }
 
-  def readCSV(f : String) : Seq[Map[String, String]] = {
+  def readCSV(f : String, csv_schema : Map[String, String => Any]) : Seq[Map[String, Any]] = {
     val csvParser = new CSVParser(
       new InputStreamReader(new FileInputStream(f), "UTF-8"), CSVFormat.DEFAULT.withFirstRecordAsHeader())
 
-    Seq(csvParser.getRecords(): _*).map(_.toMap().toMap)
+    csvParser.getRecords().toSeq.map((x : CSVRecord) =>
+      x.toMap().toMap.map{
+        case (k, v) => csv_schema.get(k) match {
+          case None => k -> v
+          case Some(func) => k -> func(v)
+        }
+      }
+    )
   }
 
-  def compareFileTree(src: String, tgt: String) = {
+  def compareCSV(output_path : String, expected_path : String, csv_schema : Map[String, String => Any]) : Unit = {
+    val csv1 = readCSV(output_path, csv_schema)
+    val csv2 = readCSV(expected_path, csv_schema)
+    println("csv1 = " + csv1)
+    println("csv2 = " + csv2)
+    val n = Math.min(csv1.size, csv2.size)
+    for(i <- 0 until n) {
+      val strdiff = csv1(i).toSet diff csv2(i).toSet
+      val strdiff2 = csv2(i).toSet diff csv1(i).toSet
+      println("diff = " + strdiff)
+      println("diff2 = " + strdiff2)
+    }
+    for(i <- n until csv1.size) {
+      println("only = " + csv1(i))
+    }
+    for(i <- n until csv2.size) {
+      println("only2 = " + csv2(i))
+    }
+    csv1 should equal (csv2)
+  }
+
+  def compareFileTree(src: String, tgt: String, csv: Boolean = false, csv_schema : Map[String, String => Any] = Map()) = {
     getFileTree(new File(src)).foreach(f => {
       println("comparing " + f.getPath())
       val expected_path = f.getPath()
@@ -61,19 +89,15 @@ object TestUtils {
         val patch = JsonDiff.diff(json1, json2, true)
         println("diff = " + patch)
         assert(json1 == json2)
-      } else if (output_path.endsWith(".csv") && expected_path.endsWith(".csv")) {
-        val csv1 = readCSV(output_path)
-        val csv2 = readCSV(expected_path)
-        println("csv1 = " + csv1)
-        println("csv2 = " + csv2)
-        val strdiff = csv2 diff csv2
-        println("diff = " + strdiff)
-        csv1 should equal (csv2)
+      } else if (csv || (output_path.endsWith(".csv") && expected_path.endsWith(".csv"))) {
+        compareCSV(output_path, expected_path, csv_schema)
       } else {
         println("f1 = " + f1)
         println("f2 = " + f2)
         val strdiff = f1 diff f2
+        val strdiff2 = f2 diff f1
         println("diff = " + strdiff)
+        println("diff2 = " + strdiff2)
         assert(f1 == f2)
       }
 

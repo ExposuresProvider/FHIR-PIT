@@ -13,6 +13,7 @@ import io.circe.parser._
 import geotrellis.proj4._
 import org.apache.commons.lang.StringEscapeUtils
 import org.joda.time.DateTime
+import org.joda.time.format.{DateTimeFormatter, ISODateTimeFormat}
 import org.apache.commons.csv._
 
 import scala.collection.mutable
@@ -114,6 +115,21 @@ object Utils {
       case JSON =>
     }
   }
+
+  def readCSV(spark: SparkSession, fn: String, schema : StructType): DataFrame = {
+    val fileSchema = spark.read.option("header", "true").csv(fn).schema
+    val fieldNames = fileSchema.fieldNames.toSeq
+    val fieldNameSet = fieldNames.toSet
+    val fields = schema.fields.toSeq
+    val fieldsNotInFile = fields.filter((x : StructField) => !fieldNameSet.contains(x.name))
+    val fieldsInFile = fieldNames.map((s : String) => fields.find((x: StructField) => x.name == s) match {
+      case Some(y) => y
+      case None => throw new RuntimeException(s"readCSV: Cannot find $s in $schema")
+    })
+    val schemaFiltered = StructType(fieldsInFile ++ fieldsNotInFile)
+    spark.read.format("csv").option("header", value = true).schema(schemaFiltered).load(fn)
+  }
+
   def writeDataframe(hc: Configuration, output_file: String, table: DataFrame): Unit = {
     val dname = output_file + "_temp"
     val dpath = new Path(dname)
@@ -568,6 +584,11 @@ class Cache[K,V <: AnyRef](fun : K => V) {
     "EstProbabilityESL",
     "EstHouseholdIncome",
     "MajorRoadwayHighwayExposure",
+    "RoadwayDistanceExposure",
+    "RoadwayType",
+    "RoadwayAADT",
+    "RoadwaySpeedLimit",
+    "RoadwayLanes",
     "ur")
 
   val demograph = Seq(
@@ -584,5 +605,7 @@ class Cache[K,V <: AnyRef](fun : K => V) {
       case Right(obj) => obj
     }
   }
+
+  def stringToDateTime(str : String, dateTimeParser : DateTimeFormatter = ISODateTimeFormat.dateTimeParser()) : DateTime = DateTime.parse(str, dateTimeParser)
 
 }

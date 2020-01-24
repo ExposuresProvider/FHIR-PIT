@@ -3,7 +3,6 @@ package datatrans.step
 import org.apache.commons.csv._
 import java.io._
 import java.util.concurrent.atomic.AtomicInteger
-import datatrans.Utils._
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
 import org.apache.spark.sql.SparkSession
@@ -14,13 +13,14 @@ import scopt._
 import scala.collection.JavaConverters._
 import squants.mass.{Kilograms, Grams, Pounds}
 import squants.space.{Centimeters, Inches}
-import datatrans.Config._
 import net.jcazevedo.moultingyaml._
 import com.github.plokhotnyuk.jsoniter_scala.macros._
 import com.github.plokhotnyuk.jsoniter_scala.core._
 import io.circe._
 import org.apache.log4j.{Logger, Level}
 
+import datatrans.Utils._
+import datatrans.Config._
 import datatrans.Implicits._
 import datatrans.Config._
 import datatrans._
@@ -282,13 +282,13 @@ object PreprocPerPatSeriesToVector extends StepConfigConfig {
                 val bmi = enc.bmi
                 if(!med.isEmpty) {
                   // med encounter use start date
-                  Some(DateTime.parse(med(0).start, ISODateTimeFormat.dateTimeParser()))
+                  Some(stringToDateTime(med(0).start))
                 } else if(!cond.isEmpty) {
                   // cond encounter use asserted date
-                  Some(DateTime.parse(cond(0).assertedDate, ISODateTimeFormat.dateTimeParser()))
+                  Some(stringToDateTime(cond(0).assertedDate))
                 } else if(!proc.isEmpty) {
                   // cond encounter use asserted date
-                  Some(DateTime.parse(proc(0).performedDateTime, ISODateTimeFormat.dateTimeParser()))
+                  Some(stringToDateTime(proc(0).performedDateTime))
                 } else {
                   if(!med.isEmpty || !cond.isEmpty || !lab.isEmpty || !proc.isEmpty || !bmi.isEmpty) {
                     log.info("non empty encountner has no start date " + p + " " + enc.id)

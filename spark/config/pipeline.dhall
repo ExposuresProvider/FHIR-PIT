@@ -156,7 +156,7 @@ let envDataSourceStep = λ(skip : Bool) → λ(year : Natural) → Step.EnvDataS
       patgeo_data = patgeo year,
       environmental_data = "${basedirinput}/other/env",
       fips_data = "${basedirinput}/other/spatial/env/US_Census_Tracts_LCC/US_Census_Tracts_LCC.shp",
-      output_file = "${basedir}/other_processed/${Natural/show year}/env/%i",
+      output_file = "${basedir}/other_processed/env/${Natural/show year}/%i",
       indices = [] : List Text,
       statistics = [] : List Text,
       indices2 = [
@@ -252,7 +252,7 @@ let envCSVTableStep = λ(skip : Bool) → λ(year : Natural) → Step.EnvCSVTabl
     function = "datatrans.step.PreprocCSVTableConfig",
     arguments = {
       patient_file = "${basedir}/FHIR_processed/${Natural/show year}/PatVec",
-      environment_file = "${basedir}/other_processed/${Natural/show year}/env",
+      environment_file = "${basedir}/other_processed/env",
       input_files = [
         acs year,
         acs2 year,

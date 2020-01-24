@@ -24,7 +24,7 @@ class VectorSpec extends FlatSpec {
 
     val parser = ISODateTimeFormat.dateTimeParser()
     val config = PreprocPerPatSeriesToVectorConfig(
-      input_directory = "src/test/data/fhir_processed/Patient",
+      input_directory = "src/test/data/fhir_processed/2010/Patient",
       output_directory = tempDir.toString,
       start_date = parser.parseDateTime("2010-01-01T00:00:00Z"),
       end_date = parser.parseDateTime("2011-01-01T00:00:00Z"),
@@ -34,7 +34,7 @@ class VectorSpec extends FlatSpec {
 
     PreprocPerPatSeriesToVector.step(spark, config)
 
-    compareFileTree("src/test/data/PatVec", tempDir.toString())
+    compareFileTree("src/test/data/vector/2010/PatVec", tempDir.toString())
 
     deleteRecursively(tempDir)
 
