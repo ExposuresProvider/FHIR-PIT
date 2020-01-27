@@ -65,11 +65,11 @@ object PreprocCSVTable extends StepConfigConfig {
 
       val df = if (config.input_files.isEmpty) None else Some(dfs.reduce(_.join(_, "patient_num")))
 
-      df match {
-        case Some(df) =>
-          spark.sparkContext.broadcast(df)
-        case _ =>
-      }
+      // df match {
+      //   case Some(df) =>
+      //     spark.sparkContext.broadcast(df)
+      //   case _ =>
+      // }
 
       val plusOneDayDate = udf((x : String) =>
         DateTime.parse(x, ISODateTimeFormat.dateParser()).plusDays(1).toString("yyyy-MM-dd")
