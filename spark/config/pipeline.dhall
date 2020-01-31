@@ -161,7 +161,15 @@ let envDataSourceStep = λ(skip : Bool) → λ(year : Natural) → Step.EnvDataS
       statistics = [] : List Text,
       indices2 = [
         "ozone_daily_8hour_maximum",
-        "pm25_daily_average"
+        "pm25_daily_average",
+	"CO_ppbv",
+	"NO_ppbv",
+	"NO2_ppbv",
+	"NOX_ppbv",
+	"SO2_ppbv",
+	"ALD2_ppbv",
+	"FORM_ppbv",
+	"BENZ_ppbv"
       ],
       start_date = start_year year,
       end_date = end_year year
