@@ -26,22 +26,19 @@ class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
       StructField("Date", StringType),
       StructField("FIPS", StringType),
       StructField("Longitude", StringType),
-      StructField("Latitude", StringType),
-      StructField("pm25_daily_average", DoubleType),
-      StructField("pm25_daily_average_stderr", DoubleType),
-      StructField("ozone_daily_8hour_maximum", DoubleType),
-      StructField("ozone_daily_8hour_maximum_stderr", DoubleType)
+      StructField("Latitude", StringType)
     )
   )
 
   def loadEnvDataFrame(input: (String, Seq[String], StructType)) : Option[DataFrame] = {
     val (filename, names, schema) = input
-    val df = spark.read.format("csv").option("header", value = true).schema(schema).load(filename)
+    val df = readCSV(spark, filename, schema, (_: String) => DoubleType)
     if (names.forall(x => df.columns.contains(x))) {
       Some(df.cache())
     } else {
       log.error(f"$filename doesn't contain all required columns")
-      None
+      val namesNotInDf = names.filter(x => !df.columns.contains(x))
+      Some(namesNotInDf.foldLeft(df)((df : DataFrame, x : String) => df.withColumn(x, lit(null))))
     }
   }
 
@@ -52,7 +49,7 @@ class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
     val (fips, years) = input
     val dfs2 = years.flatMap(year => {
       val filename = f"${config.environmental_data}/merged_cmaq_$year.csv"
-      val df = inputCache((filename, config.indices2, FIPSSchema))
+      val df = loadEnvDataFrameCache((filename, config.indices2, FIPSSchema))
       df.map(df => df.filter(df.col("FIPS") === fips))
     })
     if(dfs2.nonEmpty) {
@@ -68,7 +65,7 @@ class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
     val dfs = coors.flatMap {
       case (year, (row, col)) =>
         val filename = f"${config.environmental_data}/cmaq$year/C$col%03dR$row%03dDaily.csv"
-        inputCache((filename, names, envSchema))
+        loadEnvDataFrameCache((filename, names, envSchema))
     }
     if (dfs.nonEmpty) {
       Some(dfs.reduce((a, b) => a.union(b)).cache())
@@ -91,10 +88,10 @@ class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
 
   def generateOutputDataFrame(key: (Seq[(Int, (Int, Int))], Option[String], Seq[Int])) = {
     val (coors, fips, years) = key
-    val df = inputCache3(coors)
+    val df = loadRowColDataFrameCache(coors)
     val df3 = fips match {
       case Some(fips) =>
-        inputCache2((fips, years))
+        loadFIPSDataFrameCache((fips, years))
       case None =>
         log.error(f"skipped fips for ${coors} geoid not found")
         None
@@ -137,10 +134,10 @@ class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
     }
   }
 
-  private val inputCache = new Cache(loadEnvDataFrame)
-  private val inputCache2 = new Cache(loadFIPSDataFrame)
-  private val inputCache3 = new Cache(loadRowColDataFrame)
-  private val outputCache = new Cache(generateOutputDataFrame)
+  private val loadEnvDataFrameCache = new Cache(loadEnvDataFrame)
+  private val loadFIPSDataFrameCache = new Cache(loadFIPSDataFrame)
+  private val loadRowColDataFrameCache = new Cache(loadRowColDataFrame)
+  private val generateOutputDataFrameCache = new Cache(generateOutputDataFrame)
   val names = for (i <- config.statistics; j <- config.indices) yield f"${j}_$i"
 
   val geoidfinder = new GeoidFinder(config.fips_data, "")
@@ -177,7 +174,7 @@ class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
           })
           val fips = geoidfinder.getGeoidForLatLon(lat, lon)
 
-          outputCache((coors, fips, yearseq)) match {
+          generateOutputDataFrameCache((coors, fips, yearseq)) match {
             case Some(df) =>
               writeDataframe(hc, output_file, df)
             case None =>

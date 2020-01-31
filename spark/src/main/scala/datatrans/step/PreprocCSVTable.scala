@@ -44,13 +44,33 @@ object PreprocCSVTable extends StepConfigConfig {
     import spark.implicits._
 
     val env_schema = StructType(
-      StructField("start_date", DateType, true) ::
+      StructField("start_date", DateType, true) +:
         (for(
-          generator <- Seq((i:String) => i, (i:String) => i + "_avg", (i:String) => i + "_max", (i:String) => i + "_min", (i:String) => i + "_stddev");
-          name <- Seq("o3_avg", "pm25_avg", "o3_max", "pm25_max", "ozone_daily_8hour_maximum", "pm25_daily_average")
-        ) yield StructField(generator(name), DoubleType, false)).toList)
-
-    println(env_schema)
+          generator <- Seq(
+            (i:String) => i,
+            (i:String) => i + "_avg",
+            (i:String) => i + "_max",
+            (i:String) => i + "_min",
+            (i:String) => i + "_stddev"
+          );
+          name <- Seq(
+            "o3_avg",
+            "pm25_avg",
+            "o3_max",
+            "pm25_max",
+            "ozone_daily_8hour_maximum",
+            "pm25_daily_average",
+            "CO_ppbv",
+            "NO_ppbv",
+            "NO2_ppbv",
+            "NOX_ppbv",
+            "SO2_ppbv",
+            "ALD2_ppbv",
+            "FORM_ppbv",
+            "BENZ_ppbv"
+          )
+        ) yield StructField(generator(name), DoubleType, false)).toSeq
+    )
 
     time {
       val hc = spark.sparkContext.hadoopConfiguration
@@ -90,7 +110,7 @@ object PreprocCSVTable extends StepConfigConfig {
               val env_file = s"${config.environment_file}/$year/$p"
               val env_prev_year_file = s"${config.environment_file}/${year-1}/$p"
               if(fileExists(hc, env_file)) {
-                val env_df0 = readCSV(spark, env_file, env_schema)
+                val env_df0 = readCSV(spark, env_file, env_schema, _ => DoubleType)
                 val env_df = if(fileExists(hc, env_prev_year_file)) {
                   val env_prev_year_df = readCSV(spark, env_prev_year_file, env_schema)
                   env_prev_year_df.union(env_df0)
@@ -216,7 +236,18 @@ object PreprocCSVTable extends StepConfigConfig {
         }
 
 
-        for ((feature1, feature2) <- Seq(("pm25_daily_average", "Avg24hPM2.5"), ("ozone_daily_8hour_maximum", "Max24hOzone"))) {
+        for ((feature1, feature2) <- Seq(
+          ("pm25_daily_average", "Avg24hPM2.5"),
+          ("ozone_daily_8hour_maximum", "Max24hOzone"),
+          ("CO_ppbv","Avg24hCO"),
+          ("NO_ppbv", "Avg24hNO"),
+          ("NO2_ppbv", "Avg24hNO2"),
+          ("NOX_ppbv", "Avg24hNOx"),
+          ("SO2_ppbv", "Avg24hSO2"),
+          ("ALD2_ppbv", "Avg24hAcetaldehyde"),
+          ("FORM_ppbv", "Avg24hFormaldehyde"),
+          ("BENZ_ppbv", "Avg24hBenzene")
+        )) {
           df_all_visit = df_all_visit.withColumnRenamed(feature1, feature2 + "Exposure_2")
           for (stat_b <- Seq("avg", "max", "min", "stddev"))
             df_all_visit = df_all_visit.drop(feature1 + "_" + stat_b)
@@ -235,21 +266,59 @@ object PreprocCSVTable extends StepConfigConfig {
         writeDataframe(hc, output_all_visit, df_all_visit)
 
         val patient_aggs =
-          (for ((feature1, feature2) <- Seq(("pm25", "PM2.5"), ("o3", "Ozone")); (stat1, stat2) <- Seq(("avg", "Avg"), ("max", "Max")); (stat1_b, stat2_b) <- Seq(("avg", "Avg"), ("max", "Max")))
-          yield first(df_all.col(feature1 + "_" + stat1 + "_" + stat1_b)).alias(stat2 + "Daily" + feature2 + "Exposure_Study" + stat2_b)) ++
-        (for ((feature1, feature2) <- Seq(("pm25", "PM2.5"), ("o3", "Ozone")); (stat1, stat2) <- Seq(("avg", "Avg"), ("max", "Max")))
-        yield first(df_all.col(feature1 + "_" + stat1 + "_" + stat1)).alias(stat2 + "Daily" + feature2 + "Exposure")) ++
-        (for ((feature1, feature2) <- Seq(("pm25_daily_average", "AvgDailyPM2.5"), ("ozone_daily_8hour_maximum", "MaxDailyOzone")))
-        yield first(df_all.col(feature1 + "_avg")).alias(feature2 + "Exposure_2")
-        ) ++
-        Seq(
-          max(df_all.col("ObesityBMIVisit")).alias("ObesityBMI"),
-          new TotalTypeVisits("EMER")($"VisitType", $"RespiratoryDx").alias("TotalEDVisits"),
-          new TotalTypeVisits("IMP")($"VisitType", $"RespiratoryDx").alias("TotalInpatientVisits"),
-          (new TotalTypeVisits("EMER")($"VisitType", $"RespiratoryDx") + new TotalTypeVisits("IMP")($"VisitType", $"RespiratoryDx")).alias("TotalEDInpatientVisits")) ++
-        demograph.map(v => first(df_all.col(v)).alias(v)) ++
-        acs.map(v => first(df_all.col(v)).alias(v)) ++
-        visit.map(v => max(df_all.col(v)).alias(v))
+          (
+            for (
+              (feature1, feature2) <- Seq(
+                ("pm25", "PM2.5"),
+                ("o3", "Ozone")
+              );
+              (stat1, stat2) <- Seq(
+                ("avg", "Avg"),
+                ("max", "Max")
+              );
+              (stat1_b, stat2_b) <- Seq(
+                ("avg", "Avg"),
+                ("max", "Max")
+              )
+            ) yield first(df_all.col(feature1 + "_" + stat1 + "_" + stat1_b)).alias(stat2 + "Daily" + feature2 + "Exposure_Study" + stat2_b)
+          ) ++ (
+            for (
+              (feature1, feature2) <- Seq(
+                ("pm25", "PM2.5"),
+                ("o3", "Ozone")
+              );
+              (stat1, stat2) <- Seq(
+                ("avg", "Avg"),
+                ("max", "Max")
+              )
+            ) yield first(df_all.col(feature1 + "_" + stat1 + "_" + stat1)).alias(stat2 + "Daily" + feature2 + "Exposure")
+          ) ++ (
+            for (
+              (feature1, feature2) <- Seq(
+                ("pm25_daily_average", "AvgDailyPM2.5"),
+                ("ozone_daily_8hour_maximum", "MaxDailyOzone"),
+                ("CO_ppbv","AvgDailyCO"),
+                ("NO_ppbv", "AvgDailyNO"),
+                ("NO2_ppbv", "AvgDailyNO2"),
+                ("NOX_ppbv", "AvgDailyNOx"),
+                ("SO2_ppbv", "AvgDailySO2"),
+                ("ALD2_ppbv", "AvgDailyAcetaldehyde"),
+                ("FORM_ppbv", "AvgDailyFormaldehyde"),
+                ("BENZ_ppbv", "AvgDailyBenzene")
+              )
+            ) yield first(df_all.col(feature1 + "_avg")).alias(feature2 + "Exposure_2")
+          ) ++ Seq(
+            max(df_all.col("ObesityBMIVisit")).alias("ObesityBMI"),
+            new TotalTypeVisits("EMER")($"VisitType", $"RespiratoryDx").alias("TotalEDVisits"),
+            new TotalTypeVisits("IMP")($"VisitType", $"RespiratoryDx").alias("TotalInpatientVisits"),
+            (new TotalTypeVisits("EMER")($"VisitType", $"RespiratoryDx") + new TotalTypeVisits("IMP")($"VisitType", $"RespiratoryDx")).alias("TotalEDInpatientVisits")
+          ) ++ demograph.map(
+            v => first(df_all.col(v)).alias(v)
+          ) ++ acs.map(
+            v => first(df_all.col(v)).alias(v)
+          ) ++ visit.map(
+            v => max(df_all.col(v)).alias(v)
+          )
 
         val df_all2 = df_all
           .withColumn("RespiratoryDx", $"AsthmaDx" === "1" || $"CroupDx" === "1" || $"ReactiveAirwayDx" === "1" || $"CoughDx" === "1" || $"PneumoniaDx" === "1")

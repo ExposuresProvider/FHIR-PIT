@@ -116,7 +116,7 @@ object Utils {
     }
   }
 
-  def readCSV(spark: SparkSession, fn: String, schema : StructType): DataFrame = {
+  def readCSV(spark: SparkSession, fn: String, schema : StructType, field_type : String => DataType = s => throw new RuntimeException(s"readCSV: Cannot find $s in schema")): DataFrame = {
     val fileSchema = spark.read.option("header", "true").csv(fn).schema
     val fieldNames = fileSchema.fieldNames.toSeq
     val fieldNameSet = fieldNames.toSet
@@ -124,7 +124,7 @@ object Utils {
     val fieldsNotInFile = fields.filter((x : StructField) => !fieldNameSet.contains(x.name))
     val fieldsInFile = fieldNames.map((s : String) => fields.find((x: StructField) => x.name == s) match {
       case Some(y) => y
-      case None => throw new RuntimeException(s"readCSV: Cannot find $s in $schema")
+      case None => StructField(s, field_type(s))
     })
     val schemaFiltered = StructType(fieldsInFile ++ fieldsNotInFile)
     spark.read.format("csv").option("header", value = true).schema(schemaFiltered).load(fn)
