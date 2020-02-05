@@ -60,7 +60,8 @@ let EnvDataSourceStep : Type = GenericStep {
     statistics: List Text,
     indices2: List Text,
     start_date: Text,
-    end_date: Text
+    end_date: Text,
+    offset_hours: Integer
 }
 
 let PerPatSeriesACSStep : Type = GenericStep {
