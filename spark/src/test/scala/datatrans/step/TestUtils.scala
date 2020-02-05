@@ -19,8 +19,10 @@ object TestUtils {
   def getFileTree(f: File): Stream[File] =
     if (f.isDirectory)
       f.listFiles().toStream.flatMap(getFileTree)
-    else
+    else if (f.isFile)
       Seq(f).toStream
+    else
+      throw new RuntimeException(f"$f is neither a dir nor a file")
 
   def readFile(f: String): String = {
     val source = scala.io.Source.fromFile(f)
@@ -51,11 +53,14 @@ object TestUtils {
     )
   }
 
+  def showCSV(csv : Seq[Map[String, Any]]): String =
+    csv.foldLeft("")((a, b) => f"$a\n$b")
+
   def compareCSV(output_path : String, expected_path : String, csv_schema : Map[String, String => Any]) : Unit = {
     val csv1 = readCSV(output_path, csv_schema)
     val csv2 = readCSV(expected_path, csv_schema)
-    println("csv1 = " + csv1)
-    println("csv2 = " + csv2)
+    println("csv1 = " + showCSV(csv1))
+    println("csv2 = " + showCSV(csv2))
     val n = Math.min(csv1.size, csv2.size)
     for(i <- 0 until n) {
       val strdiff = csv1(i).toSet diff csv2(i).toSet
@@ -77,6 +82,7 @@ object TestUtils {
       println("comparing " + f.getPath())
       val expected_path = f.getPath()
       val output_path = expected_path.replace(src, tgt)
+      println("output path " + output_path)
       val op = Paths.get(output_path)
       assert(Files.isRegularFile(op))
       val f1 = readFile(output_path)

@@ -1,17 +1,33 @@
 import csv
 import sys
 import json
+import openpyxl
+from openpyxl import read_workbook
 
 input_file_name, output_file_name = sys.argv[1:]
 
-rd = {}
-with open(input_file_name) as f:
-    r = csv.reader(f)
-    for row in r:
-        row = [x.strip().lower() for x in row]
-        ids = [x for x in row if "rxcui" in x]
-        for id in ids:
-            rd[id[6:]] = row[0]
+wb = read_workbook(input_file_name)
+ws = wb["FeatureVariables"]
+
+rd = []
+
+for col in ws.iter_cols(min_col=1, min_row=6, values_only=True):
+    pvar = next(col)
+    vvar = next(col)
+    next(col)
+    identifiers = []
+    while True:
+        identifier = next(col)
+        if identifer == "":
+            break
+        else:
+            identifiers.append(identifier)
+    rd.append({
+        "patient_var": pvar,
+        "visit_var": vvar,
+        "identifiers": identifiers
+    })
+            
 with open(output_file_name, "w+") as of:
     json.dump(rd, of)
 

@@ -21,11 +21,12 @@ case class EnvDataSourceConfig(
   fips_data: String,
   indices : Seq[String], // = Seq("o3", "pm25"),
   statistics : Seq[String], // = Seq("avg", "max"),
-  indices2 : Seq[String] // = Seq("ozone_daily_8hour_maximum", "pm25_daily_average")
+  indices2 : Seq[String], // = Seq("ozone_daily_8hour_maximum", "pm25_daily_average")
+  offset_hours : Int
 ) extends StepConfig
 
 object PreprocPerPatSeriesEnvDataYamlProtocol extends SharedYamlProtocol {
-  implicit val preprocPerPatSeriesEnvDataYamlFormat = yamlFormat9(EnvDataSourceConfig)
+  implicit val preprocPerPatSeriesEnvDataYamlFormat = yamlFormat10(EnvDataSourceConfig)
 }
 
 object PreprocPerPatSeriesEnvData extends StepConfigConfig {

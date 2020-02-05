@@ -40,13 +40,14 @@ class EnvDataSpec extends FlatSpec {
 	"ALD2_ppbv",
 	"FORM_ppbv",
 	"BENZ_ppbv"
-      )
+      ),
+      offset_hours = 0
     )
 
     PreprocPerPatSeriesEnvData.step(spark, config)
 
     val toDouble = (x : String) => x.toDouble
-    compareFileTree("src/test/data/other_processed/2010/env", tempDir.toString(), true, Map(
+    compareFileTree("src/test/data/other_processed/env/2010", tempDir.toString(), true, Map(
       "ozone_daily_8hour_maximum" -> toDouble,
       "pm25_daily_average" -> toDouble,
       "CO_ppbv" -> toDouble,

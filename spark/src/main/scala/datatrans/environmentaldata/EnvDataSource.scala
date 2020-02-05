@@ -163,7 +163,11 @@ class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
         case (r, lat, lon) =>
           log.info("processing patient " + count.incrementAndGet() + " / " + n + " " + r)
           val output_file = config.output_file.replace("%i", r)
-          val yearseq = (config.start_date.year.get to config.end_date.minusDays(1).year.get)
+          val timeZone = DateTimeZone.forOffsetHours(config.offset_hours)
+          val start_date_local = config.start_date.toDateTime(timeZone)
+          val end_date_local = config.end_date.toDateTime(timeZone).minusDays(1)
+          val yearseq = start_date_local.year.get to end_date_local.year.get
+          log.info(f"loading env data from year sequence $yearseq, start_date = ${start_date_local}, end_date = ${end_date_local}")
           val coors = yearseq.intersect(Seq(2010,2011)).flatMap(year => {
             latlon2rowcol(lat, lon, year) match {
               case Some((row, col)) =>
