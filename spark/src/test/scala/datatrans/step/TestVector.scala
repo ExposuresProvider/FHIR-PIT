@@ -29,7 +29,7 @@ class VectorSpec extends FlatSpec {
       start_date = parser.parseDateTime("2010-01-01T00:00:00Z"),
       end_date = parser.parseDateTime("2011-01-01T00:00:00Z"),
       offset_hours = 0,
-      med_map = "src/main/data/ICEES_Identifiers_v7 06.03.19_rxcui.json"
+      med_map = "src/main/data/icees_features_rxnorm.json"
     )
 
     PreprocPerPatSeriesToVector.step(spark, config)
