@@ -48,5 +48,43 @@ python src/main/python/runPreprocPipeline.py <master url> <config file>
       <arg>: <value>
 ```
 
+### utilities:
+
+#### env ####
+
+##### dataset 1 #####
+
+`preproc_cmaq_2011.py`: preprocess 2011 cmaq data into `runPreprocDailyEnvData.py` input format
+
+`runPreprocCMAQ.py`: preprocess 2010 cmaq data into `runPreprocDailyEnvData.py` input format
+
+`runPreprocDailyEnvData.py`: daily to yearly stats
+
+##### dataset 2 #####
+
+`convert_environmental_date_format.py`: convert environmental file date format from mm-dd-yy to yy/mm/dd
+
+`merge_env.py`: merge env csvs
+
+#### medication request ####
+
+`rxcui_dict.py`: generate icees features rxnorm json from a xslx file
+
+#### icees ####
+
+`preprocPatient.py`: bin patient values
+
+`preprocVisit.py`: bin visit values
+
+#### generic
+
+`concat_dfs.py`: concatenate a list of csv
+
+`create_shapefile.py`: create a shapefile for testing the `EnvData` step
+
+`merge_dfs.py`: merge a list of csv
+
+`stats.py`: generate statistics of a list of csvs
+
 
 
