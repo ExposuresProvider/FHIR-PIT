@@ -29,19 +29,11 @@
 		"extension": [
 		    {
 			"url": "http://hl7.org/fhir/v3/Race",
-			"extension": [
-			    {
-				"valueString": "2028-9"
-			    }
-			]
+			"valueString": "2028-9"
 		    },
 		    {
 			"url": "http://hl7.org/fhir/v3/Ethnicity",
-			"extension": [
-			    {
-				"valueString": "2186-5"
-			    }
-			]
+			"valueString": "2186-5"
 		    }
 		]
 	    }

@@ -113,16 +113,16 @@ object Implicits{
         race =
           (for(
             json <- extension;
-            s <- json.hcursor.downField("url").as[String].right.toSeq
+            s <- root.url.string.getOption(json)
             if s == "http://hl7.org/fhir/v3/Race";
-            s <- root.extension.each.valueString.string.getAll(json)
+            s <- root.valueString.string.getOption(json)
           ) yield s).toSeq;
         ethnicity =
           (for(
             json <- extension;
-            s <- json.hcursor.downField("url").as[String].right.toSeq
+            s <- root.url.string.getOption(json)
             if s == "http://hl7.org/fhir/v3/Ethnicity";
-            s <- root.extension.each.valueString.string.getAll(json)
+            s <- root.valueString.string.getOption(json)
           ) yield s).toSeq;
         gender = resource.downField("gender").as[String].right.getOrElse("Unknown");
         address =

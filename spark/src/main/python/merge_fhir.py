@@ -1,0 +1,194 @@
+import json
+import sys
+import os
+from oslash import Left, Right
+
+def sequence(l):
+    l2 = []
+    for x in l:
+        if isinstance(x, Left):
+            return x
+        else:
+            l2.append(x.value)
+    return Right(l2)
+
+
+def birth_date(pat):
+    return Right(pat.get("birthDate"))
+
+
+def set_birth_date(pat, birth_date):
+    pat["birthDate"] = birth_date
+    return Right(pat)
+
+
+def races(pat):
+    extensions = pat.get("extension", [])
+    return Right(list(map(lambda x : x["valueString"], filter(lambda x : x.get("url") == "http://hl7.org/fhir/v3/Race" and "valueString" in x, extensions))))
+
+
+def set_races(pat, races):
+    print(f"{pat}, {races}")
+    extensions = pat.get("extension", [])
+    pat["extension"] = list(filter(lambda x : x.get("url") != "http://hl7.org/fhir/v3/Race", extensions)) + list(map(lambda race: {
+        "url": "http://hl7.org/fhir/v3/Race",
+        "extension": [{
+            "valueString": race
+        }]
+    }, races))
+    return Right(pat)
+
+
+def ethnicities(pat):
+    extensions = pat.get("extension", [])
+    return Right(list(map(lambda x : x["valueString"], filter(lambda x : x.get("url") == "http://hl7.org/fhir/v3/Ethnicity" and "valueString" in x, extensions))))
+
+
+def set_ethnicities(pat, ethnicities):
+    extensions = pat.get("extension", [])
+    pat["extension"] = list(filter(lambda x : x.get("url") != "http://hl7.org/fhir/v3/Ethnicity", extensions)) + list(map(lambda ethnicity: {
+        "url": "http://hl7.org/fhir/v3/Ethnicity",
+        "extension": [{
+            "valueString": ethnicity
+        }]
+    }, ethnicities))
+    return Right(pat)
+
+
+def gender(pat):
+    return Right(pat.get("gender"))
+
+
+def set_gender(pat, gender):
+    pat["gender"] = gender
+    return Right(pat)
+
+
+def addresses(pat):
+    extensions = pat.get("address", [])
+    return sequence(map(address, extensions)).map(lambda l : list(filter(lambda x : x is not None, l)))
+
+
+def address(pat):
+    extensions = pat.get("extension", [])
+    lat = list(map(lambda x : x["valueDecimal"], filter(lambda x : x.get("url", "").lower() == "latitude", extensions)))
+    lon = list(map(lambda x : x["valueDecimal"], filter(lambda x : x.get("url", "").lower() == "longitude", extensions)))
+    if len(lat) > 1:
+        return Left("more than one latitudes")
+    if len(lon) > 1:
+        return Left("more than one longitudes")
+    if len(lat) == 0:
+        if len(lon) == 0:
+            return Right(None)
+        else:
+            return Left("a longitude without a latitude")
+    elif len(lon) == 0:
+        return Left("a latitude without a longitude")
+    else:
+        return Right({
+            "latitude": lat,
+            "longitude": lon
+        })
+
+
+def set_addresses(pat, addresses):
+    pat["address"] = list(map(lambda address: {
+        "extension": [{
+            "url": None,
+            "extension": [
+                {
+                    "url": "latitude",
+                    "valueDecimal": address[0]
+                },
+                {
+                    "url": "longitude",
+                    "valueDecimal": address[1]
+                }
+            ]
+        }]
+    }, addresses))
+    return Right(pat)
+
+
+def patient(pat):
+    return addresses(pat).bind(lambda addresses: birth_date(pat).bind(lambda birth_date: races(pat).bind(lambda races: ethnicities(pat).bind(lambda ethnicities: gender(pat).map(lambda gender: {
+        "birth_date": birth_date,
+        "race": races,
+        "ethnicity": ethnicities,
+        "gender": gender,
+        "address": addresses
+    })))))
+
+
+def canonical(patient):
+    return json.dumps(patient, sort_keys=True, indent=2)
+
+def merge(a, b, err):
+    if a is None:
+        return Right(b)
+    elif b is None:
+        return Right(a)
+    elif a == b:
+        return Right(a)
+    else:
+        return Left(f"err={err} a={a} b={b}")
+
+def merge_patients(pat, pat2):
+
+    def handle_p1(p1):
+
+        def handle_p2(p2):
+            return merge(p1["birth_date"], p2["birth_date"], "different birth date") \
+                .bind(lambda birth_date: set_birth_date(pat, birth_date) \
+                      .bind(lambda pat: merge(p1["gender"], p2["gender"], "different gender") \
+                            .bind(lambda gender: set_gender(pat, gender)) \
+                            .bind(lambda pat: merge(p1["race"], p2["race"], "different races") \
+                                  .bind(lambda races: set_races(pat, races)) \
+                                  .bind(lambda pat: merge(p1["ethnicity"], p2["ethnicity"], "different ethnicities") \
+                                        .bind(lambda ethnicities: set_ethnicities(pat, ethnicities)) \
+                                        .bind(lambda pat: merge(p1["address"], p2["address"], "different addresses") \
+                                              .bind(lambda addresses: set_addresses(pat, addresses)))))))
+
+        return patient(pat2).bind(handle_p2)
+    
+    return patient(pat).bind(handle_p1)
+
+
+def merge_pat(pats, pat, fn, i):
+    pat_id = pat["id"]
+    print(f"id = {pat_id}, fn = {fn}, i = {i}")
+    if pat_id in pats:
+        pat1, pos = pats[pat_id]
+        def handle_merged_patient(pat):
+            pats[pat_id] = pat, (pos + [(fn, i)])
+            return Right(None)
+        return merge_patients(pat1, pat).bind(handle_merged_patient)
+    else:
+        pats[pat_id] = (pat, [(fn, i)])
+
+
+def merge_fhir(input_dir, output_dir, pats):
+    for year in os.listdir(input_dir):
+        sub_dir = f"{input_dir}/{year}/Patient"
+        for filename in os.listdir(sub_dir):
+            fn = f"{sub_dir}/{filename}"
+            with open(fn) as ifp:
+                pat_bundle = json.load(ifp)
+                for i, x in enumerate(pat_bundle.get("entry", [])):
+                    pat = x["resource"]
+                    ret = merge_pat(pats, pat, fn, i)
+                    if isinstance(ret, Left):
+                        print(f"error: " + str(ret.value))
+
+
+    for pat, pos in pats.values():
+        pat_id = pat["id"]
+        with open(f"{output_dir}/{pat_id}.json", "w+") as ofp:
+            print(f"id = {pat_id}, pos = {pos}, pat={pat}")
+            json.dump(pat, ofp)
+
+            
+if __name__ == "__main__":
+    input_dir, output_dir = sys.argv[1:]
+    pats = {}
+    merge_fhir(input_dir, output_dir, pats)
