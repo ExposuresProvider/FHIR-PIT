@@ -196,6 +196,7 @@ def merge_fhir(input_dir, output_dir, pats):
                     if isinstance(ret, Left):
                         print(f"error: " + str(ret.value) + " {pat_id " + str(pats[pat["id"]][1] + [(fn, i)]))
 
+    os.makedirs(f"{output_dir}/Patient")
     widgets=[
         ' <write output> ',
         ' [', progressbar.Timer(), '] ',
@@ -204,7 +205,7 @@ def merge_fhir(input_dir, output_dir, pats):
     ]
     for pat, pos in progressbar.progressbar(pats.values(), redirect_stdout=True, widgets=widgets):
         pat_id = pat["id"]
-        with open(f"{output_dir}/{pat_id}.json", "w+") as ofp:
+        with open(f"{output_dir}/Patient/{pat_id}.json", "w+") as ofp:
             json.dump(pat, ofp)
 
             
