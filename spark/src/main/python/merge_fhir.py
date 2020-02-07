@@ -3,6 +3,7 @@ import sys
 import os
 from oslash import Left, Right
 import progressbar
+import shutil
 
 def sequence(l):
     l2 = []
@@ -177,10 +178,12 @@ def merge_pat(pats, pat, fn, i):
         pats[pat_id] = (pat, [(fn, i)])
 
 
-def merge_fhir(input_dir, output_dir, pats):
+def merge_fhir_patient(input_dir, output_dir):
+    pats = {}
+
     for year in os.listdir(input_dir):
         widgets=[
-            ' <', year, '> ',
+            ' <Patient ', year, '> ',
             ' [', progressbar.Timer(), '] ',
             progressbar.Bar(),
             ' (', progressbar.ETA(), ') ',
@@ -196,9 +199,9 @@ def merge_fhir(input_dir, output_dir, pats):
                     if isinstance(ret, Left):
                         print(f"error: " + str(ret.value) + " {pat_id " + str(pats[pat["id"]][1] + [(fn, i)]))
 
-    os.makedirs(f"{output_dir}/Patient")
+    os.makedirs(f"{output_dir}/Patient", exist_ok=True)
     widgets=[
-        ' <write output> ',
+        ' <Patient write output> ',
         ' [', progressbar.Timer(), '] ',
         progressbar.Bar(),
         ' (', progressbar.ETA(), ') ',
@@ -208,8 +211,46 @@ def merge_fhir(input_dir, output_dir, pats):
         with open(f"{output_dir}/Patient/{pat_id}.json", "w+") as ofp:
             json.dump(pat, ofp)
 
-            
+def merge_fhir_resource(resc, resc_dirs, input_dir, output_dir):
+    os.makedirs(f"{output_dir}/{resc}", exist_ok=True)
+    for year in os.listdir(input_dir):
+        widgets=[
+            f' <{resc} {year}> ',
+            ' [', progressbar.Timer(), '] ',
+            progressbar.Bar(),
+            ' (', progressbar.ETA(), ') ',
+        ]
+        sub_dir = next(filter(os.path.isdir, map(lambda resc_dir : f"{input_dir}/{year}/{resc_dir}", [resc] + resc_dirs)))
+        for filename in progressbar.progressbar(os.listdir(sub_dir), redirect_stdout=True, widgets=widgets):
+            ifn = f"{sub_dir}/{filename}"
+            ofn = f"{output_dir}/{resc}/{year}:{filename}"
+            shutil.copyfile(ifn, ofn)
+
+
+def merge_fhir_lab(input_dir, output_dir):
+    merge_fhir_resource("Lab", ["Observation_Labs"], input_dir, output_dir)
+
+    
+def merge_fhir_condition(input_dir, output_dir):
+    merge_fhir_resource("Condition", [], input_dir, output_dir)
+
+    
+def merge_fhir_medication_request(input_dir, output_dir):
+    merge_fhir_resource("MedicationRequest", [], input_dir, output_dir)
+
+    
+def merge_fhir_encounter(input_dir, output_dir):
+    merge_fhir_resource("Encounter", [], input_dir, output_dir)
+
+
+def merge_fhir(input_dir, output_dir):
+    merge_fhir_patient(input_dir, output_dir)
+    merge_fhir_lab(input_dir, output_dir)
+    merge_fhir_condition(input_dir, output_dir)
+    merge_fhir_medication_request(input_dir, output_dir)
+    merge_fhir_encounter(input_dir, output_dir)
+
+    
 if __name__ == "__main__":
     input_dir, output_dir = sys.argv[1:]
-    pats = {}
-    merge_fhir(input_dir, output_dir, pats)
+    merge_fhir(input_dir, output_dir)
