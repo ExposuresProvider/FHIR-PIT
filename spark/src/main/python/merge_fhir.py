@@ -135,6 +135,16 @@ def merge(a, b, err):
     else:
         return Left(f"err={err} a={a} b={b}")
 
+def merge_array(a, b, err):
+    if a is None:
+        return Right(b)
+    elif b is None:
+        return Right(a)
+    elif a == b:
+        return Right([elem for elem in b if elem not in a])
+    else:
+        return Left(f"err={err} a={a} b={b}")
+
 def merge_patients(pat, pat2):
 
     def handle_p1(p1):
