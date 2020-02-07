@@ -114,14 +114,14 @@ object Implicits{
           (for(
             json <- extension;
             s <- root.url.string.getOption(json)
-            if s == "http://hl7.org/fhir/v3/Race";
+            if s == "http://terminology.hl7.org/ValueSet/v3-Race";
             s <- root.valueString.string.getOption(json)
           ) yield s).toSeq;
         ethnicity =
           (for(
             json <- extension;
             s <- root.url.string.getOption(json)
-            if s == "http://hl7.org/fhir/v3/Ethnicity";
+            if s == "http://terminology.hl7.org/ValueSet/v3-Ethnicity";
             s <- root.valueString.string.getOption(json)
           ) yield s).toSeq;
         gender = resource.downField("gender").as[String].right.getOrElse("Unknown");

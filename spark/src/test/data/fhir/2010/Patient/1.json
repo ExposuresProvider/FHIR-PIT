@@ -28,11 +28,11 @@
 		],
 		"extension": [
 		    {
-			"url": "http://hl7.org/fhir/v3/Race",
+			"url": "http://terminology.hl7.org/ValueSet/v3-Race",
 			"valueString": "2028-9"
 		    },
 		    {
-			"url": "http://hl7.org/fhir/v3/Ethnicity",
+			"url": "http://terminology.hl7.org/ValueSet/v3-Ethnicity",
 			"valueString": "2186-5"
 		    }
 		]

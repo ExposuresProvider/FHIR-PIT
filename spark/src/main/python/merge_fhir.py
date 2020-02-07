@@ -35,7 +35,7 @@ def races(pat):
 def set_races(pat, races):
     extensions = pat.get("extension", [])
     pat["extension"] = list(filter(lambda x : x.get("url") not in race_urls, extensions)) + list(map(lambda race: {
-        "url": "http://hl7.org/fhir/v3/Race",
+        "url": race_urls[0],
         "extension": [{
             "valueString": race
         }]
@@ -51,7 +51,7 @@ def ethnicities(pat):
 def set_ethnicities(pat, ethnicities):
     extensions = pat.get("extension", [])
     pat["extension"] = list(filter(lambda x : x.get("url") not in ethnicity_urls, extensions)) + list(map(lambda ethnicity: {
-        "url": "http://hl7.org/fhir/v3/Ethnicity",
+        "url": ethnicity_urls[0],
         "extension": [{
             "valueString": ethnicity
         }]
