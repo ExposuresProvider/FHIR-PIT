@@ -223,7 +223,7 @@ def merge_fhir_resource(resc, resc_dirs, input_dir, output_dir):
         sub_dir = next(filter(os.path.isdir, map(lambda resc_dir : f"{input_dir}/{year}/{resc_dir}", [resc] + resc_dirs)))
         for filename in progressbar.progressbar(os.listdir(sub_dir), redirect_stdout=True, widgets=widgets):
             ifn = f"{sub_dir}/{filename}"
-            ofn = f"{output_dir}/{resc}/{year}:{filename}"
+            ofn = f"{output_dir}/{resc}/<{year}>{filename}"
             shutil.copyfile(ifn, ofn)
 
 
