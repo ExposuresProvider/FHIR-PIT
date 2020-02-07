@@ -57,6 +57,8 @@ libraryDependencies += "org.gnieh" %% "diffson-circe" % "3.1.1" % Test
 
 testOptions += Tests.Argument("-oF")
 
+logLevel in assembly := Level.Error
+
 assemblyMergeStrategy in assembly := {
   case PathList("com", "vividsolutions", _*) => MergeStrategy.last
   case PathList("javax", "inject", _*) => MergeStrategy.last
