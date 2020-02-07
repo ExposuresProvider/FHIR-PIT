@@ -141,7 +141,7 @@ def merge_array(a, b, err):
     elif b is None:
         return Right(a)
     elif a == b:
-        return Right([elem for elem in b if elem not in a])
+        return Right(a + [elem for elem in b if elem not in a])
     else:
         return Left(f"err={err} a={a} b={b}")
 
@@ -154,11 +154,11 @@ def merge_patients(pat, pat2):
                 .bind(lambda birth_date: set_birth_date(pat, birth_date) \
                       .bind(lambda pat: merge(p1["gender"], p2["gender"], "different gender") \
                             .bind(lambda gender: set_gender(pat, gender)) \
-                            .bind(lambda pat: merge(p1["race"], p2["race"], "different races") \
+                            .bind(lambda pat: merge_array(p1["race"], p2["race"], "different races") \
                                   .bind(lambda races: set_races(pat, races)) \
-                                  .bind(lambda pat: merge(p1["ethnicity"], p2["ethnicity"], "different ethnicities") \
+                                  .bind(lambda pat: merge_array(p1["ethnicity"], p2["ethnicity"], "different ethnicities") \
                                         .bind(lambda ethnicities: set_ethnicities(pat, ethnicities)) \
-                                        .bind(lambda pat: merge(p1["address"], p2["address"], "different addresses") \
+                                        .bind(lambda pat: merge_array(p1["address"], p2["address"], "different addresses") \
                                               .bind(lambda addresses: set_addresses(pat, addresses)))))))
 
         return patient(pat2).bind(handle_p2)
