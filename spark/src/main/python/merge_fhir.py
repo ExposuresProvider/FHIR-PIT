@@ -68,7 +68,6 @@ def set_gender(pat, gender):
 
 def addresses(pat):
     extensions = [address for extension in pat.get("address", []) for address in extension.get("extension", [])]
-    print(extensions)
     return sequence(map(address, extensions)).map(lambda l : list(filter(lambda x : x is not None, l)))
 
 
