@@ -205,7 +205,6 @@ def merge_fhir(input_dir, output_dir, pats):
     for pat, pos in progressbar.progressbar(pats.values(), redirect_stdout=True, widgets=widgets):
         pat_id = pat["id"]
         with open(f"{output_dir}/{pat_id}.json", "w+") as ofp:
-            print(f"id = {pat_id}, pos = {pos}, pat={pat}")
             json.dump(pat, ofp)
 
             
