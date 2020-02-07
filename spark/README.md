@@ -76,6 +76,10 @@ python src/main/python/runPreprocPipeline.py <master url> <config file>
 
 `preprocVisit.py`: bin visit values
 
+#### fhir ####
+
+`merge_fhir.py`: merge multiple fhir datasets into one
+
 #### generic
 
 `concat_dfs.py`: concatenate a list of csv
