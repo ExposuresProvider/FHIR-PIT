@@ -22,15 +22,18 @@ def set_birth_date(pat, birth_date):
     return Right(pat)
 
 
+race_urls = ["http://terminology.hl7.org/ValueSet/v3-Race", "http://hl7.org/fhir/v3/Race"]
+
+ethnicity_urls = ["http://terminology.hl7.org/ValueSet/v3-Ethnicity", "http://hl7.org/fhir/v3/Ethnicity"]
+
 def races(pat):
     extensions = pat.get("extension", [])
-    return Right(list(map(lambda x : x["valueString"], filter(lambda x : x.get("url") == "http://hl7.org/fhir/v3/Race" and "valueString" in x, extensions))))
-
+    return Right(list(map(lambda x : x["valueString"], filter(lambda x : x.get("url") in race_urls and "valueString" in x, extensions))))
 
 def set_races(pat, races):
     print(f"{pat}, {races}")
     extensions = pat.get("extension", [])
-    pat["extension"] = list(filter(lambda x : x.get("url") != "http://hl7.org/fhir/v3/Race", extensions)) + list(map(lambda race: {
+    pat["extension"] = list(filter(lambda x : x.get("url") not in race_urls, extensions)) + list(map(lambda race: {
         "url": "http://hl7.org/fhir/v3/Race",
         "extension": [{
             "valueString": race
@@ -41,12 +44,12 @@ def set_races(pat, races):
 
 def ethnicities(pat):
     extensions = pat.get("extension", [])
-    return Right(list(map(lambda x : x["valueString"], filter(lambda x : x.get("url") == "http://hl7.org/fhir/v3/Ethnicity" and "valueString" in x, extensions))))
+    return Right(list(map(lambda x : x["valueString"], filter(lambda x : x.get("url") in ethnicity_urls and "valueString" in x, extensions))))
 
 
 def set_ethnicities(pat, ethnicities):
     extensions = pat.get("extension", [])
-    pat["extension"] = list(filter(lambda x : x.get("url") != "http://hl7.org/fhir/v3/Ethnicity", extensions)) + list(map(lambda ethnicity: {
+    pat["extension"] = list(filter(lambda x : x.get("url") not in ethnicity_urls, extensions)) + list(map(lambda ethnicity: {
         "url": "http://hl7.org/fhir/v3/Ethnicity",
         "extension": [{
             "valueString": ethnicity
