@@ -140,10 +140,8 @@ def merge_array(a, b, err):
         return Right(b)
     elif b is None:
         return Right(a)
-    elif a == b:
-        return Right(a + [elem for elem in b if elem not in a])
     else:
-        return Left(f"err={err} a={a} b={b}")
+        return Right(a + [elem for elem in b if elem not in a])
 
 def merge_patients(pat, pat2):
 
