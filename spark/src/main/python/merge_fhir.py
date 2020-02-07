@@ -188,7 +188,7 @@ def merge_fhir(input_dir, output_dir, pats):
                     pat = x["resource"]
                     ret = merge_pat(pats, pat, fn, i)
                     if isinstance(ret, Left):
-                        print(f"error: " + str(ret.value))
+                        print(f"error: " + str(ret.value) + " " + str(pats[pat["id"]][1]))
                         sys.exit()
 
 
