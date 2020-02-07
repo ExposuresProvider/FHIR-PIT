@@ -31,7 +31,6 @@ def races(pat):
     return Right(list(map(lambda x : x["valueString"], filter(lambda x : x.get("url") in race_urls and "valueString" in x, extensions))))
 
 def set_races(pat, races):
-    print(f"{pat}, {races}")
     extensions = pat.get("extension", [])
     pat["extension"] = list(filter(lambda x : x.get("url") not in race_urls, extensions)) + list(map(lambda race: {
         "url": "http://hl7.org/fhir/v3/Race",
@@ -68,7 +67,8 @@ def set_gender(pat, gender):
 
 
 def addresses(pat):
-    extensions = pat.get("address", [])
+    extensions = [address for extension in pat.get("address", []) for address in extension.get("extension", [])]
+    print(extensions)
     return sequence(map(address, extensions)).map(lambda l : list(filter(lambda x : x is not None, l)))
 
 
@@ -89,8 +89,8 @@ def address(pat):
         return Left("a latitude without a longitude")
     else:
         return Right({
-            "latitude": lat,
-            "longitude": lon
+            "latitude": lat[0],
+            "longitude": lon[0]
         })
 
 
@@ -101,11 +101,11 @@ def set_addresses(pat, addresses):
             "extension": [
                 {
                     "url": "latitude",
-                    "valueDecimal": address[0]
+                    "valueDecimal": address["latitude"]
                 },
                 {
                     "url": "longitude",
-                    "valueDecimal": address[1]
+                    "valueDecimal": address["longitude"]
                 }
             ]
         }]
