@@ -2,6 +2,7 @@ import json
 import sys
 import os
 from oslash import Left, Right
+import progressbar
 
 def sequence(l):
     l2 = []
@@ -166,7 +167,6 @@ def merge_patients(pat, pat2):
 
 def merge_pat(pats, pat, fn, i):
     pat_id = pat["id"]
-    print(f"id = {pat_id}, fn = {fn}, i = {i}")
     if pat_id in pats:
         pat1, pos = pats[pat_id]
         def handle_merged_patient(pat):
@@ -179,8 +179,14 @@ def merge_pat(pats, pat, fn, i):
 
 def merge_fhir(input_dir, output_dir, pats):
     for year in os.listdir(input_dir):
+        widgets=[
+            ' <', year, '> ',
+            ' [', progressbar.Timer(), '] ',
+            progressbar.Bar(),
+            ' (', progressbar.ETA(), ') ',
+        ]
         sub_dir = f"{input_dir}/{year}/Patient"
-        for filename in os.listdir(sub_dir):
+        for filename in progressbar.progressbar(os.listdir(sub_dir), redirect_stdout=True, widgets=widgets):
             fn = f"{sub_dir}/{filename}"
             with open(fn) as ifp:
                 pat_bundle = json.load(ifp)
@@ -188,11 +194,15 @@ def merge_fhir(input_dir, output_dir, pats):
                     pat = x["resource"]
                     ret = merge_pat(pats, pat, fn, i)
                     if isinstance(ret, Left):
-                        print(f"error: " + str(ret.value) + " " + str(pats[pat["id"]][1]))
-                        sys.exit()
+                        print(f"error: " + str(ret.value) + " {pat_id " + str(pats[pat["id"]][1] + [(fn, i)]))
 
-
-    for pat, pos in pats.values():
+    widgets=[
+        ' <write output> ',
+        ' [', progressbar.Timer(), '] ',
+        progressbar.Bar(),
+        ' (', progressbar.ETA(), ') ',
+    ]
+    for pat, pos in progressbar.progressbar(pats.values(), redirect_stdout=True, widgets=widgets):
         pat_id = pat["id"]
         with open(f"{output_dir}/{pat_id}.json", "w+") as ofp:
             print(f"id = {pat_id}, pos = {pos}, pat={pat}")
