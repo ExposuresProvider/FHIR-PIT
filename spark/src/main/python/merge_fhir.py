@@ -181,6 +181,7 @@ def merge_fhir(input_dir, output_dir, pats):
                     ret = merge_pat(pats, pat, fn, i)
                     if isinstance(ret, Left):
                         print(f"error: " + str(ret.value))
+                        sys.exit()
 
 
     for pat, pos in pats.values():
