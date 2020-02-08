@@ -231,6 +231,10 @@ def merge_fhir_lab(input_dir, output_dir):
     merge_fhir_resource("Lab", ["Observation_Labs"], input_dir, output_dir)
 
     
+def merge_fhir_procedure(input_dir, output_dir):
+    merge_fhir_resource("Procedure", [], input_dir, output_dir)
+
+    
 def merge_fhir_condition(input_dir, output_dir):
     merge_fhir_resource("Condition", [], input_dir, output_dir)
 
@@ -247,6 +251,7 @@ def merge_fhir(input_dir, output_dir):
     merge_fhir_patient(input_dir, output_dir)
     merge_fhir_lab(input_dir, output_dir)
     merge_fhir_condition(input_dir, output_dir)
+    merge_fhir_procedure(input_dir, output_dir)
     merge_fhir_medication_request(input_dir, output_dir)
     merge_fhir_encounter(input_dir, output_dir)
 
