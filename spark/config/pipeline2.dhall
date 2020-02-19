@@ -274,7 +274,7 @@ let envCSVTableStep = λ(skip : Bool) → λ(year : Natural) → Step.EnvCSVTabl
   step = {
     function = "datatrans.step.PreprocCSVTableConfig",
     arguments = {
-      patient_file = "${basedir}/FHIR_processed/${Natural/show year}/PatVec",
+      patient_file = "${basedir}/FHIR_vector/${Natural/show year}/PatVec",
       environment_file = "${basedir}/other_processed/env",
       input_files = [
         acs,

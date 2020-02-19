@@ -80,7 +80,7 @@ object Utils {
         case _ => throw new RuntimeException("typeToTrans: unsupported data type " + ty)
       }
 
-  def writeCSV(spark:SparkSession, wide:DataFrame, fn:String, form:Format) : Unit = {
+  def writeCSV(spark:SparkSession, wide:DataFrame, fn:String, form:Format, skipCRC : Boolean = true) : Unit = {
 
     val hc = spark.sparkContext.hadoopConfiguration
     val dirn = fn + "_temp"
@@ -114,6 +114,8 @@ object Utils {
         prependStringToFile(hc, wide.columns.mkString(sep) + "\n", fname)
       case JSON =>
     }
+    if(skipCRC)
+      deleteCRCFile(dfs, fpath)
   }
 
   def readCSV(spark: SparkSession, fn: String, schema : StructType, field_type : String => DataType = s => throw new RuntimeException(s"readCSV: Cannot find $s in schema")): DataFrame = {
@@ -130,7 +132,7 @@ object Utils {
     spark.read.format("csv").option("header", value = true).schema(schemaFiltered).load(fn)
   }
 
-  def writeDataframe(hc: Configuration, output_file: String, table: DataFrame): Unit = {
+  def writeDataframe(hc: Configuration, output_file: String, table: DataFrame, skipCRC : Boolean = true): Unit = {
     val dname = output_file + "_temp"
     val dpath = new Path(dname)
     table.write.option("sep", ",").option("header", value = false).csv(dname)
@@ -141,6 +143,8 @@ object Utils {
     copyMerge(hc, output_file_file_system, overwrite = true, output_file, dpath)
 
     prependStringToFile(hc, table.columns.mkString(",") + "\n", output_file)
+    if(skipCRC)
+      deleteCRCFile(output_file_file_system, output_file_path)
   }
 
   def aggregate(df: DataFrame, keycols : Seq[String], cols : Seq[String], col:String) : DataFrame = {
@@ -177,6 +181,7 @@ object Utils {
     val output_file_output_stream = output_file_file_system.create (output_file_path)
     writeStringToOutputStream(output_file_output_stream, text)
     output_file_output_stream.close ()
+
   }
 
   private def writeStringToOutputStream(output_file_output_stream: FSDataOutputStream, text: String): Unit = {
@@ -416,6 +421,14 @@ object Utils {
     }
   }
 
+  def deleteCRCFile(fs: FileSystem, path: Path) : Unit = {
+    val dir = path.getParent()
+    val name = path.getName()
+    val crc = new Path(dir, "." + name + ".crc")
+    if (fs.exists(crc))
+      fs.delete(crc, false)
+  }
+
   def loadJson[U](hc: Configuration, path: Path)(implicit codec : JsonValueCodec[U]) : U = {
     val fs = path.getFileSystem(hc)
     val is = fs.open(path)
@@ -423,11 +436,14 @@ object Utils {
     obj
   }
 
-  def saveJson[U](hc: Configuration, path: Path, json: U)(implicit codec : JsonValueCodec[U]) : Unit = {
+  def saveJson[U](hc: Configuration, path: Path, json: U, skipCRC : Boolean = true)(implicit codec : JsonValueCodec[U]) : Unit = {
     val fs = path.getFileSystem(hc)
     val is = fs.create(path)
-    val obj = try { writeToStream[U](json, is) } finally { is.close() }
-  
+    val obj = try { writeToStream[U](json, is) } finally {
+      is.close()
+      if(skipCRC)
+        deleteCRCFile(fs, path)
+    }
   }
 
 class Cache[K,V <: AnyRef](fun : K => V) {
@@ -462,7 +478,7 @@ class Cache[K,V <: AnyRef](fun : K => V) {
   }
 
 
-  def combineCSVs(hc: Configuration, input_directory: String, output_file: String) : Unit = {
+  def combineCSVs(hc: Configuration, input_directory: String, output_file: String, skipCRC : Boolean = true) : Unit = {
           val output_directory_path = new Path(input_directory)
           val output_directory_file_system = output_directory_path.getFileSystem(hc)
 
@@ -516,6 +532,8 @@ class Cache[K,V <: AnyRef](fun : K => V) {
               )
             } finally {
               output_file_csv_writer.close()
+              if(skipCRC)
+                deleteCRCFile(output_directory_file_system, output_file_path)
             }
           }
   }

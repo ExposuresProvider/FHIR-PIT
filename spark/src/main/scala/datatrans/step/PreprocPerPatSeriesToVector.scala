@@ -423,6 +423,7 @@ object PreprocPerPatSeriesToVector extends StepConfigConfig {
             output_file_csv_writer.printRecord(row.asJava)
           })
           output_file_csv_writer.close()
+          deleteCRCFile(output_file_file_system, output_file_path)
 
         }
       }

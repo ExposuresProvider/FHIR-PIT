@@ -108,6 +108,14 @@ object TestUtils {
       }
 
     })
+    getFileTree(new File(tgt)).foreach(f => {
+      println(s"checking ${f.getPath}")
+      val output_path = f.getPath()
+      val expected_path = output_path.replace(tgt, src)
+      println(s"expected path $expected_path")
+      val ip = Paths.get(expected_path)
+      assert(Files.isRegularFile(ip))
+    })
 
   }
 
