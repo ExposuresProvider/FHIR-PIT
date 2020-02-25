@@ -140,7 +140,7 @@ object PreprocPerPatSeriesEnvDataFIPS extends StepConfigConfig {
 
           withCounter(count =>
 
-            patl.par.foreach{
+            patl.foreach{
               case (r, _, _) =>
                 log.info("processing patient " + count.incrementAndGet() + " / " + n + " " + r)
                 val output_file = config.output_file.replace("%i", r)
