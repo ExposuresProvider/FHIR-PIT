@@ -31,7 +31,7 @@ object Config {
 
   }
 
-  val stepConfigConfigMap: Map[String, StepConfigConfig] = Seq(PreprocFHIR, PreprocPerPatSeriesToVector, PreprocPerPatSeriesEnvData, PreprocPerPatSeriesNearestRoad, PreprocPerPatSeriesNearestRoad2, PreprocPerPatSeriesACS, PreprocPerPatSeriesACS2, PreprocCSVTable, Train, Noop).map(c => (c.configType, c)).toMap
+  val stepConfigConfigMap: Map[String, StepConfigConfig] = Seq(PreprocFHIR, PreprocPerPatSeriesToVector, PreprocPerPatSeriesEnvData, PreprocPerPatSeriesEnvDataFIPS, PreprocPerPatSeriesNearestRoad, PreprocPerPatSeriesNearestRoad2, PreprocPerPatSeriesACS, PreprocPerPatSeriesACS2, PreprocCSVTable, Train, Noop).map(c => (c.configType, c)).toMap
 }
 
 trait StepConfigConfig {

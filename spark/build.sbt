@@ -10,8 +10,8 @@ resolvers ++= Seq(
   "Java.net repository" at "http://download.java.net/maven/2"
 )
 
-libraryDependencies += "org.apache.spark" % "spark-core_2.11" % "2.4.4"
-libraryDependencies += "org.apache.spark" % "spark-sql_2.11" % "2.4.4"
+libraryDependencies += "org.apache.spark" % "spark-core_2.11" % "2.4.5"
+libraryDependencies += "org.apache.spark" % "spark-sql_2.11" % "2.4.5"
 libraryDependencies += "org.deeplearning4j" % "deeplearning4j-core" % "1.0.0-beta4"
 libraryDependencies += "org.nd4j" % "nd4j-native-platform" % "1.0.0-beta4"
 libraryDependencies += "org.nd4j" %% "nd4j-parameter-server-node" % "1.0.0-beta4"

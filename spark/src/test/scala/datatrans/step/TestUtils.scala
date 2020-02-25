@@ -5,6 +5,7 @@ import Matchers._
 import datatrans.step.PreprocFHIRResourceType._
 import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
+import scala.collection.mutable.ListBuffer
 import java.io.{File, FileInputStream, InputStreamReader}
 import java.nio.file.{Files, Paths, Path}
 import java.nio.file.Files
@@ -56,33 +57,53 @@ object TestUtils {
   def showCSV(csv : Seq[Map[String, Any]]): String =
     csv.foldLeft("")((a, b) => f"$a\n$b")
 
+  def toMap[A](a: Seq[A]) : Map[A, Integer] =
+    a.foldLeft(Map[A, Integer]())((b: Map[A, Integer], c: A) =>  b + (c -> ((b.getOrElse(c, 0) : Integer) + 1)))
+
   def compareCSV(output_path : String, expected_path : String, csv_schema : Map[String, String => Any]) : Unit = {
+    val txt1 = readFile(output_path)
+    val txt2 = readFile(expected_path)
     val csv1 = readCSV(output_path, csv_schema)
     val csv2 = readCSV(expected_path, csv_schema)
     println("csv1 = " + showCSV(csv1))
     println("csv2 = " + showCSV(csv2))
+    println("txt1 = " + txt1)
+    println("txt2 = " + txt2)
+    def diff[A](a : Set[A], b : Set[A]) =
+      (a diff b, b diff a)
+
     val n = Math.min(csv1.size, csv2.size)
+    val csv2remaining = new ListBuffer[Map[String,Any]]()
+    csv2remaining.addAll(csv2)
     for(i <- 0 until n) {
-      val strdiff = csv1(i).toSet diff csv2(i).toSet
-      val strdiff2 = csv2(i).toSet diff csv1(i).toSet
-      println("diff = " + strdiff)
-      println("diff2 = " + strdiff2)
+      val a = csv1(i).toSet
+      val closest = csv2remaining.minBy(bm => {
+        val b = bm.toSet
+        val (ab, ba) = diff(a,b)
+        ab.size + ba.size
+      })
+      val (ab, ba) = diff(a, closest.toSet)
+      csv2remaining -= closest
+      println("a = " + a)
+      println("a2 = " + closest)
+      println("diff = " + ab)
+      println("diff2 = " + ba)
     }
     for(i <- n until csv1.size) {
       println("only = " + csv1(i))
     }
-    for(i <- n until csv2.size) {
-      println("only2 = " + csv2(i))
+    for(b <- csv2remaining) {
+      println("only2 = " + b)
     }
-    csv1 should equal (csv2)
+    toMap(csv1) should equal (toMap(csv2))
   }
 
   def compareFileTree(src: String, tgt: String, csv: Boolean = false, csv_schema : Map[String, String => Any] = Map()) = {
     getFileTree(new File(src)).foreach(f => {
-      println("comparing " + f.getPath())
       val expected_path = f.getPath()
       val output_path = expected_path.replace(src, tgt)
       println("output path " + output_path)
+      println("comparing " + f.getPath())
       val op = Paths.get(output_path)
       assert(Files.isRegularFile(op))
       val f1 = readFile(output_path)

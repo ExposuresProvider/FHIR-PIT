@@ -6,7 +6,7 @@ import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
 import org.apache.spark.sql.expressions.{MutableAggregationBuffer, UserDefinedAggregateFunction}
 import org.apache.spark.sql.types._
-import org.apache.spark.sql.{Column, Row, SparkSession}
+import org.apache.spark.sql.{Column, Row, SparkSession, DataFrame}
 import org.joda.time.format.{ISODateTimeFormat, DateTimeFormat}
 import org.joda.time._
 import scopt._
@@ -20,7 +20,8 @@ import datatrans._
 
 case class PreprocCSVTableConfig(
   patient_file : String = "",
-  environment_file : String = "",
+  environment_file : Option[String] = None,
+  environment2_file : Option[String] = None,
   input_files : Seq[String] = Seq(),
   output_file : String = "",
   start_date : DateTime = new DateTime(0),
@@ -29,7 +30,7 @@ case class PreprocCSVTableConfig(
 ) extends StepConfig
 
 object CSVTableYamlProtocol extends SharedYamlProtocol {
-  implicit val csvTableYamlFormat = yamlFormat7(PreprocCSVTableConfig)
+  implicit val csvTableYamlFormat = yamlFormat8(PreprocCSVTableConfig)
 }
 
 object PreprocCSVTable extends StepConfigConfig {
@@ -43,7 +44,7 @@ object PreprocCSVTable extends StepConfigConfig {
   def step(spark: SparkSession, config:PreprocCSVTableConfig) : Unit = {
     import spark.implicits._
 
-    val env_schema = StructType(
+    def make_env_schema(names: Seq[String]) = StructType(
       StructField("start_date", DateType, true) +:
         (for(
           generator <- Seq(
@@ -53,24 +54,35 @@ object PreprocCSVTable extends StepConfigConfig {
             (i:String) => i + "_min",
             (i:String) => i + "_stddev"
           );
-          name <- Seq(
-            "o3_avg",
-            "pm25_avg",
-            "o3_max",
-            "pm25_max",
-            "ozone_daily_8hour_maximum",
-            "pm25_daily_average",
-            "CO_ppbv",
-            "NO_ppbv",
-            "NO2_ppbv",
-            "NOX_ppbv",
-            "SO2_ppbv",
-            "ALD2_ppbv",
-            "FORM_ppbv",
-            "BENZ_ppbv"
-          )
+          name <- names
         ) yield StructField(generator(name), DoubleType, false)).toSeq
     )
+
+    val env_schema = make_env_schema(Seq(
+      "o3_avg",
+      "pm25_avg",
+      "o3_max",
+      "pm25_max"
+    ))
+
+    val env2_schema = make_env_schema(Seq(
+      "ozone_daily_8hour_maximum",
+      "pm25_daily_average",
+      "CO_ppbv",
+      "NO_ppbv",
+      "NO2_ppbv",
+      "NOX_ppbv",
+      "SO2_ppbv",
+      "ALD2_ppbv",
+      "FORM_ppbv",
+      "BENZ_ppbv"
+    ))
+
+    def expandDataFrame(df: DataFrame, schema : StructType) =
+      schema.fields.toSeq.foldLeft(df)((df0: DataFrame, field: StructField) => {
+        val f = field.name
+        if (df.columns.contains(f)) df0 else df0.withColumn(f, lit(null).cast(DoubleType))
+      })
 
     time {
       val hc = spark.sparkContext.hadoopConfiguration
@@ -107,27 +119,61 @@ object PreprocCSVTable extends StepConfigConfig {
             val pat_df = spark.read.format("csv").option("header", value = true).load(f.toString())
 
             if(!pat_df.head(1).isEmpty) {
-              val env_file = s"${config.environment_file}/$year/$p"
-              val env_prev_year_file = s"${config.environment_file}/${year-1}/$p"
-              if(fileExists(hc, env_file)) {
-                val env_df0 = readCSV(spark, env_file, env_schema, _ => DoubleType)
-                val env_df = if(fileExists(hc, env_prev_year_file)) {
-                  val env_prev_year_df = readCSV(spark, env_prev_year_file, env_schema)
-                  env_prev_year_df.union(env_df0)
-                } else
-                  env_df0
+              println(f"pat_df = ")
+              pat_df.show()
+              val patenv_df0 = config.environment_file match {
+                case Some(env) =>
+                  val env_file = s"${env}/$year/$p"
+                  val env_prev_year_file = s"${env}/${year-1}/$p"
 
-                val env_df2 = env_df.withColumn("next_date", plusOneDayDate(env_df.col("start_date"))).drop("start_date").withColumnRenamed("next_date", "start_date")
+                  if(fileExists(hc, env_file)) {
+                    val env_df0 = readCSV(spark, env_file, env_schema, _ => DoubleType)
+                    val env_df = if(fileExists(hc, env_prev_year_file)) {
+                      val env_prev_year_df = readCSV(spark, env_prev_year_file, env_schema)
+                      env_prev_year_df.union(env_df0)
+                    } else {
+                      println(f"cannot find $env_prev_year_file")
+                      env_df0
+                    }
 
-                val patenv_df0 = pat_df.join(env_df2, Seq("start_date"), "left")
-                val patenv_df = df match {
-                  case Some(df) => patenv_df0.join(df, Seq("patient_num"), "left")
-                  case _ => patenv_df0
-                }
-                writeDataframe(hc, output_file, patenv_df)
-              } else {
-                println("warning: no record is contructed because env file does not exist for " + p)
+                    println("env_df for env = ")
+                    env_df.show()
+                    pat_df.join(env_df, Seq("start_date"), "left")
+                  } else {
+                    pat_df // expandDataFrame(pat_df, env_schema)
+                  }
+                case None =>
+                  pat_df // expandDataFrame(pat_df, env_schema)
               }
+              println(f"patenv_df with env = ")
+              patenv_df0.show()
+
+              val patenv_df1 = config.environment2_file match {
+                case Some(env2) =>
+                  val env2_file = s"${env2}/$p"
+                  if(fileExists(hc, env2_file)) {
+                    val env_df3 = readCSV(spark, env2_file, env2_schema, _ => DoubleType)
+                    println("env_df for env2 = ")
+                    env_df3.show()
+                    patenv_df0.join(env_df3, Seq("start_date"), "left")
+                  } else {
+                    patenv_df0 // expandDataFrame(patenv_df0, env2_schema)
+                  }
+                case None =>
+                  patenv_df0 // expandDataFrame(patenv_df0, env2_schema)
+              }
+              println(f"patenv_df with env2")
+              patenv_df1.show()
+              
+              val patenv_df2 = df match {
+                case Some(df) => patenv_df1.join(df, Seq("patient_num"), "left")
+                case _ => patenv_df1
+              }
+
+              print(f"patenv_df with sed")
+              patenv_df2.show()
+              writeDataframe(hc, output_file, patenv_df2)
+
             }
           }
 
@@ -220,6 +266,9 @@ object PreprocCSVTable extends StepConfigConfig {
           .withColumn("year", year($"start_date"))
           .withColumn("Sex2", sex2gen($"Sex"))
 
+        df_all = expandDataFrame(df_all, env_schema)
+        df_all = expandDataFrame(df_all, env2_schema)
+
         val procObesityBMI = udf((x : Double) => if(x >= 30) 1 else 0)
 
         var df_all_visit = df_all
@@ -237,16 +286,16 @@ object PreprocCSVTable extends StepConfigConfig {
 
 
         for ((feature1, feature2) <- Seq(
-          ("pm25_daily_average", "Avg24hPM2.5"),
-          ("ozone_daily_8hour_maximum", "Max24hOzone"),
-          ("CO_ppbv","Avg24hCO"),
-          ("NO_ppbv", "Avg24hNO"),
-          ("NO2_ppbv", "Avg24hNO2"),
-          ("NOX_ppbv", "Avg24hNOx"),
-          ("SO2_ppbv", "Avg24hSO2"),
-          ("ALD2_ppbv", "Avg24hAcetaldehyde"),
-          ("FORM_ppbv", "Avg24hFormaldehyde"),
-          ("BENZ_ppbv", "Avg24hBenzene")
+          ("pm25_daily_average_prev_date", "Avg24hPM2.5"),
+          ("ozone_daily_8hour_maximum_prev_date", "Max24hOzone"),
+          ("CO_ppbv_prev_date","Avg24hCO"),
+          ("NO_ppbv_prev_date", "Avg24hNO"),
+          ("NO2_ppbv_prev_date", "Avg24hNO2"),
+          ("NOX_ppbv_prev_date", "Avg24hNOx"),
+          ("SO2_ppbv_prev_date", "Avg24hSO2"),
+          ("ALD2_ppbv_prev_date", "Avg24hAcetaldehyde"),
+          ("FORM_ppbv_prev_date", "Avg24hFormaldehyde"),
+          ("BENZ_ppbv_prev_date", "Avg24hBenzene")
         )) {
           df_all_visit = df_all_visit.withColumnRenamed(feature1, feature2 + "Exposure_2")
           for (stat_b <- Seq("avg", "max", "min", "stddev"))

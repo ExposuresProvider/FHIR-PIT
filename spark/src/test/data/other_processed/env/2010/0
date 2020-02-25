@@ -1,3 +1,1 @@
-start_date,ozone_daily_8hour_maximum,pm25_daily_average,CO_ppbv,NO_ppbv,NO2_ppbv,NOX_ppbv,SO2_ppbv,ALD2_ppbv,FORM_ppbv,BENZ_ppbv
-2010-01-01,2,2.2,2.3,2.4,2.5,2.6,2.7,2.8,2.9,2.1
-2010-01-02,3,3.3,3.2,3.4,3.5,3.6,3.7,3.8,3.9,3.1
+start_date

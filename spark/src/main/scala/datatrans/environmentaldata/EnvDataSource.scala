@@ -3,7 +3,7 @@ package datatrans.environmentaldata
 import datatrans.GeoidFinder
 import java.util.concurrent.atomic.AtomicInteger
 import datatrans.Utils._
-import org.apache.spark.sql.{DataFrame, SparkSession, Column}
+import org.apache.spark.sql.{DataFrame, SparkSession, Column, Row}
 import org.apache.spark.sql.types._
 import org.joda.time._
 import datatrans.step.EnvDataSourceConfig
@@ -11,6 +11,7 @@ import datatrans.step.EnvDataSourceConfig
 import org.apache.spark.sql.functions._
 import org.apache.hadoop.fs._
 import org.apache.log4j.{Logger, Level}
+import datatrans.environmentaldata.Utils._
 
 class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
   val log = Logger.getLogger(getClass.getName)
@@ -19,15 +20,6 @@ class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
   val envSchema = StructType(
     StructField("start_date", DateType) ::
       (for(j <- Seq("avg", "max", "min", "stddev"); i <- Seq("o3", "pm25")) yield i + "_" + j).map(i => StructField(i, DoubleType)).toList
-  )
-
-  val FIPSSchema = StructType(
-    List(
-      StructField("Date", StringType),
-      StructField("FIPS", StringType),
-      StructField("Longitude", StringType),
-      StructField("Latitude", StringType)
-    )
   )
 
   def loadEnvDataFrame(input: (String, Seq[String], StructType)) : Option[DataFrame] = {
@@ -41,106 +33,37 @@ class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
       Some(namesNotInDf.foldLeft(df)((df : DataFrame, x : String) => df.withColumn(x, lit(null))))
     }
   }
+    
 
-
-
-
-  def loadFIPSDataFrame(input: (String, Seq[Int])) : Option[DataFrame] = {
-    val (fips, years) = input
-    val dfs2 = years.flatMap(year => {
-      val filename = f"${config.environmental_data}/merged_cmaq_$year.csv"
-      val df = loadEnvDataFrameCache((filename, config.indices2, FIPSSchema))
-      df.map(df => df.filter(df.col("FIPS") === fips))
-    })
-    if(dfs2.nonEmpty) {
-      val df2 = dfs2.reduce((a, b) => a.union(b))
-      val df3 = df2.withColumn("start_date", to_date(df2.col("Date"),"yy/MM/dd"))
-      Some(df3.cache())
-    } else {
-      None
-    }
-  }
-
-  def loadRowColDataFrame(coors: Seq[(Int, (Int, Int))]) : Option[DataFrame] = {
+  def loadRowColDataFrame(coors: Seq[(Int, (Int, Int))]) : DataFrame = {
     val dfs = coors.flatMap {
       case (year, (row, col)) =>
         val filename = f"${config.environmental_data}/cmaq$year/C$col%03dR$row%03dDaily.csv"
         loadEnvDataFrameCache((filename, names, envSchema))
     }
     if (dfs.nonEmpty) {
-      Some(dfs.reduce((a, b) => a.union(b)).cache())
+      dfs.reduce((a, b) => a.union(b)).cache()
     } else {
-      None
+      log.error(f"input env df is not available ${coors}")
+      spark.createDataFrame(spark.sparkContext.emptyRDD[Row], envSchema)
     }
   }
 
-  val yearlyStatsToCompute : Seq[(String => Column, String)] = Seq((avg, "avg"), (max, "max"), (min, "min"), (stddev, "stddev"))
-
-  def aggregateByYear(df: DataFrame, names: Seq[String]) = {
-    val df2 = df.withColumn("year", year(df.col("start_date")))
-    val exprs = for(name <- names; (func, suffix) <- yearlyStatsToCompute) yield func(name).alias(name + "_" + suffix)
-    
-    val aggregate = df2.groupBy("year").agg(
-      exprs.head, exprs.tail : _*
-    )
-    df2.join(aggregate, Seq("year"))
-  }
-
-  def generateOutputDataFrame(key: (Seq[(Int, (Int, Int))], Option[String], Seq[Int])) = {
-    val (coors, fips, years) = key
+  def generateOutputDataFrame(key: (Seq[(Int, (Int, Int))], Seq[Int])) = {
+    val (coors, years) = key
     val df = loadRowColDataFrameCache(coors)
-    val df3 = fips match {
-      case Some(fips) =>
-        loadFIPSDataFrameCache((fips, years))
-      case None =>
-        log.error(f"skipped fips for ${coors} geoid not found")
-        None
-    }
 
-    val dfyearm = df match {
-      case Some(df) =>
-        Some(aggregateByYear(df, names))
-      case None => 
-        log.error(f"input env df is not available ${coors}")
-        None
-    }
+    val dfyear = aggregateByYear(spark, df, names, Seq())
    
-    val df3yearm = df3 match {
-      case Some(df3) =>
-        Some(aggregateByYear(df3.withColumn("year", year(df3.col("start_date"))), config.indices2))
-      case None =>
-        log.error(f"input fips df is not available ${fips}, ${years}")
-        None
-    }
+    def stats(names2 : Seq[String]) = names2 ++ (for ((_, i) <- yearlyStatsToCompute; j <- names2) yield f"${j}_$i")
 
-    val names2 = names ++ config.indices2
-    val names3 = for ((_, i) <- yearlyStatsToCompute; j <- names2) yield f"${j}_$i"
-
-    dfyearm match {
-      case Some(dfyear) =>
-        df3yearm match {
-          case Some(df3year) =>
-            Some(dfyear.join(df3year, Seq("start_date"), "outer").select("start_date", names2 ++ names3: _*).cache())
-          case None =>
-            Some(dfyear.select("start_date", names3: _*).cache())
-        }
-      case None =>
-        df3yearm match {
-          case Some(df3year) =>
-            Some(df3year.select("start_date", names2: _*).cache())
-          case None =>
-            None
-        }
-    }
+    dfyear.select("start_date", stats(names): _*).cache()
   }
 
   private val loadEnvDataFrameCache = new Cache(loadEnvDataFrame)
-  private val loadFIPSDataFrameCache = new Cache(loadFIPSDataFrame)
   private val loadRowColDataFrameCache = new Cache(loadRowColDataFrame)
   private val generateOutputDataFrameCache = new Cache(generateOutputDataFrame)
   val names = for (i <- config.statistics; j <- config.indices) yield f"${j}_$i"
-
-  val geoidfinder = new GeoidFinder(config.fips_data, "")
 
   def run(): Unit = {
 
@@ -176,14 +99,9 @@ class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
                 Seq()
             }
           })
-          val fips = geoidfinder.getGeoidForLatLon(lat, lon)
 
-          generateOutputDataFrameCache((coors, fips, yearseq)) match {
-            case Some(df) =>
-              writeDataframe(hc, output_file, df)
-            case None =>
-              log.error(f"skipped ${r} lat ${lat} lon ${lon} neither env is found")
-          }
+          val df = generateOutputDataFrameCache((coors, yearseq))
+          writeDataframe(hc, output_file, df)
 
       })
     }
