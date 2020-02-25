@@ -76,13 +76,24 @@ object PreprocPerPatSeriesEnvDataFIPS extends StepConfigConfig {
     }
   }
 
+  def union(a: DataFrame, b: DataFrame): DataFrame = {
+    val acols = a.columns.toSet
+    val bcols = b.columns.toSet
+    val cols = acols ++ bcols
+    val a2 = acols -- cols
+    val b2 = bcols -- cols
+    val a3 = a2.foldLeft(a)((df: DataFrame, col:String) => df.withColumn(col, lit(null)))
+    val b3 = b2.foldLeft(b)((df: DataFrame, col:String) => df.withColumn(col, lit(null)))
+    a3.union(b3)
+  }
+
   def loadFIPSDataFrame(spark: SparkSession, config: EnvDataSourceFIPSConfig, years: Seq[Int]) : Option[DataFrame] = {
     val dfs2 = years.flatMap(year => {
       val filename = f"${config.environmental_data}/merged_cmaq_$year.csv"
       loadEnvDataFrame(spark, filename, config.indices, FIPSSchema)
     })
     if(dfs2.nonEmpty) {
-      val df2 = dfs2.reduce((a, b) => a.union(b))
+      val df2 = dfs2.reduce((a, b) => union(a, b))
       val df3 = df2.withColumn("start_date", to_date(df2.col("Date"),"yy/MM/dd"))
       Some(df3)
     } else {
