@@ -18,7 +18,8 @@ for year in range(2010, 2015):
     df1 = pd.read_csv(dffn1)
     print(f"reading {dffn2}")
 
-    df2 = pd.read_csv(dffn2)
+    df15 = pd.read_csv(dffn2)
+    df2 = df15.drop(["Latitude", "Longitude"], axis=1)
 
     print(f"writing {dffn3}")
     df = pd.merge(df1, df2, on=["FIPS", "Date"], how="inner", suffixes=("", "_2"))

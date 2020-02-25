@@ -80,8 +80,8 @@ object PreprocPerPatSeriesEnvDataFIPS extends StepConfigConfig {
     val acols = a.columns.toSet
     val bcols = b.columns.toSet
     val cols = acols ++ bcols
-    val a2 = acols -- cols
-    val b2 = bcols -- cols
+    val a2 = cols -- acols
+    val b2 = cols -- bcols
     val a3 = a2.foldLeft(a)((df: DataFrame, col:String) => df.withColumn(col, lit(null)))
     val b3 = b2.foldLeft(b)((df: DataFrame, col:String) => df.withColumn(col, lit(null)))
     a3.union(b3)

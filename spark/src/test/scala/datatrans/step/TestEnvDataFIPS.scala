@@ -150,5 +150,38 @@ class EnvDataSpecFIPS extends FlatSpec {
 
   }
 
+  "EnvDataFIPS" should "handle union columns outside of schema" in {
+    val tempDir = Files.createTempDirectory("env")
+
+    val config = EnvDataSourceFIPSConfig(
+      patgeo_data = "src/test/data/fhir_processed/2010/geo.csv",
+      environmental_data = "src/test/data/other/envfips3",
+      output_file = s"${tempDir.toString()}/%i",
+      start_date = stringToDateTime("2009-01-01T00:00:00Z"),
+      end_date = stringToDateTime("2011-01-01T00:00:00Z"),
+      fips_data = "src/test/data/other/spatial/env/env.shp",
+      statistics = Seq(),
+      indices = Seq(
+        "ozone_daily_8hour_maximum",
+        "pm25_daily_average",
+	"CO_ppbv",
+	"NO_ppbv",
+	"NO2_ppbv",
+	"NOX_ppbv",
+	"SO2_ppbv",
+	"ALD2_ppbv",
+	"FORM_ppbv",
+	"BENZ_ppbv"
+      ),
+      offset_hours = 0
+    )
+
+    PreprocPerPatSeriesEnvDataFIPS.step(spark, config)
+
+    compareFileTree("src/test/data/other_processed/envfips3", tempDir.toString(), true, m)
+
+    deleteRecursively(tempDir)
+
+  }
 
 }
