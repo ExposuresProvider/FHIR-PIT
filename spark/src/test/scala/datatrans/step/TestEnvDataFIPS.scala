@@ -17,36 +17,9 @@ class EnvDataSpecFIPS extends FlatSpec {
   
   lazy val spark = SparkSession.builder().master("local").appName("datatrans preproc").getOrCreate()
 
-  "EnvDataFIPS" should "handle all columns" in {
-    val tempDir = Files.createTempDirectory("env")
+  val toDouble = (x : String) => if (x == "") null else x.toDouble
 
-    val config = EnvDataSourceFIPSConfig(
-      patgeo_data = "src/test/data/fhir_processed/2010/geo.csv",
-      environmental_data = "src/test/data/other/env",
-      output_file = s"${tempDir.toString()}/%i",
-      start_date = stringToDateTime("2009-01-01T00:00:00Z"),
-      end_date = stringToDateTime("2011-01-01T00:00:00Z"),
-      fips_data = "src/test/data/other/spatial/env/env.shp",
-      statistics = Seq(),
-      indices = Seq(
-        "ozone_daily_8hour_maximum",
-        "pm25_daily_average",
-	"CO_ppbv",
-	"NO_ppbv",
-	"NO2_ppbv",
-	"NOX_ppbv",
-	"SO2_ppbv",
-	"ALD2_ppbv",
-	"FORM_ppbv",
-	"BENZ_ppbv"
-      ),
-      offset_hours = 0
-    )
-
-    PreprocPerPatSeriesEnvDataFIPS.step(spark, config)
-
-    val toDouble = (x : String) => if (x == "") null else x.toDouble
-    compareFileTree("src/test/data/other_processed/env2", tempDir.toString(), true, Map(
+  val m = Map(
       "ozone_daily_8hour_maximum" -> toDouble,
       "pm25_daily_average" -> toDouble,
       "CO_ppbv" -> toDouble,
@@ -107,7 +80,71 @@ class EnvDataSpecFIPS extends FlatSpec {
       "ALD2_ppbv_prev_date" -> toDouble,
       "FORM_ppbv_prev_date" -> toDouble,
       "BENZ_ppbv_prev_date" -> toDouble
-    ))
+    )
+
+  "EnvDataFIPS" should "handle all columns" in {
+    val tempDir = Files.createTempDirectory("env")
+
+    val config = EnvDataSourceFIPSConfig(
+      patgeo_data = "src/test/data/fhir_processed/2010/geo.csv",
+      environmental_data = "src/test/data/other/env",
+      output_file = s"${tempDir.toString()}/%i",
+      start_date = stringToDateTime("2009-01-01T00:00:00Z"),
+      end_date = stringToDateTime("2011-01-01T00:00:00Z"),
+      fips_data = "src/test/data/other/spatial/env/env.shp",
+      statistics = Seq(),
+      indices = Seq(
+        "ozone_daily_8hour_maximum",
+        "pm25_daily_average",
+	"CO_ppbv",
+	"NO_ppbv",
+	"NO2_ppbv",
+	"NOX_ppbv",
+	"SO2_ppbv",
+	"ALD2_ppbv",
+	"FORM_ppbv",
+	"BENZ_ppbv"
+      ),
+      offset_hours = 0
+    )
+
+    PreprocPerPatSeriesEnvDataFIPS.step(spark, config)
+
+    val toDouble = (x : String) => if (x == "") null else x.toDouble
+    compareFileTree("src/test/data/other_processed/env2", tempDir.toString(), true, m)
+
+    deleteRecursively(tempDir)
+
+  }
+  "EnvDataFIPS" should "handle union columns" in {
+    val tempDir = Files.createTempDirectory("env")
+
+    val config = EnvDataSourceFIPSConfig(
+      patgeo_data = "src/test/data/fhir_processed/2010/geo.csv",
+      environmental_data = "src/test/data/other/envfips2",
+      output_file = s"${tempDir.toString()}/%i",
+      start_date = stringToDateTime("2009-01-01T00:00:00Z"),
+      end_date = stringToDateTime("2011-01-01T00:00:00Z"),
+      fips_data = "src/test/data/other/spatial/env/env.shp",
+      statistics = Seq(),
+      indices = Seq(
+        "ozone_daily_8hour_maximum",
+        "pm25_daily_average",
+	"CO_ppbv",
+	"NO_ppbv",
+	"NO2_ppbv",
+	"NOX_ppbv",
+	"SO2_ppbv",
+	"ALD2_ppbv",
+	"FORM_ppbv",
+	"BENZ_ppbv"
+      ),
+      offset_hours = 0
+    )
+
+    PreprocPerPatSeriesEnvDataFIPS.step(spark, config)
+
+    compareFileTree("src/test/data/other_processed/envfips2", tempDir.toString(), true, m)
 
     deleteRecursively(tempDir)
 
