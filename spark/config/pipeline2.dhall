@@ -235,7 +235,7 @@ let envDataFIPSSourceStep = λ(skip : Bool) → λ(year_start : Natural) → λ(
     function = "datatrans.step.EnvDataSourceFIPSConfig",
     arguments = {
       environmental_data = "${basedirinput}/other/env",
-      fips_data = "${basedirinput}/other/spatial/env2/geoids.csv",
+      fips_data = "${basedir}/other_processed/env2/geoids.csv",
       output_file = "${basedir}/other_processed/env3/all",
       statistics = [] : List Text,
       indices = [
@@ -267,7 +267,7 @@ let perPatSeriesEnvDataFIPSSourceStep = λ(skip : Bool) → Step.PerPatSeriesEnv
     function = "datatrans.step.PerPatSeriesEnvDataSourceFIPSConfig",
     arguments = {
       patgeo_data = patgeo,
-      environmental_data = "${basedirinput}/other_processed/env3/all",
+      environmental_data = "${basedir}/other_processed/env3/all",
       output_file = "${basedir}/other_processed/env4/%i"
     }
   }
