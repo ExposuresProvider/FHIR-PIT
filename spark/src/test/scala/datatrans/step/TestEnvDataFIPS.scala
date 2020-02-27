@@ -88,7 +88,7 @@ class EnvDataSpecFIPS extends FlatSpec {
     val config = EnvDataSourceFIPSConfig(
       patgeo_data = "src/test/data/fhir_processed/2010/geo.csv",
       environmental_data = "src/test/data/other/env",
-      output_file = s"${tempDir.toString()}/%i",
+      output_file = s"${tempDir.toString()}/all",
       start_date = stringToDateTime("2009-01-01T00:00:00Z"),
       end_date = stringToDateTime("2011-01-01T00:00:00Z"),
       fips_data = "src/test/data/other/spatial/env/env.shp",
@@ -108,7 +108,15 @@ class EnvDataSpecFIPS extends FlatSpec {
       offset_hours = 0
     )
 
-    PreprocPerPatSeriesEnvDataFIPS.step(spark, config)
+    PreprocEnvDataFIPS.step(spark, config)
+
+    val config2 = PerPatSeriesEnvDataSourceFIPSConfig(
+      patgeo_data = "src/test/data/fhir_processed/2010/geo.csv",
+      environmental_data = s"${tempDir.toString()}/all",
+      output_file = s"${tempDir.toString()}/%i"
+    )
+
+    PreprocPerPatSeriesEnvDataFIPS.step(spark, config2)
 
     val toDouble = (x : String) => if (x == "") null else x.toDouble
     compareFileTree("src/test/data/other_processed/env2", tempDir.toString(), true, m)
@@ -122,7 +130,7 @@ class EnvDataSpecFIPS extends FlatSpec {
     val config = EnvDataSourceFIPSConfig(
       patgeo_data = "src/test/data/fhir_processed/2010/geo.csv",
       environmental_data = "src/test/data/other/envfips2",
-      output_file = s"${tempDir.toString()}/%i",
+      output_file = s"${tempDir.toString()}/all",
       start_date = stringToDateTime("2009-01-01T00:00:00Z"),
       end_date = stringToDateTime("2011-01-01T00:00:00Z"),
       fips_data = "src/test/data/other/spatial/env/env.shp",
@@ -142,7 +150,15 @@ class EnvDataSpecFIPS extends FlatSpec {
       offset_hours = 0
     )
 
-    PreprocPerPatSeriesEnvDataFIPS.step(spark, config)
+    PreprocEnvDataFIPS.step(spark, config)
+
+    val config2 = PerPatSeriesEnvDataSourceFIPSConfig(
+      patgeo_data = "src/test/data/fhir_processed/2010/geo.csv",
+      environmental_data = s"${tempDir.toString()}/all",
+      output_file = s"${tempDir.toString()}/%i"
+    )
+
+    PreprocPerPatSeriesEnvDataFIPS.step(spark, config2)
 
     compareFileTree("src/test/data/other_processed/envfips2", tempDir.toString(), true, m)
 
@@ -156,7 +172,7 @@ class EnvDataSpecFIPS extends FlatSpec {
     val config = EnvDataSourceFIPSConfig(
       patgeo_data = "src/test/data/fhir_processed/2010/geo.csv",
       environmental_data = "src/test/data/other/envfips3",
-      output_file = s"${tempDir.toString()}/%i",
+      output_file = s"${tempDir.toString()}/all",
       start_date = stringToDateTime("2009-01-01T00:00:00Z"),
       end_date = stringToDateTime("2011-01-01T00:00:00Z"),
       fips_data = "src/test/data/other/spatial/env/env.shp",
@@ -176,7 +192,15 @@ class EnvDataSpecFIPS extends FlatSpec {
       offset_hours = 0
     )
 
-    PreprocPerPatSeriesEnvDataFIPS.step(spark, config)
+    PreprocEnvDataFIPS.step(spark, config)
+
+    val config2 = PerPatSeriesEnvDataSourceFIPSConfig(
+      patgeo_data = "src/test/data/fhir_processed/2010/geo.csv",
+      environmental_data = s"${tempDir.toString()}/all",
+      output_file = s"${tempDir.toString()}/%i"
+    )
+
+    PreprocPerPatSeriesEnvDataFIPS.step(spark, config2)
 
     compareFileTree("src/test/data/other_processed/envfips3", tempDir.toString(), true, m)
 

@@ -4,6 +4,7 @@ in pipeline "report" "progress" "/var/fhir" "/var/fhir" "/share/spark/hao/data" 
   skip = {
     fhir = True,
     envDataSourceFIPS = True,
+    perPatSeriesEnvDataSourceFIPS = True,
     acs = True,
     acs2 = True,
     nearestRoad = True,
