@@ -28,6 +28,7 @@ let resc_types = {
 let FhirConfig : Type = {
     skip: {
       fhir: Bool,
+      fips: Bool,
       envDataSourceFIPS : Bool,
       perPatSeriesEnvDataSourceFIPS : Bool,
       acs : Bool,
@@ -79,8 +80,13 @@ let EnvDataCoordinatesSourceStep : Type = GenericStep {
     offset_hours: Integer
 }
 
-let EnvDataFIPSSourceStep : Type = GenericStep {
+let FIPSStep : Type = GenericStep {
     patgeo_data: Text,
+    fips_data: Text,
+    output_file: Text
+}
+
+let EnvDataFIPSSourceStep : Type = GenericStep {
     environmental_data: Text,
     fips_data: Text,
     output_file: Text,
@@ -126,6 +132,7 @@ let Step : Type = <
     FHIR : FHIRStep |
     ToVector : PerPatSeriesToVectorStep |
     EnvDataCoordinatesSource : EnvDataCoordinatesSourceStep |
+    FIPS : FIPSStep |
     EnvDataFIPSSource : EnvDataFIPSSourceStep |
     PerPatSeriesEnvDataFIPSSource : PerPatSeriesEnvDataFIPSSourceStep |
     ACS : PerPatSeriesACSStep |
@@ -202,6 +209,22 @@ let envDataCoordinatesSourceStep = λ(skip : Bool) → λ(year : Natural) → St
   }
 }
 
+let fipsStep = λ(skip : Bool) → Step.FIPS {
+  name = "FIPS",
+  dependsOn = [
+    "FHIR"
+  ],
+  skip = skip,
+  step = {
+    function = "datatrans.step.FIPSConfig",
+    arguments = {
+      patgeo_data = patgeo,
+      fips_data = "${basedirinput}/other/spatial/env/US_Census_Tracts_LCC/US_Census_Tracts_LCC.shp",
+      output_file = "${basedir}/other_processed/env2/geoids.csv"
+    }
+  }
+}
+
 let envDataFIPSSourceStep = λ(skip : Bool) → λ(year_start : Natural) → λ(year_end : Natural) → Step.EnvDataFIPSSource {
   name = "EnvDataFIPSSource",
   dependsOn = [
@@ -211,10 +234,9 @@ let envDataFIPSSourceStep = λ(skip : Bool) → λ(year_start : Natural) → λ(
   step = {
     function = "datatrans.step.EnvDataSourceFIPSConfig",
     arguments = {
-      patgeo_data = patgeo,
       environmental_data = "${basedirinput}/other/env",
-      fips_data = "${basedirinput}/other/spatial/env/US_Census_Tracts_LCC/US_Census_Tracts_LCC.shp",
-      output_file = "${basedir}/other_processed/env2/all",
+      fips_data = "${basedirinput}/other/spatial/env2/geoids.csv",
+      output_file = "${basedir}/other_processed/env3/all",
       statistics = [] : List Text,
       indices = [
         "ozone_daily_8hour_maximum",
@@ -245,8 +267,8 @@ let perPatSeriesEnvDataFIPSSourceStep = λ(skip : Bool) → Step.PerPatSeriesEnv
     function = "datatrans.step.PerPatSeriesEnvDataSourceFIPSConfig",
     arguments = {
       patgeo_data = patgeo,
-      environmental_data = "${basedirinput}/other_processed/env2/all",
-      output_file = "${basedir}/other_processed/env3/%i"
+      environmental_data = "${basedirinput}/other_processed/env3/all",
+      output_file = "${basedir}/other_processed/env4/%i"
     }
   }
 }
@@ -336,7 +358,7 @@ let envCSVTableStep = λ(skip : Bool) → λ(year : Natural) → Step.EnvCSVTabl
     arguments = {
       patient_file = "${basedir}/FHIR_vector/${Natural/show year}/PatVec",
       environment_file = "${basedir}/other_processed/env",
-      environment2_file = "${basedir}/other_processed/env3",
+      environment2_file = "${basedir}/other_processed/env4",
       input_files = [
         acs,
         acs2,
@@ -357,6 +379,7 @@ in {
   steps =
     [
       fhirStep fhirConfig.skip.fhir fhirConfig.skip_preproc,
+      fipsStep fhirConfig.skip.fips,
       envDataFIPSSourceStep fhirConfig.skip.envDataSourceFIPS fhirConfig.yearStart fhirConfig.yearEnd,
       perPatSeriesEnvDataFIPSSourceStep fhirConfig.skip.perPatSeriesEnvDataSourceFIPS,
       acsStep fhirConfig.skip.acs,

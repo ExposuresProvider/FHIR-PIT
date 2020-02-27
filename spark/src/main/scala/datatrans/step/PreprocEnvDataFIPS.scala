@@ -21,7 +21,6 @@ import datatrans._
 
 
 case class EnvDataSourceFIPSConfig(
-  patgeo_data : String,
   environmental_data : String,
   output_file : String,
   start_date : DateTime,
@@ -33,7 +32,7 @@ case class EnvDataSourceFIPSConfig(
 ) extends StepConfig
 
 object PreprocEnvDataFIPSYamlProtocol extends SharedYamlProtocol {
-  implicit val preprocEnvDataFIPSYamlFormat = yamlFormat9(EnvDataSourceFIPSConfig)
+  implicit val preprocEnvDataFIPSYamlFormat = yamlFormat8(EnvDataSourceFIPSConfig)
 }
 
 object PreprocEnvDataFIPS extends StepConfigConfig {
@@ -105,10 +104,11 @@ object PreprocEnvDataFIPS extends StepConfigConfig {
     time {
       import spark.implicits._
 
-      val patient_dimension = config.patgeo_data
+      val patient_dimension = config.fips_data
       log.info("loading patient_dimension from " + patient_dimension)
       val pddf0 = spark.read.format("csv").option("header", value = true).load(patient_dimension)
-      val patl = pddf0.select("patient_num", "lat", "lon").map(r => (r.getString(0), r.getString(1).toDouble, r.getString(2).toDouble)).collect.toList
+      val pat_geoid = pddf0.select("patient_num", "FIPS")
+      val patl = pddf0.select("patient_num").map(r => r.getString(0)).collect.toList
       val n = patl.size
 
       val hc = spark.sparkContext.hadoopConfiguration
@@ -121,19 +121,6 @@ object PreprocEnvDataFIPS extends StepConfigConfig {
       val start_date_local = config.start_date.toDateTime(timeZone)
       val end_date_local = config.end_date.toDateTime(timeZone).minusDays(1)
       val yearseq = start_date_local.year.get to end_date_local.year.get
-
-
-      val geoidfinder = new GeoidFinder(config.fips_data, "")
-      log.info("generating geoid")
-      val patl_geoid = patl.par.map {
-        case (r, lat, lon) =>
-          (r, geoidfinder.getGeoidForLatLon(lat, lon))
-      }.seq
-      log.info("computing geoids")
-      val pat_geoid = pddf0.select("patient_num", "lat", "lon").join(patl_geoid.toDF("patient_num", "FIPS"), Seq("patient_num"), "left")
-
-      writeDataframe(hc, config.output_file.replace("%i", "geoids.csv"), pat_geoid)
-
 
       val indices = config.indices
       val names = for (i <- config.statistics; j <- indices) yield f"${j}_$i"
@@ -154,11 +141,11 @@ object PreprocEnvDataFIPS extends StepConfigConfig {
           log.info(f"aggregating $indices")
           val df3year_pat_aggbyyear = aggregateByYear(spark, df3year_pat, indices, Seq("FIPS"))
           //        df3year_pat_aggbyyear.cache()
-          log.info(f"columns4 = ${df3year_pat_aggbyyear.columns.toSeq}, nrows1 = ${df3year_pat_aggbyyear.count()}")
+          // log.info(f"columns4 = ${df3year_pat_aggbyyear.columns.toSeq}, nrows1 = ${df3year_pat_aggbyyear.count()}")
 
           val names3 = for ((_, i) <- yearlyStatsToCompute; j <- indices) yield f"${j}_$i"
           val df4 = df3year_pat_aggbyyear.select("patient_num", ("start_date" +: indices) ++ names3 ++ indices.map((s: String) => f"${s}_prev_date"): _*)
-          log.info(f"columns5 = ${df4.columns.toSeq}, nrows1 = ${df4.count()}")
+          // log.info(f"columns5 = ${df4.columns.toSeq}, nrows1 = ${df4.count()}")
 
           writeDataframe(hc, output_file_all, df4)
         case None =>

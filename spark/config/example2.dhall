@@ -3,6 +3,7 @@ let pipeline = ./pipeline2.dhall
 in pipeline "report" "progress" "/var/fhir" "/var/fhir" "/share/spark/hao/data" {
   skip = {
     fhir = True,
+    fips = True,
     envDataSourceFIPS = True,
     perPatSeriesEnvDataSourceFIPS = True,
     acs = True,
