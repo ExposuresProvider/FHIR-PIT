@@ -389,7 +389,7 @@ let envCSVTableStep = λ(skip : Bool) → λ(year : Natural) → Step.EnvCSVTabl
     arguments = {
       patient_file = "${basedir}/FHIR_vector/${Natural/show year}/PatVec",
       environment_file = "${basedir}/other_processed/env",
-      environment2_file = "${basedir}/other_processed/env4",
+      environment2_file = "${basedir}/other_processed/env5",
       input_files = [
         acs,
         acs2,
