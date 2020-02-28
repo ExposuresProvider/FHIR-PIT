@@ -130,7 +130,7 @@ object PreprocEnvDataFIPS extends StepConfigConfig {
           //        df3year.cache()
           log.info(f"columns2 = ${df3year.columns.toSeq}, nrows1 = ${df3year.count()}")
 
-          val df3year_pat = pat_geoid.join(broadcast(df3), Seq("FIPS"), "inner")
+          val df3year_pat = df3.join(broadcast(pat_geoid), Seq("FIPS"), "inner")
           //        df3year_pat.cache()
           log.info(f"columns3 = ${df3year_pat.columns.toSeq}, nrows1 = ${df3year_pat.count()}")
 
