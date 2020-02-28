@@ -25,7 +25,7 @@ install dhall, dhall-to-json from
 
 https://github.com/dhall-lang/dhall-haskell/releases
 
-modify config/example.dhall
+modify `config/example.dhall`
 
 ```
 dhall-to-yaml --file config/example.dhall --output config/example.yaml
@@ -35,6 +35,13 @@ dhall-to-yaml --file config/example.dhall --output config/example.yaml
 ```
 python src/main/python/runPreprocPipeline.py <master url> <config file>
 ```
+
+### troubleshooting
+
+#### run out of memory
+set `SBT_OPTS`
+#### run out disk space for temp
+set `SPARK_LOCAL_DIRS`
 
 ### config file format
 ```
