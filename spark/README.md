@@ -19,7 +19,7 @@ sbt test
 ```
 
 
-### generate config file
+## generate config file
 
 install dhall, dhall-to-json from
 
@@ -31,12 +31,12 @@ modify `config/example2.dhall`
 dhall-to-yaml --file config/example2.dhall --output config/example2.yaml
 ```
 
-### run
+## run
 ```
 python src/main/python/runPreprocPipeline.py <master url> <config file>
 ```
 
-### config file format
+## config file format
 ```
 - name: <name>
   dependsOn: 
@@ -48,21 +48,21 @@ python src/main/python/runPreprocPipeline.py <master url> <config file>
       <arg>: <value>
 ```
 
-### troubleshooting
+## troubleshooting
 
-#### run out of memory
+### run out of memory
 
 set `SBT_OPTS`
 
-#### run out disk space for temp
+### run out disk space for temp
 
 set `SPARK_LOCAL_DIRS`
 
-### utilities:
+## utilities:
 
-#### env ####
+### env
 
-##### dataset 1 #####
+#### dataset 1
 
 `preproc_cmaq_2011.py`: preprocess 2011 cmaq data into `runPreprocDailyEnvData.py` input format
 
@@ -70,27 +70,27 @@ set `SPARK_LOCAL_DIRS`
 
 `runPreprocDailyEnvData.py`: daily to yearly stats
 
-##### dataset 2 #####
+#### dataset 2
 
 `convert_environmental_date_format.py`: convert environmental file date format from mm-dd-yy to yy/mm/dd
 
 `merge_env.py`: merge env csvs
 
-#### medication request ####
+### medication request
 
 `rxcui_dict.py`: generate icees features rxnorm json from a xslx file
 
-#### icees ####
+### icees
 
 `preprocPatient.py`: bin patient values
 
 `preprocVisit.py`: bin visit values
 
-#### fhir ####
+### fhir
 
 `merge_fhir.py`: merge multiple fhir datasets into one
 
-#### generic
+### generic
 
 `concat_dfs.py`: concatenate a list of csv
 
