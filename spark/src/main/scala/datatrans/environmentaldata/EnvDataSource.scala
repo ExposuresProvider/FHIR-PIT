@@ -6,14 +6,14 @@ import datatrans.Utils._
 import org.apache.spark.sql.{DataFrame, SparkSession, Column, Row}
 import org.apache.spark.sql.types._
 import org.joda.time._
-import datatrans.step.EnvDataSourceConfig
+import datatrans.step.EnvDataConfig
 
 import org.apache.spark.sql.functions._
 import org.apache.hadoop.fs._
 import org.apache.log4j.{Logger, Level}
 import datatrans.environmentaldata.Utils._
 
-class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
+class EnvDataSource(spark: SparkSession, config: EnvDataConfig) {
   val log = Logger.getLogger(getClass.getName)
 
   log.setLevel(Level.INFO)
@@ -53,9 +53,9 @@ class EnvDataSource(spark: SparkSession, config: EnvDataSourceConfig) {
     val (coors, years) = key
     val df = loadRowColDataFrameCache(coors)
 
-    val dfyear = aggregateByYear(spark, df, names, Seq())
+    val dfyear = aggregateByYear(spark, df, names, config.statistics, Seq())
    
-    def stats(names2 : Seq[String]) = names2 ++ (for ((_, i) <- yearlyStatsToCompute; j <- names2) yield f"${j}_$i")
+    def stats(names2 : Seq[String]) = names2 ++ (for (i <- config.statistics; j <- names2) yield f"${j}_$i")
 
     dfyear.select("start_date", stats(names): _*).cache()
   }

@@ -4,8 +4,9 @@ in pipeline "report" "progress" "/var/fhir" "/var/fhir" "/share/spark/hao/data" 
   skip = {
     fhir = True,
     fips = True,
-    envDataSourceFIPS = True,
-    perPatSeriesEnvDataSourceFIPS = True,
+    envDataFIPS = True,
+    envDataAggregateFIPS = True,
+    perPatSeriesEnvDataFIPS = True,
     acs = True,
     acs2 = True,
     nearestRoad = True,
@@ -18,49 +19,49 @@ in pipeline "report" "progress" "/var/fhir" "/var/fhir" "/share/spark/hao/data" 
   year = 2010,
   skip = {
     toVector = True,
-    envDataSourceCoordinates = True,
+    envDataCoordinates = True,
     envCSVTable = True
   }
 }, {
   year = 2011,
   skip = {
     toVector = True,
-    envDataSourceCoordinates = True,
+    envDataCoordinates = True,
     envCSVTable = True
   }
 }, {
   year = 2012,
   skip = {
     toVector = True,
-    envDataSourceCoordinates = True,
+    envDataCoordinates = True,
     envCSVTable = True
   }
 }, {
   year = 2013,
   skip = {
     toVector = True,
-    envDataSourceCoordinates = True,
+    envDataCoordinates = True,
     envCSVTable = True
   }
 }, {
   year = 2014,
   skip = {
     toVector = True,
-    envDataSourceCoordinates = True,
+    envDataCoordinates = True,
     envCSVTable = True
   }
 }, {
   year = 2015,
   skip = {
     toVector = True,
-    envDataSourceCoordinates = True,
+    envDataCoordinates = True,
     envCSVTable = True
   }
 }, {
   year = 2016,
   skip = {
     toVector = True,
-    envDataSourceCoordinates = True,
+    envDataCoordinates = True,
     envCSVTable = True
   }
 }]

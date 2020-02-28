@@ -20,29 +20,29 @@ import datatrans.Implicits._
 import datatrans._
 
 
-case class PerPatSeriesEnvDataSourceFIPSConfig(
+case class PerPatSeriesEnvDataFIPSConfig(
   patgeo_data : String,
   environmental_data : String,
   output_file : String
 ) extends StepConfig
 
 object PreprocPerPatSeriesEnvDataFIPSYamlProtocol extends SharedYamlProtocol {
-  implicit val preprocPerPatSeriesEnvDataFIPSYamlFormat = yamlFormat3(PerPatSeriesEnvDataSourceFIPSConfig)
+  implicit val preprocPerPatSeriesEnvDataFIPSYamlFormat = yamlFormat3(PerPatSeriesEnvDataFIPSConfig)
 }
 
 object PreprocPerPatSeriesEnvDataFIPS extends StepConfigConfig {
 
-  type ConfigType = PerPatSeriesEnvDataSourceFIPSConfig
+  type ConfigType = PerPatSeriesEnvDataFIPSConfig
 
   val yamlFormat = PreprocPerPatSeriesEnvDataFIPSYamlProtocol.preprocPerPatSeriesEnvDataFIPSYamlFormat
 
-  val configType = classOf[PerPatSeriesEnvDataSourceFIPSConfig].getName()
+  val configType = classOf[PerPatSeriesEnvDataFIPSConfig].getName()
 
   val log = Logger.getLogger(getClass.getName)
 
   log.setLevel(Level.INFO)
 
-  def step(spark: SparkSession, config: PerPatSeriesEnvDataSourceFIPSConfig) = {
+  def step(spark: SparkSession, config: PerPatSeriesEnvDataFIPSConfig) = {
     time {
       import spark.implicits._
 

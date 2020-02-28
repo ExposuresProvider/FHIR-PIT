@@ -12,7 +12,7 @@ import datatrans.Implicits._
 import datatrans._
 
 
-case class EnvDataSourceConfig(
+case class EnvDataConfig(
   patgeo_data : String,
   environmental_data : String,
   output_file : String,
@@ -24,16 +24,16 @@ case class EnvDataSourceConfig(
 ) extends StepConfig
 
 object PreprocPerPatSeriesEnvDataYamlProtocol extends SharedYamlProtocol {
-  implicit val preprocPerPatSeriesEnvDataYamlFormat = yamlFormat8(EnvDataSourceConfig)
+  implicit val preprocPerPatSeriesEnvDataYamlFormat = yamlFormat8(EnvDataConfig)
 }
 
 object PreprocPerPatSeriesEnvData extends StepConfigConfig {
 
-  type ConfigType = EnvDataSourceConfig
+  type ConfigType = EnvDataConfig
 
   val yamlFormat = PreprocPerPatSeriesEnvDataYamlProtocol.preprocPerPatSeriesEnvDataYamlFormat
 
-  val configType = classOf[EnvDataSourceConfig].getName()
+  val configType = classOf[EnvDataConfig].getName()
 
   def main(args: Array[String]) {
 
@@ -43,7 +43,7 @@ object PreprocPerPatSeriesEnvData extends StepConfigConfig {
 
     import PreprocPerPatSeriesEnvDataYamlProtocol._
 
-    parseInput[EnvDataSourceConfig](args) match {
+    parseInput[EnvDataConfig](args) match {
       case Some(config) =>
         step(spark, config)
       case None =>
@@ -53,7 +53,7 @@ object PreprocPerPatSeriesEnvData extends StepConfigConfig {
 
   }
 
-  def step(spark: SparkSession, config: EnvDataSourceConfig) = {
+  def step(spark: SparkSession, config: EnvDataConfig) = {
     time {
       val datasource = new EnvDataSource(spark, config)
       datasource.run()

@@ -20,14 +20,14 @@ class EnvDataCoordinatesSpec extends FlatSpec {
   "EnvData" should "handle all columns" in {
     val tempDir = Files.createTempDirectory("env")
 
-    val config = EnvDataSourceConfig(
+    val config = EnvDataConfig(
       patgeo_data = "src/test/data/fhir_processed/2010/geo.csv",
       environmental_data = "src/test/data/other/env",
       output_file = s"${tempDir.toString()}/%i",
       start_date = stringToDateTime("2010-01-01T00:00:00Z"),
       end_date = stringToDateTime("2011-01-01T00:00:00Z"),
       indices = Seq(),
-      statistics = Seq(),
+      statistics = Seq("max", "min", "avg", "stddev"),
       offset_hours = 0
     )
 

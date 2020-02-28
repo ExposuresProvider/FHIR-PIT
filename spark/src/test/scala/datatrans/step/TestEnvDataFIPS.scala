@@ -13,7 +13,7 @@ import io.circe.parser._
 import TestUtils._
 import datatrans.Utils._
 
-class EnvDataSpecFIPS extends FlatSpec {
+class EnvDataFIPSSpec extends FlatSpec {
   
   lazy val spark = SparkSession.builder().master("local").appName("datatrans preproc").getOrCreate()
 
@@ -84,25 +84,7 @@ class EnvDataSpecFIPS extends FlatSpec {
     "lon" -> toDouble
   )
 
-  "EnvDataFIPS" should "handle all columns" in {
-    val tempDir = Files.createTempDirectory("env")
-
-    val config0 = FIPSConfig(
-      patgeo_data = "src/test/data/fhir_processed/2010/geo.csv",
-      output_file = s"${tempDir.toString()}/geoids.csv",
-      fips_data = "src/test/data/other/spatial/env/env.shp"
-    )
-
-    PreprocFIPS.step(spark, config0)
-
-    val config = EnvDataSourceFIPSConfig(
-      environmental_data = "src/test/data/other/env",
-      output_file = s"${tempDir.toString()}/all",
-      start_date = stringToDateTime("2009-01-01T00:00:00Z"),
-      end_date = stringToDateTime("2011-01-01T00:00:00Z"),
-      fips_data = s"${tempDir.toString()}/geoids.csv",
-      statistics = Seq(),
-      indices = Seq(
+  val indices = Seq(
         "ozone_daily_8hour_maximum",
         "pm25_daily_average",
 	"CO_ppbv",
@@ -113,122 +95,65 @@ class EnvDataSpecFIPS extends FlatSpec {
 	"ALD2_ppbv",
 	"FORM_ppbv",
 	"BENZ_ppbv"
-      ),
+  )
+
+  val statistics = Seq("max", "min", "avg", "stddev")
+
+  def test(inp: String, outp: String) : Unit = {
+    val tempDir = Files.createTempDirectory("env")
+
+    val config0 = FIPSConfig(
+      patgeo_data = "src/test/data/fhir_processed/2010/geo.csv",
+      output_file = s"${tempDir.toString()}/geoids.csv",
+      fips_data = "src/test/data/other/spatial/env/env.shp"
+    )
+
+    PreprocFIPS.step(spark, config0)
+
+    val config = EnvDataFIPSConfig(
+      environmental_data = f"src/test/data/other/$inp",
+      output_file = s"${tempDir.toString()}/preagg",
+      start_date = stringToDateTime("2009-01-01T00:00:00Z"),
+      end_date = stringToDateTime("2011-01-01T00:00:00Z"),
+      fips_data = s"${tempDir.toString()}/geoids.csv",
+      indices = indices,
       offset_hours = 0
     )
 
     PreprocEnvDataFIPS.step(spark, config)
 
-    val config2 = PerPatSeriesEnvDataSourceFIPSConfig(
+    val config2 = EnvDataAggregateFIPSConfig(
+      input_file=s"${tempDir.toString()}/preagg",
+      output_file = s"${tempDir.toString()}/all",
+      statistics = statistics,
+      indices = indices
+    )
+
+    PreprocEnvDataAggregateFIPS.step(spark, config2)
+
+    val config3 = PerPatSeriesEnvDataFIPSConfig(
       patgeo_data = "src/test/data/fhir_processed/2010/geo.csv",
       environmental_data = s"${tempDir.toString()}/all",
       output_file = s"${tempDir.toString()}/%i"
     )
 
-    PreprocPerPatSeriesEnvDataFIPS.step(spark, config2)
+    PreprocPerPatSeriesEnvDataFIPS.step(spark, config3)
 
-    val toDouble = (x : String) => if (x == "") null else x.toDouble
-    compareFileTree("src/test/data/other_processed/env2", tempDir.toString(), true, m)
+    compareFileTree(f"src/test/data/other_processed/$outp", tempDir.toString(), true, m)
 
     deleteRecursively(tempDir)
-
   }
+
+  "EnvDataFIPS" should "handle all columns" in {
+    test("env", "env2")
+  }
+
   "EnvDataFIPS" should "handle union columns" in {
-    val tempDir = Files.createTempDirectory("env")
-
-    val config0 = FIPSConfig(
-      patgeo_data = "src/test/data/fhir_processed/2010/geo.csv",
-      output_file = s"${tempDir.toString()}/geoids.csv",
-      fips_data = "src/test/data/other/spatial/env/env.shp"
-    )
-
-    PreprocFIPS.step(spark, config0)
-
-    val config = EnvDataSourceFIPSConfig(
-      environmental_data = "src/test/data/other/envfips2",
-      output_file = s"${tempDir.toString()}/all",
-      start_date = stringToDateTime("2009-01-01T00:00:00Z"),
-      end_date = stringToDateTime("2011-01-01T00:00:00Z"),
-      fips_data = s"${tempDir.toString()}/geoids.csv",
-      statistics = Seq(),
-      indices = Seq(
-        "ozone_daily_8hour_maximum",
-        "pm25_daily_average",
-	"CO_ppbv",
-	"NO_ppbv",
-	"NO2_ppbv",
-	"NOX_ppbv",
-	"SO2_ppbv",
-	"ALD2_ppbv",
-	"FORM_ppbv",
-	"BENZ_ppbv"
-      ),
-      offset_hours = 0
-    )
-
-    PreprocEnvDataFIPS.step(spark, config)
-
-    val config2 = PerPatSeriesEnvDataSourceFIPSConfig(
-      patgeo_data = "src/test/data/fhir_processed/2010/geo.csv",
-      environmental_data = s"${tempDir.toString()}/all",
-      output_file = s"${tempDir.toString()}/%i"
-    )
-
-    PreprocPerPatSeriesEnvDataFIPS.step(spark, config2)
-
-    compareFileTree("src/test/data/other_processed/envfips2", tempDir.toString(), true, m)
-
-    deleteRecursively(tempDir)
-
+    test("envfips2", "envfips2")
   }
 
   "EnvDataFIPS" should "handle union columns outside of schema" in {
-    val tempDir = Files.createTempDirectory("env")
-
-    val config0 = FIPSConfig(
-      patgeo_data = "src/test/data/fhir_processed/2010/geo.csv",
-      output_file = s"${tempDir.toString()}/geoids.csv",
-      fips_data = "src/test/data/other/spatial/env/env.shp"
-    )
-
-    PreprocFIPS.step(spark, config0)
-
-    val config = EnvDataSourceFIPSConfig(
-      environmental_data = "src/test/data/other/envfips3",
-      output_file = s"${tempDir.toString()}/all",
-      start_date = stringToDateTime("2009-01-01T00:00:00Z"),
-      end_date = stringToDateTime("2011-01-01T00:00:00Z"),
-      fips_data = s"${tempDir.toString()}/geoids.csv",
-      statistics = Seq(),
-      indices = Seq(
-        "ozone_daily_8hour_maximum",
-        "pm25_daily_average",
-	"CO_ppbv",
-	"NO_ppbv",
-	"NO2_ppbv",
-	"NOX_ppbv",
-	"SO2_ppbv",
-	"ALD2_ppbv",
-	"FORM_ppbv",
-	"BENZ_ppbv"
-      ),
-      offset_hours = 0
-    )
-
-    PreprocEnvDataFIPS.step(spark, config)
-
-    val config2 = PerPatSeriesEnvDataSourceFIPSConfig(
-      patgeo_data = "src/test/data/fhir_processed/2010/geo.csv",
-      environmental_data = s"${tempDir.toString()}/all",
-      output_file = s"${tempDir.toString()}/%i"
-    )
-
-    PreprocPerPatSeriesEnvDataFIPS.step(spark, config2)
-
-    compareFileTree("src/test/data/other_processed/envfips3", tempDir.toString(), true, m)
-
-    deleteRecursively(tempDir)
-
+    test("envfips3", "envfips3")
   }
 
 }

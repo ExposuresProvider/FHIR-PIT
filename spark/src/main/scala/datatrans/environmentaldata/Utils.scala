@@ -24,10 +24,13 @@ object Utils {
 
   val yearlyStatsToCompute : Seq[(String => Column, String)] = Seq((avg, "avg"), (max, "max"), (min, "min"), (stddev, "stddev"))
 
-  def aggregateByYear(spark: SparkSession, df: DataFrame, names: Seq[String], additional_primary_keys : Seq[String]) = {
+  def aggregateByYear(spark: SparkSession, df: DataFrame, names: Seq[String], statistics:Seq[String], additional_primary_keys : Seq[String]) = {
     import spark.implicits._
     val df_with_year = df.withColumn("year", year($"start_date"))
-    val exprs = for(name <- names; (func, suffix) <- yearlyStatsToCompute) yield func(name).alias(name + "_" + suffix)
+    val stats = statistics.flatMap((stat: String) => yearlyStatsToCompute.find{
+      case (_, suffix) => suffix == stat
+    })
+    val exprs = for(name <- names; (func, suffix) <- stats) yield func(name).alias(name + "_" + suffix)
     
     val df_with_agg = if (!exprs.isEmpty) {
       val aggregate = df_with_year.groupBy("year", additional_primary_keys : _*).agg(
