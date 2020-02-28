@@ -25,10 +25,10 @@ install dhall, dhall-to-json from
 
 https://github.com/dhall-lang/dhall-haskell/releases
 
-modify `config/example.dhall`
+modify `config/example2.dhall`
 
 ```
-dhall-to-yaml --file config/example.dhall --output config/example.yaml
+dhall-to-yaml --file config/example2.dhall --output config/example2.yaml
 ```
 
 ### run
