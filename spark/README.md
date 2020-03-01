@@ -70,7 +70,9 @@ set `SPARK_LOCAL_DIRS`
 
 `runPreprocDailyEnvData.py`: daily to yearly stats
 
-`split.py`: split the dataset by `patient_num`
+`split.py`: split the dataset by `patient_num` this is the same as `PreprocSplit.scala` but runs on single machine
+
+`envDataAggregate.py`: aggregate data by year this is the same as `PreprocEnvDataAggregate.scala` but runs on single machine
 
 #### dataset 2
 
