@@ -70,6 +70,8 @@ set `SPARK_LOCAL_DIRS`
 
 `runPreprocDailyEnvData.py`: daily to yearly stats
 
+`split.py`: split the dataset by `patient_num`
+
 #### dataset 2
 
 `convert_environmental_date_format.py`: convert environmental file date format from mm-dd-yy to yy/mm/dd

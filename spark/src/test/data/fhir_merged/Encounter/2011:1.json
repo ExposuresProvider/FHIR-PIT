@@ -1,0 +1,23 @@
+{
+    "resourceType": "Bundle",
+    "type": "collection",
+    "entry": [
+	{
+	    "resource": {
+		"resourceType": "Encounter",
+		"id": "0",
+		"class": {
+		    "system": "http://hl7.org/fhir/ValueSet/v3-ActEncounterCode",
+		    "code": "AMB",
+		    "display": "ambulatory"
+		},
+		"subject": {
+		    "reference": "Patient/0"
+		},
+		"period": {
+		    "start": "2010-01-01T00:00:00Z"
+		}
+	    }
+	}
+    ]
+}

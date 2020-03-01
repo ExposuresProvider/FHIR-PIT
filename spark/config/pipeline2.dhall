@@ -30,8 +30,8 @@ let FhirConfig : Type = {
       fhir: Bool,
       fips: Bool,
       envDataFIPS : Bool,
-      envDataAggregateFIPS : Bool,
-      perPatSeriesEnvDataFIPS : Bool,
+      split : Bool,
+      envDataAggregate : Bool,
       acs : Bool,
       acs2 : Bool,
       nearestRoad : Bool,
@@ -97,17 +97,17 @@ let EnvDataFIPSStep : Type = GenericStep {
     offset_hours: Integer
 }
 
-let EnvDataAggregateFIPSStep : Type = GenericStep {
+let SplitStep : Type = GenericStep {
     input_file: Text,
-    output_file: Text,
-    statistics: List Text,
-    indices: List Text
+    split_index: Text,
+    output_dir: Text
 }
 
-let PerPatSeriesEnvDataFIPSStep : Type = GenericStep {
-    patgeo_data: Text,
-    environmental_data: Text,
-    output_file: Text
+let EnvDataAggregateStep : Type = GenericStep {
+    input_dir: Text,
+    output_dir: Text,
+    statistics: List Text,
+    indices: List Text
 }
 
 let PerPatSeriesACSStep : Type = GenericStep {
@@ -141,8 +141,8 @@ let Step : Type = <
     EnvDataCoordinates : EnvDataCoordinatesStep |
     FIPS : FIPSStep |
     EnvDataFIPS : EnvDataFIPSStep |
-    EnvDataAggregateFIPS : EnvDataAggregateFIPSStep |
-    PerPatSeriesEnvDataFIPS : PerPatSeriesEnvDataFIPSStep |
+    Split : SplitStep |
+    EnvDataAggregate : EnvDataAggregateStep |
     ACS : PerPatSeriesACSStep |
     NearestRoad : PerPatSeriesNearestRoadStep |
     EnvCSVTable : EnvCSVTableStep
@@ -203,7 +203,7 @@ let envDataCoordinatesStep = λ(skip : Bool) → λ(year : Natural) → Step.Env
   ],
   skip = skip,
   step = {
-    function = "datatrans.step.EnvDataConfig",
+    function = "datatrans.step.EnvDataCoordinatesConfig",
     arguments = {
       patgeo_data = patgeo,
       environmental_data = "${basedirinput}/other/env",
@@ -271,35 +271,35 @@ let envDataFIPSStep = λ(skip : Bool) → λ(year_start : Natural) → λ(year_e
   }
 }
 
-let envDataAggregateFIPSStep = λ(skip : Bool) → Step.EnvDataAggregateFIPS {
-  name = "EnvDataAggregateFIPS",
+let splitStep = λ(skip : Bool) → Step.Split {
+  name = "Split",
   dependsOn = [
     "EnvDataFIPS"
   ],
   skip = skip,
   step = {
-    function = "datatrans.step.EnvDataAggregateFIPSConfig",
+    function = "datatrans.step.SplitConfig",
     arguments = {
       input_file = "${basedir}/other_processed/env3/preagg",
-      output_file = "${basedir}/other_processed/env4/all",
-      statistics = statistics,
-      indices = indices
+      split_index = "patient_num",
+      output_dir = "${basedir}/other_processed/env4"
     }
   }
 }
 
-let perPatSeriesEnvDataFIPSStep = λ(skip : Bool) → Step.PerPatSeriesEnvDataFIPS {
-  name = "PerPatSeriesEnvDataFIPS",
+let envDataAggregateStep = λ(skip : Bool) → Step.EnvDataAggregate {
+  name = "EnvDataAggregate",
   dependsOn = [
-    "EnvDataAggregateFIPS"
+    "EnvDataFIPS"
   ],
   skip = skip,
   step = {
-    function = "datatrans.step.PerPatSeriesEnvDataFIPSConfig",
+    function = "datatrans.step.EnvDataAggregateConfig",
     arguments = {
-      patgeo_data = patgeo,
-      environmental_data = "${basedir}/other_processed/env4/all",
-      output_file = "${basedir}/other_processed/env5/%i"
+      input_dir = "${basedir}/other_processed/env4",
+      output_dir = "${basedir}/other_processed/env5",
+      statistics = statistics,
+      indices = indices
     }
   }
 }
@@ -381,7 +381,7 @@ let envCSVTableStep = λ(skip : Bool) → λ(year : Natural) → Step.EnvCSVTabl
     "PerPatSeriesNearestRoad",
     "PerPatSeriesNearestRoad2",
     "EnvDataCoordinates${Natural/show year}",
-    "PerPatSeriesEnvDataFIPS"
+    "EnvDataAggregate"
   ],
   skip = skip,
   step = {
@@ -412,8 +412,8 @@ in {
       fhirStep fhirConfig.skip.fhir fhirConfig.skip_preproc,
       fipsStep fhirConfig.skip.fips,
       envDataFIPSStep fhirConfig.skip.envDataFIPS fhirConfig.yearStart fhirConfig.yearEnd,
-      envDataAggregateFIPSStep fhirConfig.skip.envDataAggregateFIPS,
-      perPatSeriesEnvDataFIPSStep fhirConfig.skip.perPatSeriesEnvDataFIPS,
+      splitStep fhirConfig.skip.split,
+      envDataAggregateStep fhirConfig.skip.envDataAggregate,
       acsStep fhirConfig.skip.acs,
       acs2Step fhirConfig.skip.acs2,
       nearestRoadStep fhirConfig.skip.nearestRoad,

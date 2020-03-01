@@ -23,7 +23,7 @@ class CSVTableSpec extends FlatSpec {
     val config = PreprocCSVTableConfig(
       patient_file = "src/test/data/vector/2010/PatVec",
       environment_file = None,
-      environment2_file = Some("src/test/data/other_processed/env2"),
+      environment2_file = Some("src/test/data/other_processed/env2/aggregate"),
       input_files = Seq[String](
         "src/test/data/other_processed/2010/acs.csv",
         "src/test/data/other_processed/2010/acs2.csv",

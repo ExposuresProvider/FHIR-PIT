@@ -1,0 +1,28 @@
+{
+    "resourceType": "Bundle",
+    "type": "collection",
+    "entry": [{
+	"resource": {
+	    "resourceType": "Observation",
+	    "id": "0",
+	    "subject": {
+		"reference": "Patient/0"
+	    },
+	    "context": {
+		"reference": "Encounter/0"
+	    },
+	    "code": {
+		"coding": [{
+		    "code": "LOINC:29463-7",
+		    "system": "http://loinc.org",
+		    "display": "weight"
+		}]
+	    },
+	    "valueQuantity": {
+		"value": 90,
+		"code": "kg"
+	    },
+	    "effectiveDateTime": "2010-01-01T00:00:00Z"
+	}    
+    }]
+}

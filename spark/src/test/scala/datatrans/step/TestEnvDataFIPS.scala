@@ -101,6 +101,8 @@ class EnvDataFIPSSpec extends FlatSpec {
 
   def test(inp: String, outp: String) : Unit = {
     val tempDir = Files.createTempDirectory("env")
+    val tempDir2 = Files.createTempDirectory("env2")
+    val tempDir3 = Files.createTempDirectory("env3")
 
     val config0 = FIPSConfig(
       patgeo_data = "src/test/data/fhir_processed/2010/geo.csv",
@@ -122,33 +124,38 @@ class EnvDataFIPSSpec extends FlatSpec {
 
     PreprocEnvDataFIPS.step(spark, config)
 
-    val config2 = EnvDataAggregateFIPSConfig(
-      input_file=s"${tempDir.toString()}/preagg",
-      output_file = s"${tempDir.toString()}/all",
+    val config3 = SplitConfig(
+      input_file = s"${tempDir.toString()}/preagg",
+      split_index = "patient_num",
+      output_dir = s"${tempDir2.toString()}"
+    )
+
+    PreprocSplit.step(spark, config3)
+
+    val config2 = EnvDataAggregateConfig(
+      input_dir=s"${tempDir2.toString()}",
+      output_dir = s"${tempDir3.toString()}",
       statistics = statistics,
       indices = indices
     )
 
-    PreprocEnvDataAggregateFIPS.step(spark, config2)
+    PreprocEnvDataAggregate.step(spark, config2)
 
-    val config3 = PerPatSeriesEnvDataFIPSConfig(
-      patgeo_data = "src/test/data/fhir_processed/2010/geo.csv",
-      environmental_data = s"${tempDir.toString()}/all",
-      output_file = s"${tempDir.toString()}/%i"
-    )
 
-    PreprocPerPatSeriesEnvDataFIPS.step(spark, config3)
-
-    compareFileTree(f"src/test/data/other_processed/$outp", tempDir.toString(), true, m)
+    compareFileTree(f"src/test/data/other_processed/$outp/fips", tempDir.toString(), true, m)
+    compareFileTree(f"src/test/data/other_processed/$outp/split", tempDir2.toString(), true, m)
+    compareFileTree(f"src/test/data/other_processed/$outp/aggregate", tempDir3.toString(), true, m)
 
     deleteRecursively(tempDir)
+    deleteRecursively(tempDir2)
+    deleteRecursively(tempDir3)
   }
 
   "EnvDataFIPS" should "handle all columns" in {
     test("env", "env2")
   }
 
-  "EnvDataFIPS" should "handle union columns" in {
+  "EnvDataFIPS" should "handle union columns inside of schema" in {
     test("envfips2", "envfips2")
   }
 

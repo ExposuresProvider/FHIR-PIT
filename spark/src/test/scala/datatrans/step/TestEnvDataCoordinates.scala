@@ -20,7 +20,7 @@ class EnvDataCoordinatesSpec extends FlatSpec {
   "EnvData" should "handle all columns" in {
     val tempDir = Files.createTempDirectory("env")
 
-    val config = EnvDataConfig(
+    val config = EnvDataCoordinatesConfig(
       patgeo_data = "src/test/data/fhir_processed/2010/geo.csv",
       environmental_data = "src/test/data/other/env",
       output_file = s"${tempDir.toString()}/%i",
@@ -31,7 +31,7 @@ class EnvDataCoordinatesSpec extends FlatSpec {
       offset_hours = 0
     )
 
-    PreprocPerPatSeriesEnvData.step(spark, config)
+    PreprocPerPatSeriesEnvDataCoordinates.step(spark, config)
 
     val toDouble = (x : String) => x.toDouble
     compareFileTree("src/test/data/other_processed/env/2010", tempDir.toString(), true, Map(

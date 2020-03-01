@@ -1,0 +1,29 @@
+{
+    "resourceType": "Bundle",
+    "type": "collection",
+    "entry": [
+	{
+	    "resource": {
+		"resourceType": "Procedure",
+		"id": "0",
+		"code": {
+		    "coding": [
+			{
+			    "system": "http://www.ama-assn.org/go/cpt/",
+			    "code": "xxxxx"
+			}
+		    ]
+		},
+		"subject": {
+		    "reference": "Patient/0"
+		},
+		"context": {
+		    "reference": "Encounter/0"
+		},
+		"performedDateTime": "2010-01-01T00:00:00Z"
+	    }
+	}
+    ]
+}
+
+ 

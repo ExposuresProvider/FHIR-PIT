@@ -1,0 +1,24 @@
+{
+    "resourceType": "Bundle",
+    "type": "collection",
+    "entry": [{
+	"resource": {
+	    "resourceType": "Condition",
+	    "id": "0",
+	    "subject": {
+		"reference": "Patient/0"
+	    },
+	    "context": {
+		"reference": "Encounter/0"
+	    },
+	    "code": {
+		"coding": [{
+		    "code": "E66.01",
+		    "system": "http://hl7.org/fhir/sid/icd-10-cm",
+		    "display": "overweight"
+		}]
+	    },
+	    "assertedDate": "2010-01-01T00:00:00Z"
+	}    
+    }]
+}

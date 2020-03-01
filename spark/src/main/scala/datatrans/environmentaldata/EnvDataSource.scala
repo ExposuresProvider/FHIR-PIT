@@ -6,14 +6,14 @@ import datatrans.Utils._
 import org.apache.spark.sql.{DataFrame, SparkSession, Column, Row}
 import org.apache.spark.sql.types._
 import org.joda.time._
-import datatrans.step.EnvDataConfig
+import datatrans.step.EnvDataCoordinatesConfig
 
 import org.apache.spark.sql.functions._
 import org.apache.hadoop.fs._
 import org.apache.log4j.{Logger, Level}
 import datatrans.environmentaldata.Utils._
 
-class EnvDataSource(spark: SparkSession, config: EnvDataConfig) {
+class EnvDataSource(spark: SparkSession, config: EnvDataCoordinatesConfig) {
   val log = Logger.getLogger(getClass.getName)
 
   log.setLevel(Level.INFO)

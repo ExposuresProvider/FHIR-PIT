@@ -82,7 +82,7 @@ object PreprocEnvDataFIPS extends StepConfigConfig {
     val b2 = cols -- bcols
     val a3 = a2.foldLeft(a)((df: DataFrame, col:String) => df.withColumn(col, lit(null)))
     val b3 = b2.foldLeft(b)((df: DataFrame, col:String) => df.withColumn(col, lit(null)))
-    a3.union(b3)
+    a3.unionByName(b3)
   }
 
   def loadFIPSDataFrame(spark: SparkSession, config: EnvDataFIPSConfig, years: Seq[Int]) : Option[DataFrame] = {

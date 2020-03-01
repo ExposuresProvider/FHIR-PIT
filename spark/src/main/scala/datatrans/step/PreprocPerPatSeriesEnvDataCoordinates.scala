@@ -12,7 +12,7 @@ import datatrans.Implicits._
 import datatrans._
 
 
-case class EnvDataConfig(
+case class EnvDataCoordinatesConfig(
   patgeo_data : String,
   environmental_data : String,
   output_file : String,
@@ -23,17 +23,17 @@ case class EnvDataConfig(
   offset_hours : Int
 ) extends StepConfig
 
-object PreprocPerPatSeriesEnvDataYamlProtocol extends SharedYamlProtocol {
-  implicit val preprocPerPatSeriesEnvDataYamlFormat = yamlFormat8(EnvDataConfig)
+object PreprocPerPatSeriesEnvDataCoordinatesYamlProtocol extends SharedYamlProtocol {
+  implicit val preprocPerPatSeriesEnvDataCoordinatesYamlFormat = yamlFormat8(EnvDataCoordinatesConfig)
 }
 
-object PreprocPerPatSeriesEnvData extends StepConfigConfig {
+object PreprocPerPatSeriesEnvDataCoordinates extends StepConfigConfig {
 
-  type ConfigType = EnvDataConfig
+  type ConfigType = EnvDataCoordinatesConfig
 
-  val yamlFormat = PreprocPerPatSeriesEnvDataYamlProtocol.preprocPerPatSeriesEnvDataYamlFormat
+  val yamlFormat = PreprocPerPatSeriesEnvDataCoordinatesYamlProtocol.preprocPerPatSeriesEnvDataCoordinatesYamlFormat
 
-  val configType = classOf[EnvDataConfig].getName()
+  val configType = classOf[EnvDataCoordinatesConfig].getName()
 
   def main(args: Array[String]) {
 
@@ -41,9 +41,9 @@ object PreprocPerPatSeriesEnvData extends StepConfigConfig {
 
     spark.sparkContext.setLogLevel("WARN")
 
-    import PreprocPerPatSeriesEnvDataYamlProtocol._
+    import PreprocPerPatSeriesEnvDataCoordinatesYamlProtocol._
 
-    parseInput[EnvDataConfig](args) match {
+    parseInput[EnvDataCoordinatesConfig](args) match {
       case Some(config) =>
         step(spark, config)
       case None =>
@@ -53,7 +53,7 @@ object PreprocPerPatSeriesEnvData extends StepConfigConfig {
 
   }
 
-  def step(spark: SparkSession, config: EnvDataConfig) = {
+  def step(spark: SparkSession, config: EnvDataCoordinatesConfig) = {
     time {
       val datasource = new EnvDataSource(spark, config)
       datasource.run()
