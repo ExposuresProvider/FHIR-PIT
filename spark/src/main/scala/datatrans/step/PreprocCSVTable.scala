@@ -50,9 +50,7 @@ object PreprocCSVTable extends StepConfigConfig {
           generator <- Seq(
             (i:String) => i,
             (i:String) => i + "_avg",
-            (i:String) => i + "_max",
-            (i:String) => i + "_min",
-            (i:String) => i + "_stddev"
+            (i:String) => i + "_max"
           );
           name <- names
         ) yield StructField(generator(name), DoubleType, false)).toSeq

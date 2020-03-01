@@ -458,7 +458,7 @@ object PreprocPerPatSeriesToVector extends StepConfigConfig {
 
 
       withCounter(count =>
-        new HDFSCollection(hc, input_directory_path).foreach(f => {
+        new HDFSCollection(hc, input_directory_path).par.foreach(f => {
           val p = f.getName
           log.info("processing " + count.incrementAndGet + " " + p)
           proc_pid(config, hc, p, start_date_joda, end_date_joda, medmap)
