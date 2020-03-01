@@ -2,8 +2,9 @@ import csv
 import sys
 import progressbar
 import yaml
+import argparse
 
-def step(config):
+def step(params, config):
     input_file = config["input_file"]
     output_dir = config["output_dir"]
     split_index = config["split_index"]
@@ -38,6 +39,11 @@ def step(config):
         f.close()
 
 if __name__ == "__main__":
-    config = yaml.load(sys.argv[1])
-    step(config)
+    parser = argparse.ArgumentParser(description='Process some integers.')
+    parser.add_argument('--config', type=str, required=True, help='sum the integers (default: find the max)')
+
+    args = parser.parse_args()
+    with open(args.config) as f:
+        config = yaml.load(f)
+    step({}, config)
 
