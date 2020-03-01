@@ -58,16 +58,16 @@ object PreprocEnvDataAggregate extends StepConfigConfig {
 
       val statistics = config.statistics
 
+      withCounter(count =>
       while(itr.hasNext) {
         val input_file_path = itr.next().getPath()
 
         val p = input_file_path.getName()
 
         val patient_dimension = input_file_path.toString()
-        log.info("loading patient_dimension from " + patient_dimension)
+        log.info("processing patient " + count.incrementAndGet() + " " + p + " from " + patient_dimension)
         val df3year_pat = spark.read.format("csv").option("header", value = true).load(patient_dimension)
 
-        df3year_pat.show()
         log.info(f"aggregating $indices")
         val df3year_pat_aggbyyear = aggregateByYear(spark, df3year_pat, indices, statistics, Seq())
         //        df3year_pat_aggbyyear.cache()

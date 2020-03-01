@@ -65,7 +65,10 @@ object PreprocSplit extends StepConfigConfig {
       val headers = csvParser.getHeaderNames()
       val index = headers.indexOf(config.split_index)
       val rows = csvParser.iterator()
+      var i = 0
       while(rows.hasNext()) {
+        log.info(f"processing row $i")
+        i += 1
         val row = rows.next()
         val filename = row.get(index)
         val writer = fileMap.get(filename) match {
