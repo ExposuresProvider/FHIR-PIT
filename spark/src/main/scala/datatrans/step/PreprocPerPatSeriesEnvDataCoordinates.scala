@@ -15,7 +15,7 @@ import datatrans._
 case class EnvDataCoordinatesConfig(
   patgeo_data : String,
   environmental_data : String,
-  output_file : String,
+  output_dir : String,
   start_date : DateTime,
   end_date : DateTime,
   indices : Seq[String], // = Seq("o3", "pm25"),

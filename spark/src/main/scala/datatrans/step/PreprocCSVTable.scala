@@ -19,18 +19,16 @@ import datatrans.Implicits._
 import datatrans._
 
 case class PreprocCSVTableConfig(
-  patient_file : String = "",
-  environment_file : Option[String] = None,
-  environment2_file : Option[String] = None,
-  input_files : Seq[String] = Seq(),
-  output_file : String = "",
+  input_dir : String = "",
+  output_dir : String = "",
   start_date : DateTime = new DateTime(0),
   end_date : DateTime = new DateTime(0),
-  deidentify : Seq[String] = Seq()
+  deidentify : Seq[String] = Seq(),
+  offset_hours : Int = 1
 ) extends StepConfig
 
 object CSVTableYamlProtocol extends SharedYamlProtocol {
-  implicit val csvTableYamlFormat = yamlFormat8(PreprocCSVTableConfig)
+  implicit val csvTableYamlFormat = yamlFormat6(PreprocCSVTableConfig)
 }
 
 object PreprocCSVTable extends StepConfigConfig {
@@ -82,33 +80,30 @@ object PreprocCSVTable extends StepConfigConfig {
         if (df.columns.contains(f)) df0 else df0.withColumn(f, lit(null).cast(DoubleType))
       })
 
-    def join_env(hc: Configuration, pat_df: DataFrame, menv_file: Option[String], cols : String) : DataFrame = {
+    def join_env(hc: Configuration, pat_df: DataFrame, schema: StructType, menv_file: Option[String], cols : String) : DataFrame = {
       menv_file match {
         case Some(env_file) =>
           if(fileExists(hc, env_file)) {
-            val env_df = readCSV(spark, env_file, env_schema, _ => DoubleType)
+            val env_df = readCSV2(spark, env_file, schema, _ => DoubleType)
 
             pat_df.join(env_df, Seq(cols), "left")
           } else {
+            println(f"file not exists $env_file")
             pat_df // expandDataFrame(pat_df, env_schema)
           }
         case None =>
+          println(f"no file name provided")
           pat_df // expandDataFrame(pat_df, env_schema)
       }
     }
 
     time {
       val hc = spark.sparkContext.hadoopConfiguration
-      val start_date_joda = config.start_date
-      val end_date_joda = config.end_date
+      val timeZone = DateTimeZone.forOffsetHours(config.offset_hours)
+      val start_date_joda = config.start_date.toDateTime(timeZone)
+      val end_date_joda = config.end_date.toDateTime(timeZone)
 
       val year = start_date_joda.year.get
-
-      val dfs = config.input_files.map(input_file => {
-        spark.read.format("csv").option("header", value = true).load(input_file)
-      })
-
-      val df = if (config.input_files.isEmpty) None else Some(dfs.reduce(_.join(_, "patient_num")))
 
       // df match {
       //   case Some(df) =>
@@ -116,42 +111,10 @@ object PreprocCSVTable extends StepConfigConfig {
       //   case _ =>
       // }
 
-      val plusOneDayDate = udf((x : String) =>
-        DateTime.parse(x, ISODateTimeFormat.dateParser()).plusDays(1).toString("yyyy-MM-dd")
-      )
-
-      val per_pat_output_dir = config.output_file + "/per_patient"
-      withCounter(count =>
-        new HDFSCollection(hc, new Path(config.patient_file)).foreach(f => {
-          val p = f.getName().stripSuffix(".csv")
-          println("processing patient " + count.incrementAndGet() + " " + p)
-          val output_file = per_pat_output_dir + "/" + p
-          if(fileExists(hc, output_file)) {
-            println("file exists " + output_file)
-          } else {
-            val pat_df = spark.read.format("csv").option("header", value = true).load(f.toString())
-
-            if(!pat_df.head(1).isEmpty) {
-              val patenv_df0 = join_env(hc, pat_df, config.environment_file.map(env => s"${env}/$year/$p"), "start_date")
-
-              val patenv_df1 = join_env(hc, patenv_df0, config.environment2_file.map(env2 => s"${env2}/$p"), "start_date")
-              
-              val patenv_df2 = df match {
-                case Some(df) => patenv_df1.join(df, Seq("patient_num"), "left")
-                case _ => patenv_df1
-              }
-
-              writeDataframe(hc, output_file, patenv_df2)
-
-            }
-          }
-
-        })
-
-      )
+      val per_pat_output_dir = config.input_dir
 
       println("combining output")
-      val output_file_all = config.output_file + "/all"
+      val output_file_all = config.output_dir + "/all"
       if(fileExists(hc, output_file_all)) {
         println(output_file_all +  " exists")
       } else {
@@ -160,8 +123,8 @@ object PreprocCSVTable extends StepConfigConfig {
 
       println("aggregation")
 
-      val output_all_visit = config.output_file + "/all_visit"
-      val output_all_patient = config.output_file + "/all_patient"
+      val output_all_visit = config.output_dir + "/all_visit"
+      val output_all_patient = config.output_dir + "/all_patient"
       if(fileExists(hc, output_all_patient)) {
         println(output_all_patient + " exists")
       } else {
@@ -240,7 +203,7 @@ object PreprocCSVTable extends StepConfigConfig {
 
         val procObesityBMI = udf((x : Double) => if(x >= 30) 1 else 0)
 
-        var df_all_visit = df_all
+        var df_all_visit = df_all.filter($"VisitType" !== "study")
           .withColumn("AgeVisit", ageDiff($"birth_date", $"start_date"))
 
         visit.foreach(v => {

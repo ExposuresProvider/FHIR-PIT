@@ -10,9 +10,7 @@ let ResourceTypes : Type = {
 let YearConfig : Type = {
     year : Natural,
     skip : {
-      toVector : Bool,
-      envDataCoordinates : Bool,
-      envCSVTable : Bool
+      csvTable : Bool
     }
 }
 
@@ -28,6 +26,7 @@ let resc_types = {
 let FhirConfig : Type = {
     skip: {
       fhir: Bool,
+      envDataCoordinates : Bool,
       fips: Bool,
       envDataFIPS : Bool,
       split : Bool,
@@ -35,7 +34,9 @@ let FhirConfig : Type = {
       acs : Bool,
       acs2 : Bool,
       nearestRoad : Bool,
-      nearestRoad2 : Bool
+      nearestRoad2 : Bool,
+      toVector : Bool,
+      perPatSeriesCSVTable : Bool
     },
     skip_preproc: List Text,
     yearStart: Natural,
@@ -73,7 +74,7 @@ let PerPatSeriesToVectorStep : Type = GenericStep {
 let EnvDataCoordinatesStep : Type = GenericStep {
     patgeo_data: Text,
     environmental_data: Text,
-    output_file: Text,
+    output_dir: Text,
     indices: List Text,
     statistics: List Text,
     start_date: Text,
@@ -124,15 +125,24 @@ let PerPatSeriesNearestRoadStep : Type = GenericStep {
     output_file : Text
 }
 
-let EnvCSVTableStep : Type = GenericStep {
+let PerPatSeriesCSVTableStep : Type = GenericStep {
     patient_file : Text,
     environment_file : Text,
     environment2_file : Text,
     input_files : List Text,
-    output_file : Text,
+    output_dir : Text,
     start_date : Text,
     end_date : Text,
-    deidentify : List Text
+    offset_hours : Integer
+}
+
+let csvTableStep : Type = GenericStep {
+    input_dir : Text,
+    output_dir : Text,
+    start_date : Text,
+    end_date : Text,
+    deidentify : List Text,
+    offset_hours : Integer
 }
 
 let Step : Type = <
@@ -145,7 +155,8 @@ let Step : Type = <
     EnvDataAggregate : EnvDataAggregateStep |
     ACS : PerPatSeriesACSStep |
     NearestRoad : PerPatSeriesNearestRoadStep |
-    EnvCSVTable : EnvCSVTableStep
+    csvTable : csvTableStep |
+    PerPatSeriesCSVTable : PerPatSeriesCSVTableStep
 >
 
 let Config: Type = {
@@ -177,8 +188,8 @@ let fhirStep = λ(skip : Bool) → λ(skip_preproc : List Text) → Step.FHIR {
     }
 }
 
-let toVectorStep = λ(skip : Bool) → λ(year : Natural) → Step.ToVector {
-  name = "PerPatSeriesToVector${Natural/show year}",
+let toVectorStep = λ(skip : Bool) → Step.ToVector {
+  name = "PerPatSeriesToVector",
   dependsOn = [
     "FHIR"
   ],
@@ -187,17 +198,17 @@ let toVectorStep = λ(skip : Bool) → λ(year : Natural) → Step.ToVector {
     function = "datatrans.step.PreprocPerPatSeriesToVectorConfig",
     arguments = {
       input_directory = "${basedir}/FHIR_processed/Patient",
-      output_directory = "${basedir}/FHIR_vector/${Natural/show year}/PatVec",
-      start_date = start_year year,
-      end_date = end_year year,
+      output_directory = "${basedir}/FHIR_vector",
+      start_date = start_year 2010,
+      end_date = end_year 2016,
       offset_hours = -5,
       med_map = "${basedir}/other/medical/icees_features_rxnorm.json"
     }
   }
 }
 
-let envDataCoordinatesStep = λ(skip : Bool) → λ(year : Natural) → Step.EnvDataCoordinates {
-  name = "EnvDataCoordinates${Natural/show year}",
+let envDataCoordinatesStep = λ(skip : Bool) → λ(year_start : Natural) → λ(year_end : Natural) → Step.EnvDataCoordinates {
+  name = "EnvDataCoordinates",
   dependsOn = [
     "FHIR"
   ],
@@ -207,11 +218,11 @@ let envDataCoordinatesStep = λ(skip : Bool) → λ(year : Natural) → Step.Env
     arguments = {
       patgeo_data = patgeo,
       environmental_data = "${basedirinput}/other/env",
-      output_file = "${basedir}/other_processed/env/${Natural/show year}/%i",
+      output_dir = "${basedir}/other_processed/env",
       indices = [] : List Text,
       statistics = [] : List Text,
-      start_date = start_year year,
-      end_date = end_year year,
+      start_date = start_year year_start,
+      end_date = end_year year_end,
       offset_hours = -5
     }
   }
@@ -236,14 +247,14 @@ let fipsStep = λ(skip : Bool) → Step.FIPS {
 let indices = [
         "ozone_daily_8hour_maximum",
         "pm25_daily_average",
-	"CO_ppbv",
-	"NO_ppbv",
-	"NO2_ppbv",
-	"NOX_ppbv",
-	"SO2_ppbv",
-	"ALD2_ppbv",
-	"FORM_ppbv",
-	"BENZ_ppbv"
+        "CO_ppbv",
+        "NO_ppbv",
+        "NO2_ppbv",
+        "NOX_ppbv",
+        "SO2_ppbv",
+        "ALD2_ppbv",
+        "FORM_ppbv",
+        "BENZ_ppbv"
 ]
 
 let statistics = [
@@ -335,8 +346,7 @@ let acs2Step = λ(skip : Bool) → Step.ACS {
       geoid_data = "${basedirinput}/other/spatial/acs/tl_2016_37_bg_lcc.shp",
       output_file = acs2
     }
-  }
-}
+  }                                                                                                                                    }
 
 let nearestRoadStep = λ(skip : Bool) → Step.NearestRoad {
   name = "PerPatSeriesNearestRoad",
@@ -372,34 +382,53 @@ let nearestRoad2Step = λ(skip : Bool) → Step.NearestRoad {
   }
 }
 
-let envCSVTableStep = λ(skip : Bool) → λ(year : Natural) → Step.EnvCSVTable {
-  name = "EnvCSVTable${Natural/show year}",
+let perPatSeriesCSVTableStep = λ(skip : Bool) →  λ(year_start : Natural) →  λ(year_end : Natural) →  Step.PerPatSeriesCSVTable {
+  name = "PerPatSeriesCSVTable",
   dependsOn = [
-    "PerPatSeriesToVector${Natural/show year}",
+    "PerPatSeriesToVector",
     "PerPatSeriesACS",
     "PerPatSeriesACS2",
     "PerPatSeriesNearestRoad",
     "PerPatSeriesNearestRoad2",
-    "EnvDataCoordinates${Natural/show year}",
+    "EnvDataCoordinates",
     "EnvDataAggregate"
   ],
   skip = skip,
   step = {
-    function = "datatrans.step.PreprocCSVTableConfig",
+    function = "datatrans.step.PreprocPerPatSeriesCSVTableConfig",
     arguments = {
-      patient_file = "${basedir}/FHIR_vector/${Natural/show year}/PatVec",
+      patient_file = "${basedir}/FHIR_vector",
       environment_file = "${basedir}/other_processed/env",
       environment2_file = "${basedir}/other_processed/env5",
       input_files = [
         acs,
         acs2,
         nearestroad,
-	nearestroad2
+        nearestroad2
       ],
-      output_file = "${basediroutput}/icees/${Natural/show year}",
+      output_dir = "${basedir}/icees",
+      start_date = start_year year_start,
+      end_date = end_year year_end,
+      offset_hours = -5
+    }
+  }
+}
+
+let csvTableStep = λ(skip : Bool) → λ(year : Natural) → Step.csvTable {
+  name = "csvTable${Natural/show year}",
+  dependsOn = [
+    "PerPatSeriesCSVTable"
+  ],
+  skip = skip,
+  step = {
+    function = "datatrans.step.PreprocCSVTableConfig",
+    arguments = {
+      input_dir = "${basedir}/icees",
+      output_dir = "${basediroutput}/icees2/${Natural/show year}",
       start_date = start_year year,
       end_date = end_year year,
-      deidentify = [] : List Text
+      deidentify = [] : List Text,
+      offset_hours = -5
     }
   }
 }
@@ -410,6 +439,7 @@ in {
   steps =
     [
       fhirStep fhirConfig.skip.fhir fhirConfig.skip_preproc,
+      envDataCoordinatesStep fhirConfig.skip.envDataCoordinates fhirConfig.yearStart fhirConfig.yearEnd,
       fipsStep fhirConfig.skip.fips,
       envDataFIPSStep fhirConfig.skip.envDataFIPS fhirConfig.yearStart fhirConfig.yearEnd,
       splitStep fhirConfig.skip.split,
@@ -417,10 +447,10 @@ in {
       acsStep fhirConfig.skip.acs,
       acs2Step fhirConfig.skip.acs2,
       nearestRoadStep fhirConfig.skip.nearestRoad,
-      nearestRoad2Step fhirConfig.skip.nearestRoad2
+      nearestRoad2Step fhirConfig.skip.nearestRoad2,
+      toVectorStep fhirConfig.skip.toVector,
+      perPatSeriesCSVTableStep fhirConfig.skip.perPatSeriesCSVTable fhirConfig.yearStart fhirConfig.yearEnd
     ] # List/fold YearConfig skipList (List Step) (λ(yearSkip : YearConfig) → λ(stepList : List Step) → [
-      toVectorStep yearSkip.skip.toVector yearSkip.year,
-      envDataCoordinatesStep yearSkip.skip.envDataCoordinates yearSkip.year,
-      envCSVTableStep yearSkip.skip.envCSVTable yearSkip.year
+      csvTableStep yearSkip.skip.csvTable yearSkip.year
     ] # stepList) ([] : List Step)
 } : Config

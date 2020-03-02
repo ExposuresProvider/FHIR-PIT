@@ -19,8 +19,9 @@ class CSVTableSpec extends FlatSpec {
 
   "EnvData" should "handle subset columns" in {
     val tempDir = Files.createTempDirectory("icees")
+    val tempDir2 = Files.createTempDirectory("icees2")
 
-    val config = PreprocCSVTableConfig(
+    val config = PreprocPerPatSeriesCSVTableConfig(
       patient_file = "src/test/data/vector/2010/PatVec",
       environment_file = None,
       environment2_file = Some("src/test/data/other_processed/env2/aggregate"),
@@ -30,21 +31,45 @@ class CSVTableSpec extends FlatSpec {
         "src/test/data/other_processed/2010/nearestroad.csv",
         "src/test/data/other_processed/2010/nearestroad2.csv"
       ),
-      output_file = tempDir.toString(),
+      output_dir = tempDir.toString(),
       start_date = stringToDateTime("2010-01-01T00:00:00Z"),
       end_date = stringToDateTime("2011-01-01T00:00:00Z"),
-      deidentify = Seq[String]()
+      offset_hours = 0
     )
 
-    PreprocCSVTable.step(spark, config)
+    PreprocPerPatSeriesCSVTable.step(spark, config)
+
+    val config2 = PreprocCSVTableConfig(
+      input_dir = f"${tempDir.toString()}/2010",
+      output_dir = tempDir2.toString(),
+      start_date = stringToDateTime("2010-01-01T00:00:00Z"),
+      end_date = stringToDateTime("2011-01-01T00:00:00Z"),
+      deidentify = Seq[String](),
+      offset_hours = 0
+    )
+
+    PreprocCSVTable.step(spark, config2)
 
     val toDouble = (x : String) => x.toDouble
-    compareFileTree("src/test/data/icees/2010", tempDir.toString(), true, Map(
+    val typemap = Map(
       "ozone_daily_8hour_maximum" -> toDouble,
-      "pm25_daily_average" -> toDouble
-    ))
+      "pm25_daily_average" -> toDouble,
+      "ozone_daily_8hour_maximum_max" -> toDouble,
+      "pm25_daily_average_max" -> toDouble,
+      "ozone_daily_8hour_maximum_avg" -> toDouble,
+      "pm25_daily_average_avg" -> toDouble,
+      "ozone_daily_8hour_maximum_min" -> toDouble,
+      "pm25_daily_average_min" -> toDouble,
+      "ozone_daily_8hour_maximum_stddev" -> toDouble,
+      "pm25_daily_average_stddev" -> toDouble,
+      "Max24hOzoneExposure_2" -> toDouble
+    )
+    compareFileTree("src/test/data/icees", tempDir.toString(), true, typemap)
+
+    compareFileTree("src/test/data/icees2/2010", tempDir2.toString(), true, typemap)
 
     deleteRecursively(tempDir)
+    deleteRecursively(tempDir2)
 
   }
 

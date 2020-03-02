@@ -8,6 +8,7 @@ import org.apache.hadoop.fs._
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.types._
+import org.apache.spark.sql.functions._
 import io.circe._
 import io.circe.parser._
 import geotrellis.proj4._
@@ -131,6 +132,22 @@ object Utils {
     val schemaFiltered = StructType(fieldsInFile ++ fieldsNotInFile)
     spark.read.format("csv").option("header", value = true).schema(schemaFiltered).load(fn)
   }
+
+  def readCSV2(spark: SparkSession, fn: String, schema : StructType, field_type : String => DataType = s => throw new RuntimeException(s"readCSV: Cannot find $s in schema")): DataFrame = {
+    val csv0 = spark.read.option("header", "true").csv(fn)
+    val fileSchema = csv0.schema
+    val fieldNames = fileSchema.fieldNames.toSeq
+    val fieldNameSet = fieldNames.toSet
+    val fields = schema.fields.toSeq
+    val fieldsNotInFile = fields.filter((x : StructField) => !fieldNameSet.contains(x.name))
+    val fieldsInFile = fieldNames.map((s : String) => fields.find((x: StructField) => x.name == s) match {
+      case Some(y) => y
+      case None => StructField(s, field_type(s))
+    })
+    val schemaFiltered = StructType(fieldsInFile)
+    fieldsNotInFile.foldLeft(csv0)((csv1:DataFrame, f : StructField)=> csv1.withColumn(f.name, lit(null).cast(f.dataType)))
+  }
+
 
   def writeDataframe(hc: Configuration, output_file: String, table: DataFrame, skipCRC : Boolean = true): Unit = {
     val dname = output_file + "_temp"

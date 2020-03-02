@@ -334,6 +334,11 @@ object PreprocPerPatSeriesToVector extends StepConfigConfig {
             throw new RuntimeException("error: " + b)
           })
 
+          // log.info(f"start_date = $start_date end_date = $end_date start_date.year = ${start_date.year.get} end_date.year = ${end_date.year.get}")
+          for (year <- start_date.toDateTime(timeZone).year.get until end_date.toDateTime(timeZone).year.get) {
+            recs.append(demographic + ("start_date" -> f"$year-01-01", "VisitType" -> "study"))
+          }
+
           encounter_map.foreach {
             case (encounter_start_date_joda, encset) =>
               var rec0 = demographic

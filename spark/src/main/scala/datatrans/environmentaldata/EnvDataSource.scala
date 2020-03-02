@@ -39,7 +39,7 @@ class EnvDataSource(spark: SparkSession, config: EnvDataCoordinatesConfig) {
     val dfs = coors.flatMap {
       case (year, (row, col)) =>
         val filename = f"${config.environmental_data}/cmaq$year/C$col%03dR$row%03dDaily.csv"
-        loadEnvDataFrameCache((filename, names, envSchema))
+        loadEnvDataFrameCache((filename, config.indices, envSchema))
     }
     if (dfs.nonEmpty) {
       dfs.reduce((a, b) => a.union(b)).cache()
@@ -49,21 +49,17 @@ class EnvDataSource(spark: SparkSession, config: EnvDataCoordinatesConfig) {
     }
   }
 
-  def generateOutputDataFrame(key: (Seq[(Int, (Int, Int))], Seq[Int])) = {
-    val (coors, years) = key
+  def stats(names2 : Seq[String]) = names2 ++ (for (i <- config.statistics; j <- names2) yield f"${j}_$i") ++ (for (j <- names2) yield f"${j}_prev_date")
+
+  def generateOutputDataFrame(coors: Seq[(Int, (Int, Int))]) = {
     val df = loadRowColDataFrameCache(coors)
-
-    val dfyear = aggregateByYear(spark, df, names, config.statistics, Seq())
-   
-    def stats(names2 : Seq[String]) = names2 ++ (for (i <- config.statistics; j <- names2) yield f"${j}_$i")
-
-    dfyear.select("start_date", stats(names): _*).cache()
+    val dfyear = aggregateByYear(spark, df, config.indices, config.statistics, Seq())
+    dfyear.select("start_date", ("year" +: stats(config.indices)): _*).cache()
   }
 
   private val loadEnvDataFrameCache = new Cache(loadEnvDataFrame)
   private val loadRowColDataFrameCache = new Cache(loadRowColDataFrame)
   private val generateOutputDataFrameCache = new Cache(generateOutputDataFrame)
-  val names = for (i <- config.statistics; j <- config.indices) yield f"${j}_$i"
 
   def run(): Unit = {
 
@@ -85,11 +81,11 @@ class EnvDataSource(spark: SparkSession, config: EnvDataCoordinatesConfig) {
       patl.par.foreach{
         case (r, lat, lon) =>
           log.info("processing patient " + count.incrementAndGet() + " / " + n + " " + r)
-          val output_file = config.output_file.replace("%i", r)
           val timeZone = DateTimeZone.forOffsetHours(config.offset_hours)
           val start_date_local = config.start_date.toDateTime(timeZone)
           val end_date_local = config.end_date.toDateTime(timeZone).minusDays(1)
           val yearseq = start_date_local.year.get to end_date_local.year.get
+          val output_file = f"${config.output_dir}/$r"
           log.info(f"loading env data from year sequence $yearseq, start_date = ${start_date_local}, end_date = ${end_date_local}")
           val coors = yearseq.intersect(Seq(2010,2011)).flatMap(year => {
             latlon2rowcol(lat, lon, year) match {
@@ -100,7 +96,7 @@ class EnvDataSource(spark: SparkSession, config: EnvDataCoordinatesConfig) {
             }
           })
 
-          val df = generateOutputDataFrameCache((coors, yearseq))
+          val df = generateOutputDataFrameCache(coors)
           writeDataframe(hc, output_file, df)
 
       })
