@@ -587,7 +587,31 @@ class Cache[K,V <: AnyRef](fun : K => V) {
     "Indacaterol",
     "Theophylline",
     "Omalizumab",
-    "Mepolizumab"
+    "Mepolizumab",
+    "Sertraline",
+    "Citalopram",
+    "Fluoxetine",
+    "Paroxetine",
+    "Trazodone",
+    "Escitalopram",
+    "Duloxetine",
+    "Venlafaxine",
+    "Propranolol",
+    "Hydroxyzine",
+    "Estradiol",
+    "Estropipate",
+    "Estrogen",
+    "Progesterone",
+    "Medroxyprogresterone",
+    "Testosterone",
+    "Androstenedione",
+    "Nandrolone",
+    "Prasterone",
+    "Leuprolide",
+    "Goserelin",
+    "Triptorelin",
+    "Histrelin",
+    "Tamoxifen"
   )
 
 

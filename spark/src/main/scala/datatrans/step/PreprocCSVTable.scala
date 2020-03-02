@@ -82,6 +82,21 @@ object PreprocCSVTable extends StepConfigConfig {
         if (df.columns.contains(f)) df0 else df0.withColumn(f, lit(null).cast(DoubleType))
       })
 
+    def join_env(hc: Configuration, pat_df: DataFrame, menv_file: Option[String], cols : String) : DataFrame = {
+      menv_file match {
+        case Some(env_file) =>
+          if(fileExists(hc, env_file)) {
+            val env_df = readCSV(spark, env_file, env_schema, _ => DoubleType)
+
+            pat_df.join(env_df, Seq(cols), "left")
+          } else {
+            pat_df // expandDataFrame(pat_df, env_schema)
+          }
+        case None =>
+          pat_df // expandDataFrame(pat_df, env_schema)
+      }
+    }
+
     time {
       val hc = spark.sparkContext.hadoopConfiguration
       val start_date_joda = config.start_date
@@ -117,59 +132,15 @@ object PreprocCSVTable extends StepConfigConfig {
             val pat_df = spark.read.format("csv").option("header", value = true).load(f.toString())
 
             if(!pat_df.head(1).isEmpty) {
-              println(f"pat_df = ")
-              pat_df.show()
-              val patenv_df0 = config.environment_file match {
-                case Some(env) =>
-                  val env_file = s"${env}/$year/$p"
-                  val env_prev_year_file = s"${env}/${year-1}/$p"
+              val patenv_df0 = join_env(hc, pat_df, config.environment_file.map(env => s"${env}/$year/$p"), "start_date")
 
-                  if(fileExists(hc, env_file)) {
-                    val env_df0 = readCSV(spark, env_file, env_schema, _ => DoubleType)
-                    val env_df = if(fileExists(hc, env_prev_year_file)) {
-                      val env_prev_year_df = readCSV(spark, env_prev_year_file, env_schema)
-                      env_prev_year_df.union(env_df0)
-                    } else {
-                      println(f"cannot find $env_prev_year_file")
-                      env_df0
-                    }
-
-                    println("env_df for env = ")
-                    env_df.show()
-                    pat_df.join(env_df, Seq("start_date"), "left")
-                  } else {
-                    pat_df // expandDataFrame(pat_df, env_schema)
-                  }
-                case None =>
-                  pat_df // expandDataFrame(pat_df, env_schema)
-              }
-              println(f"patenv_df with env = ")
-              patenv_df0.show()
-
-              val patenv_df1 = config.environment2_file match {
-                case Some(env2) =>
-                  val env2_file = s"${env2}/$p"
-                  if(fileExists(hc, env2_file)) {
-                    val env_df3 = readCSV(spark, env2_file, env2_schema, _ => DoubleType)
-                    println("env_df for env2 = ")
-                    env_df3.show()
-                    patenv_df0.join(env_df3, Seq("start_date"), "left")
-                  } else {
-                    patenv_df0 // expandDataFrame(patenv_df0, env2_schema)
-                  }
-                case None =>
-                  patenv_df0 // expandDataFrame(patenv_df0, env2_schema)
-              }
-              println(f"patenv_df with env2")
-              patenv_df1.show()
+              val patenv_df1 = join_env(hc, patenv_df0, config.environment2_file.map(env2 => s"${env2}/$p"), "start_date")
               
               val patenv_df2 = df match {
                 case Some(df) => patenv_df1.join(df, Seq("patient_num"), "left")
                 case _ => patenv_df1
               }
 
-              print(f"patenv_df with sed")
-              patenv_df2.show()
               writeDataframe(hc, output_file, patenv_df2)
 
             }
