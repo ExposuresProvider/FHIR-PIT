@@ -1,28 +1,20 @@
 import pandas as pd
+import numpy as np
 import sys
-from preprocUtils import quantile, preprocSocial
+from preprocUtils import *
 
-input_file = sys.argv[1]
-output_file = sys.argv[2]
-year = sys.argv[3]
-binstr = sys.argv[4]
+def preproc_visit(input_file, output_file):
+    df = pd.read_csv(input_file)
 
-df = pd.read_csv(input_file)
+    preprocAge(df, "AgeVisit")
 
-df["AgeVisit"] = pd.cut(df["AgeVisit"], [0, 3, 18, 35, 51, 70, 90], labels=['0-2', '3-17', '18-34', '35-50', '51-69', '70-89'], include_lowest=True, right=False)
+    preprocEnv(df, "24h")
 
-for binning, binstr in [("_qcut", "qcut"), ("", binstr)]:
-    for feature in ["PM2.5", "Ozone"]:
-        for stat in ["Avg", "Max"]:
-                col = stat + "24h" + feature + "Exposure"
-                col_2 = stat + "24h" + feature + "Exposure" + "_2"
-                quantile(df, col, 5, binstr, col + binning)
-                if col_2 in df.columns.values:
-                    quantile(df, col_2, 5, binstr, col_2 + binning)
-                else:
-                    print(col_2 + " does not exist")
-preprocSocial(df)
+    preprocSocial(df)
 
-df["year"] = year
+    df = df.drop(["patient_num", "birth_date", "encounter_num", "esri_id", "esri_idn", "GEOID", "stcnty", "next_date"] + [feature + stat for feature in features2 for stat in ["_avg", "_max", ""]], axis=1)
+    df.to_csv(output_file, index=False)
 
-df.to_csv(output_file, index=False)
+    output_file = output_file+"_deidentified"
+    features2 = ["ozone_daily_8hour_maximum", "pm25_daily_average", "CO_ppbv", "NO_ppbv", "NO2_ppbv", "NOX_ppbv", "SO2_ppbv", "ALD2_ppbv", "FORM_ppbv", "BENZ_ppbv"]
+    df.drop(["patient_num"], axis=1).to_csv(output_file, index=False)

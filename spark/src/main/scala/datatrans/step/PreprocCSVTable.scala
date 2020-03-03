@@ -140,7 +140,7 @@ object PreprocCSVTable extends StepConfigConfig {
           val study_start_joda = DateTime.parse(start_date, ISODateTimeFormat.dateParser())
           Years.yearsBetween(birth_date_joda, study_start_joda).getYears
         })
-        class TotalTypeVisits(vtype : String) extends UserDefinedAggregateFunction {
+        class TotalTypeVisits(vtype : Seq[String], nvtype:Seq[String] = Seq()) extends UserDefinedAggregateFunction {
           // This is the input fields for your aggregate function.
           override def inputSchema: org.apache.spark.sql.types.StructType =
             StructType(StructField("VisitType", StringType) :: StructField("RespiratoryDx", BooleanType) :: Nil)
@@ -165,7 +165,7 @@ object PreprocCSVTable extends StepConfigConfig {
           override def update(buffer: MutableAggregationBuffer, input: Row): Unit = {
             val visitType = input.getAs[String](0)
             val respiratoryDx = input.getAs[Boolean](1)
-            if(respiratoryDx && visitType != null && visitType.contains(vtype)) {
+            if(respiratoryDx && visitType != null && vtype.exists(visitType.contains(_)) && !nvtype.exists(visitType.contains(_))) {
               buffer(0) = buffer.getAs[Int](0) + 1
             }
           }
@@ -246,6 +246,9 @@ object PreprocCSVTable extends StepConfigConfig {
 
         writeDataframe(hc, output_all_visit, df_all_visit)
 
+        val emerTypes = Seq("AMB","EMER")
+        val inpatientTypes = Seq("IMP")
+
         val patient_aggs =
           (
             for (
@@ -290,9 +293,9 @@ object PreprocCSVTable extends StepConfigConfig {
             ) yield first(df_all.col(feature1 + "_avg")).alias(feature2 + "Exposure_2")
           ) ++ Seq(
             max(df_all.col("ObesityBMIVisit")).alias("ObesityBMI"),
-            new TotalTypeVisits("EMER")($"VisitType", $"RespiratoryDx").alias("TotalEDVisits"),
-            new TotalTypeVisits("IMP")($"VisitType", $"RespiratoryDx").alias("TotalInpatientVisits"),
-            (new TotalTypeVisits("EMER")($"VisitType", $"RespiratoryDx") + new TotalTypeVisits("IMP")($"VisitType", $"RespiratoryDx")).alias("TotalEDInpatientVisits")
+            new TotalTypeVisits(emerTypes)($"VisitType", $"RespiratoryDx").alias("TotalEDVisits"),
+            new TotalTypeVisits(inpatientTypes)($"VisitType", $"RespiratoryDx").alias("TotalInpatientVisits"),
+            (new TotalTypeVisits(emerTypes)($"VisitType", $"RespiratoryDx") + new TotalTypeVisits(inpatientTypes, emerTypes)($"VisitType", $"RespiratoryDx")).alias("TotalEDInpatientVisits")
           ) ++ demograph.map(
             v => first(df_all.col(v)).alias(v)
           ) ++ acs.map(
@@ -302,7 +305,7 @@ object PreprocCSVTable extends StepConfigConfig {
           )
 
         val df_all2 = df_all
-          .withColumn("RespiratoryDx", $"AsthmaDx" === "1" || $"CroupDx" === "1" || $"ReactiveAirwayDx" === "1" || $"CoughDx" === "1" || $"PneumoniaDx" === "1")
+          .withColumn("RespiratoryDx", $"AsthmaDx".cast(IntegerType) === 1 || $"CroupDx".cast(IntegerType) === 1 || $"ReactiveAirwayDx".cast(IntegerType) === 1 || $"CoughDx".cast(IntegerType) === 1 || $"PneumoniaDx".cast(IntegerType) === 1)
           .groupBy("patient_num", "year").agg(patient_aggs.head, patient_aggs.tail:_*)
         var df_all_patient = df_all2
           .withColumn("AgeStudyStart", ageYear($"birth_date", $"year"))

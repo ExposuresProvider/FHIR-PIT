@@ -1,30 +1,18 @@
 import pandas as pd
+import numpy as np
 import sys
-from preprocUtils import quantile, preprocSocial
+from preprocUtils import *
 
-input_file = sys.argv[1]
-output_file = sys.argv[2]
-year = sys.argv[3]
-binstr = sys.argv[4]
+def preproc_patient(input_file, output_file):
+    df = pd.read_csv(input_file)
 
-df = pd.read_csv(input_file)
+    preprocAge(df, "AgeStudyStart")
 
-df["AgeStudyStart"] = pd.cut(df["AgeStudyStart"], [0, 3, 18, 35, 51, 70, 90], labels=['0-2', '3-17', '18-34', '35-50', '51-69', '70-89'], include_lowest=True, right=False)
+    preprocEnv(df, "Daily")
 
+    preprocSocial(df)
 
-for binning, binstr in [("_qcut", "qcut"), ("", binstr)]:
-    for feature in ["PM2.5", "Ozone"]:
-        for stat in ["Avg", "Max"]:
-            for suffix in ["_StudyAvg", "_StudyMax", ""]:
-                col = stat + "Daily" + feature + "Exposure" + suffix
-                col_2 = stat + "Daily" + feature + "Exposure" + suffix + "_2"
-                quantile(df, col, 5, binstr, col + binning)
-                if col_2 in df.columns.values:
-                    quantile(df, col_2, 5, binstr, col_2 + binning)
-                else:
-                    print(col_2 + " does not exist")
-preprocSocial(df)
+    df.to_csv(output_file, index=False)
 
-df["year"] = year
-
-df.to_csv(output_file, index=False)
+    output_file = output_file+"_deidentified"
+    df.drop("patient_num", axis=1).to_csv(output_file, index=False)
