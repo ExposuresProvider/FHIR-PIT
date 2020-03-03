@@ -9,6 +9,7 @@ from tqdm import tqdm
 from joblib import Parallel, delayed
 import joblib
 import argparse
+from stepUtils import tqdm_joblib
 
 statisticsFunctions = {
     "min": np.min,
@@ -39,28 +40,6 @@ def aggregateByYear(input_dir, output_dir, indices, statistics):
     return func
 
 
-@contextlib.contextmanager
-def tqdm_joblib(tqdm_object):
-    """Context manager to patch joblib to report into tqdm progress bar given as argument"""
-    class TqdmBatchCompletionCallback:
-        def __init__(self, time, index, parallel):
-            self.index = index
-            self.parallel = parallel
-
-        def __call__(self, index):
-            tqdm_object.update()
-            if self.parallel._original_iterator is not None:
-                self.parallel.dispatch_next()
-
-    old_batch_callback = joblib.parallel.BatchCompletionCallBack
-    joblib.parallel.BatchCompletionCallBack = TqdmBatchCompletionCallback
-    try:
-        yield tqdm_object
-    finally:
-        joblib.parallel.BatchCompletionCallBack = old_batch_callback
-        tqdm_object.close()
-
-
 def step(params, config):
     input_dir = config["input_dir"]
     output_dir = config["output_dir"]
@@ -72,7 +51,7 @@ def step(params, config):
     files = list(os.listdir(input_dir))
 
     with tqdm_joblib(tqdm(total=len(files))) as progress_bar:
-        Parallel(n_jobs=params.n_jobs)(delayed(aggregateByYear(input_dir, output_dir, indices, statistics))(filename) for filename in files)
+        Parallel(n_jobs=params["n_jobs"])(delayed(aggregateByYear(input_dir, output_dir, indices, statistics))(filename) for filename in files)
 
 
 if __name__ == "__main__":

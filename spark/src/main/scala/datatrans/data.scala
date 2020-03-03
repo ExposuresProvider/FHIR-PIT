@@ -103,37 +103,33 @@ object Implicits{
       ) yield (Address(lat, lon))
   }
 
+  def toResult[A](a: Option[A]) = a.fold[Either[DecodingFailure, A]](Left(DecodingFailure("error",List())))(x => Right (x))
+
   implicit val patientDecoder: Decoder[Patient] = new Decoder[Patient] {
-    override def apply(json: HCursor): Decoder.Result[Patient] = {
-      val resource = json.downField("resource");
-      for (
-        id <- resource.downField("id").as[String];
-        birthDate <- resource.downField("birthDate").as[String];
-        extension = resource.downField("extension").values.getOrElse(Seq());
+    override def apply(json: HCursor): Decoder.Result[Patient] =
+      for(
+        json <- json.as[Json];
+        resource = root.resource;
+        id <- toResult(resource.id.string.getOption(json));
+        birthDate <- toResult(resource.birthDate.string.getOption(json));
+        extension = resource.extension.each.json.getAll(json);
         race =
           (for(
             json <- extension;
-            s <- root.url.string.getOption(json)
-            if s == "http://terminology.hl7.org/ValueSet/v3-Race";
-            s <- root.valueString.string.getOption(json)
+            s <- root.url.string.getOption(json).toSeq
+            if s == "http://terminology.hl7.org/ValueSet/v3-Race" || s == "http://hl7.org/fhir/v3/Race";
+            s <- root.valueString.string.getOption(json).toSeq ++ root.extension.each.valueString.string.getAll(json)
           ) yield s).toSeq;
         ethnicity =
           (for(
             json <- extension;
-            s <- root.url.string.getOption(json)
-            if s == "http://terminology.hl7.org/ValueSet/v3-Ethnicity";
-            s <- root.valueString.string.getOption(json)
+            s <- root.url.string.getOption(json).toSeq
+            if s == "http://terminology.hl7.org/ValueSet/v3-Ethnicity" || s == "http://hl7.org/fhir/v3/Ethnicity";
+            s <- root.valueString.string.getOption(json).toSeq ++ root.extension.each.valueString.string.getAll(json)
           ) yield s).toSeq;
-        gender = resource.downField("gender").as[String].right.getOrElse("Unknown");
-        address =
-          (for(
-            x <- resource.downField("address").values.getOrElse(Seq());
-            y <- x.hcursor.downField("extension").as[Seq[Address]].right.toOption
-          ) yield y).toSeq.flatten
-      ) yield {
-        Patient(id, race, ethnicity, gender, birthDate, address, Seq(), Seq(), Seq(), Seq(), Seq(), Seq())
-      }
-    }
+        gender = resource.gender.string.getOption(json).getOrElse("Unknown");
+        address = resource.address.each.extension.each.json.getAll(json).map(_.as[Address].right.toOption).toSeq.flatten
+      ) yield Patient(id, race, ethnicity, gender, birthDate, address, Seq(), Seq(), Seq(), Seq(), Seq(), Seq())
   }
 
   def filterCoding(coding: Json) : Boolean =

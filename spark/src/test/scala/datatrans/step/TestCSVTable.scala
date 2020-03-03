@@ -62,7 +62,8 @@ class CSVTableSpec extends FlatSpec {
       "pm25_daily_average_min" -> toDouble,
       "ozone_daily_8hour_maximum_stddev" -> toDouble,
       "pm25_daily_average_stddev" -> toDouble,
-      "Max24hOzoneExposure_2" -> toDouble
+      "Max24hOzoneExposure_2" -> toDouble,
+      "NO2_ppbv_avg" -> toDouble
     )
     compareFileTree("src/test/data/icees", tempDir.toString(), true, typemap)
 
