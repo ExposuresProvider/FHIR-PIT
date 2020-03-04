@@ -129,7 +129,7 @@ object PreprocPerPatSeriesCSVTable extends StepConfigConfig {
 
               val patenv_df1 = join_env(hc, pat_df, env2_schema, config.environment2_file.map(env2 => s"${env2}/$p"), "start_date")
 
-              val patenv_df15 = if (patenv_df1.columns.contains("year")) patenv_df1 else patenv_df1.withColumn("year", year($"start_date"))
+              val patenv_df15 = (if (patenv_df1.columns.contains("year")) patenv_df1.drop("year") else patenv_df1).withColumn("year", year($"start_date"))
               
               val patenv_df2 = df match {
                 case Some(df) => patenv_df15.join(df, Seq("patient_num"), "left")

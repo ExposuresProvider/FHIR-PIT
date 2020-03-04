@@ -50,8 +50,7 @@ def proc_pid(config, p):
         penvdf = join_env(pdf, f"{env_fn}/{p}")
         penv2df = join_env(penvdf, f"{env2_fn}/{p}")
 
-        if "year" not in penv2df.columns:
-            penv2df["year"] = penv2df["start_date"].apply(extractYear)
+        penv2df["year"] = penv2df["start_date"].apply(extractYear)
 
         padf = penv2df.merge(sdf, on="patient_num", how="left") if sdf is not None else penv2df
         for year in years:
