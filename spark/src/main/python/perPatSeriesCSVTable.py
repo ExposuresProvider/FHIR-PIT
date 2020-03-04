@@ -10,10 +10,11 @@ from dateutil.parser import *
 from datetime import datetime, timedelta
 from dateutil.tz import *
 import functools
-   
+import yaml
 
-def join_env(pdf, env_fn):                                                                                                                                     
-    if os.path.isfile(env_fn):                                                                                                                                 
+
+def join_env(pdf, env_fn):
+    if os.path.isfile(env_fn):
         envdf = pd.read_csv(env_fn)
         penvdf = pdf.merge(envdf, on="start_date", how="left")
     else:
@@ -24,56 +25,54 @@ def extractYear(x):
     return int(x[0:4])
 
 
-def proc_pid(config):
-    def func(p):
-        # print(f"processing {p}")
+def proc_pid(config, p):
+        # print(f"processing {p}")                                                                                                                                                                                                                                                                                                                                         
         v = config["patient_file"]
-        e = config["environmental_file"]
-        e2 = config["environmental2_file"]
+        env_fn = config["environmental_file"]
+        env2_fn = config["environmental2_file"]
         input_files = config["input_files"]
         output_dir = config["output_dir"]
         offset_hours = config["offset_hours"]
         start_date_str = config["start_date"]
         end_date_str = config["end_date"]
-        start_date = parseTimestamp(start_date_str)
-        end_date = parseTimestamp(end_date_str)
+        start_date = parseTimestamp(start_date_str, offset_hours)
+        end_date = parseTimestamp(end_date_str, offset_hours)
         start_year = start_date.year
         end_year = end_date.year
         years = range(start_year, end_year)
-        
-        input_dfs = map(lambda nr: pd.read_csv(nr), input_files)
+
+        input_dfs = list(map(lambda nr: pd.read_csv(nr), input_files))
         sdf = functools.reduce(lambda l,r: l.merge(r, on="patient_num", how="outer"), input_dfs) if len(input_dfs) != 0 else None
 
         fn = f"{v}/{p}.csv"
         pdf = pd.read_csv(fn)
 
-        penvdf = join_env(pdf, env_fn)
-        penv2df = join_env(penvdf, env2_fn)
+        penvdf = join_env(pdf, f"{env_fn}/{p}")
+        penv2df = join_env(penvdf, f"{env2_fn}/{p}")
 
         if "year" not in penv2df.columns:
             penv2df["year"] = penv2df["start_date"].apply(extractYear)
 
         padf = penv2df.merge(sdf, on="patient_num", how="left") if sdf is not None else penv2df
         for year in years:
-            output_dir = f"/var/fhir/icees/{year2}/per_patient"
+            output_dir = f"/var/fhir/icees/{year}/per_patient"
             os.makedirs(output_dir, exist_ok=True)
             padf[padf["year"] == year].to_csv(f"{output_dir}/{p}", index=False)
-    return func
 
 
 def parseTimestamp(a, offset_hours):
     dt = parse(a)
-    tz = tzoffset(None, timedelta(hour=offset_hours))
+    tz = tzoffset(None, timedelta(hours=offset_hours))
     dtl = dt.astimezone(tz)
     return dtl
 
-    
+
 def step(params, config):
     v = config["patient_file"]
     files = list(os.listdir(v))
 
     with tqdm_joblib(tqdm(total=len(files))) as progress_bar:
-        Parallel(n_jobs=params["n_jobs"])(delayed(proc_pid(config))(f[:-4]) for f in files)
+        Parallel(n_jobs=params["n_jobs"])(delayed(proc_pid)(config, f[:-4]) for f in files)
 
 
 if __name__ == "__main__":
