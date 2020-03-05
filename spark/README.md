@@ -85,10 +85,13 @@ set `SPARK_LOCAL_DIRS`
 `rxcui_dict.py`: generate icees features rxnorm json from a xslx file
 
 ### icees
+`perPatSeriesCSVTable.py`: generate icees table
 
 `preprocPatient.py`: bin patient values
 
 `preprocVisit.py`: bin visit values
+
+`preprocBinning.py`: preprocess binning
 
 ### fhir
 
