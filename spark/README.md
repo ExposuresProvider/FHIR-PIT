@@ -85,7 +85,7 @@ set `SPARK_LOCAL_DIRS`
 `rxcui_dict.py`: generate icees features rxnorm json from a xslx file
 
 ### icees
-`perPatSeriesCSVTable.py`: generate icees table
+`perPatSeriesCSVTable.py`: generate icees table this is the same as `PreprocPerPatSeriesCSVTable.scala` but runs on single machine
 
 `preprocPatient.py`: bin patient values
 
