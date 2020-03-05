@@ -107,5 +107,8 @@ set `SPARK_LOCAL_DIRS`
 
 `stats.py`: generate statistics of a list of csvs
 
+`split.py`: split by index
+
+`submit.py`: submit
 
 
