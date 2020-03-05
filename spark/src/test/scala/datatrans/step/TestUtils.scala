@@ -98,12 +98,51 @@ object TestUtils {
     toMap(csv1) should equal (toMap(csv2))
   }
 
+  def printDirectoryTree( folder : File, indent : Integer, sb:StringBuilder) : Unit = {
+    if (!folder.isDirectory()) {
+      throw new IllegalArgumentException("folder is not a Directory")
+    }
+    sb.append(getIndentString(indent))
+    sb.append("+--")
+    sb.append(folder.getName())
+    sb.append("/")
+    sb.append("\n")
+    for (file <- folder.listFiles()) {
+      if (file.isDirectory()) {
+        printDirectoryTree(file, indent + 1, sb)
+      } else {
+        printFile(file, indent + 1, sb)
+      }
+    }
+  }
+
+  def printFile(file : File, indent : Integer, sb : StringBuilder) : Unit = {
+    sb.append(getIndentString(indent))
+    sb.append("+--")
+    sb.append(file.getName())
+    sb.append("\n")
+  }
+
+  def getIndentString(indent: Integer) : String = {
+    val sb = new StringBuilder()
+    for (i <- 0 until indent) {
+      sb.append("|  ")
+    }
+    sb.toString()
+  }
+
   def compareFileTree(src: String, tgt: String, csv: Boolean = false, csv_schema : Map[String, String => Any] = Map()) = {
+    val sb = new StringBuilder()
+    printDirectoryTree(new File(tgt), 0, sb)
+    println(s"output directory: ${sb.toString()}")
+    val sb2 = new StringBuilder()
+    printDirectoryTree(new File(src), 0, sb2)
+    println(s"expected directory: ${sb2.toString()}")
     getFileTree(new File(src)).foreach(f => {
       val expected_path = f.getPath()
       val output_path = expected_path.replace(src, tgt)
-      println("output path " + output_path)
-      println("comparing " + f.getPath())
+      println("output path: " + output_path)
+      println("expected path: " + f.getPath())
       val op = Paths.get(output_path)
       assert(Files.isRegularFile(op))
       val f1 = readFile(output_path)

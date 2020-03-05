@@ -4,8 +4,18 @@ import numpy as np
 features = ["PM2.5", "Ozone"]
 features2 = ["PM2.5", "Ozone", "CO", "NO", "NO2", "NOx", "SO2", "Acetaldehyde", "Formaldehyde", "Benzene"]
 
+def sex2gen(a):
+    if a == "Female" or a == "Male":
+        return a
+    else:
+        return ""
+
+def addSex2(df):
+    df["Sex2"] = df["Sex"].apply(sex2gen)
+
+
 def quantile(df, col, n, bin="qcut", column=None):
-    # print(f"{bin} {col} -> {column}")                                                                                                                                                                                                                                                                                      
+    # print(f"{bin} {col} -> {column}")
     try:
         if column is None:
             column = col
@@ -17,8 +27,9 @@ def quantile(df, col, n, bin="qcut", column=None):
             raise "unsupported binning method"
     except:
         pass
-        # print(f"cannot bin {col}")                                                                                                                                                                                                                                                                                         
+        # print(f"cannot bin {col}")
 
+        
 def preprocHighwayExposure(i):
     if i < 0:
         return 500

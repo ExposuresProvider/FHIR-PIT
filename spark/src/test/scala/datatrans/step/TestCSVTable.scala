@@ -31,7 +31,7 @@ class CSVTableSpec extends FlatSpec {
         "src/test/data/other_processed/2010/nearestroad.csv",
         "src/test/data/other_processed/2010/nearestroad2.csv"
       ),
-      output_dir = tempDir.toString(),
+      output_dir = f"${tempDir.toString()}",
       start_date = stringToDateTime("2010-01-01T00:00:00Z"),
       end_date = stringToDateTime("2011-01-01T00:00:00Z"),
       offset_hours = 0
@@ -41,7 +41,7 @@ class CSVTableSpec extends FlatSpec {
 
     val config2 = PreprocCSVTableConfig(
       input_dir = f"${tempDir.toString()}/2010",
-      output_dir = tempDir2.toString(),
+      output_dir = f"${tempDir2.toString()}/2010",
       start_date = stringToDateTime("2010-01-01T00:00:00Z"),
       end_date = stringToDateTime("2011-01-01T00:00:00Z"),
       deidentify = Seq[String](),
@@ -67,7 +67,7 @@ class CSVTableSpec extends FlatSpec {
     )
     compareFileTree("src/test/data/icees", tempDir.toString(), true, typemap)
 
-    compareFileTree("src/test/data/icees2/2010", tempDir2.toString(), true, typemap)
+    compareFileTree("src/test/data/icees2", tempDir2.toString(), true, typemap)
 
     deleteRecursively(tempDir)
     deleteRecursively(tempDir2)

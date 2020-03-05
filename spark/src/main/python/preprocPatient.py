@@ -12,6 +12,9 @@ def preproc_patient(input_file, output_file):
 
     preprocSocial(df)
 
+    addSex2(df)
+
+    df.drop("birth_date", axis=1).to_csv(output_file, index=False)
     df.to_csv(output_file, index=False)
 
     output_file = output_file+"_deidentified"

@@ -87,11 +87,15 @@ class EnvDataSource(spark: SparkSession, config: EnvDataCoordinatesConfig) {
             val end_date_local = config.end_date.toDateTime(timeZone).minusDays(1)
             val yearseq = start_date_local.year.get to end_date_local.year.get
             val output_file = f"${config.output_dir}/$r"
-            log.info(f"loading env data from year sequence $yearseq, start_date = ${start_date_local}, end_date = ${end_date_local}")
-            val coors = yearseq.flatMap(year => latlon2rowcol(lat, lon, year).map(rc => (year, rc)))
+            val output_file_path = new Path(output_file)
+            val output_file_file_system = output_file_path.getFileSystem(hc)
+            if (!output_file_file_system.exists(output_file_path)) {
+              log.info(f"loading env data from year sequence $yearseq, start_date = ${start_date_local}, end_date = ${end_date_local}")
+              val coors = yearseq.flatMap(year => latlon2rowcol(lat, lon, year).map(rc => (year, rc)))
 
-            val df = generateOutputDataFrame(coors)
-            writeDataframe(hc, output_file, df)
+              val df = generateOutputDataFrame(coors)
+              writeDataframe(hc, output_file, df)
+            }
 
       })
     }

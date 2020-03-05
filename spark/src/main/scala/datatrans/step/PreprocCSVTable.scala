@@ -298,6 +298,8 @@ object PreprocCSVTable extends StepConfigConfig {
             (new TotalTypeVisits(emerTypes)($"VisitType", $"RespiratoryDx") + new TotalTypeVisits(inpatientTypes, emerTypes)($"VisitType", $"RespiratoryDx")).alias("TotalEDInpatientVisits")
           ) ++ demograph.map(
             v => first(df_all.col(v)).alias(v)
+          ) ++ Seq(
+            first("Sex2").alias("Sex2")
           ) ++ acs.map(
             v => first(df_all.col(v)).alias(v)
           ) ++ visit.map(

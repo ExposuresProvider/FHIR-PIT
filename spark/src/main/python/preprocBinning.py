@@ -2,8 +2,8 @@ from preprocPatient import *
 from preprocVisit import *
 import os
 
-input_dir = "/var/fhir/icees"
-output_dir = "/var/fhir/icees/output"
+input_dir = "/var/fhir/icees2"
+output_dir = "/var/fhir/icees2/output"
 
 for year in range(2010, 2017):
     print(year)
