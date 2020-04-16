@@ -32,8 +32,7 @@ class EnvDataSource(spark: SparkSession, config: EnvDataCoordinatesConfig) {
         Some(df)
       } else {
         log.error(f"$filename doesn't contain all required columns")
-        val namesNotInDf = names.filter(x => !df.columns.contains(x))
-        Some(namesNotInDf.foldLeft(df)((df : DataFrame, x : String) => df.withColumn(x, lit(null))))
+        None
       }
     } else {
       None
@@ -91,13 +90,19 @@ class EnvDataSource(spark: SparkSession, config: EnvDataCoordinatesConfig) {
             val output_file_file_system = output_file_path.getFileSystem(hc)
             if (!output_file_file_system.exists(output_file_path)) {
               log.info(f"loading env data from year sequence $yearseq, start_date = ${start_date_local}, end_date = ${end_date_local}")
-              val coors = yearseq.flatMap(year => latlon2rowcol(lat, lon, year).map(rc => (year, rc)))
-
+              val coors = yearseq.intersect(Seq(2010,2011)).flatMap(year => {
+                latlon2rowcol(lat, lon, year) match {
+                  case Some((row, col)) =>
+                    Seq((year, (row, col)))
+                  case _ =>
+                    Seq()
+                }
+              })
+              
               val df = generateOutputDataFrame(coors)
               writeDataframe(hc, output_file, df)
             }
-
-      })
+        })
     }
   }
 }
