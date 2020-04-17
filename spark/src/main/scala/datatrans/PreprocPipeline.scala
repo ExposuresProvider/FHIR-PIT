@@ -63,7 +63,7 @@ object PreprocPipeline {
     case ex: Throwable => throw ex
   }
 
-  def main(args: Array[String]) {    
+  def main(args: Array[String]) : Unit = {    
 
     val spark = SparkSession.builder().appName("datatrans preproc").getOrCreate()
 
