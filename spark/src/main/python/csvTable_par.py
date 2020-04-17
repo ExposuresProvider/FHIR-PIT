@@ -1,4 +1,3 @@
-File Edit Options Buffers Tools Python Help                                                                                                                                                                                                                                                                                                                                
 import os
 import pandas as pd
 import numpy as np
