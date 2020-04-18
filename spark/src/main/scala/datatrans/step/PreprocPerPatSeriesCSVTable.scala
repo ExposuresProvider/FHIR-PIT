@@ -11,7 +11,8 @@ import org.joda.time.format.{ISODateTimeFormat, DateTimeFormat}
 import org.joda.time._
 import scopt._
 import org.apache.spark.sql.functions._
-import net.jcazevedo.moultingyaml._
+import io.circe._
+import io.circe.generic.semiauto._
 import datatrans.Utils._
 import datatrans.ConditionMapper._
 import datatrans.Config._
@@ -27,19 +28,15 @@ case class PreprocPerPatSeriesCSVTableConfig(
   start_date : DateTime = new DateTime(0),
   end_date : DateTime = new DateTime(0),
   offset_hours : Int = 0
-) extends StepConfig
+)
 
-object PerPatSeriesCSVTableYamlProtocol extends SharedYamlProtocol {
-  implicit val csvTableYamlFormat = yamlFormat8(PreprocPerPatSeriesCSVTableConfig)
-}
-
-object PreprocPerPatSeriesCSVTable extends StepConfigConfig {
+object PreprocPerPatSeriesCSVTable extends StepImpl {
   
   type ConfigType = PreprocPerPatSeriesCSVTableConfig
 
-  val yamlFormat = PerPatSeriesCSVTableYamlProtocol.csvTableYamlFormat
+  import datatrans.SharedImplicits._
 
-  val configType = classOf[PreprocPerPatSeriesCSVTableConfig].getName()
+  val configDecoder : Decoder[ConfigType] = deriveDecoder
 
   def step(spark: SparkSession, config:PreprocPerPatSeriesCSVTableConfig) : Unit = {
     import spark.implicits._

@@ -11,7 +11,7 @@ import java.io.File
 import java.nio.file.{Files}
 import org.scalatest.Assertions._
 import java.nio.file.Files
-import gnieh.diffson.circe._
+import diffson.circe._
 import io.circe.parser._
 import org.joda.time._
 import org.joda.time.format._

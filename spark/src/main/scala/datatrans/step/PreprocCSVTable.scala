@@ -7,11 +7,12 @@ import org.apache.hadoop.fs.Path
 import org.apache.spark.sql.expressions.{MutableAggregationBuffer, UserDefinedAggregateFunction}
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{Column, Row, SparkSession, DataFrame}
+import io.circe._
+import io.circe.generic.semiauto._
 import org.joda.time.format.{ISODateTimeFormat, DateTimeFormat}
 import org.joda.time._
 import scopt._
 import org.apache.spark.sql.functions._
-import net.jcazevedo.moultingyaml._
 import datatrans.Utils._
 import datatrans.ConditionMapper._
 import datatrans.Config._
@@ -25,19 +26,15 @@ case class PreprocCSVTableConfig(
   end_date : DateTime = new DateTime(0),
   deidentify : Seq[String] = Seq(),
   offset_hours : Int = 1
-) extends StepConfig
+)
 
-object CSVTableYamlProtocol extends SharedYamlProtocol {
-  implicit val csvTableYamlFormat = yamlFormat6(PreprocCSVTableConfig)
-}
-
-object PreprocCSVTable extends StepConfigConfig {
+object PreprocCSVTable extends StepImpl {
   
   type ConfigType = PreprocCSVTableConfig
 
-  val yamlFormat = CSVTableYamlProtocol.csvTableYamlFormat
+  import datatrans.SharedImplicits._
 
-  val configType = classOf[PreprocCSVTableConfig].getName()
+  val configDecoder : Decoder[ConfigType] = deriveDecoder
 
   def step(spark: SparkSession, config:PreprocCSVTableConfig) : Unit = {
     import spark.implicits._

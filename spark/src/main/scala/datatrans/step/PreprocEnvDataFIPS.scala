@@ -11,7 +11,8 @@ import org.apache.spark.sql.functions._
 import org.apache.hadoop.fs._
 import org.apache.log4j.{Logger, Level}
 
-import net.jcazevedo.moultingyaml._
+import io.circe._
+import io.circe.generic.semiauto._
 
 import datatrans.environmentaldata._
 import datatrans.environmentaldata.Utils._
@@ -28,19 +29,15 @@ case class EnvDataFIPSConfig(
   fips_data: String,
   indices : Seq[String], // = Seq("ozone_daily_8hour_maximum", "pm25_daily_average")
   offset_hours : Int
-) extends StepConfig
+)
 
-object PreprocEnvDataFIPSYamlProtocol extends SharedYamlProtocol {
-  implicit val preprocEnvDataFIPSYamlFormat = yamlFormat7(EnvDataFIPSConfig)
-}
-
-object PreprocEnvDataFIPS extends StepConfigConfig {
+object PreprocEnvDataFIPS extends StepImpl {
 
   type ConfigType = EnvDataFIPSConfig
 
-  val yamlFormat = PreprocEnvDataFIPSYamlProtocol.preprocEnvDataFIPSYamlFormat
+  import datatrans.SharedImplicits._
 
-  val configType = classOf[EnvDataFIPSConfig].getName()
+  val configDecoder : Decoder[ConfigType] = deriveDecoder
 
   val log = Logger.getLogger(getClass.getName)
 

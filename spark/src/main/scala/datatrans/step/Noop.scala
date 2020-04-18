@@ -3,18 +3,16 @@ package datatrans.step
 import datatrans.Utils._
 import org.apache.spark.sql.SparkSession
 import datatrans.Config._
-import net.jcazevedo.moultingyaml._
-import net.jcazevedo.moultingyaml.DefaultYamlProtocol._
+import io.circe._
+import io.circe.generic.semiauto._
 import datatrans.Implicits._
 import datatrans._
 
-object Noop extends StepConfigConfig {
+object Noop extends StepImpl {
 
   type ConfigType = Unit
 
-  val yamlFormat = UnitYamlFormat
-
-  val configType = classOf[Unit].getName()
+  val configDecoder : Decoder[ConfigType] = deriveDecoder
 
   def step(spark: SparkSession, config: Unit): Unit = ()
 

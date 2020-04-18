@@ -4,7 +4,8 @@ import datatrans.Utils._
 import org.apache.spark.sql.SparkSession
 import org.joda.time._
 import scopt._
-import net.jcazevedo.moultingyaml._
+import io.circe._
+import io.circe.generic.semiauto._
 
 import datatrans.environmentaldata._
 import datatrans.Config._
@@ -21,37 +22,15 @@ case class EnvDataCoordinatesConfig(
   indices : Seq[String], // = Seq("o3", "pm25"),
   statistics : Seq[String], // = Seq("avg", "max"),
   offset_hours : Int
-) extends StepConfig
+)
 
-object PreprocPerPatSeriesEnvDataCoordinatesYamlProtocol extends SharedYamlProtocol {
-  implicit val preprocPerPatSeriesEnvDataCoordinatesYamlFormat = yamlFormat8(EnvDataCoordinatesConfig)
-}
-
-object PreprocPerPatSeriesEnvDataCoordinates extends StepConfigConfig {
+object PreprocPerPatSeriesEnvDataCoordinates extends StepImpl {
 
   type ConfigType = EnvDataCoordinatesConfig
 
-  val yamlFormat = PreprocPerPatSeriesEnvDataCoordinatesYamlProtocol.preprocPerPatSeriesEnvDataCoordinatesYamlFormat
+  import datatrans.SharedImplicits._
 
-  val configType = classOf[EnvDataCoordinatesConfig].getName()
-
-  def main(args: Array[String]) {
-
-    val spark = SparkSession.builder().appName("datatrans preproc").getOrCreate()
-
-    spark.sparkContext.setLogLevel("WARN")
-
-    import PreprocPerPatSeriesEnvDataCoordinatesYamlProtocol._
-
-    parseInput[EnvDataCoordinatesConfig](args) match {
-      case Some(config) =>
-        step(spark, config)
-      case None =>
-    }
-
-    spark.stop()
-
-  }
+  val configDecoder : Decoder[ConfigType] = deriveDecoder
 
   def step(spark: SparkSession, config: EnvDataCoordinatesConfig) = {
     time {

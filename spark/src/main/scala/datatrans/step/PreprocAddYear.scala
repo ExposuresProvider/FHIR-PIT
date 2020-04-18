@@ -5,14 +5,13 @@ import java.util.concurrent.atomic.AtomicInteger
 import datatrans.Utils._
 import org.apache.spark.sql.{DataFrame, SparkSession, Column}
 import org.apache.spark.sql.types._
-import org.joda.time._
 
 import org.apache.spark.sql.functions._
 import org.apache.hadoop.fs._
 import org.apache.log4j.{Logger, Level}
 
-import net.jcazevedo.moultingyaml._
-
+import io.circe._
+import io.circe.generic.semiauto._
 import datatrans.environmentaldata._
 import datatrans.environmentaldata.Utils._
 import datatrans.Config._
@@ -25,22 +24,16 @@ case class AddYearConfig(
   output_file : String,
   date_index: String,
   year_index : String
-) extends StepConfig
-
-object AddYearYamlProtocol extends SharedYamlProtocol {
-  implicit val preprocAddYearYamlFormat = yamlFormat4(AddYearConfig)
-}
+)
 
 /**
   *  split preagg into individual files for patients 
   */
-object PreprocAddYear extends StepConfigConfig {
+object PreprocAddYear extends StepImpl {
 
   type ConfigType = AddYearConfig
 
-  val yamlFormat = AddYearYamlProtocol.preprocAddYearYamlFormat
-
-  val configType = classOf[AddYearConfig].getName()
+  val configDecoder : Decoder[ConfigType] = deriveDecoder
 
   val log = Logger.getLogger(getClass.getName)
 

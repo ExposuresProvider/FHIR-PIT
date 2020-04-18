@@ -6,7 +6,6 @@ scalaVersion := "2.11.12"
 
 resolvers ++= Seq(
   "Open Source Geospatial Foundation Repository" at "http://download.osgeo.org/webdav/geotools/",
-  "Boundless Maven Repository" at "http://repo.boundlessgeo.com/main",
   "Java.net repository" at "http://download.java.net/maven/2"
 )
 
@@ -28,7 +27,6 @@ libraryDependencies += "junit" % "junit" % "4.11" % Test
 libraryDependencies += "javax.media" % "jai_core" % "1.1.3" from "http://download.osgeo.org/webdav/geotools/javax/media/jai_core/1.1.3/jai_core-1.1.3.jar"
 libraryDependencies += "org.apache.commons" % "commons-csv" % "1.8"
 libraryDependencies += "org.typelevel" %% "squants" % "1.6.0"
-libraryDependencies += "net.jcazevedo" %% "moultingyaml" % "0.4.1"
 libraryDependencies += "io.suzaku" %% "boopickle" % "1.3.1"
 libraryDependencies += "com.fasterxml.jackson.core" % "jackson-core" % "2.8.9"
 libraryDependencies += "com.fasterxml.jackson.core" % "jackson-databind" % "2.8.9"
@@ -44,16 +42,16 @@ libraryDependencies += "org.apache.hadoop" % "hadoop-common" % "2.7.7"
 
 libraryDependencies += "org.scalactic" %% "scalactic" % "3.1.0" % Test
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.1.0" % Test
-val circeVersion = "0.11.0"
 
 libraryDependencies ++= Seq(
-  "io.circe" %% "circe-core",
-  "io.circe" %% "circe-generic",
-  "io.circe" %% "circe-parser",
-  "io.circe" %% "circe-optics"
-).map(_ % circeVersion)
+  "io.circe" %% "circe-core" % "0.11.2",
+  "io.circe" %% "circe-generic" % "0.11.2",
+  "io.circe" %% "circe-parser" % "0.11.2",
+  "io.circe" %% "circe-optics" % "0.11.0",
+  "io.circe" %% "circe-yaml" % "0.11.0-M1"
+)
 
-libraryDependencies += "org.gnieh" %% "diffson-circe" % "3.1.1" % Test
+libraryDependencies += "org.gnieh" %% "diffson-circe" % "4.0.0-M3" % Test
 
 testOptions += Tests.Argument("-oF")
 

@@ -9,13 +9,13 @@ import cats.syntax.either._
 import io.circe._
 import io.circe.syntax._
 import io.circe.parser._
+import io.circe.generic.semiauto._
 import scala.collection.mutable.ListBuffer
 import scopt._
 import java.util.Base64
 import java.io.InputStream
 import java.nio.charset.StandardCharsets
 import datatrans.Config._
-import net.jcazevedo.moultingyaml._
 import com.github.plokhotnyuk.jsoniter_scala.macros._
 import com.github.plokhotnyuk.jsoniter_scala.core._
 import org.apache.log4j.{Logger, Level}
@@ -95,34 +95,34 @@ case class PreprocFHIRConfig(
   output_directory : String = "", // output directory of patient data
   resc_types : Map[JsonifiableType, String], // map resource type to directory, these are resources included in patient data
   skip_preproc : Seq[String] // skip preprocessing these resource as they have already benn preprocessed
-) extends StepConfig
+)
 
-object FHIRYamlProtocol extends DefaultYamlProtocol {
-  implicit val resourceTypeFormat = new YamlFormat[JsonifiableType] {
-    def write(x: JsonifiableType) = StringYamlFormat.write(x.toString())
-    def read(value: YamlValue) = StringYamlFormat.read(value) match {
-      case "Condition" =>
-        ConditionResourceType
-      case "Lab" =>
-        LabResourceType
-      case "MedicationRequest" =>
-        MedicationRequestResourceType
-      case "Procedure" =>
-        ProcedureResourceType
-      case "BMI" =>
-        BMIResourceType
-      case "Encounter" =>
-        EncounterResourceType
-      case "Patient" =>
-        PatientResourceType
-      case a =>
-        throw new RuntimeException(s"unsupported resource type $a")
-    }
+object FHIRImplicits {
+  implicit val resourceTypeDecoder : KeyDecoder[JsonifiableType] = new KeyDecoder[JsonifiableType] {
+    final def apply(c: String) : Option[JsonifiableType] =
+      c match {
+        case "Condition" =>
+          Some(ConditionResourceType)
+        case "Lab" =>
+          Some(LabResourceType)
+        case "MedicationRequest" =>
+          Some(MedicationRequestResourceType)
+        case "Procedure" =>
+          Some(ProcedureResourceType)
+        case "BMI" =>
+          Some(BMIResourceType)
+        case "Encounter" =>
+          Some(EncounterResourceType)
+        case "Patient" =>
+          Some(PatientResourceType)
+        case a =>
+          None
+          // throw new RuntimeException(s"unsupported resource type $a")
+      }
   }
-  implicit val fhirYamlFormat = yamlFormat4(PreprocFHIRConfig)
 }
 
-object PreprocFHIR extends StepConfigConfig {
+object PreprocFHIR extends StepImpl {
 
   import Utils._
 
@@ -130,29 +130,11 @@ object PreprocFHIR extends StepConfigConfig {
 
   log.setLevel(Level.INFO)
 
-  def main(args: Array[String]) {    
-
-    val spark = SparkSession.builder().appName("datatrans preproc").getOrCreate()
-
-    spark.sparkContext.setLogLevel("WARN")
-
-    import FHIRYamlProtocol._
-
-    parseInput[PreprocFHIRConfig](args) match {
-      case Some(config) =>
-        step(spark, config)
-      case None =>
-    }
-
-    spark.stop()
-
-  }
+  import FHIRImplicits._
 
   type ConfigType = PreprocFHIRConfig
 
-  val yamlFormat = FHIRYamlProtocol.fhirYamlFormat
-
-  val configType = classOf[PreprocFHIRConfig].getName()
+  val configDecoder : Decoder[ConfigType] = deriveDecoder
 
   def step(spark: SparkSession, config: PreprocFHIRConfig): Unit = {
     import spark.implicits._

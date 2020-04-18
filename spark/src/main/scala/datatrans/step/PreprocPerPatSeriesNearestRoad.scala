@@ -6,7 +6,8 @@ import datatrans.Utils._
 import org.apache.hadoop.fs.Path
 import org.apache.spark.sql.SparkSession
 import scopt._
-import net.jcazevedo.moultingyaml._
+import io.circe._
+import io.circe.generic.semiauto._
 import datatrans.Config._
 import datatrans.Implicits._
 import datatrans._
@@ -16,43 +17,13 @@ case class PreprocPerPatSeriesNearestRoadConfig(
   nearestroad_data : String,
   maximum_search_radius : Double, // = 500,
   output_file : String
-) extends StepConfig
+)
 
-object PerPatSeriesNearestRoadYamlProtocol extends DefaultYamlProtocol {
-  implicit val perPatSeriesNearestRoadYamlFormat = yamlFormat4(PreprocPerPatSeriesNearestRoadConfig)
-}
-
-object PreprocPerPatSeriesNearestRoad extends StepConfigConfig {
+object PreprocPerPatSeriesNearestRoad extends StepImpl {
 
   type ConfigType = PreprocPerPatSeriesNearestRoadConfig
 
-  val yamlFormat = PerPatSeriesNearestRoadYamlProtocol.perPatSeriesNearestRoadYamlFormat
-
-  val configType = classOf[PreprocPerPatSeriesNearestRoadConfig].getName()
-
-  def main(args: Array[String]) {
-    val parser = new OptionParser[PreprocPerPatSeriesNearestRoadConfig]("series_to_vector") {
-      head("series_to_vector")
-      opt[String]("patgeo_data").required.action((x,c) => c.copy(patgeo_data = x))
-      opt[String]("nearestroad_data").required.action((x,c) => c.copy(nearestroad_data = x))
-      opt[Double]("maximum_search_radius").action((x,c) => c.copy(maximum_search_radius = x))
-      opt[String]("output_file").required.action((x,c) => c.copy(output_file = x))
-    }
-
-    val spark = SparkSession.builder().appName("datatrans preproc").getOrCreate()
-
-    spark.sparkContext.setLogLevel("WARN")
-
-    import PerPatSeriesNearestRoadYamlProtocol._
-
-    parseInput[PreprocPerPatSeriesNearestRoadConfig](args) match {
-      case Some(config) =>
-        step(spark, config)
-
-      case None =>
-    }
-    spark.stop()
-  }
+  val configDecoder : Decoder[ConfigType] = deriveDecoder
 
   def step(spark: SparkSession, config: PreprocPerPatSeriesNearestRoadConfig): Unit = {
     // For implicit conversions like converting RDDs to DataFrames

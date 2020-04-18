@@ -1,52 +1,66 @@
 package datatrans
 
 import scopt._
-import net.jcazevedo.moultingyaml._
+import io.circe.yaml
+import io.circe._
+import io.circe.generic.semiauto._
+import cats.syntax.either._
 import org.joda.time._
 import org.joda.time.format.{DateTimeFormat, ISODateTimeFormat}
 import org.apache.spark.sql.SparkSession
 import Implicits._
 import datatrans.step._
+import scala.reflect.runtime.universe
+import scala.reflect.classTag
 
 case class InputConfig(
   config : String = ""
 )
 
+
 object Config {
 
-  def parseInput[T](args : Seq[String])(implicit configFormatExplicit : YamlFormat[T]) : Option[T] = {
+  val runtimeMirror = universe.runtimeMirror(getClass.getClassLoader)
+
+  def getObject(name:String) : Any = {
+    val module = runtimeMirror.staticModule("package.ObjectName")
+
+    val obj = runtimeMirror.reflectModule(module)
+
+    obj.instance
+  }
+
+  // def getObjectName(obj: Any) : String = obj.getClass().getCanonicalName().dropRight(1)
+  def parseInput[T](args : Seq[String])(implicit decoder : Decoder[T]) : Option[T] = {
 
     val parser = new OptionParser[InputConfig]("series_to_vector") {
       head("series_to_vector")
       opt[String]("config").required.action((x,c) => c.copy(config = x))
     }
 
-    parser.parse(args, InputConfig()).map(
+    parser.parse(args, InputConfig()).flatMap(
       configFile => {
         val source = scala.io.Source.fromFile(configFile.config)
         val yamlStr = try source.mkString finally source.close()
-        yamlStr.parseYaml.convertTo[T]
+
+        yaml.parser.parse(yamlStr).right.toOption.flatMap(_.as[T].right.toOption)
       }
     )
 
   }
-
-  val stepConfigConfigMap: Map[String, StepConfigConfig] = Seq(PreprocFHIR, PreprocPerPatSeriesToVector, PreprocPerPatSeriesEnvDataCoordinates, PreprocFIPS, PreprocEnvDataFIPS, PreprocSplit, PreprocAddYear, PreprocEnvDataAggregate, PreprocPerPatSeriesNearestRoad, PreprocPerPatSeriesNearestRoad2, PreprocPerPatSeriesACS, PreprocPerPatSeriesACS2, PreprocPerPatSeriesCSVTable, PreprocCSVTable, Train, Noop).map(c => (c.configType, c)).toMap
 }
 
-trait StepConfigConfig {
+import Config._
+
+trait StepImpl {
   type ConfigType
-  val yamlFormat : YamlFormat[ConfigType]
-  val configType : String
+  val configDecoder : Decoder[ConfigType]
   def step(spark: SparkSession, config: ConfigType)
 }
 
-abstract class StepConfig extends Serializable {
-}
-
-
 case class Step(
-  step: StepConfig,
+  config: Any,
+  impl: StepImpl,
   name: String,
   skip: Boolean,
   dependsOn: Seq[String]
@@ -54,43 +68,58 @@ case class Step(
 
 
 
-trait SharedYamlProtocol extends DefaultYamlProtocol {
+object SharedImplicits {
   val fmt = ISODateTimeFormat.dateTime()
-  implicit val dateTimeFormat = new YamlFormat[org.joda.time.DateTime] {
-    def write(x: org.joda.time.DateTime) =
-      YamlString(fmt.print(x))
+  implicit val dateTimeDecoder : Decoder[org.joda.time.DateTime] = new Decoder[org.joda.time.DateTime] {
+    final def apply(c: HCursor) : Decoder.Result[org.joda.time.DateTime] =
+      for (
+        s <- c.as[String]
+      ) yield fmt.parseDateTime(s)
 
-    def read(value: YamlValue) =
-      value match {
-        case YamlString(s) =>
-          fmt.parseDateTime(s)
-        case YamlDate(d) =>
-          d
-        case _ =>
-          throw new RuntimeException("cannot parse date time from YamlValue " + value)
-      }
+  }
+
+  implicit val dateTimeEncoder : Encoder[org.joda.time.DateTime] = new Encoder[org.joda.time.DateTime] {
+    final def apply(x: org.joda.time.DateTime) : Json =
+      Json.fromString(fmt.print(x))
 
   }
 
 }
 
 
-object StepYamlProtocol extends DefaultYamlProtocol {
+object StepImplicits {
 
-  implicit val configFormat = new YamlFormat[StepConfig] {
-    def write(x: StepConfig) = {
-      val stepConfigConfig = Config.stepConfigConfigMap(x.getClass().getName())
-      YamlObject(
-        YamlString("function") -> YamlString(stepConfigConfig.configType),
-        YamlString("arguments") -> stepConfigConfig.yamlFormat.write(x.asInstanceOf[stepConfigConfig.ConfigType])
-      )
-    }
 
-    def read(value: YamlValue) = {
-      val config = value.asYamlObject.getFields(YamlString("arguments")).head
-      val stepConfigConfig = Config.stepConfigConfigMap(value.asYamlObject.getFields(YamlString("function")).head.convertTo[String])
-      stepConfigConfig.yamlFormat.read(config).asInstanceOf[StepConfig]
-    }
+
+  implicit val stepImplDecoder : Decoder[StepImpl] = new Decoder[StepImpl] {
+    final def apply(c : HCursor) : Decoder.Result[StepImpl] =
+      for(
+        qn <- c.downField("function").as[String]
+      ) yield getObject(qn).asInstanceOf[StepImpl]
   }
-  implicit val stepFormat = yamlFormat4(Step)
+
+  // implicit val stepImplEncoder : Encoder[StepImpl] = new Encoder[StepImpl] {
+  //   final def apply(x : StepImpl) : Json = Json.fromString(getObjectName(x))
+  // }
+
+  implicit val stepConfigDecoder : Decoder[Any] = new Decoder[Any] {
+    final def apply(c : HCursor): Decoder.Result[Any] =
+      for(
+        qn <- c.downField("function").as[String];
+        val impl = getObject(qn).asInstanceOf[StepImpl];
+        config <- impl.configDecoder(c)
+      ) yield config
+  }
+
+  implicit val stepDecoder : Decoder[Step] = new Decoder[Step] {
+    final def apply(c : HCursor) : Decoder.Result[Step] =
+      for(
+        name <- c.downField("name").as[String];
+        skip <- c.downField("skip").as[Boolean];
+        dependsOn <- c.downField("dependsOn").as[Seq[String]];
+        config <- c.as[Any];
+        impl <- c.as[StepImpl]
+      ) yield Step(config, impl, name, skip, dependsOn)
+  }
+
 }

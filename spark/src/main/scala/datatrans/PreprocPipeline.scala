@@ -10,7 +10,6 @@ import scopt._
 import java.util.Base64
 import java.nio.charset.StandardCharsets
 import datatrans.Config._
-import net.jcazevedo.moultingyaml._
 import org.joda.time._
 import org.joda.time.format.{DateTimeFormat, ISODateTimeFormat}
 import scala.collection.mutable.{Set, Queue}
@@ -26,7 +25,7 @@ object PreprocPipeline {
 
   import Utils._
 
-  import StepYamlProtocol._
+  import StepImplicits._
 
   case class PreprocPipelineConfig(
     progress_output : String,
@@ -34,7 +33,7 @@ object PreprocPipeline {
     steps : Seq[Step]
   )
 
-  implicit val preprocPipelineYamlFormat = yamlFormat3(PreprocPipelineConfig)
+  implicit val preprocPipelineDecoder : Decoder[PreprocPipelineConfig] = deriveDecoder
 
   case class Report(
     success: Set[String],
@@ -108,8 +107,8 @@ object PreprocPipeline {
                   try {
                     val report = Report(success, skip, failure.map{case (step, err) => (step, err.toString)}, notRun, Some(step.name), queued.map(_.name))
                     writeToFile(hc, config.progress_output, report.asJson.noSpaces)
-                    val stepConfigConfig = stepConfigConfigMap(step.step.getClass().getName())
-                    stepConfigConfig.step(spark, step.step.asInstanceOf[stepConfigConfig.ConfigType])
+                    val stepImpl = step.impl
+                    stepImpl.step(spark, step.config.asInstanceOf[stepImpl.ConfigType])
                     log.info("success: " + step.name)
                     success.add(step.name)
                   } catch safely {

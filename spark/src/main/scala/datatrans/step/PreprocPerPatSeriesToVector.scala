@@ -13,10 +13,10 @@ import scopt._
 import scala.collection.JavaConverters._
 import squants.mass.{Kilograms, Grams, Pounds}
 import squants.space.{Centimeters, Inches}
-import net.jcazevedo.moultingyaml._
 import com.github.plokhotnyuk.jsoniter_scala.macros._
 import com.github.plokhotnyuk.jsoniter_scala.core._
 import io.circe._
+import io.circe.generic.semiauto._
 import org.apache.log4j.{Logger, Level}
 
 import datatrans.Utils._
@@ -32,21 +32,18 @@ case class PreprocPerPatSeriesToVectorConfig(
   end_date : org.joda.time.DateTime,
   offset_hours: Int,
   med_map : String
-) extends StepConfig
+)
 
-object PreprocPerPatSeriesToVectorYamlProtocol extends SharedYamlProtocol {
-  implicit val preprocPerPatSeriesToVectorYamlFormat = yamlFormat6(PreprocPerPatSeriesToVectorConfig)
-}
-
-object PreprocPerPatSeriesToVector extends StepConfigConfig {
+object PreprocPerPatSeriesToVector extends StepImpl {
   val log = Logger.getLogger(getClass.getName)
 
   log.setLevel(Level.INFO)
+
   type ConfigType = PreprocPerPatSeriesToVectorConfig
 
-  val yamlFormat = PreprocPerPatSeriesToVectorYamlProtocol.preprocPerPatSeriesToVectorYamlFormat
+  import datatrans.SharedImplicits._
 
-  val configType = classOf[PreprocPerPatSeriesToVectorConfig].getName()
+  val configDecoder : Decoder[ConfigType] = deriveDecoder
 
   def map_condition(coding: Coding) : Seq[String] =
     ConditionMapper.map_condition(coding.system, coding.code)
@@ -449,7 +446,6 @@ object PreprocPerPatSeriesToVector extends StepConfigConfig {
   def step(spark: SparkSession, config: PreprocPerPatSeriesToVectorConfig): Unit = {
     // For implicit conversions like converting RDDs to DataFrames
     import spark.implicits._
-    import DefaultYamlProtocol._
 
     time {
       val hc = spark.sparkContext.hadoopConfiguration
@@ -474,25 +470,6 @@ object PreprocPerPatSeriesToVector extends StepConfigConfig {
 
   }
   
-  def main(args: Array[String]) {
-
-    val spark = SparkSession.builder().appName("datatrans preproc").getOrCreate()
-
-    spark.sparkContext.setLogLevel("WARN")
-
-    import PreprocPerPatSeriesToVectorYamlProtocol._
-
-    parseInput[PreprocPerPatSeriesToVectorConfig](args) match {
-      case Some(config) =>
-        step(spark, config)
-      case None =>
-    }
-
-
-    spark.stop()
-
-
-  }
 }
 
 object LOINC {

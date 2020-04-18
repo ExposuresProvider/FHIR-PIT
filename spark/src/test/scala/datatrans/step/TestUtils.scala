@@ -9,14 +9,27 @@ import scala.collection.mutable.ListBuffer
 import java.io.{File, FileInputStream, InputStreamReader}
 import java.nio.file.{Files, Paths, Path}
 import java.nio.file.Files
-import gnieh.diffson.circe._
+import diffson._
+import diffson.lcs._
+import diffson.circe._
+import diffson.jsonpatch._
+import diffson.jsonpatch.lcsdiff._
+
+import io.circe._
 import io.circe.parser._
 import org.joda.time._
 import org.joda.time.format._
 import org.apache.commons.csv._
 
+import cats._
+import cats.implicits._
+
+
+
 object TestUtils {
-  
+
+  implicit val lcs = new Patience[Json]
+
   def getFileTree(f: File): Stream[File] =
     if (f.isDirectory)
       f.listFiles().toStream.flatMap(getFileTree)
@@ -152,7 +165,7 @@ object TestUtils {
       if (json1 != null && json2 != null) {
         println("json1 = " + json1)
         println("json2 = " + json2)
-        val patch = JsonDiff.diff(json1, json2, true)
+        val patch = diff(json1, json2)
         println("diff = " + patch)
         assert(json1 == json2)
       } else if (csv || (output_path.endsWith(".csv") && expected_path.endsWith(".csv"))) {

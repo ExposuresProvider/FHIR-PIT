@@ -8,7 +8,8 @@ import org.apache.spark.sql._
 import org.apache.hadoop.fs._
 import org.apache.log4j.{Logger, Level}
 
-import net.jcazevedo.moultingyaml._
+import io.circe._
+import io.circe.generic.semiauto._
 import org.apache.commons.csv._
 
 import datatrans.Config._
@@ -21,22 +22,16 @@ case class SplitConfig(
   input_file : String,
   output_dir : String,
   split_index: String
-) extends StepConfig
-
-object PreprocSplitYamlProtocol extends SharedYamlProtocol {
-  implicit val preprocSplitYamlFormat = yamlFormat3(SplitConfig)
-}
+)
 
 /**
   *  split preagg into individual files for patients 
   */
-object PreprocSplit extends StepConfigConfig {
+object PreprocSplit extends StepImpl {
 
   type ConfigType = SplitConfig
 
-  val yamlFormat = PreprocSplitYamlProtocol.preprocSplitYamlFormat
-
-  val configType = classOf[SplitConfig].getName()
+  val configDecoder : Decoder[ConfigType] = deriveDecoder
 
   val log = Logger.getLogger(getClass.getName)
 

@@ -5,13 +5,13 @@ import java.util.concurrent.atomic.AtomicInteger
 import datatrans.Utils._
 import org.apache.spark.sql.{DataFrame, SparkSession, Column}
 import org.apache.spark.sql.types._
-import org.joda.time._
 
 import org.apache.spark.sql.functions._
 import org.apache.hadoop.fs._
 import org.apache.log4j.{Logger, Level}
 
-import net.jcazevedo.moultingyaml._
+import io.circe._
+import io.circe.generic.semiauto._
 
 import datatrans.environmentaldata._
 import datatrans.environmentaldata.Utils._
@@ -24,20 +24,14 @@ case class FIPSConfig(
   patgeo_data : String,
   output_file : String,
   fips_data: String
-) extends StepConfig
+)
 
-object PreprocFIPSYamlProtocol extends SharedYamlProtocol {
-  implicit val preprocFIPSYamlFormat = yamlFormat3(FIPSConfig)
-}
-
-object PreprocFIPS extends StepConfigConfig {
+object PreprocFIPS extends StepImpl {
 
   type ConfigType = FIPSConfig
 
-  val yamlFormat = PreprocFIPSYamlProtocol.preprocFIPSYamlFormat
-
-  val configType = classOf[FIPSConfig].getName()
-
+  val configDecoder : Decoder[ConfigType] = deriveDecoder
+  
   val log = Logger.getLogger(getClass.getName)
 
   log.setLevel(Level.INFO)

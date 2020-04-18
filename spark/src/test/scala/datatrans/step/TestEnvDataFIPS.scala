@@ -8,7 +8,7 @@ import java.io.File
 import java.nio.file.{Files, Paths, Path}
 import org.scalatest.Assertions._
 import java.nio.file.Files
-import gnieh.diffson.circe._
+import diffson.circe._
 import io.circe.parser._
 import TestUtils._
 import datatrans.Utils._

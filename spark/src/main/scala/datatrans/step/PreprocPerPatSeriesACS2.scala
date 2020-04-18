@@ -7,7 +7,8 @@ import org.apache.hadoop.fs.Path
 import org.apache.spark.sql.SparkSession
 import scopt._
 import org.apache.hadoop.fs.{FileStatus, FileSystem, Path, PathFilter}
-import net.jcazevedo.moultingyaml._
+import io.circe._
+import io.circe.generic.semiauto._
 import datatrans.Config._
 import datatrans.Implicits._
 import datatrans._
@@ -17,19 +18,13 @@ case class PreprocPerPatSeriesACS2Config(
                    acs_data : String = "",
                    geoid_data : String = "",
                    output_file : String = ""
-                 ) extends StepConfig
+                 )
 
-object PerPatSeriesACS2YamlProtocol extends DefaultYamlProtocol {
-  implicit val perPatSeriesACS2YamlFormat = yamlFormat4(PreprocPerPatSeriesACS2Config)
-}
-
-object PreprocPerPatSeriesACS2 extends StepConfigConfig {
+object PreprocPerPatSeriesACS2 extends StepImpl {
 
   type ConfigType = PreprocPerPatSeriesACS2Config
 
-  val yamlFormat = PerPatSeriesACS2YamlProtocol.perPatSeriesACS2YamlFormat
-
-  val configType = classOf[PreprocPerPatSeriesACS2Config].getName()
+  val configDecoder : Decoder[ConfigType] = deriveDecoder
 
   def step(spark: SparkSession, config: PreprocPerPatSeriesACS2Config) : Unit = {
 

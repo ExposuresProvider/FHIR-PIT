@@ -6,7 +6,8 @@ import org.apache.hadoop.fs.Path
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.api.java._
 import scopt._
-import net.jcazevedo.moultingyaml._
+import io.circe._
+import io.circe.generic.semiauto._
 import org.datavec.spark.transform.misc._
 import org.datavec.api.records.reader.impl.csv._
 import org.nd4j.parameterserver.distributed.conf._
@@ -35,19 +36,13 @@ case class TrainConfig(
   num_workers_per_node : Int,
   network_mask: String,
   controller_address: String
-) extends StepConfig
+)
 
-object TrainYamlProtocol extends DefaultYamlProtocol {
-  implicit val trainYamlFormat = yamlFormat12(TrainConfig)
-}
-
-object Train extends StepConfigConfig {
+object Train extends StepImpl {
 
   type ConfigType = TrainConfig
 
-  val yamlFormat = TrainYamlProtocol.trainYamlFormat
-
-  val configType = classOf[TrainConfig].getName()
+  val configDecoder : Decoder[ConfigType] = deriveDecoder
 
   def step(spark: SparkSession, config: TrainConfig): Unit = {
 
