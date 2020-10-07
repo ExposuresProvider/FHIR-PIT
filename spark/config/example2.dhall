@@ -4,10 +4,11 @@ in pipeline "report" "progress" "/var/fhir" "/var/fhir" "/share/spark/hao/data" 
   skip = {
     fhir = True,
     envDataCoordinates = True,
-    fips = True,
+    latLonToGeoid = True,
     envDataFIPS = True,
     split = True,
-    envDataAggregate = True,
+    envDataAggregateCoordinates = True,
+    envDataAggregateFIPS = True,
     acs = True,
     acs2 = True,
     nearestRoad = True,

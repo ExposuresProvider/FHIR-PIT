@@ -11,14 +11,13 @@ import org.joda.time.format.{DateTimeFormat, ISODateTimeFormat}
 import scala.collection.mutable.{ ListBuffer, MultiMap }
 import scopt._
 import scala.collection.JavaConverters._
-import squants.mass.{Kilograms, Grams, Pounds}
-import squants.space.{Centimeters, Inches}
 import com.github.plokhotnyuk.jsoniter_scala.macros._
 import com.github.plokhotnyuk.jsoniter_scala.core._
 import io.circe._
 import io.circe.generic.semiauto._
 import org.apache.log4j.{Logger, Level}
 
+import datatrans.Mapper
 import datatrans.Utils._
 import datatrans.Config._
 import datatrans.Implicits._
@@ -31,7 +30,7 @@ case class PreprocPerPatSeriesToVectorConfig(
   start_date : org.joda.time.DateTime,
   end_date : org.joda.time.DateTime,
   offset_hours: Int,
-  med_map : String
+  feature_map : String
 )
 
 object PreprocPerPatSeriesToVector extends StepImpl {
@@ -45,198 +44,8 @@ object PreprocPerPatSeriesToVector extends StepImpl {
 
   val configDecoder : Decoder[ConfigType] = deriveDecoder
 
-  def map_condition(coding: Coding) : Seq[String] =
-    ConditionMapper.map_condition(coding.system, coding.code)
-
-  def sort_by_effectiveDateTime(lab : Seq[Lab]) : Seq[Lab] =
-    lab.sortWith((a, b) => {
-      val at = DateTime.parse(a.effectiveDateTime, ISODateTimeFormat.dateTimeParser())
-      val bt = DateTime.parse(b.effectiveDateTime, ISODateTimeFormat.dateTimeParser())
-      if(at == bt && a.value != b.value) {
-        log.info("warning: two labs in one encounter has same effectiveDateTime but different values")
-      }
-      at.isBefore(bt)
-    })
-
-  def map_lab(lab : Seq[Lab]) : Seq[(String, Any)] = {
-    def filter_by_code(code : String) =
-      sort_by_effectiveDateTime(lab.filter(lab => lab.coding.exists((x) => x.code == code)))
-    val wbc = filter_by_code("6690-2") // 26464-8
-    val hct = filter_by_code("20570-8") // 24360-0
-    val plt = filter_by_code("26515-7") // 7773
-    val fev1 = filter_by_code("20150-9") // 52485-0
-    val fvc = filter_by_code("19870-5") // 52485-0
-    val fev1fvc = filter_by_code("19926-5") // 52485-0
-    val listBuf = new ListBuffer[(String, Any)]()
-
-    def extractValue(lab: Lab) = lab.value.map(x => x.asInstanceOf[ValueQuantity].valueNumber).getOrElse(null)
-    def extractFlag(lab: Lab) = lab.flag.getOrElse(null)
-    def extractColumns(lab: Seq[Lab], prefix: String) = {
-      if(!lab.isEmpty) {
-        Seq(
-          (f"${prefix}_FirstValue", extractValue(lab.head)),
-          (f"${prefix}_FirstFlag", extractFlag(lab.head)),
-          (f"${prefix}_LastValue", extractValue(lab.last)),
-          (f"${prefix}_LastFlag", extractFlag(lab.last))
-        )
-      } else {
-        Seq()
-      }
-    }
-
-    def extractColumns2(lab: Seq[Lab], prefix: String) = {
-      if(!lab.isEmpty) {
-        Seq(
-          (f"${prefix}_FirstValue", extractValue(lab.head)),
-          (f"${prefix}_LastValue", extractValue(lab.last))
-        )
-      } else {
-        Seq()
-      }
-    }
-
-    extractColumns(wbc, "WBC") ++
-    extractColumns(hct, "HCT") ++
-    extractColumns(plt, "PLT") ++
-    extractColumns(fev1fvc, "FEV1FVC") ++
-    extractColumns2(fev1, "FEV1") ++
-    extractColumns2(fvc, "FVC")
-
-  }
-
-  def map_procedure(coding : Coding) : Seq[String] = Seq() /* {
-    system match {
-      case "http://www.ama-assn.org/go/cpt/" =>
-        code match {
-          case "94010" =>
-            Seq("spirometry")
-          case "94070" =>
-            Seq("multiple spirometry")
-          case "95070" =>
-            Seq("methacholine challenge test")
-          case "94620" =>
-            Seq("simple exercise stress test")
-          case "94621" =>
-            Seq("complex exercise stress test")
-          case "31624" =>
-            Seq("bronchoscopy")
-          case "94375" =>
-            Seq("flow-volume loop")
-          case "94060" =>
-            Seq("spirometry (pre/post bronchodilator test)")
-          case "94070" =>
-            Seq("bronchospasm provocation")
-          case "95070" =>
-            Seq("inhalation bronchial challenge")
-          case "94664" =>
-            Seq("bronchodilator administration")
-          case "94620" =>
-            Seq("pulmonary stress test")
-          case "95027" =>
-            Seq("airborne allergen panel")
-          case _ =>
-            Seq()
-        }
-      case _ =>
-        Seq()
-    }
-  } */
-
-  def map_medication(medmap : Map[String, String], coding : Coding) : Option[String] =
-    medmap.get(coding.code) match {
-      case Some(ms) =>
-        val medfiltered = meds.find(med => ms.toLowerCase == med.toLowerCase)
-        // log.info("medication " + ms + " " + meds + " " + medfiltered)
-        medfiltered
-      case None =>
-        log.debug("cannot find medication name for code " + coding.code)
-        None
-    }
-
-  def map_race(race : Seq[String]) : String =
-    if(race.isEmpty) {
-      "Unknown"
-    } else {
-      race.head.trim match {
-        case "2106-3" => "Caucasian"
-        case "2054-5" => "African American"
-        case "2028-9" => "Asian"
-        case "2076-8" => "Native Hawaiian/Pacific Islander"
-        case "1002-5" => "American/Alaskan Native"
-        case _ => "Other(" + race.head + ")"
-      }
-    }
-
-  def map_ethnicity(ethnicity : Seq[String]) : String =
-    if(ethnicity.isEmpty) {
-      "Unknown"
-    } else {
-      ethnicity.head match {
-        case "2135-2" => "Hispanic"
-        case "2186-5" => "Not Hispanic"
-        case _ => "Unknown"
-      }
-    }
-
-  def map_sex(sex : String) : String =
-    sex match {
-      case "male" => "Male"
-      case "female" => "Female"
-      case _ => "Unknown"
-    }
-
-  def map_bmi(bmi : Seq[Lab]) : Option[Double] = {
-    def filter_by_code(code : String) =
-      bmi.filter(bmi => bmi.coding.exists((x) => x.code == code))
-    val bmiQuas = filter_by_code(LOINC.BMI)
-    val heightQuas = filter_by_code(LOINC.BODY_HEIGHT)
-    val weightQuas = filter_by_code(LOINC.BODY_WEIGHT)
-    bmiQuas match {
-      case Seq() =>
-        (heightQuas, weightQuas) match {
-          case (heightQ :: _ , weightQ :: _) =>
-            val heightQua = heightQ.value.asInstanceOf[ValueQuantity]
-            val weightQua = weightQ.value.asInstanceOf[ValueQuantity]
-            val heightVal = heightQua.valueNumber
-            val heightUnit = heightQua.unit
-            val weightVal = weightQua.valueNumber
-            val weightUnit = weightQua.unit
-            val height = (heightUnit match {
-              case Some("in") =>
-                Inches
-              case Some("[in_i]") =>
-                Inches
-              case Some("cm") =>
-                Centimeters
-              case _ =>
-                throw new RuntimeException("unsupported unit " + heightUnit)
-            })(heightVal) to Inches
-            val weight = (weightUnit match {
-              case Some("lbs") =>
-                Pounds
-              case Some("[lb_av]") =>
-                Pounds
-              case Some("kg") =>
-                Kilograms
-              case Some("g") =>
-                Grams
-              case _ =>
-                throw new RuntimeException("unsupported unit " + weightUnit)
-            })(weightVal) to Pounds
-            Some(weight / math.pow(height, 2) * 703)
-          case _ =>
-            None
-        }
-      case bmiQua :: _ =>
-        Some(bmiQua.value.asInstanceOf[ValueQuantity].valueNumber)
-    }
-  }
-
-  def proc_pid(config : PreprocPerPatSeriesToVectorConfig, hc : Configuration, p:String, start_date : DateTime, end_date : DateTime, medmap : Map[String, String]): Unit =
+  def proc_pid(config : PreprocPerPatSeriesToVectorConfig, hc : Configuration, p:String, start_date: DateTime, end_date: DateTime, mapper: Mapper): Unit =
     time {
-
-
-
       val input_file = f"${config.input_directory}/$p"
       val input_file_path = new Path(input_file)
       val input_file_file_system = input_file_path.getFileSystem(hc)
@@ -263,7 +72,7 @@ object PreprocPerPatSeriesToVector extends StepImpl {
           val sex = pat.gender
           val race = pat.race
           val ethnicity = pat.ethnicity
-          val demographic = Map[String, Any]("patient_num" -> pat.id, "birth_date" -> birth_date_joda.toString("yyyy-MM-dd"), "Sex" -> map_sex(sex), "Race" -> map_race(race), "Ethnicity" -> map_ethnicity(ethnicity))
+          val demographic = Map[String, Any]("patient_num" -> pat.id, "birth_date" -> birth_date_joda.toString("yyyy-MM-dd"), "Sex" -> Mapper.map_sex(sex), "Race" -> Mapper.map_race(race), "Ethnicity" -> Mapper.map_ethnicity(ethnicity))
           val intv = new Interval(start_date, end_date)
 
           val encounter_map = new scala.collection.mutable.HashMap[DateTime, scala.collection.mutable.Set[Encounter]] with MultiMap[DateTime, Encounter]
@@ -351,27 +160,34 @@ object PreprocPerPatSeriesToVector extends StepImpl {
                 val bmi = enc.bmi
 
                 med.foreach(m =>
-                  m.coding.foreach(coding => map_medication(medmap, coding).foreach(n => {
+                  m.coding.foreach(coding => Mapper.map_coding_to_feature(mapper.med_map, coding).foreach(n => {
                     rec += (n -> 1)
                   }))
                 )
-                cond.foreach(m =>
-                  m.coding.foreach(coding => map_condition(coding).foreach(n => {
-                    rec += (n -> 1)
-                  }))
-                )
-                // map_lab(lab).foreach(rec += _)
 
-                rec += ("ObesityBMIVisit" -> (map_bmi(bmi) match {
+                cond.foreach(m =>
+                  m.coding.foreach(coding => Mapper.map_coding_to_feature(mapper.cond_map, coding).foreach(n => {
+                    rec += (n -> 1)
+                  }))
+                )
+
+                lab.foreach(m =>
+                  m.coding.foreach(coding => Mapper.map_coding_to_feature(mapper.obs_map, coding).foreach(n => {
+                    rec += (n -> 1)
+                  }))
+                )
+
+                proc.foreach(m =>
+                  m.coding.foreach(coding => Mapper.map_coding_to_feature(mapper.proc_map, coding).foreach(n => {
+                    rec += (n -> 1)
+                  }))
+                )
+
+                rec += ("ObesityBMIVisit" -> (Mapper.map_bmi(bmi) match {
                   case Some(x) => x
                   case None => -1
                 }))
 
-                proc.foreach(m =>
-                  m.coding.foreach(coding => map_procedure(coding).foreach(n => {
-                    rec += (n -> 1)
-                  }))
-                )
                 recs.append(rec)
               }
 
@@ -431,18 +247,6 @@ object PreprocPerPatSeriesToVector extends StepImpl {
       }
     }
 
-  def loadMedMap(hc : Configuration, med_map : String) : Map[String, String] = {
-    val med_map_path = new Path(med_map)
-    val input_directory_file_system = med_map_path.getFileSystem(hc)
-
-    val json = Utils.parseInputStream(input_directory_file_system.open(med_map_path))
-    json.as[Map[String, String]] match {
-      case Left(error) => throw new RuntimeException(error)
-      case Right(obj) => obj
-    }
-
-  }
-
   def step(spark: SparkSession, config: PreprocPerPatSeriesToVectorConfig): Unit = {
     // For implicit conversions like converting RDDs to DataFrames
     import spark.implicits._
@@ -455,14 +259,14 @@ object PreprocPerPatSeriesToVector extends StepImpl {
       val input_directory_path = new Path(config.input_directory)
       val input_directory_file_system = input_directory_path.getFileSystem(hc)
 
-      val medmap = loadMedMap(hc, config.med_map)
+      val mapper = new Mapper(hc, config.feature_map)
 
 
       withCounter(count =>
         new HDFSCollection(hc, input_directory_path).par.foreach(f => {
           val p = f.getName
           log.info("processing " + count.incrementAndGet + " " + p)
-          proc_pid(config, hc, p, start_date_joda, end_date_joda, medmap)
+          proc_pid(config, hc, p, start_date_joda, end_date_joda, mapper)
         })
       )
 
@@ -472,9 +276,5 @@ object PreprocPerPatSeriesToVector extends StepImpl {
   
 }
 
-object LOINC {
-  val BMI = "39156-5"
-  val BODY_HEIGHT = "8302-2"
-  val BODY_WEIGHT = "29463-7"
-}
+
 

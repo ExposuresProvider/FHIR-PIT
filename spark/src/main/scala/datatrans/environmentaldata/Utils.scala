@@ -9,6 +9,7 @@ import org.joda.time.format.{ISODateTimeFormat, DateTimeFormat}
 import org.apache.spark.sql.functions._
 import org.apache.hadoop.fs._
 import org.apache.log4j.{Logger, Level}
+import datatrans.Mapper
 
 object Utils {
   val log = Logger.getLogger(getClass.getName)
@@ -22,7 +23,14 @@ object Utils {
       DateTime.parse(x, ISODateTimeFormat.dateParser()).plusDays(1).toString("yyyy-MM-dd")
   )
 
-  val yearlyStatsToCompute : Seq[(String => Column, String)] = Seq((avg, "avg"), (max, "max"), (min, "min"), (stddev, "stddev"))
+  val aggFuncs = Map[String, String => Column](
+    "avg" -> avg,
+    "max" -> max,
+    "min" -> min,
+    "stddev" -> stddev
+  )
+
+  val yearlyStatsToCompute : Seq[(String => Column, String)] = Mapper.studyPeriodMappedEnvStats.map(stat => (aggFuncs(stat), stat))
 
   def aggregateByYear(spark: SparkSession, df: DataFrame, names: Seq[String], statistics:Seq[String], additional_primary_keys : Seq[String]) = {
     import spark.implicits._

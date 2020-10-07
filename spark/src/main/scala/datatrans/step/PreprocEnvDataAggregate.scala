@@ -2,29 +2,24 @@ package datatrans.step
 
 import datatrans.GeoidFinder
 import java.util.concurrent.atomic.AtomicInteger
-import datatrans.Utils._
+import datatrans.Utils.{time, withCounter, writeDataframe}
 import org.apache.spark.sql.{DataFrame, SparkSession, Column}
-import org.apache.spark.sql.types._
 
-import org.apache.spark.sql.functions._
-import org.apache.hadoop.fs._
+import org.apache.hadoop.fs.Path
 import org.apache.log4j.{Logger, Level}
 
-import io.circe._
-import io.circe.generic.semiauto._
+import io.circe.Decoder
+import io.circe.generic.semiauto.deriveDecoder
 
-import datatrans.environmentaldata._
-import datatrans.environmentaldata.Utils._
-import datatrans.Config._
-import datatrans.Implicits._
-import datatrans._
+import datatrans.environmentaldata.Utils.aggregateByYear
+import datatrans.{StepImpl, Mapper}
 
 
 case class EnvDataAggregateConfig(
   input_dir : String,
   output_dir : String,
-  statistics : Seq[String],
-  indices : Seq[String]
+  indices: Seq[String],
+  statistics: Seq[String]
 )
 
 object PreprocEnvDataAggregate extends StepImpl {

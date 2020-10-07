@@ -8,9 +8,7 @@ import io.circe._
 import io.circe.generic.semiauto._
 
 import datatrans.environmentaldata._
-import datatrans.Config._
-import datatrans.Implicits._
-import datatrans._
+import datatrans.StepImpl
 
 
 case class EnvDataCoordinatesConfig(
@@ -19,8 +17,6 @@ case class EnvDataCoordinatesConfig(
   output_dir : String,
   start_date : DateTime,
   end_date : DateTime,
-  indices : Seq[String], // = Seq("o3", "pm25"),
-  statistics : Seq[String], // = Seq("avg", "max"),
   offset_hours : Int
 )
 

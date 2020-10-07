@@ -1,23 +1,17 @@
 package datatrans.step
 
-import java.io._
-
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
-import org.apache.spark.sql.expressions.{MutableAggregationBuffer, UserDefinedAggregateFunction}
-import org.apache.spark.sql.types._
+import org.apache.spark.sql.types.{StructType, StructField, DateType, DoubleType}
 import org.apache.spark.sql.{Column, Row, SparkSession, DataFrame}
 import org.joda.time.format.{ISODateTimeFormat, DateTimeFormat}
-import org.joda.time._
-import scopt._
-import org.apache.spark.sql.functions._
-import io.circe._
-import io.circe.generic.semiauto._
-import datatrans.Utils._
-import datatrans.ConditionMapper._
-import datatrans.Config._
-import datatrans.Implicits._
-import datatrans._
+import org.joda.time.{DateTime, DateTimeZone}
+import org.apache.spark.sql.functions.udf
+import io.circe.Decoder
+import io.circe.generic.semiauto.deriveDecoder
+import datatrans.Utils.{fileExists, readCSV2, time, withCounter, HDFSCollection, writeDataframe}
+import datatrans.StepImpl
+import datatrans.Mapper
 
 case class PreprocPerPatSeriesCSVTableConfig(
   patient_file : String = "",
@@ -44,34 +38,13 @@ object PreprocPerPatSeriesCSVTable extends StepImpl {
     def make_env_schema(names: Seq[String]) = StructType(
       StructField("start_date", DateType, true) +:
         (for(
-          generator <- Seq(
-            (i:String) => i,
-            (i:String) => i + "_avg",
-            (i:String) => i + "_max"
-          );
           name <- names
-        ) yield StructField(generator(name), DoubleType, false)).toSeq
+        ) yield StructField(name, DoubleType, false)).toSeq
     )
 
-    val env_schema = make_env_schema(Seq(
-      "o3_avg",
-      "pm25_avg",
-      "o3_max",
-      "pm25_max"
-    ))
+    val env_schema = make_env_schema(Mapper.mappedEnvOutputColumns)
 
-    val env2_schema = make_env_schema(Seq(
-      "ozone_daily_8hour_maximum",
-      "pm25_daily_average",
-      "CO_ppbv",
-      "NO_ppbv",
-      "NO2_ppbv",
-      "NOX_ppbv",
-      "SO2_ppbv",
-      "ALD2_ppbv",
-      "FORM_ppbv",
-      "BENZ_ppbv"
-    ))
+    val env2_schema = make_env_schema(Mapper.mappedEnvOutputColumns2)
 
     def join_env(hc: Configuration, pat_df: DataFrame, schema: StructType, menv_file: Option[String], cols : String) : DataFrame = {
       menv_file match {
@@ -106,13 +79,6 @@ object PreprocPerPatSeriesCSVTable extends StepImpl {
       })
 
       val df = if (config.input_files.isEmpty) None else Some(dfs.reduce(_.join(_, "patient_num")))
-
-      // df match {
-      //   case Some(df) =>
-      //     spark.sparkContext.broadcast(df)
-      //   case _ =>
-      // }
-
 
       val year = udf((date : String) => DateTime.parse(date, ISODateTimeFormat.dateParser()).year.get)
       withCounter(count =>

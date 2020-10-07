@@ -14,10 +14,10 @@ import org.joda.time._
 import scopt._
 import org.apache.spark.sql.functions._
 import datatrans.Utils._
-import datatrans.ConditionMapper._
 import datatrans.Config._
 import datatrans.Implicits._
 import datatrans._
+import datatrans.Mapper
 
 case class PreprocCSVTableConfig(
   input_dir : String = "",
@@ -25,7 +25,8 @@ case class PreprocCSVTableConfig(
   start_date : DateTime = new DateTime(0),
   end_date : DateTime = new DateTime(0),
   deidentify : Seq[String] = Seq(),
-  offset_hours : Int = 1
+  offset_hours : Int = 1,
+  feature_map : String = ""
 )
 
 object PreprocCSVTable extends StepImpl {
@@ -96,6 +97,8 @@ object PreprocCSVTable extends StepImpl {
 
     time {
       val hc = spark.sparkContext.hadoopConfiguration
+      val mapper = new Mapper(hc, config.feature_map)
+
       val timeZone = DateTimeZone.forOffsetHours(config.offset_hours)
       val start_date_joda = config.start_date.toDateTime(timeZone)
       val end_date_joda = config.end_date.toDateTime(timeZone)
@@ -178,7 +181,7 @@ object PreprocCSVTable extends StepImpl {
           }
         }
 
-        val visit = dx ++ meds
+        val visit = mapper.conds ++ mapper.meds
 
         var df_all = spark.read.format("csv").option("header", value = true).load(output_file_all)
         visit.diff(df_all.columns).foreach(col => {
@@ -207,29 +210,11 @@ object PreprocCSVTable extends StepImpl {
           df_all_visit = df_all_visit.withColumnRenamed(v,v + "Visit")
         })
 
-        for ((feature1, feature2) <- Seq(("pm25", "PM2.5"), ("o3", "Ozone")); (stat1, stat2) <- Seq(("avg", "Avg"), ("max", "Max"))) {
-          df_all_visit = df_all_visit.withColumnRenamed(feature1 + "_" + stat1, stat2 + "24h" + feature2 + "Exposure")
-          for (stat_b <- Seq("avg", "max", "min", "stddev"))
-            df_all_visit = df_all_visit.drop(feature1 + "_" + stat1 + "_" + stat_b)
-        }
+        for ((feature1, feature2) <- Mapper.visitEnvFeatureMapping)
+          df_all_visit = df_all_visit.withColumnRenamed(feature1, feature2)
 
-
-        for ((feature1, feature2) <- Seq(
-          ("pm25_daily_average_prev_date", "Avg24hPM2.5"),
-          ("ozone_daily_8hour_maximum_prev_date", "Max24hOzone"),
-          ("CO_ppbv_prev_date","Avg24hCO"),
-          ("NO_ppbv_prev_date", "Avg24hNO"),
-          ("NO2_ppbv_prev_date", "Avg24hNO2"),
-          ("NOX_ppbv_prev_date", "Avg24hNOx"),
-          ("SO2_ppbv_prev_date", "Avg24hSO2"),
-          ("ALD2_ppbv_prev_date", "Avg24hAcetaldehyde"),
-          ("FORM_ppbv_prev_date", "Avg24hFormaldehyde"),
-          ("BENZ_ppbv_prev_date", "Avg24hBenzene")
-        )) {
-          df_all_visit = df_all_visit.withColumnRenamed(feature1, feature2 + "Exposure_2")
-          for (stat_b <- Seq("avg", "max", "min", "stddev"))
-            df_all_visit = df_all_visit.drop(feature1 + "_" + stat_b)
-        }
+        for (feature <- Mapper.envFeatures)
+          df_all_visit = df_all_visit.drop(feature)
 
         df_all_visit = df_all_visit
           .withColumnRenamed("ObesityBMIVisit", "ObesityBMIVisit0")
@@ -249,55 +234,18 @@ object PreprocCSVTable extends StepImpl {
         val patient_aggs =
           (
             for (
-              (feature1, feature2) <- Seq(
-                ("pm25", "PM2.5"),
-                ("o3", "Ozone")
-              );
-              (stat1, stat2) <- Seq(
-                ("avg", "Avg"),
-                ("max", "Max")
-              );
-              (stat1_b, stat2_b) <- Seq(
-                ("avg", "Avg"),
-                ("max", "Max")
-              )
-            ) yield first(df_all.col(feature1 + "_" + stat1 + "_" + stat1_b)).alias(stat2 + "Daily" + feature2 + "Exposure_Study" + stat2_b)
-          ) ++ (
-            for (
-              (feature1, feature2) <- Seq(
-                ("pm25", "PM2.5"),
-                ("o3", "Ozone")
-              );
-              (stat1, stat2) <- Seq(
-                ("avg", "Avg"),
-                ("max", "Max")
-              )
-            ) yield first(df_all.col(feature1 + "_" + stat1 + "_" + stat1)).alias(stat2 + "Daily" + feature2 + "Exposure")
-          ) ++ (
-            for (
-              (feature1, feature2) <- Seq(
-                ("pm25_daily_average", "AvgDailyPM2.5"),
-                ("ozone_daily_8hour_maximum", "MaxDailyOzone"),
-                ("CO_ppbv","AvgDailyCO"),
-                ("NO_ppbv", "AvgDailyNO"),
-                ("NO2_ppbv", "AvgDailyNO2"),
-                ("NOX_ppbv", "AvgDailyNOx"),
-                ("SO2_ppbv", "AvgDailySO2"),
-                ("ALD2_ppbv", "AvgDailyAcetaldehyde"),
-                ("FORM_ppbv", "AvgDailyFormaldehyde"),
-                ("BENZ_ppbv", "AvgDailyBenzene")
-              )
-            ) yield first(df_all.col(feature1 + "_avg")).alias(feature2 + "Exposure_2")
+              (feature1, feature2) <- Mapper.patientEnvFeatureMapping
+            ) yield first(df_all.col(feature1)).alias(feature2)
           ) ++ Seq(
             max(df_all.col("ObesityBMIVisit")).alias("ObesityBMI"),
             new TotalTypeVisits(emerTypes)($"VisitType", $"RespiratoryDx").alias("TotalEDVisits"),
             new TotalTypeVisits(inpatientTypes)($"VisitType", $"RespiratoryDx").alias("TotalInpatientVisits"),
             (new TotalTypeVisits(emerTypes)($"VisitType", $"RespiratoryDx") + new TotalTypeVisits(inpatientTypes, emerTypes)($"VisitType", $"RespiratoryDx")).alias("TotalEDInpatientVisits")
-          ) ++ demograph.map(
+          ) ++ Mapper.demograph.map(
             v => first(df_all.col(v)).alias(v)
           ) ++ Seq(
             first("Sex2").alias("Sex2")
-          ) ++ acs.map(
+          ) ++ Mapper.acs.map(
             v => first(df_all.col(v)).alias(v)
           ) ++ visit.map(
             v => max(df_all.col(v)).alias(v)

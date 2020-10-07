@@ -42,12 +42,13 @@ sealed trait Resource {
   val id : String
   val subjectReference : String
   val contextReference : Option[String]
+  val coding: Seq[Coding]
 }
 
-case class Condition(override val id : String, override val subjectReference : String, override val contextReference : Option[String], coding: Seq[Coding], assertedDate : String) extends Resource
-case class Lab(override val id : String, override val subjectReference : String, override val contextReference : Option[String], coding : Seq[Coding], value : Option[Value], flag : Option[String], effectiveDateTime : String) extends Resource
-case class Medication(override val id : String, override val subjectReference : String, override val contextReference : Option[String], coding : Seq[Coding], authoredOn : Option[String], start: String, end: Option[String]) extends Resource
-case class Procedure(override val id : String, override val subjectReference : String, override val contextReference : Option[String], coding : Seq[Coding], performedDateTime : String) extends Resource
+case class Condition(override val id : String, override val subjectReference : String, override val contextReference : Option[String], override val coding: Seq[Coding], assertedDate : String) extends Resource
+case class Lab(override val id : String, override val subjectReference : String, override val contextReference : Option[String], override val coding : Seq[Coding], value : Option[Value], flag : Option[String], effectiveDateTime : String) extends Resource
+case class Medication(override val id : String, override val subjectReference : String, override val contextReference : Option[String], override val coding : Seq[Coding], authoredOn : Option[String], start: String, end: Option[String]) extends Resource
+case class Procedure(override val id : String, override val subjectReference : String, override val contextReference : Option[String], override val coding : Seq[Coding], performedDateTime : String) extends Resource
 
 case class Coding(system: String, code: String, display: Option[String])
 

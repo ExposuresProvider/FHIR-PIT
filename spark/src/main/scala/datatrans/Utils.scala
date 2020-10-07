@@ -10,8 +10,8 @@ import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.functions._
 import io.circe._
-import io.circe.parser._
-import geotrellis.proj4._
+import io.circe.yaml.parser.{parse}
+import geotrellis.proj4.{CRS, Transform, LatLng}
 import org.apache.commons.lang.StringEscapeUtils
 import org.joda.time.DateTime
 import org.joda.time.format.{DateTimeFormatter, ISODateTimeFormat}
@@ -584,79 +584,17 @@ class Cache[K,V <: AnyRef](fun : K => V) {
     MessageDigest.getInstance("MD5").digest(s.getBytes)
   }
 
-  val meds = Seq(
-    "Prednisone",
-    "Fluticasone",
-    "Mometasone",
-    "Budesonide",
-    "Beclomethasone",
-    "Ciclesonide",
-    "Flunisolide",
-    "Albuterol",
-    "Metaproterenol",
-    "Diphenhydramine",
-    "Fexofenadine",
-    "Cetirizine",
-    "Ipratropium",
-    "Salmeterol",
-    "Arformoterol",
-    "Formoterol",
-    "Indacaterol",
-    "Theophylline",
-    "Omalizumab",
-    "Mepolizumab",
-    "Sertraline",
-    "Citalopram",
-    "Fluoxetine",
-    "Paroxetine",
-    "Trazodone",
-    "Escitalopram",
-    "Duloxetine",
-    "Venlafaxine",
-    "Propranolol",
-    "Hydroxyzine",
-    "Estradiol",
-    "Estropipate",
-    "Estrogen",
-    "Progesterone",
-    "Medroxyprogresterone",
-    "Testosterone",
-    "Androstenedione",
-    "Nandrolone",
-    "Prasterone",
-    "Leuprolide",
-    "Goserelin",
-    "Triptorelin",
-    "Histrelin",
-    "Tamoxifen"
-  )
-
-
-  val acs = Seq(
-    "EstResidentialDensity",
-    "EstResidentialDensity25Plus",
-    "EstProbabilityNonHispWhite",
-    "EstProbabilityHouseholdNonHispWhite",
-    "EstProbabilityHighSchoolMaxEducation",
-    "EstProbabilityNoAuto",
-    "EstProbabilityNoHealthIns",
-    "EstProbabilityESL",
-    "EstHouseholdIncome",
-    "MajorRoadwayHighwayExposure",
-    "RoadwayDistanceExposure",
-    "RoadwayType",
-    "RoadwayAADT",
-    "RoadwaySpeedLimit",
-    "RoadwayLanes",
-    "ur")
-
-  val demograph = Seq(
-    "birth_date",
-    "Sex",
-    "Race",
-    "Ethnicity")
 
   def parseInputStream(input_file_input_stream : InputStream) : Json = {
+    val str = scala.io.Source.fromInputStream(input_file_input_stream, "utf-8").mkString
+
+    io.circe.parser.parse(str) match {
+      case Left(error) => throw new RuntimeException(error)
+      case Right(obj) => obj
+    }
+  }
+
+  def parseInputStreamYaml(input_file_input_stream : InputStream) : Json = {
     val str = scala.io.Source.fromInputStream(input_file_input_stream, "utf-8").mkString
 
     parse(str) match {

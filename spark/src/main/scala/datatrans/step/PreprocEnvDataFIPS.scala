@@ -2,23 +2,20 @@ package datatrans.step
 
 import datatrans.GeoidFinder
 import java.util.concurrent.atomic.AtomicInteger
-import datatrans.Utils._
+import datatrans.Utils.{time, readCSV, writeDataframe}
 import org.apache.spark.sql.{DataFrame, SparkSession, Column}
-import org.apache.spark.sql.types._
-import org.joda.time._
+import org.apache.spark.sql.types.{StructType, StructField, StringType, DoubleType}
+import org.joda.time.{DateTime, DateTimeZone}
 
-import org.apache.spark.sql.functions._
-import org.apache.hadoop.fs._
+import org.apache.spark.sql.functions.{lit, to_date, year, broadcast}
+import org.apache.hadoop.fs.Path
 import org.apache.log4j.{Logger, Level}
 
-import io.circe._
-import io.circe.generic.semiauto._
+import io.circe.Decoder
+import io.circe.generic.semiauto.deriveDecoder
 
-import datatrans.environmentaldata._
-import datatrans.environmentaldata.Utils._
-import datatrans.Config._
-import datatrans.Implicits._
-import datatrans._
+import datatrans.StepImpl
+import datatrans.Mapper
 
 
 case class EnvDataFIPSConfig(
@@ -27,7 +24,6 @@ case class EnvDataFIPSConfig(
   start_date : DateTime,
   end_date : DateTime,
   fips_data: String,
-  indices : Seq[String], // = Seq("ozone_daily_8hour_maximum", "pm25_daily_average")
   offset_hours : Int
 )
 
@@ -85,7 +81,7 @@ object PreprocEnvDataFIPS extends StepImpl {
   def loadFIPSDataFrame(spark: SparkSession, config: EnvDataFIPSConfig, years: Seq[Int]) : Option[DataFrame] = {
     val dfs2 = years.flatMap(year => {
       val filename = f"${config.environmental_data}/merged_cmaq_$year.csv"
-      loadEnvDataFrame(spark, filename, config.indices, FIPSSchema)
+      loadEnvDataFrame(spark, filename, Mapper.envInputColumns2, FIPSSchema)
     })
     if(dfs2.nonEmpty) {
       val df2 = dfs2.reduce((a, b) => union(a, b))
@@ -115,8 +111,6 @@ object PreprocEnvDataFIPS extends StepImpl {
       val start_date_local = config.start_date.toDateTime(timeZone)
       val end_date_local = config.end_date.toDateTime(timeZone).minusDays(1)
       val yearseq = start_date_local.year.get to end_date_local.year.get
-
-      val indices = config.indices
 
       log.info("loading env data")
       loadFIPSDataFrame(spark, config, yearseq) match {

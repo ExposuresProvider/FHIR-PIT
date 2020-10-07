@@ -2,16 +2,16 @@ package datatrans.environmentaldata
 
 import datatrans.GeoidFinder
 import java.util.concurrent.atomic.AtomicInteger
-import datatrans.Utils._
+import datatrans.Utils.{time, withCounter, writeDataframe, readCSV, latlon2rowcol}
 import org.apache.spark.sql.{DataFrame, SparkSession, Column, Row}
-import org.apache.spark.sql.types._
-import org.joda.time._
+import org.apache.spark.sql.types.{StructType, StructField, DateType, DoubleType}
+import org.joda.time.DateTimeZone
 import datatrans.step.EnvDataCoordinatesConfig
 
-import org.apache.spark.sql.functions._
-import org.apache.hadoop.fs._
+import org.apache.spark.sql.functions.year
+import org.apache.hadoop.fs.Path
 import org.apache.log4j.{Logger, Level}
-import datatrans.environmentaldata.Utils._
+import datatrans.Mapper
 
 class EnvDataSource(spark: SparkSession, config: EnvDataCoordinatesConfig) {
   val log = Logger.getLogger(getClass.getName)
@@ -40,11 +40,11 @@ class EnvDataSource(spark: SparkSession, config: EnvDataCoordinatesConfig) {
   }
     
 
-  def loadRowColDataFrame(coors: Seq[(Int, (Int, Int))]) : DataFrame = {
+  def generateOutputDataFrame(coors: Seq[(Int, (Int, Int))]) : DataFrame = {
     val dfs = coors.flatMap {
       case (year, (row, col)) =>
         val filename = f"${config.environmental_data}/cmaq$year/C$col%03dR$row%03dDaily.csv"
-        loadEnvDataFrame(filename, config.indices, envSchema)
+        loadEnvDataFrame(filename, Mapper.envInputColumns, envSchema)
     }
     if (dfs.nonEmpty) {
       dfs.reduce((a, b) => a.unionByName(b))
@@ -52,14 +52,6 @@ class EnvDataSource(spark: SparkSession, config: EnvDataCoordinatesConfig) {
       log.error(f"input env df is not available ${coors}")
       spark.createDataFrame(spark.sparkContext.emptyRDD[Row], envSchema)
     }
-  }
-
-  def stats(names2 : Seq[String]) = names2 ++ (for (i <- config.statistics; j <- names2) yield f"${j}_$i") ++ (for (j <- names2) yield f"${j}_prev_date")
-
-  def generateOutputDataFrame(coors: Seq[(Int, (Int, Int))]) = {
-    val df = loadRowColDataFrame(coors)
-    val dfyear = aggregateByYear(spark, df, config.indices, config.statistics, Seq())
-    dfyear.select("start_date", ("year" +: stats(config.indices)): _*)
   }
 
   def run(): Unit = {

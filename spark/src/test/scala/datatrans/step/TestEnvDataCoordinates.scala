@@ -26,8 +26,6 @@ class EnvDataCoordinatesSpec extends FlatSpec {
       output_dir = s"${tempDir.toString()}",
       start_date = stringToDateTime("2010-01-01T00:00:00Z"),
       end_date = stringToDateTime("2011-01-01T00:00:00Z"),
-      indices = Seq(),
-      statistics = Seq("max", "min", "avg", "stddev"),
       offset_hours = 0
     )
 

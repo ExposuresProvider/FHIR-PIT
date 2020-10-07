@@ -2,33 +2,26 @@ package datatrans.step
 
 import datatrans.GeoidFinder
 import java.util.concurrent.atomic.AtomicInteger
-import datatrans.Utils._
+import datatrans.Utils.{time, writeDataframe}
 import org.apache.spark.sql.{DataFrame, SparkSession, Column}
-import org.apache.spark.sql.types._
 
-import org.apache.spark.sql.functions._
-import org.apache.hadoop.fs._
 import org.apache.log4j.{Logger, Level}
 
-import io.circe._
-import io.circe.generic.semiauto._
+import io.circe.Decoder
+import io.circe.generic.semiauto.deriveDecoder
 
-import datatrans.environmentaldata._
-import datatrans.environmentaldata.Utils._
-import datatrans.Config._
-import datatrans.Implicits._
-import datatrans._
+import datatrans.StepImpl
 
 
-case class FIPSConfig(
+case class LatLonToGeoidConfig(
   patgeo_data : String,
   output_file : String,
   fips_data: String
 )
 
-object PreprocFIPS extends StepImpl {
+object PreprocLatLonToGeoid extends StepImpl {
 
-  type ConfigType = FIPSConfig
+  type ConfigType = LatLonToGeoidConfig
 
   val configDecoder : Decoder[ConfigType] = deriveDecoder
   
@@ -36,7 +29,7 @@ object PreprocFIPS extends StepImpl {
 
   log.setLevel(Level.INFO)
 
-  def step(spark: SparkSession, config: FIPSConfig) = {
+  def step(spark: SparkSession, config: LatLonToGeoidConfig) = {
     time {
       import spark.implicits._
 

@@ -12,6 +12,7 @@ import diffson.circe._
 import io.circe.parser._
 import TestUtils._
 import datatrans.Utils._
+import datatrans.Mapper
 
 class EnvDataFIPSSpec extends FlatSpec {
   
@@ -84,33 +85,18 @@ class EnvDataFIPSSpec extends FlatSpec {
     "lon" -> toDouble
   )
 
-  val indices = Seq(
-        "ozone_daily_8hour_maximum",
-        "pm25_daily_average",
-	"CO_ppbv",
-	"NO_ppbv",
-	"NO2_ppbv",
-	"NOX_ppbv",
-	"SO2_ppbv",
-	"ALD2_ppbv",
-	"FORM_ppbv",
-	"BENZ_ppbv"
-  )
-
-  val statistics = Seq("max", "min", "avg", "stddev")
-
   def test(inp: String, outp: String) : Unit = {
     val tempDir = Files.createTempDirectory("env")
     val tempDir2 = Files.createTempDirectory("env2")
     val tempDir3 = Files.createTempDirectory("env3")
 
-    val config0 = FIPSConfig(
+    val config0 = LatLonToGeoidConfig(
       patgeo_data = "src/test/data/fhir_processed/2010/geo.csv",
       output_file = s"${tempDir.toString()}/geoids.csv",
       fips_data = "src/test/data/other/spatial/env/env.shp"
     )
 
-    PreprocFIPS.step(spark, config0)
+    PreprocLatLonToGeoid.step(spark, config0)
 
     val config = EnvDataFIPSConfig(
       environmental_data = f"src/test/data/other/$inp",
@@ -118,7 +104,6 @@ class EnvDataFIPSSpec extends FlatSpec {
       start_date = stringToDateTime("2009-01-01T00:00:00Z"),
       end_date = stringToDateTime("2011-01-01T00:00:00Z"),
       fips_data = s"${tempDir.toString()}/geoids.csv",
-      indices = indices,
       offset_hours = 0
     )
 
@@ -135,8 +120,8 @@ class EnvDataFIPSSpec extends FlatSpec {
     val config2 = EnvDataAggregateConfig(
       input_dir=s"${tempDir2.toString()}",
       output_dir = s"${tempDir3.toString()}",
-      statistics = statistics,
-      indices = indices
+      indices = Mapper.envInputColumns2,
+      statistics = Mapper.studyPeriodMappedEnvStats
     )
 
     PreprocEnvDataAggregate.step(spark, config2)

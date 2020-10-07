@@ -25,6 +25,32 @@ import cats._
 import cats.implicits._
 
 
+object Tabulator {
+  def format(table: Seq[Seq[Any]]) = table match {
+    case Seq() => ""
+    case _ => 
+      val sizes = for (row <- table) yield (for (cell <- row) yield if (cell == null) 0 else cell.toString.length)
+      val colSizes = for (col <- sizes.transpose) yield col.max
+      val rows = for (row <- table) yield formatRow(row, colSizes)
+      formatRows(rowSeparator(colSizes), rows)
+  }
+
+  def formatRows(rowSeparator: String, rows: Seq[String]): String = (
+    rowSeparator :: 
+    rows.head :: 
+    rowSeparator :: 
+    rows.tail.toList ::: 
+    rowSeparator :: 
+    List()).mkString("\n")
+
+  def formatRow(row: Seq[Any], colSizes: Seq[Int]) = {
+    val cells = (for ((item, size) <- row.zip(colSizes)) yield if (size == 0) "" else ("%" + size + "s").format(item))
+    cells.mkString("|", "|", "|")
+  }
+
+  def rowSeparator(colSizes: Seq[Int]) = colSizes map { "-" * _ } mkString("+", "+", "+")
+}
+
 
 object TestUtils {
 
@@ -53,22 +79,24 @@ object TestUtils {
     }
   }
 
-  def readCSV(f : String, csv_schema : Map[String, String => Any]) : Seq[Map[String, Any]] = {
+  def readCSV(f : String, csv_schema : Map[String, String => Any]) : (Seq[String], Seq[Map[String, Any]]) = {
     val csvParser = new CSVParser(
       new InputStreamReader(new FileInputStream(f), "UTF-8"), CSVFormat.DEFAULT.withFirstRecordAsHeader())
 
-    csvParser.getRecords().toSeq.map((x : CSVRecord) =>
+    (csvParser.getHeaderNames(), csvParser.getRecords().toSeq.map((x : CSVRecord) =>
       x.toMap().toMap.map{
         case (k, v) => csv_schema.get(k) match {
           case None => k -> v
           case Some(func) => k -> func(v)
         }
       }
-    )
+    ))
   }
 
-  def showCSV(csv : Seq[Map[String, Any]]): String =
-    csv.foldLeft("")((a, b) => f"$a\n$b")
+  def showCSV(headers: Seq[String], csv : Seq[Map[String, Any]]): String = {
+    val table = headers +: csv.map(row => headers.map(row))
+    Tabulator.format(table)
+  }
 
   def toMap[A](a: Seq[A]) : Map[A, Integer] =
     a.foldLeft(Map[A, Integer]())((b: Map[A, Integer], c: A) =>  b + (c -> ((b.getOrElse(c, 0) : Integer) + 1)))
@@ -76,12 +104,15 @@ object TestUtils {
   def compareCSV(output_path : String, expected_path : String, csv_schema : Map[String, String => Any]) : Unit = {
     val txt1 = readFile(output_path)
     val txt2 = readFile(expected_path)
-    val csv1 = readCSV(output_path, csv_schema)
-    val csv2 = readCSV(expected_path, csv_schema)
-    println("csv1 = " + showCSV(csv1))
-    println("csv2 = " + showCSV(csv2))
-    println("txt1 = " + txt1)
-    println("txt2 = " + txt2)
+    val (headers1raw, csv1) = readCSV(output_path, csv_schema)
+    val (headers2raw, csv2) = readCSV(expected_path, csv_schema)
+    val headersCommon = headers1raw.intersect(headers2raw)
+    val headers1 = headersCommon ++ (headers1raw.diff(headersCommon))
+    val headers2 = headersCommon ++ (headers2raw.diff(headersCommon))
+    println("csv1 =\n" + showCSV(headers1, csv1))
+    println("csv2 =\n" + showCSV(headers2, csv2))
+    println("txt1 =\n" + txt1)
+    println("txt2 =\n" + txt2)
     def diff[A](a : Set[A], b : Set[A]) =
       (a diff b, b diff a)
 
