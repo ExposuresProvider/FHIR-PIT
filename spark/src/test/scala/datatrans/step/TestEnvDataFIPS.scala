@@ -11,7 +11,9 @@ import java.nio.file.Files
 import diffson.circe._
 import io.circe.parser._
 import TestUtils._
-import datatrans.Utils._
+import datatrans.Utils.{stringToDateTime}
+import org.joda.time.DateTime
+import org.joda.time.format.DateTimeFormat
 import datatrans.Mapper
 
 class EnvDataFIPSSpec extends FlatSpec {
@@ -82,13 +84,95 @@ class EnvDataFIPSSpec extends FlatSpec {
     "FORM_ppbv_prev_date" -> toDouble,
     "BENZ_ppbv_prev_date" -> toDouble,
     "lat" -> toDouble,
-    "lon" -> toDouble
+    "lon" -> toDouble,
+    "Latitude" -> toDouble,
+    "Longitude" -> toDouble
   )
 
   def test(inp: String, outp: String) : Unit = {
     val tempDir = Files.createTempDirectory("env")
     val tempDir2 = Files.createTempDirectory("env2")
     val tempDir3 = Files.createTempDirectory("env3")
+    val tempDirExpected = Files.createTempDirectory("envExpected")
+    val tempDir2Exepcted = Files.createTempDirectory("env2Expected")
+    val tempDir3Expected = Files.createTempDirectory("env3Expected")
+
+    val cols = Seq(
+      "ozone_daily_8hour_maximum" ,
+      "pm25_daily_average" ,
+      "CO_ppbv" ,
+      "NO_ppbv" ,
+      "NO2_ppbv" ,
+      "NOX_ppbv" ,
+      "SO2_ppbv" ,
+      "ALD2_ppbv" ,
+      "FORM_ppbv" ,
+      "BENZ_ppbv"
+    )
+
+    val (cols2009, raw2009) = readCSV(f"src/test/data/other/$inp/merged_cmaq_2009.csv", m)
+    val (cols2010, raw2010) = readCSV(f"src/test/data/other/$inp/merged_cmaq_2010.csv", m)
+
+    val rawCols = (cols2009.toSet | cols2010.toSet).toSeq
+
+    val raw = (raw2009 ++ raw2010).filter(_("FIPS") == "0")
+
+    val dateTimeFormatter = DateTimeFormat.forPattern("yyyy/MM/dd")
+    val dateTimeFormatterOutput = DateTimeFormat.forPattern("yyyy-MM-dd")
+
+    val patient_num = "0"
+    val lat = 0
+    val lon = 0
+    val FIPS = "0"
+
+    def parseDate(r: Map[String, Any]): DateTime = dateTimeFormatter.parseDateTime(r("Date").asInstanceOf[String])
+
+    def aggRaw(table: Seq[Map[String, Any]]): Seq[Seq[Option[Any]]] = {
+
+      val tableSorted = table.sortWith((a, b) => parseDate(a).isBefore(parseDate(b)))
+      val daily = tableSorted.map(r => Some(dateTimeFormatterOutput.print(parseDate(r))) +: cols.map(col => r.get(col)))
+
+      val groupsByYear = tableSorted.groupBy(r => parseDate(r).year)
+
+      val yearly = groupsByYear.map({
+        case (year, tableSortedYear) =>
+          cols.map(col => {
+            val colVals = tableSortedYear.map(_.get(col).flatMap {
+              case s : String =>
+                if(s == "")
+                  None
+                else
+                  Some(s.toDouble)
+              case s : Double =>
+                Some(s)
+              case s => throw new RuntimeException(f"unsupported type $s")
+            })
+            val colValsSome = colVals.flatten
+            val colMax = Seq.fill(tableSortedYear.length)(if(colValsSome.isEmpty) None else Some(colValsSome.max))
+            val colAvg = Seq.fill(tableSortedYear.length)(if(colValsSome.isEmpty) None else Some(colValsSome.sum / colValsSome.length))
+            Seq(colMax, colAvg)
+          }).transpose.flatten.transpose
+      }).flatten
+
+      val colPrev = Seq.fill(cols.length)(None) +: tableSorted.map(r => cols.map(col => r.get(col))).take(tableSorted.length - 1)
+
+      (daily, yearly, colPrev).zipped.map(_ ++ _ ++ _)
+    }
+
+    writeCSV(tempDirExpected.resolve("geoids.csv").toString(), Seq("patient_num","lat","lon","FIPS"), Seq(Seq(patient_num,lat,lon,FIPS)))
+
+    val headers = Seq("patient_num", "start_date") ++ rawCols
+
+    val preagg = raw.map(r => Seq(patient_num, dateTimeFormatterOutput.print(parseDate(r))) ++ rawCols.map(col => r.get(col)))
+    
+    writeCSV(tempDirExpected.resolve("preagg").toString(), headers, preagg)
+
+    writeCSV(tempDir2Exepcted.resolve("0").toString(), headers, preagg)
+
+    val headers3 = Seq("start_date") ++ cols ++ cols.map(_ + "_max") ++ cols.map(_ + "_avg") ++ cols.map(_ + "_prev_date")
+
+    val agg = aggRaw(raw2009 ++ raw2010)
+    writeCSV(tempDir3Expected.resolve("0").toString(), headers3, agg)
 
     val config0 = LatLonToGeoidConfig(
       patgeo_data = "src/test/data/fhir_processed/2010/geo.csv",
@@ -127,13 +211,16 @@ class EnvDataFIPSSpec extends FlatSpec {
     PreprocEnvDataAggregate.step(spark, config2)
 
 
-    compareFileTree(f"src/test/data/other_processed/$outp/fips", tempDir.toString(), true, m)
-    compareFileTree(f"src/test/data/other_processed/$outp/split", tempDir2.toString(), true, m)
-    compareFileTree(f"src/test/data/other_processed/$outp/aggregate", tempDir3.toString(), true, m)
+    compareFileTree(tempDir.toString(), tempDirExpected.toString(), true, m)
+    compareFileTree(tempDir2.toString(), tempDir2Exepcted.toString(), true, m)
+    compareFileTree(tempDir3.toString(), tempDir3Expected.toString(), true, m)
 
     deleteRecursively(tempDir)
     deleteRecursively(tempDir2)
     deleteRecursively(tempDir3)
+    deleteRecursively(tempDirExpected)
+    deleteRecursively(tempDir2Exepcted)
+    deleteRecursively(tempDir3Expected)
   }
 
   "EnvDataFIPS" should "handle all columns" in {

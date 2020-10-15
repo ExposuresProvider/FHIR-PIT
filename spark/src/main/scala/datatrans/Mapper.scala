@@ -121,21 +121,18 @@ object Mapper {
 
   }
 
-  def match_str(pattern: String, str: String): Boolean = 
-    if (str.contains("*")) {
+  def match_str(pattern: String, str: String): Boolean =
+    if (pattern.contains("*")) {
       pattern.r.pattern.matcher(str).matches()
     } else {
       pattern == str
     }
 
-  def map_coding_to_feature(medmap : Map[Coding, String], coding : Coding) : Option[String] = {
-    for ((coding_pattern, feature_name) <- medmap) {
-      if (match_str(coding_pattern.code, coding.code) && match_str(coding_pattern.system, coding.system)) {
-        Some(feature_name)
-      }
-    }
-    None
-  }
+  def map_coding_to_feature(medmap : CodingToFeatureMap, coding : Coding) : Option[String] = 
+    medmap.view.filter {
+      case (coding_pattern, feature_name) =>
+        match_str(coding_pattern.code, coding.code) && match_str(coding_pattern.system, coding.system)
+    }.headOption.map (_._2)
 
   def map_race(race : Seq[String]) : String =
     if(race.isEmpty) {
@@ -240,15 +237,13 @@ object Mapper {
     "Race",
     "Ethnicity")
 
-
   object LOINC {
     val BMI = "39156-5"
     val BODY_HEIGHT = "8302-2"
     val BODY_WEIGHT = "29463-7"
   }
 
-
-  val envInputColumns = Seq("pm25", "o3")
+  val envInputColumns1 = Seq("pm25", "o3")
 
   val envInputColumns2 = Seq(
     "pm25_daily_average",
@@ -267,8 +262,8 @@ object Mapper {
 
   val studyPeriodMappedEnvStats = Seq("avg", "max")
 
-  val mappedRawEnvColumns = (for(
-    ftr <- envInputColumns;
+  val mappedRawEnvColumns1 = (for(
+    ftr <- envInputColumns1;
     stat <- mappedEnvStats
   ) yield f"${ftr}_${stat}")
 
@@ -279,11 +274,13 @@ object Mapper {
     stat <- Seq("", "_prev_date", "_avg", "_max")
   ) yield f"${mappedRawEnvColumn}${stat}"
 
-  val mappedEnvOutputColumns = getEnvOutputColumns(mappedRawEnvColumns)
+  val mappedEnvOutputColumns1 = getEnvOutputColumns(mappedRawEnvColumns1)
 
   val mappedEnvOutputColumns2 = getEnvOutputColumns(mappedRawEnvColumns2)
 
-  val envFeatures = Seq("PM2.5", "Ozone")
+  val mappedEnvOutputColumns = mappedEnvOutputColumns1 ++ mappedEnvOutputColumns2
+
+  val envFeatures1 = Seq("PM2.5", "Ozone")
 
   val envFeatures2 = Seq(
     ("Avg", "PM2.5"),
@@ -300,19 +297,19 @@ object Mapper {
 
 
   val visitEnvFeatureMapping = (for(
-    (ftr, icees_ftr) <- envInputColumns zip envFeatures;
+    (ftr, icees_ftr) <- envInputColumns1 zip envFeatures1;
     (stat, icees_stat) <- mappedEnvStats zip Seq("Avg", "Max")
   ) yield (f"${ftr}_${stat}_prev_date", f"${icees_stat}24h${icees_ftr}Exposure")) ++ (for(
     (ftr, (icees_stat, icees_ftr)) <- envInputColumns2 zip envFeatures2
-  ) yield (f"${ftr}_prev_date", f"${icees_stat}24h{icees_ftr}Exposure_2"))
+  ) yield (f"${ftr}_prev_date", f"${icees_stat}24h${icees_ftr}Exposure_2"))
 
   val patientEnvFeatureMapping = (for(
-    (ftr, icees_ftr) <- envInputColumns zip envFeatures;
+    (ftr, icees_ftr) <- envInputColumns1 zip envFeatures1;
     (stat, icees_stat) <- mappedEnvStats zip Seq("Avg", "Max");
     (stat_b, study_period_icees_stat) <- Seq("", "_avg", "_max") zip Seq("", "_StudyAvg", "_StudyMax")
-  ) yield (f"${ftr}_${stat_b}${study_period_icees_stat}", f"${icees_stat}Daily${icees_ftr}Exposure${study_period_icees_stat}")) ++ (for(
+  ) yield (f"${ftr}_${stat}${stat_b}", f"${icees_stat}Daily${icees_ftr}Exposure${study_period_icees_stat}")) ++ (for(
     (ftr, (icees_stat, icees_ftr)) <- envInputColumns2 zip envFeatures2
-  ) yield (f"${ftr}_avg", f"${icees_stat}Daily{icees_ftr}Exposure_2"))
+  ) yield (f"${ftr}_avg", f"${icees_stat}Daily${icees_ftr}Exposure_2"))
 
 }
 
@@ -320,11 +317,11 @@ class Mapper(hc : Configuration, feature_map_input_path : String) {
 
   import Mapper.{CodingToFeatureMap, loadFeatureMap}
 
-  val (cond_map, med_map, obs_map, proc_map) : (CodingToFeatureMap, CodingToFeatureMap, CodingToFeatureMap, CodingToFeatureMap) = loadFeatureMap(hc, feature_map_input_path)
+  val (cond_map, obs_map, med_map, proc_map) : (CodingToFeatureMap, CodingToFeatureMap, CodingToFeatureMap, CodingToFeatureMap) = loadFeatureMap(hc, feature_map_input_path)
 
-  val meds = med_map.values.toSeq
-  val conds = cond_map.values.toSeq
-  val labs = obs_map.values.toSeq
-  val procs = obs_map.values.toSeq
+  val meds = med_map.values.toSet
+  val conds = cond_map.values.toSet
+  val labs = obs_map.values.toSet
+  val procs = obs_map.values.toSet
 
 }

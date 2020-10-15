@@ -724,7 +724,7 @@ Diphenhydramine:
     system: http://www.nlm.nih.gov/research/umls/rxnorm 
   - code: '1310483'
     system: http://www.nlm.nih.gov/research/umls/rxnorm 
-'Duloxetine ':
+Duloxetine:
   MedicationRequest:
   - code: '476250'
     system: http://www.nlm.nih.gov/research/umls/rxnorm 
@@ -1624,151 +1624,151 @@ Venlafaxine:
   MedicationRequest:
   - code: '39786'
     system: http://www.nlm.nih.gov/research/umls/rxnorm 
-Asthma:
+AsthmaDx:
   Condition:
     - system: http://hl7.org/fhir/sid/icd-9-cm
       code: "(493[.]).*"
     - system: http://hl7.org/fhir/sid/icd-10-cm
       code: "(J45[.]).*"
-Croup:
+CroupDx:
   Condition:
     - system: http://hl7.org/fhir/sid/icd-9-cm
       code: "(464[.]).*"
     - system: http://hl7.org/fhir/sid/icd-10-cm
       code: "(J05[.]).*"
-ReactiveAirway:
+ReactiveAirwayDx:
   Condition:
     - system: http://hl7.org/fhir/sid/icd-9-cm
       code: "(496[.]).*"
     - system: http://hl7.org/fhir/sid/icd-10-cm
       code: "(J44[.]|J66[.]).*"
-Cough:
+CoughDx:
   Condition:
     - system: http://hl7.org/fhir/sid/icd-9-cm
       code: "(786[.]).*"
     - system: http://hl7.org/fhir/sid/icd-10-cm
       code: "(R05[.]).*"
-Pneumonia:
+PneumoniaDx:
   Condition:
     - system: http://hl7.org/fhir/sid/icd-9-cm
       code: "(48[1-6][.]).*"
     - system: http://hl7.org/fhir/sid/icd-10-cm
       code: "(J1[2-8].).*"
-Obesity:
+ObesityDx:
   Condition:
     - system: http://hl7.org/fhir/sid/icd-9-cm
       code: "(278[.]).*"
     - system: http://hl7.org/fhir/sid/icd-10-cm
       code: "(E66.[^3]).*"
-UterineCancer:
+UterineCancerDx:
   Condition:
     - system: http://hl7.org/fhir/sid/icd-9-cm
       code: "(179|182)[.].*"
     - system: http://hl7.org/fhir/sid/icd-10-cm
       code: "(C55)[.].*"
-CervicalCancer:
+CervicalCancerDx:
   Condition:
     - system: http://hl7.org/fhir/sid/icd-9-cm
       code: "(180)[.].*"
     - system: http://hl7.org/fhir/sid/icd-10-cm
       code: "(C53)[.].*"
-OvarianCancer:
+OvarianCancerDx:
   Condition:
     - system: http://hl7.org/fhir/sid/icd-9-cm
       code: "(183)[.].*"
     - system: http://hl7.org/fhir/sid/icd-10-cm
       code: "(C56)[.].*"
-ProstateCancer:
+ProstateCancerDx:
   Condition:
     - system: http://hl7.org/fhir/sid/icd-9-cm
       code: "(185)[.].*"
     - system: http://hl7.org/fhir/sid/icd-10-cm
       code: "(C61)[.].*"
-TesticularCancer:
+TesticularCancerDx:
   Condition:
     - system: http://hl7.org/fhir/sid/icd-9-cm
       code: "(186)[.].*"
     - system: http://hl7.org/fhir/sid/icd-10-cm
       code: "(C62)[.].*"
-KidneyCancer:
+KidneyCancerDx:
   Condition:
     - system: http://hl7.org/fhir/sid/icd-9-cm
       code: "(189)[.].*"
     - system: http://hl7.org/fhir/sid/icd-10-cm
       code: "(C64)[.].*"
-Endometriosis:
+EndometriosisDx:
   Condition:
     - system: http://hl7.org/fhir/sid/icd-9-cm
       code: "(617)[.].*"
     - system: http://hl7.org/fhir/sid/icd-10-cm
       code: "(N80)[.].*"
-OvarianDysfunction:
+OvarianDysfunctionDx:
   Condition:
     - system: http://hl7.org/fhir/sid/icd-9-cm
       code: "(256)[.].*"
     - system: http://hl7.org/fhir/sid/icd-10-cm
       code: "(E28)[.].*"
-TesticularDysfunction:
+TesticularDysfunctionDx:
   Condition:
     - system: http://hl7.org/fhir/sid/icd-9-cm
       code: "(257)[.].*"
     - system: http://hl7.org/fhir/sid/icd-10-cm
       code: "(E29)[.].*"
-Pregnancy:
+PregnancyDx:
   Condition:
     - system: http://hl7.org/fhir/sid/icd-9-cm
       code: "(V22)[.].*"
     - system: http://hl7.org/fhir/sid/icd-10-cm
       code: "(Z34)[.].*"
-Menopause:
+MenopauseDx:
   Condition:
     - system: http://hl7.org/fhir/sid/icd-9-cm
       code: "(627)[.].*"
     - system: http://hl7.org/fhir/sid/icd-10-cm
       code: "(N95)[.].*"
-Diabetes:
+DiabetesDx:
   Condition:
     - system: http://hl7.org/fhir/sid/icd-9-cm
       code: "(249|250)[.].*"
     - system: http://hl7.org/fhir/sid/icd-10-cm
       code: "(E08|E09|E10|E11|E13)[.].*"
-Alopecia:
+AlopeciaDx:
   Condition:
     - system: http://hl7.org/fhir/sid/icd-9-cm
       code: "(704)[.].*"
     - system: http://hl7.org/fhir/sid/icd-10-cm
       code: "(L63|L64)[.].*"
-Fibromyalgia:
+FibromyalgiaDx:
   Condition:
     - system: http://hl7.org/fhir/sid/icd-9-cm
       code: "(729)[.].*"
     - system: http://hl7.org/fhir/sid/icd-10-cm
       code: "(M79)[.].*"
-AlcoholDependence:
+AlcoholDependenceDx:
   Condition:
     - system: http://hl7.org/fhir/sid/icd-9-cm
       code: "(303)[.].*"
     - system: http://hl7.org/fhir/sid/icd-10-cm
       code: "(F10)[.].*"
-DrugDependence:
+DrugDependenceDx:
   Condition:
     - system: http://hl7.org/fhir/sid/icd-9-cm
       code: "(304)[.].*"
     - system: http://hl7.org/fhir/sid/icd-10-cm
       code: "(F11|F12|F13|F14|F15|F16|F17|F18|F19)[.].*"
-Depression:
+DepressionDx:
   Condition:
     - system: http://hl7.org/fhir/sid/icd-9-cm
       code: "(311)[.].*"
     - system: http://hl7.org/fhir/sid/icd-10-cm
       code: "(F32|F33)[.].*"
-Anxiety:
+AnxietyDx:
   Condition:
     - system: http://hl7.org/fhir/sid/icd-9-cm
       code: "(300)[.].*"
     - system: http://hl7.org/fhir/sid/icd-10-cm
       code: -> "(F40|F41)[.].*"
-Autism:
+AutismDx:
   Condition:
     - system: http://hl7.org/fhir/sid/icd-9-cm
       code: "(299)[.].*"

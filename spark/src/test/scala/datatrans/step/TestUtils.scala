@@ -3,10 +3,9 @@ package datatrans.step
 import org.scalatest._
 import Matchers._
 import datatrans.step.PreprocFHIRResourceType._
-import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
-import java.io.{File, FileInputStream, InputStreamReader}
+import java.io.{File, FileInputStream, InputStreamReader, OutputStreamWriter, FileOutputStream}
 import java.nio.file.{Files, Paths, Path}
 import java.nio.file.Files
 import diffson._
@@ -83,14 +82,40 @@ object TestUtils {
     val csvParser = new CSVParser(
       new InputStreamReader(new FileInputStream(f), "UTF-8"), CSVFormat.DEFAULT.withFirstRecordAsHeader())
 
-    (csvParser.getHeaderNames(), csvParser.getRecords().toSeq.map((x : CSVRecord) =>
-      x.toMap().toMap.map{
-        case (k, v) => csv_schema.get(k) match {
-          case None => k -> v
-          case Some(func) => k -> func(v)
+    try {
+
+      (csvParser.getHeaderNames().asScala, csvParser.getRecords().asScala.toSeq.map((x : CSVRecord) =>
+        x.toMap().asScala.toMap.map{
+          case (k, v) => csv_schema.get(k) match {
+            case None => k -> v
+            case Some(func) => k -> func(v)
+          }
         }
+      ))
+    } finally {
+
+      csvParser.close()
+    }
+  }
+
+  def writeCSV(f : String, headers: Seq[String], table: Seq[Seq[Any]]) : Unit = {
+    val csvPrinter = new CSVPrinter(
+      new OutputStreamWriter(new FileOutputStream(f), "UTF-8"), CSVFormat.DEFAULT.withRecordSeparator("\n"))
+    try {
+      println(headers)
+      csvPrinter.printRecord(headers.asJava)
+      for(r <- table) {
+        val rNoneToEmptyString = r.map(_ match {
+          case None => ""
+          case Some(s) => s
+          case t => t
+        })
+        println(rNoneToEmptyString)
+        csvPrinter.printRecord(rNoneToEmptyString.asJava)
       }
-    ))
+    } finally {
+      csvPrinter.close()
+    }
   }
 
   def showCSV(headers: Seq[String], csv : Seq[Map[String, Any]]): String = {
@@ -118,7 +143,7 @@ object TestUtils {
 
     val n = Math.min(csv1.size, csv2.size)
     val csv2remaining = new ListBuffer[Map[String,Any]]()
-    csv2remaining.addAll(csv2)
+    csv2remaining ++= csv2
     for(i <- 0 until n) {
       val a = csv1(i).toSet
       val closest = csv2remaining.minBy(bm => {
@@ -175,7 +200,7 @@ object TestUtils {
     sb.toString()
   }
 
-  def compareFileTree(src: String, tgt: String, csv: Boolean = false, csv_schema : Map[String, String => Any] = Map()) = {
+  def compareFileTree(tgt: String, src: String, csv: Boolean = false, csv_schema : Map[String, String => Any] = Map()) = {
     val sb = new StringBuilder()
     printDirectoryTree(new File(tgt), 0, sb)
     println(s"output directory: ${sb.toString()}")

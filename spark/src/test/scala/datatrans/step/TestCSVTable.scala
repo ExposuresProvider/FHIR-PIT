@@ -45,7 +45,8 @@ class CSVTableSpec extends FlatSpec {
       start_date = stringToDateTime("2010-01-01T00:00:00Z"),
       end_date = stringToDateTime("2011-01-01T00:00:00Z"),
       deidentify = Seq[String](),
-      offset_hours = 0
+      offset_hours = 0,
+      feature_map = "config/icees_features.yaml"
     )
 
     PreprocCSVTable.step(spark, config2)
@@ -65,9 +66,9 @@ class CSVTableSpec extends FlatSpec {
       "Max24hOzoneExposure_2" -> toDouble,
       "NO2_ppbv_avg" -> toDouble
     )
-    compareFileTree("src/test/data/icees", tempDir.toString(), true, typemap)
+    compareFileTree(tempDir.toString(), "src/test/data/icees", true, typemap)
 
-    compareFileTree("src/test/data/icees2", tempDir2.toString(), true, typemap)
+    compareFileTree(tempDir2.toString(), "src/test/data/icees2", true, typemap)
 
     deleteRecursively(tempDir)
     deleteRecursively(tempDir2)

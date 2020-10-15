@@ -20,13 +20,13 @@ import datatrans._
 import datatrans.Mapper
 
 case class PreprocCSVTableConfig(
-  input_dir : String = "",
-  output_dir : String = "",
-  start_date : DateTime = new DateTime(0),
-  end_date : DateTime = new DateTime(0),
-  deidentify : Seq[String] = Seq(),
-  offset_hours : Int = 1,
-  feature_map : String = ""
+  input_dir : String,
+  output_dir : String,
+  start_date : DateTime,
+  end_date : DateTime,
+  deidentify : Seq[String],
+  offset_hours : Int,
+  feature_map : String
 )
 
 object PreprocCSVTable extends StepImpl {
@@ -181,10 +181,10 @@ object PreprocCSVTable extends StepImpl {
           }
         }
 
-        val visit = mapper.conds ++ mapper.meds
+        val visit = mapper.conds | mapper.meds
 
         var df_all = spark.read.format("csv").option("header", value = true).load(output_file_all)
-        visit.diff(df_all.columns).foreach(col => {
+        (visit -- df_all.columns.toSet).foreach(col => {
           df_all = df_all.withColumn(col, lit(0))
         })
 
@@ -210,10 +210,14 @@ object PreprocCSVTable extends StepImpl {
           df_all_visit = df_all_visit.withColumnRenamed(v,v + "Visit")
         })
 
+        val df_all_visit_column_set = df_all_visit.columns.toSet
         for ((feature1, feature2) <- Mapper.visitEnvFeatureMapping)
-          df_all_visit = df_all_visit.withColumnRenamed(feature1, feature2)
+          if(df_all_visit_column_set.contains(feature1))
+            df_all_visit = df_all_visit.withColumnRenamed(feature1, feature2)
+          else
+            df_all_visit = df_all_visit.withColumn(feature2, lit(""))
 
-        for (feature <- Mapper.envFeatures)
+        for (feature <- Mapper.mappedEnvOutputColumns)
           df_all_visit = df_all_visit.drop(feature)
 
         df_all_visit = df_all_visit
