@@ -44,7 +44,7 @@ let FhirConfig : Type = {
     yearEnd: Natural
 }
 
-in λ(report : Text) → λ(progress : Text) → λ(basedirinput : Text) → λ(basedir : Text) → λ(basediroutput : Text) → λ(fhirConfig : FhirConfig) → λ(skipList : List YearConfig) →
+in λ(report : Text) → λ(progress : Text) → λ(configdir : Text) → λ(basedirinput : Text) → λ(basedir : Text) → λ(basediroutput : Text) → λ(fhirConfig : FhirConfig) → λ(skipList : List YearConfig) →
 
 let GenericStep : Type → Type = λ(a : Type) → {
     name : Text,
@@ -111,7 +111,9 @@ let PerPatSeriesACSStep : Type = GenericStep {
     time_series : Text,
     acs_data : Text,
     geoid_data : Text,
-    output_file : Text
+    output_file : Text,
+    feature_map : Text,
+    features : Text
 }
 
 let PerPatSeriesNearestRoadStep : Type = GenericStep {
@@ -199,7 +201,7 @@ let toVectorStep = λ(skip : Bool) → Step.ToVector {
       start_date = start_year 2010,
       end_date = end_year 2016,
       offset_hours = -5,
-      feature_map = "${basedir}/other/medical/icees_features.yaml"
+      feature_map = "${configdir}/icees_features.yaml"
     }
   }
 }
@@ -343,7 +345,9 @@ let acsStep = λ(skip : Bool) → Step.ACS {
       time_series = patgeo,
       acs_data = "${basedirinput}/other/spatial/acs/ACS_NC_2016_with_column_headers.csv",
       geoid_data = "${basedirinput}/other/spatial/acs/tl_2016_37_bg_lcc.shp",
-      output_file = acs
+      output_file = acs,
+      features = "acs",
+      feature_map = "${configdir}/icees_features.yaml"
     }
   }
 }
@@ -355,12 +359,14 @@ let acs2Step = λ(skip : Bool) → Step.ACS {
   ],
   skip = skip,
   step = {
-    function = "datatrans.step.PreprocPerPatSeriesACS2Config",
+    function = "datatrans.step.PreprocPerPatSeriesACSConfig",
     arguments = {
       time_series = patgeo,
       acs_data = "${basedirinput}/other/spatial/acs/Appold_trans_geo_cross_02.10.10 - trans_geo_cross.csv",
       geoid_data = "${basedirinput}/other/spatial/acs/tl_2016_37_bg_lcc.shp",
-      output_file = acs2
+      output_file = acs2,
+      features = "acs2",
+      feature_map = "${configdir}/icees_features.yaml"
     }
   }                                                                                                                                    }
 

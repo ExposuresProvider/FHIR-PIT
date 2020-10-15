@@ -16,50 +16,55 @@ object Mapper {
 
   log.setLevel(Level.INFO)
 
-  case class FeatureMapping(Condition: Option[Seq[Coding]], Observation: Option[Seq[Coding]], MedicationRequest: Option[Seq[Coding]], Procedure: Option[Seq[Coding]])
+  case class FHIRFeatureMapping(Condition: Option[Seq[Coding]], Observation: Option[Seq[Coding]], MedicationRequest: Option[Seq[Coding]], Procedure: Option[Seq[Coding]])
+
+  case class GEOIDMapping(GEOID: String, columns: Map[String, String])
+
+  case class FeatureMapping(FHIR: Option[Map[String, FHIRFeatureMapping]], GEOID: Option[Map[String, GEOIDMapping]])
 
   type CodingToFeatureMap = Map[Coding, String]
 
-  def loadFeatureMap(hc : Configuration, feature_map_input_path : String) : (CodingToFeatureMap, CodingToFeatureMap, CodingToFeatureMap, CodingToFeatureMap) = {
+  def loadFeatureMap(hc : Configuration, feature_map_input_path : String) : (CodingToFeatureMap, CodingToFeatureMap, CodingToFeatureMap, CodingToFeatureMap, Map[String, GEOIDMapping]) = {
     val med_map_path = new Path(feature_map_input_path)
     val input_directory_file_system = med_map_path.getFileSystem(hc)
 
     val json = Utils.parseInputStreamYaml(input_directory_file_system.open(med_map_path))
-    json.as[Map[String, FeatureMapping]] match {
+    json.as[FeatureMapping] match {
       case Left(error) => throw new RuntimeException(error)
-      case Right(obj) => {
+      case Right(obj) =>
         val cond_map = scala.collection.mutable.Map[Coding, String]()
         val med_map = scala.collection.mutable.Map[Coding, String]()
         val obs_map = scala.collection.mutable.Map[Coding, String]()
         val proc_map = scala.collection.mutable.Map[Coding, String]()
-        for((feature_name, feature_mapping) <- obj) {
-          for(
-            condlist <- feature_mapping.Condition.toSeq;
-            coding <- condlist
-          ) {
-            cond_map(coding) = feature_name
+        obj.FHIR.foreach(obj =>
+          for((feature_name, feature_mapping) <- obj) {
+            for(
+              condlist <- feature_mapping.Condition.toSeq;
+              coding <- condlist
+            ) {
+              cond_map(coding) = feature_name
+            }
+            for(
+              medlist <- feature_mapping.MedicationRequest.toSeq;
+              coding <- medlist
+            ) {
+              med_map(coding) = feature_name
+            }
+            for(
+              obslist <- feature_mapping.Observation.toSeq;
+              coding <- obslist
+            ) {
+              obs_map(coding) = feature_name
+            }
+            for(
+              proclist <- feature_mapping.Procedure.toSeq;
+              coding <- proclist
+            ) {
+              proc_map(coding) = feature_name
+            }
           }
-          for(
-            medlist <- feature_mapping.MedicationRequest.toSeq;
-            coding <- medlist
-          ) {
-            med_map(coding) = feature_name
-          }
-          for(
-            obslist <- feature_mapping.Observation.toSeq;
-            coding <- obslist
-          ) {
-            obs_map(coding) = feature_name
-          }
-          for(
-            proclist <- feature_mapping.Procedure.toSeq;
-            coding <- proclist
-          ) {
-            proc_map(coding) = feature_name
-          }
-        }
-        return (cond_map.toMap, obs_map.toMap, med_map.toMap, proc_map.toMap)
-      }
+        )
+        (cond_map.toMap, obs_map.toMap, med_map.toMap, proc_map.toMap, obj.GEOID.getOrElse(Map()))
     }
   }
 
@@ -213,23 +218,6 @@ object Mapper {
     }
   }
 
-  val acs : Seq[(String, String)]  = Seq(
-    ("EstPropPersons5PlusNoEnglish", "EstProbabilityESL"),
-    ("median_HH_inc", "EstHouseholdIncome"),
-    ("nHwtindiv", "EstProbabilityNonHispWhite"),
-    ("prp_HSminus", "EstProbabilityHighSchoolMaxEducation"),
-    ("prp_nHwHHs", "EstProbabilityHouseholdNonHispWhite"),
-    ("prp_no_auto", "EstProbabilityNoAuto"),
-    ("prp_not_insured", "EstProbabilityNoHealthIns"),
-    ("total_pop2016", "EstResidentialDensity"),
-    ("total_25plus", "EstResidentialDensity25Plus")
-  )
-
-
-  val acs2 : Seq[(String, String)] = Seq(
-    ("ur", "ur")
-  )
-
   val nearestRoad = Seq(
     "MajorRoadwayHighwayExposure"
   )
@@ -326,9 +314,9 @@ object Mapper {
 
 class Mapper(hc : Configuration, feature_map_input_path : String) {
 
-  import Mapper.{CodingToFeatureMap, loadFeatureMap}
+  import Mapper.{CodingToFeatureMap, GEOIDMapping, loadFeatureMap}
 
-  val (cond_map, obs_map, med_map, proc_map) : (CodingToFeatureMap, CodingToFeatureMap, CodingToFeatureMap, CodingToFeatureMap) = loadFeatureMap(hc, feature_map_input_path)
+  val (cond_map, obs_map, med_map, proc_map, geoid_map_map) : (CodingToFeatureMap, CodingToFeatureMap, CodingToFeatureMap, CodingToFeatureMap, Map[String, GEOIDMapping]) = loadFeatureMap(hc, feature_map_input_path)
 
   val meds = med_map.values.toSet
   val conds = cond_map.values.toSet

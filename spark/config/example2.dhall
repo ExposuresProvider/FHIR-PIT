@@ -1,6 +1,6 @@
 let pipeline = ./pipeline2.dhall
 
-in pipeline "report" "progress" "/var/fhir" "/var/fhir" "/share/spark/hao/data" {
+in pipeline "report" "progress" "/share/spark/hao/datatrans/spark/config" "/var/fhir" "/var/fhir" "/share/spark/hao/data" {
   skip = {
     fhir = True,
     envDataCoordinates = True,

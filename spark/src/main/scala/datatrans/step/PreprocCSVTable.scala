@@ -245,13 +245,9 @@ object PreprocCSVTable extends StepImpl {
             new TotalTypeVisits(emerTypes)($"VisitType", $"RespiratoryDx").alias("TotalEDVisits"),
             new TotalTypeVisits(inpatientTypes)($"VisitType", $"RespiratoryDx").alias("TotalInpatientVisits"),
             (new TotalTypeVisits(emerTypes)($"VisitType", $"RespiratoryDx") + new TotalTypeVisits(inpatientTypes, emerTypes)($"VisitType", $"RespiratoryDx")).alias("TotalEDInpatientVisits")
-          ) ++ (Mapper.demograph ++ Mapper.nearestRoad ++ Mapper.nearestRoad2).map(
+          ) ++ (("Sex2" +: Mapper.demograph) ++ Mapper.nearestRoad ++ Mapper.nearestRoad2 ++ mapper.geoid_map_map.values.flatMap(_.columns.values)).map(
             v => first(df_all.col(v)).alias(v)
-          ) ++ Seq(
-            first("Sex2").alias("Sex2")
-          ) ++ (Mapper.acs ++ Mapper.acs2).map {
-            case (_, v) => first(df_all.col(v)).alias(v)
-          } ++ visit.map(
+          ) ++ visit.map(
             v => max(df_all.col(v)).alias(v)
           )
 
