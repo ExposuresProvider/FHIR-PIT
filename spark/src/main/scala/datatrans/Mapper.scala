@@ -213,7 +213,7 @@ object Mapper {
     }
   }
 
-  val acs = Seq(
+  val acs : Seq[(String, String)]  = Seq(
     ("EstPropPersons5PlusNoEnglish", "EstProbabilityESL"),
     ("median_HH_inc", "EstHouseholdIncome"),
     ("nHwtindiv", "EstProbabilityNonHispWhite"),
@@ -226,9 +226,9 @@ object Mapper {
   )
 
 
-  val acs2 = Seq(
+  val acs2 : Seq[(String, String)] = Seq(
     ("ur", "ur")
-  }
+  )
 
   val nearestRoad = Seq(
     "MajorRoadwayHighwayExposure"
@@ -239,7 +239,7 @@ object Mapper {
     "RoadwayType",
     "RoadwayAADT",
     "RoadwaySpeedLimit",
-    "RoadwayLanes",
+    "RoadwayLanes"
   )
 
   val demograph = Seq(

@@ -245,13 +245,13 @@ object PreprocCSVTable extends StepImpl {
             new TotalTypeVisits(emerTypes)($"VisitType", $"RespiratoryDx").alias("TotalEDVisits"),
             new TotalTypeVisits(inpatientTypes)($"VisitType", $"RespiratoryDx").alias("TotalInpatientVisits"),
             (new TotalTypeVisits(emerTypes)($"VisitType", $"RespiratoryDx") + new TotalTypeVisits(inpatientTypes, emerTypes)($"VisitType", $"RespiratoryDx")).alias("TotalEDInpatientVisits")
-          ) ++ Mapper.demograph.map(
+          ) ++ (Mapper.demograph ++ Mapper.nearestRoad ++ Mapper.nearestRoad2).map(
             v => first(df_all.col(v)).alias(v)
           ) ++ Seq(
             first("Sex2").alias("Sex2")
-          ) ++ Mapper.acs.map(
-            v => first(df_all.col(v)).alias(v)
-          ) ++ visit.map(
+          ) ++ (Mapper.acs ++ Mapper.acs2).map {
+            case (_, v) => first(df_all.col(v)).alias(v)
+          } ++ visit.map(
             v => max(df_all.col(v)).alias(v)
           )
 
