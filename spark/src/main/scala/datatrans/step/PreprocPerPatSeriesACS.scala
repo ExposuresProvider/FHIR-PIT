@@ -50,16 +50,9 @@ object PreprocPerPatSeriesACS extends StepImpl {
 
         val acs_df = spark.read.format("csv").option("header", value = true).load(config.acs_data)
 
-        val table = df.join(acs_df, "GEOID")
-          .withColumnRenamed("EstPropPersons5PlusNoEnglish", "EstProbabilityESL")
-          .withColumnRenamed("median_HH_inc", "EstHouseholdIncome")
-          .withColumnRenamed("nHwtindiv", "EstProbabilityNonHispWhite")
-          .withColumnRenamed("prp_HSminus", "EstProbabilityHighSchoolMaxEducation")
-          .withColumnRenamed("prp_nHwHHs", "EstProbabilityHouseholdNonHispWhite")
-          .withColumnRenamed("prp_no_auto", "EstProbabilityNoAuto")
-          .withColumnRenamed("prp_not_insured", "EstProbabilityNoHealthIns")
-          .withColumnRenamed("total_pop2016", "EstResidentialDensity")
-          .withColumnRenamed("total_25plus", "EstResidentialDensity25Plus")
+        val table = Mapper.acs.foldLeft(df.join(acs_df, "GEOID")) {
+          case (df, (oldcolumnname, newcolumnname)) => df.withColumnRenamed(oldcolumnname, newcolumnname)
+        }
 
         writeDataframe(hc, config.output_file, table)
       }

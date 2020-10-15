@@ -214,22 +214,33 @@ object Mapper {
   }
 
   val acs = Seq(
-    "EstResidentialDensity",
-    "EstResidentialDensity25Plus",
-    "EstProbabilityNonHispWhite",
-    "EstProbabilityHouseholdNonHispWhite",
-    "EstProbabilityHighSchoolMaxEducation",
-    "EstProbabilityNoAuto",
-    "EstProbabilityNoHealthIns",
-    "EstProbabilityESL",
-    "EstHouseholdIncome",
-    "MajorRoadwayHighwayExposure",
+    ("EstPropPersons5PlusNoEnglish", "EstProbabilityESL"),
+    ("median_HH_inc", "EstHouseholdIncome"),
+    ("nHwtindiv", "EstProbabilityNonHispWhite"),
+    ("prp_HSminus", "EstProbabilityHighSchoolMaxEducation"),
+    ("prp_nHwHHs", "EstProbabilityHouseholdNonHispWhite"),
+    ("prp_no_auto", "EstProbabilityNoAuto"),
+    ("prp_not_insured", "EstProbabilityNoHealthIns"),
+    ("total_pop2016", "EstResidentialDensity"),
+    ("total_25plus", "EstResidentialDensity25Plus")
+  )
+
+
+  val acs2 = Seq(
+    ("ur", "ur")
+  }
+
+  val nearestRoad = Seq(
+    "MajorRoadwayHighwayExposure"
+  )
+
+  val nearestRoad2 = Seq(
     "RoadwayDistanceExposure",
     "RoadwayType",
     "RoadwayAADT",
     "RoadwaySpeedLimit",
     "RoadwayLanes",
-    "ur")
+  )
 
   val demograph = Seq(
     "birth_date",

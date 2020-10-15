@@ -50,7 +50,9 @@ object PreprocPerPatSeriesACS2 extends StepImpl {
 
         val acs_df = spark.read.format("csv").option("header", value = true).load(config.acs_data).select("geoid", "ur")
 
-        val table = df.join(acs_df, "geoid").drop("geoid")
+        val table = Mapper.acs2.foldLeft(df.join(acs_df, "geoid")) {
+          case (df, (oldcolumnname, newcolumnname)) => df.withColumnRenamed(oldcolumnname, newcolumnname)
+        }.drop("geoid")
 
         writeDataframe(hc, config.output_file, table)
       }
