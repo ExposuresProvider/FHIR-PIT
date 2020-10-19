@@ -18,7 +18,7 @@ in pipeline "report" "progress" "/share/spark/hao/datatrans/spark/config" "/var/
   },
   skip_preproc = [] : List Text,
   yearStart = 2010,
-  yearEnd = 2016
+  yearEnd = 2019
 } [{
   year = 2010,
   skip = {
@@ -51,6 +51,21 @@ in pipeline "report" "progress" "/share/spark/hao/datatrans/spark/config" "/var/
   }
 }, {
   year = 2016,
+  skip = {
+    csvTable = True
+  }
+}, {
+  year = 2017,
+  skip = {
+    csvTable = True
+  }
+}, {
+  year = 2018,
+  skip = {
+    csvTable = True
+  }
+}, {
+  year = 2019,
   skip = {
     csvTable = True
   }

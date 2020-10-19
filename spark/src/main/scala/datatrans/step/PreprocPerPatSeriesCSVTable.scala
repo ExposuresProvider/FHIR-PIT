@@ -71,14 +71,14 @@ object PreprocPerPatSeriesCSVTable extends StepImpl {
       val start_date_joda = config.start_date.toDateTime(timeZone)
       val end_date_joda = config.end_date.toDateTime(timeZone)
 
-      val years = start_date_joda.year.get until end_date_joda.year.get
+      val years = start_date_joda.year.get to end_date_joda.minusSeconds(1).year.get
 
 
       val dfs = config.input_files.map(input_file => {
         spark.read.format("csv").option("header", value = true).load(input_file)
       })
 
-      val df = if (config.input_files.isEmpty) None else Some(dfs.reduce(_.join(_, "patient_num")))
+      val df = if (config.input_files.isEmpty) None else Some(dfs.reduce(_.join(_, Seq("patient_num"), "left")))
 
       val year = udf((date : String) => DateTime.parse(date, ISODateTimeFormat.dateParser()).year.get)
       withCounter(count =>

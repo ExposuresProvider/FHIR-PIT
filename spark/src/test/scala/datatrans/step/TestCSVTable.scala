@@ -42,8 +42,6 @@ class CSVTableSpec extends FlatSpec {
     val config2 = PreprocCSVTableConfig(
       input_dir = f"${tempDir.toString()}/2010",
       output_dir = f"${tempDir2.toString()}/2010",
-      start_date = stringToDateTime("2010-01-01T00:00:00Z"),
-      end_date = stringToDateTime("2011-01-01T00:00:00Z"),
       deidentify = Seq[String](),
       offset_hours = 0,
       feature_map = "config/icees_features.yaml"
@@ -75,5 +73,60 @@ class CSVTableSpec extends FlatSpec {
 
   }
 
+  "EnvData" should "handle inactive years" in {
+    val tempDir = Files.createTempDirectory("icees")
+    val tempDir2 = Files.createTempDirectory("icees2")
+
+    val config = PreprocPerPatSeriesCSVTableConfig(
+      patient_file = "src/test/data/vector/PatVec",
+      environment_file = None,
+      environment2_file = Some("src/test/data/other_processed/env2/aggregate"),
+      input_files = Seq[String](
+        "src/test/data/other_processed/2010/acs.csv",
+        "src/test/data/other_processed/2010/acs2.csv",
+        "src/test/data/other_processed/2010/nearestroad.csv",
+        "src/test/data/other_processed/2010/nearestroad2.csv"
+      ),
+      output_dir = f"${tempDir.toString()}",
+      start_date = stringToDateTime("2009-01-01T00:00:00Z"),
+      end_date = stringToDateTime("2011-01-01T00:00:00Z"),
+      offset_hours = 0
+    )
+
+    PreprocPerPatSeriesCSVTable.step(spark, config)
+
+    val config2 = PreprocCSVTableConfig(
+      input_dir = f"${tempDir.toString()}/2009",
+      output_dir = f"${tempDir2.toString()}/2009",
+      deidentify = Seq[String](),
+      offset_hours = 0,
+      feature_map = "config/icees_features.yaml"
+    )
+
+    PreprocCSVTable.step(spark, config2)
+
+    val toDouble = (x : String) => if (x == "") null else x.toDouble
+    val typemap = Map(
+      "ozone_daily_8hour_maximum" -> toDouble,
+      "pm25_daily_average" -> toDouble,
+      "ozone_daily_8hour_maximum_max" -> toDouble,
+      "pm25_daily_average_max" -> toDouble,
+      "ozone_daily_8hour_maximum_avg" -> toDouble,
+      "pm25_daily_average_avg" -> toDouble,
+      "ozone_daily_8hour_maximum_min" -> toDouble,
+      "pm25_daily_average_min" -> toDouble,
+      "ozone_daily_8hour_maximum_stddev" -> toDouble,
+      "pm25_daily_average_stddev" -> toDouble,
+      "Max24hOzoneExposure_2" -> toDouble,
+      "NO2_ppbv_avg" -> toDouble
+    )
+    compareFileTree(tempDir.resolve("2009").toString(), "src/test/data/icees_inactive/2009", true, typemap)
+
+    compareFileTree(tempDir2.resolve("2009").toString(), "src/test/data/icees2_inactive/2009", true, typemap)
+
+    deleteRecursively(tempDir)
+    deleteRecursively(tempDir2)
+
+  }
 
 }

@@ -129,6 +129,8 @@ object TestUtils {
   def compareCSV(output_path : String, expected_path : String, csv_schema : Map[String, String => Any]) : Unit = {
     val txt1 = readFile(output_path)
     val txt2 = readFile(expected_path)
+    println("txt1 =\n" + txt1)
+    println("txt2 =\n" + txt2)
     val (headers1raw, csv1) = readCSV(output_path, csv_schema)
     val (headers2raw, csv2) = readCSV(expected_path, csv_schema)
     val headersCommon = headers1raw.intersect(headers2raw)
@@ -136,8 +138,6 @@ object TestUtils {
     val headers2 = headersCommon ++ (headers2raw.diff(headersCommon))
     println("csv1 =\n" + showCSV(headers1, csv1))
     println("csv2 =\n" + showCSV(headers2, csv2))
-    println("txt1 =\n" + txt1)
-    println("txt2 =\n" + txt2)
     def diff[A](a : Set[A], b : Set[A]) =
       (a diff b, b diff a)
 

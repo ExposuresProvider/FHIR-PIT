@@ -22,8 +22,6 @@ import datatrans.Mapper
 case class PreprocCSVTableConfig(
   input_dir : String,
   output_dir : String,
-  start_date : DateTime,
-  end_date : DateTime,
   deidentify : Seq[String],
   offset_hours : Int,
   feature_map : String
@@ -100,10 +98,6 @@ object PreprocCSVTable extends StepImpl {
       val mapper = new Mapper(hc, config.feature_map)
 
       val timeZone = DateTimeZone.forOffsetHours(config.offset_hours)
-      val start_date_joda = config.start_date.toDateTime(timeZone)
-      val end_date_joda = config.end_date.toDateTime(timeZone)
-
-      val year = start_date_joda.year.get
 
       // df match {
       //   case Some(df) =>
@@ -254,11 +248,18 @@ object PreprocCSVTable extends StepImpl {
         val df_all2 = df_all
           .withColumn("RespiratoryDx", $"AsthmaDx".cast(IntegerType) === 1 || $"CroupDx".cast(IntegerType) === 1 || $"ReactiveAirwayDx".cast(IntegerType) === 1 || $"CoughDx".cast(IntegerType) === 1 || $"PneumoniaDx".cast(IntegerType) === 1)
           .groupBy("patient_num", "year").agg(patient_aggs.head, patient_aggs.tail:_*)
+
+        val df_active_in_year = df_all_visit.select("patient_num", "year").distinct().withColumn("Active_In_Year0", lit(1))
+
         var df_all_patient = df_all2
           .withColumn("AgeStudyStart", ageYear($"birth_date", $"year"))
           .withColumnRenamed("ObesityBMI", "ObesityBMI0")
           .withColumn("ObesityBMI", procObesityBMI($"ObesityBMI0"))
           .drop("ObesityBMI0")
+          .join(broadcast(df_active_in_year), Seq("patient_num", "year"), "left")
+          .withColumn("Active_In_Year", when($"Active_In_Year0".isNull, 0).otherwise($"Active_In_Year0"))
+          .drop("Active_In_Year0")
+
         val deidentify2 = df_all_patient.columns.intersect(config.deidentify)
         df_all_patient = df_all_patient.drop(deidentify2 : _*)
         df_all_patient = df_all_patient.filter($"AgeStudyStart" < 90)
