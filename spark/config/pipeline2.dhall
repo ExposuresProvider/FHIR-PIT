@@ -104,7 +104,9 @@ let SplitStep : Type = GenericStep {
 
 let EnvDataAggregateStep : Type = GenericStep {
     input_dir: Text,
-    output_dir: Text
+    output_dir: Text,
+    indices: List Text,
+    statistics: List Text
 }
 
 let PerPatSeriesACSStep : Type = GenericStep {
@@ -137,8 +139,6 @@ let PerPatSeriesCSVTableStep : Type = GenericStep {
 let csvTableStep : Type = GenericStep {
     input_dir : Text,
     output_dir : Text,
-    start_date : Text,
-    end_date : Text,
     deidentify : List Text,
     offset_hours : Integer,
     feature_map: Text
@@ -296,7 +296,7 @@ let indices2 = [
     "BENZ_ppbv"
 ]
 
-statistics = ["avg", "max"]
+let statistics = ["avg", "max"]
 
 
 let envDataAggregateCoordinatesStep = λ(skip : Bool) → Step.EnvDataAggregate {
