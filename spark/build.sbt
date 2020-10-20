@@ -5,7 +5,7 @@ version := "1.0"
 scalaVersion := "2.11.12"
 
 resolvers ++= Seq(
-  "Open Source Geospatial Foundation Repository" at "http://download.osgeo.org/webdav/geotools/",
+  "Open Source Geospatial Foundation Repository" at "https://repo.osgeo.org/repository/release/",
   "Java.net repository" at "http://download.java.net/maven/2"
 )
 
@@ -24,7 +24,7 @@ libraryDependencies += "org.geotools" % "gt-epsg-hsql" % "19.0"
 libraryDependencies += "org.geotools" % "gt-epsg-hsql" % "19.0" % Test
 libraryDependencies += "com.vividsolutions" % "jts" % "1.13"
 libraryDependencies += "junit" % "junit" % "4.11" % Test
-libraryDependencies += "javax.media" % "jai_core" % "1.1.3" from "http://download.osgeo.org/webdav/geotools/javax/media/jai_core/1.1.3/jai_core-1.1.3.jar"
+libraryDependencies += "javax.media" % "jai_core" % "1.1.3" from "https://repo.osgeo.org/repository/release/javax/media/jai_core/1.1.3/jai_core-1.1.3.jar"
 libraryDependencies += "org.apache.commons" % "commons-csv" % "1.8"
 libraryDependencies += "org.typelevel" %% "squants" % "1.6.0"
 libraryDependencies += "io.suzaku" %% "boopickle" % "1.3.1"
