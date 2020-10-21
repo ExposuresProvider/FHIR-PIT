@@ -115,7 +115,7 @@ let PerPatSeriesACSStep : Type = GenericStep {
     geoid_data : Text,
     output_file : Text,
     feature_map : Text,
-    features : Text
+    feature_name : Text
 }
 
 let PerPatSeriesNearestRoadStep : Type = GenericStep {
