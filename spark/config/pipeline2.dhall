@@ -346,7 +346,7 @@ let acsStep = λ(skip : Bool) → Step.ACS {
       acs_data = "${basedirinput}/other/spatial/acs/ACS_NC_2016_with_column_headers.csv",
       geoid_data = "${basedirinput}/other/spatial/acs/tl_2016_37_bg_lcc.shp",
       output_file = acs,
-      features = "acs",
+      feature_name = "acs",
       feature_map = "${configdir}/icees_features.yaml"
     }
   }
@@ -365,7 +365,7 @@ let acs2Step = λ(skip : Bool) → Step.ACS {
       acs_data = "${basedirinput}/other/spatial/acs/Appold_trans_geo_cross_02.10.10 - trans_geo_cross.csv",
       geoid_data = "${basedirinput}/other/spatial/acs/tl_2016_37_bg_lcc.shp",
       output_file = acs2,
-      features = "acs2",
+      feature_name = "acs2",
       feature_map = "${configdir}/icees_features.yaml"
     }
   }                                                                                                                                    }
