@@ -1,7 +1,8 @@
 import json
 import sys
 import os
-from oslash import Left, Right
+import os.path
+from tx.functional.either import Left, Right
 import progressbar
 import shutil
 
@@ -182,22 +183,23 @@ def merge_fhir_patient(input_dir, output_dir):
     pats = {}
 
     for year in os.listdir(input_dir):
-        widgets=[
-            ' <Patient ', year, '> ',
-            ' [', progressbar.Timer(), '] ',
-            progressbar.Bar(),
-            ' (', progressbar.ETA(), ') ',
-        ]
-        sub_dir = f"{input_dir}/{year}/Patient"
-        for filename in progressbar.progressbar(os.listdir(sub_dir), redirect_stdout=True, widgets=widgets):
-            fn = f"{sub_dir}/{filename}"
-            with open(fn) as ifp:
-                pat_bundle = json.load(ifp)
-                for i, x in enumerate(pat_bundle.get("entry", [])):
-                    pat = x["resource"]
-                    ret = merge_pat(pats, pat, fn, i)
-                    if isinstance(ret, Left):
-                        print(f"error: " + str(ret.value) + " {pat_id " + str(pats[pat["id"]][1] + [(fn, i)]))
+        if os.path.isdir(year):
+            widgets=[
+                ' <Patient ', year, '> ',
+                ' [', progressbar.Timer(), '] ',
+                progressbar.Bar(),
+                ' (', progressbar.ETA(), ') ',
+            ]
+            sub_dir = f"{input_dir}/{year}/Patient"
+            for filename in progressbar.progressbar(os.listdir(sub_dir), redirect_stdout=True, widgets=widgets):
+                fn = f"{sub_dir}/{filename}"
+                with open(fn) as ifp:
+                    pat_bundle = json.load(ifp)
+                    for i, x in enumerate(pat_bundle.get("entry", [])):
+                        pat = x["resource"]
+                        ret = merge_pat(pats, pat, fn, i)
+                        if isinstance(ret, Left):
+                            print(f"error: " + str(ret.value) + " {pat_id " + str(pats[pat["id"]][1] + [(fn, i)]))
 
     os.makedirs(f"{output_dir}/Patient", exist_ok=True)
     widgets=[
