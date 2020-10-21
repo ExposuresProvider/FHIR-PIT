@@ -48,7 +48,7 @@ libraryDependencies ++= Seq(
   "io.circe" %% "circe-generic" % "0.11.2",
   "io.circe" %% "circe-parser" % "0.11.2",
   "io.circe" %% "circe-optics" % "0.11.0",
-  "io.circe" %% "circe-yaml" % "0.11.0-M1"
+  "io.circe" %% "circe-yaml" % "0.10.1"
 )
 
 libraryDependencies += "org.gnieh" %% "diffson-circe" % "4.0.0-M3" % Test

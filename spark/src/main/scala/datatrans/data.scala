@@ -14,6 +14,7 @@ import cats.syntax.either._
 import io.circe._
 import io.circe.parser._
 import io.circe.optics.JsonPath._
+import io.circe.generic.semiauto._
 
 
 case class Patient(
@@ -137,7 +138,7 @@ object Implicits{
     if(coding.hcursor.downField("code").succeeded) 
       true
     else {
-      println(f"cannot find code field in JsValue ${coding}")
+     println(f"cannot find code field in JsValue ${coding}")
       false
     }
 

@@ -2,7 +2,7 @@ package datatrans
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
 import io.circe._
-import io.circe.generic.auto._
+import io.circe.generic.semiauto._
 import io.circe.syntax._
 import org.joda.time.format.{ISODateTimeFormat, DateTimeFormat}
 import org.joda.time.DateTime
@@ -21,6 +21,11 @@ object Mapper {
   case class GEOIDMapping(GEOID: String, columns: Map[String, String])
 
   case class FeatureMapping(FHIR: Option[Map[String, FHIRFeatureMapping]], GEOID: Option[Map[String, GEOIDMapping]])
+
+  import Implicits._
+  implicit val geoidMappingDecoder: Decoder[GEOIDMapping] = deriveDecoder
+  implicit val featureMappingDecoder: Decoder[FeatureMapping] = deriveDecoder
+  implicit val fhirFeatureMappingDecoder: Decoder[FHIRFeatureMapping] = deriveDecoder
 
   type CodingToFeatureMap = Map[Coding, String]
 
