@@ -177,7 +177,7 @@ let fhirStep = λ(skip : Bool) → λ(skip_preproc : List Text) → Step.FHIR {
     dependsOn = [] : List Text,
     skip = skip,
     step = {
-        function = "datatrans.step.PreprocFHIRConfig",
+        function = "datatrans.step.PreprocFHIR",
         arguments = {
             input_directory = "${basedirinput}/FHIR_merged",
             output_directory = "${basedir}/FHIR_processed",
@@ -194,7 +194,7 @@ let toVectorStep = λ(skip : Bool) → Step.ToVector {
   ],
   skip = skip,
   step = {
-    function = "datatrans.step.PreprocPerPatSeriesToVectorConfig",
+    function = "datatrans.step.PreprocPerPatSeriesToVector",
     arguments = {
       input_directory = "${basedir}/FHIR_processed/Patient",
       output_directory = "${basedir}/FHIR_vector",
@@ -213,7 +213,7 @@ let envDataCoordinatesStep = λ(skip : Bool) → λ(year_start : Natural) → λ
   ],
   skip = skip,
   step = {
-    function = "datatrans.step.EnvDataCoordinatesConfig",
+    function = "datatrans.step.PreprocPerPatSeriesEnvDataCoordinates",
     arguments = {
       patgeo_data = patgeo,
       environmental_data = "${basedirinput}/other/env",
@@ -232,7 +232,7 @@ let latLonToGeoidStep = λ(skip : Bool) → Step.LatLonToGeoid {
   ],
   skip = skip,
   step = {
-    function = "datatrans.step.LatLonToGeoidConfig",
+    function = "datatrans.step.LatLonToGeoid",
     arguments = {
       patgeo_data = patgeo,
       fips_data = "${basedirinput}/other/spatial/env/US_Census_Tracts_LCC/US_Census_Tracts_LCC.shp",
@@ -253,7 +253,7 @@ let envDataFIPSStep = λ(skip : Bool) → λ(year_start : Natural) → λ(year_e
   ],
   skip = skip,
   step = {
-    function = "datatrans.step.EnvDataFIPSConfig",
+    function = "datatrans.step.PreprocEnvDataFIPS",
     arguments = {
       environmental_data = "${basedirinput}/other/env",
       fips_data = "${basedir}/other_processed/env2/geoids.csv",
@@ -272,7 +272,7 @@ let splitStep = λ(skip : Bool) → Step.Split {
   ],
   skip = skip,
   step = {
-    function = "datatrans.step.SplitConfig",
+    function = "datatrans.step.PreprocSplit",
     arguments = {
       input_file = "${basedir}/other_processed/env3/preagg",
       split_index = "patient_num",
@@ -306,7 +306,7 @@ let envDataAggregateCoordinatesStep = λ(skip : Bool) → Step.EnvDataAggregate 
   ],
   skip = skip,
   step = {
-    function = "datatrans.step.EnvDataAggregateConfig",
+    function = "datatrans.step.PreprocEnvDataAggregate",
     arguments = {
       input_dir = "${basedir}/other_processed/env",
       output_dir = "${basedir}/other_processed/env6",
@@ -323,7 +323,7 @@ let envDataAggregateFIPSStep = λ(skip : Bool) → Step.EnvDataAggregate {
   ],
   skip = skip,
   step = {
-    function = "datatrans.step.EnvDataAggregateConfig",
+    function = "datatrans.step.PreprocEnvDataAggregate",
     arguments = {
       input_dir = "${basedir}/other_processed/env4",
       output_dir = "${basedir}/other_processed/env5",
@@ -340,7 +340,7 @@ let acsStep = λ(skip : Bool) → Step.ACS {
   ],
   skip = skip,
   step = {
-    function = "datatrans.step.PreprocPerPatSeriesACSConfig",
+    function = "datatrans.step.PreprocPerPatSeriesACS",
     arguments = {
       time_series = patgeo,
       acs_data = "${basedirinput}/other/spatial/acs/ACS_NC_2016_with_column_headers.csv",
@@ -359,7 +359,7 @@ let acs2Step = λ(skip : Bool) → Step.ACS {
   ],
   skip = skip,
   step = {
-    function = "datatrans.step.PreprocPerPatSeriesACSConfig",
+    function = "datatrans.step.PreprocPerPatSeriesACS",
     arguments = {
       time_series = patgeo,
       acs_data = "${basedirinput}/other/spatial/acs/Appold_trans_geo_cross_02.10.10 - trans_geo_cross.csv",
@@ -377,7 +377,7 @@ let nearestRoadStep = λ(skip : Bool) → Step.NearestRoad {
   ],
   skip = skip,
   step = {
-    function = "datatrans.step.PreprocPerPatSeriesNearestRoadConfig",
+    function = "datatrans.step.PreprocPerPatSeriesNearestRoad",
     arguments = {
       patgeo_data = patgeo,
       nearestroad_data = "${basedirinput}/other/spatial/nearestroad/tl_2015_allstates_prisecroads_lcc.shp",
@@ -394,7 +394,7 @@ let nearestRoad2Step = λ(skip : Bool) → Step.NearestRoad {
   ],
   skip = skip,
   step = {
-    function = "datatrans.step.PreprocPerPatSeriesNearestRoad2Config",
+    function = "datatrans.step.PreprocPerPatSeriesNearestRoad2",
     arguments = {
       patgeo_data = patgeo,
       nearestroad_data = "${basedirinput}/other/spatial/nearestroad2/hpms2016_major_roads_lcc.shp",
@@ -417,7 +417,7 @@ let perPatSeriesCSVTableStep = λ(skip : Bool) →  λ(year_start : Natural) →
   ],
   skip = skip,
   step = {
-    function = "datatrans.step.PreprocPerPatSeriesCSVTableConfig",
+    function = "datatrans.step.PreprocPerPatSeriesCSVTable",
     arguments = {
       patient_file = "${basedir}/FHIR_vector",
       environment_file = "${basedir}/other_processed/env6",
@@ -443,7 +443,7 @@ let csvTableStep = λ(skip : Bool) → λ(year : Natural) → Step.csvTable {
   ],
   skip = skip,
   step = {
-    function = "datatrans.step.PreprocCSVTableConfig",
+    function = "datatrans.step.PreprocCSVTable",
     arguments = {
       input_dir = "${basedir}/icees/${Natural/show year}/per_patient",
       output_dir = "${basediroutput}/icees2/${Natural/show year}",

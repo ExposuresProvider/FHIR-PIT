@@ -11,7 +11,6 @@ import org.apache.spark.sql.SparkSession
 import Implicits._
 import datatrans.step._
 import scala.reflect.runtime.universe
-import scala.reflect.classTag
 
 case class InputConfig(
   config : String = ""
@@ -20,10 +19,10 @@ case class InputConfig(
 
 object Config {
 
-  val runtimeMirror = universe.runtimeMirror(getClass.getClassLoader)
+  private val runtimeMirror = universe.runtimeMirror(getClass.getClassLoader)
 
-  def getObject(name:String) : Any =
-    Class.forName(name).newInstance
+  def getObject(name:String) : Any = 
+    runtimeMirror.reflectModule(runtimeMirror.staticModule(name)).instance
 
   // def getObjectName(obj: Any) : String = obj.getClass().getCanonicalName().dropRight(1)
   def parseInput[T](args : Seq[String])(implicit decoder : Decoder[T]) : Option[T] = {
@@ -37,11 +36,30 @@ object Config {
       configFile => {
         val source = scala.io.Source.fromFile(configFile.config)
         val yamlStr = try source.mkString finally source.close()
-
-        yaml.parser.parse(yamlStr).right.toOption.flatMap(_.as[T].right.toOption)
+        parseYAML[T](yamlStr)
       }
     )
 
+  }
+
+  def parseYAML[T](yamlStr: String)(implicit decoder : Decoder[T]) : Option[T] = {
+    val obj = yaml.parser.parse(yamlStr)
+    if (obj.isRight) {
+      val tobj = obj.right.get.as[T]
+      if (tobj.isRight)
+        Some(tobj.right.get)
+      else {
+        println(yamlStr)
+        val err = tobj.left.get
+        println(err)
+        None
+      }
+    } else {
+      println(yamlStr)
+      val err = obj.left.get
+      println(err)
+      None
+    }
   }
 }
 
@@ -102,7 +120,7 @@ object StepImplicits {
       for(
         qn <- c.downField("function").as[String];
         val impl = getObject(qn).asInstanceOf[StepImpl];
-        config <- impl.configDecoder(c)
+        config <- c.downField("arguments").as[impl.ConfigType](impl.configDecoder)
       ) yield config
   }
 
@@ -112,8 +130,8 @@ object StepImplicits {
         name <- c.downField("name").as[String];
         skip <- c.downField("skip").as[Boolean];
         dependsOn <- c.downField("dependsOn").as[Seq[String]];
-        config <- c.as[Any];
-        impl <- c.as[StepImpl]
+        config <- c.downField("step").as[Any];
+        impl <- c.downField("step").as[StepImpl]
       ) yield Step(config, impl, name, skip, dependsOn)
   }
 
