@@ -232,7 +232,7 @@ let latLonToGeoidStep = λ(skip : Bool) → Step.LatLonToGeoid {
   ],
   skip = skip,
   step = {
-    function = "datatrans.step.LatLonToGeoid",
+    function = "datatrans.step.PreproceLatLonToGeoid",
     arguments = {
       patgeo_data = patgeo,
       fips_data = "${basedirinput}/other/spatial/env/US_Census_Tracts_LCC/US_Census_Tracts_LCC.shp",
