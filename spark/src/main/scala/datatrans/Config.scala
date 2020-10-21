@@ -22,13 +22,8 @@ object Config {
 
   val runtimeMirror = universe.runtimeMirror(getClass.getClassLoader)
 
-  def getObject(name:String) : Any = {
-    val module = runtimeMirror.staticModule("package.ObjectName")
-
-    val obj = runtimeMirror.reflectModule(module)
-
-    obj.instance
-  }
+  def getObject(name:String) : Any =
+    Class.forName(name).newInstance
 
   // def getObjectName(obj: Any) : String = obj.getClass().getCanonicalName().dropRight(1)
   def parseInput[T](args : Seq[String])(implicit decoder : Decoder[T]) : Option[T] = {

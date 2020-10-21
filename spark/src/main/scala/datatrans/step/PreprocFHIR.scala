@@ -94,7 +94,7 @@ case class PreprocFHIRConfig(
   input_directory : String = "", // input directory of FHIR data
   output_directory : String = "", // output directory of patient data
   resc_types : Map[JsonifiableType, String] = Map(), // map resource type to directory, these are resources included in patient data
-  skip_preproc : Seq[String] = [] // skip preprocessing these resource as they have already benn preprocessed
+  skip_preproc : Seq[String] = Seq() // skip preprocessing these resource as they have already benn preprocessed
 )
 
 object FHIRImplicits {
