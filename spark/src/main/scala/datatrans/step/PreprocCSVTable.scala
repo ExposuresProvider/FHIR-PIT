@@ -20,11 +20,11 @@ import datatrans._
 import datatrans.Mapper
 
 case class PreprocCSVTableConfig(
-  input_dir : String,
-  output_dir : String,
-  deidentify : Seq[String],
-  offset_hours : Int,
-  feature_map : String
+  input_dir : String = null,
+  output_dir : String = null,
+  deidentify : Seq[String] = Seq(),
+  offset_hours : Int = 0,
+  feature_map : String = null
 )
 
 object PreprocCSVTable extends StepImpl {

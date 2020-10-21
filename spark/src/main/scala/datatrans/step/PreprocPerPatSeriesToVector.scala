@@ -25,12 +25,12 @@ import datatrans.Config._
 import datatrans._
 
 case class PreprocPerPatSeriesToVectorConfig(
-  input_directory : String,
-  output_directory : String,
-  start_date : org.joda.time.DateTime,
-  end_date : org.joda.time.DateTime,
-  offset_hours: Int,
-  feature_map : String
+  input_directory : String = null,
+  output_directory : String = null,
+  start_date : org.joda.time.DateTime = null,
+  end_date : org.joda.time.DateTime = null,
+  offset_hours: Int = 0,
+  feature_map : String = null
 )
 
 object PreprocPerPatSeriesToVector extends StepImpl {
