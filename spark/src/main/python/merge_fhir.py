@@ -24,7 +24,6 @@ def set_birth_date(pat, birth_date):
     pat["birthDate"] = birth_date
     return Right(pat)
 
-
 race_urls = ["http://terminology.hl7.org/ValueSet/v3-Race", "http://hl7.org/fhir/v3/Race"]
 
 ethnicity_urls = ["http://terminology.hl7.org/ValueSet/v3-Ethnicity", "http://hl7.org/fhir/v3/Ethnicity"]
@@ -32,6 +31,7 @@ ethnicity_urls = ["http://terminology.hl7.org/ValueSet/v3-Ethnicity", "http://hl
 def races(pat):
     extensions = pat.get("extension", [])
     return Right(list(map(lambda x : x["valueString"], filter(lambda x : x.get("url") in race_urls and "valueString" in x, extensions))))
+
 
 def set_races(pat, races):
     extensions = pat.get("extension", [])
@@ -128,6 +128,7 @@ def patient(pat):
 def canonical(patient):
     return json.dumps(patient, sort_keys=True, indent=2)
 
+
 def merge(a, b, err):
     if a is None:
         return Right(b)
@@ -138,6 +139,7 @@ def merge(a, b, err):
     else:
         return Left(f"err={err} a={a} b={b}")
 
+    
 def merge_array(a, b, err):
     if a is None:
         return Right(b)
@@ -146,6 +148,7 @@ def merge_array(a, b, err):
     else:
         return Right(a + [elem for elem in b if elem not in a])
 
+    
 def merge_patients(pat, pat2):
 
     def handle_p1(p1):
@@ -183,7 +186,7 @@ def merge_fhir_patient(input_dir, output_dir):
     pats = {}
 
     for year in os.listdir(input_dir):
-        if os.path.isdir(year):
+        if os.path.isdir(f"{input_dir}/{year}"):
             widgets=[
                 ' <Patient ', year, '> ',
                 ' [', progressbar.Timer(), '] ',
@@ -213,20 +216,22 @@ def merge_fhir_patient(input_dir, output_dir):
         with open(f"{output_dir}/Patient/{pat_id}.json", "w+") as ofp:
             json.dump(pat, ofp)
 
+            
 def merge_fhir_resource(resc, resc_dirs, input_dir, output_dir):
     os.makedirs(f"{output_dir}/{resc}", exist_ok=True)
     for year in os.listdir(input_dir):
-        widgets=[
-            f' <{resc} {year}> ',
-            ' [', progressbar.Timer(), '] ',
-            progressbar.Bar(),
-            ' (', progressbar.ETA(), ') ',
-        ]
-        sub_dir = next(filter(os.path.isdir, map(lambda resc_dir : f"{input_dir}/{year}/{resc_dir}", [resc] + resc_dirs)))
-        for filename in progressbar.progressbar(os.listdir(sub_dir), redirect_stdout=True, widgets=widgets):
-            ifn = f"{sub_dir}/{filename}"
-            ofn = f"{output_dir}/{resc}/<{year}>{filename}"
-            shutil.copyfile(ifn, ofn)
+        if os.path.isdir(f"{input_dir}/{year}"):
+            widgets=[
+                f' <{resc} {year}> ',
+                ' [', progressbar.Timer(), '] ',
+                progressbar.Bar(),
+                ' (', progressbar.ETA(), ') ',
+            ]
+            sub_dir = next(filter(os.path.isdir, map(lambda resc_dir : f"{input_dir}/{year}/{resc_dir}", [resc] + resc_dirs)))
+            for filename in progressbar.progressbar(os.listdir(sub_dir), redirect_stdout=True, widgets=widgets):
+                ifn = f"{sub_dir}/{filename}"
+                ofn = f"{output_dir}/{resc}/<{year}>{filename}"
+                shutil.copyfile(ifn, ofn)
 
 
 def merge_fhir_lab(input_dir, output_dir):
