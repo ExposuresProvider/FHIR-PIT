@@ -5,7 +5,7 @@ import io.circe.yaml
 import io.circe._
 import io.circe.generic.semiauto._
 import cats.syntax.either._
-import org.joda.time._
+import org.joda.time.DateTime
 import org.joda.time.format.{DateTimeFormat, ISODateTimeFormat}
 import org.apache.spark.sql.SparkSession
 import Implicits._
@@ -82,7 +82,7 @@ case class Step(
 
 
 object SharedImplicits {
-  val fmt = ISODateTimeFormat.dateTime()
+  val fmt = ISODateTimeFormat.dateTimeNoMillis()
   implicit val dateTimeDecoder : Decoder[org.joda.time.DateTime] = new Decoder[org.joda.time.DateTime] {
     final def apply(c: HCursor) : Decoder.Result[org.joda.time.DateTime] =
       for (
