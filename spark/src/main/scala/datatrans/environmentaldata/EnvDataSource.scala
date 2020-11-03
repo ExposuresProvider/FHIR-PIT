@@ -28,9 +28,9 @@ class EnvDataSource(spark: SparkSession, config: EnvDataCoordinatesConfig) {
     val file_file_system = filepath.getFileSystem(hc)
     if (file_file_system.exists(filepath)) {
       val df = readCSV(spark, filename, schema, (_: String) => DoubleType)
-      val dfcolumns = df.columns.toSet
-      val names = names.toSet
-      if (names.subsetOf(dfcolumns)) {
+      val colset = df.columns.toSet
+      val requiredcolset = names.toSet
+      if (requiredcolset.subsetOf(colset)) {
         Some(df)
       } else {
         log.error(f"$filename doesn't contain all required columns $names > ${df.columns.toSeq}")
