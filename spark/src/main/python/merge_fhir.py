@@ -205,16 +205,11 @@ def merge_fhir_patient(input_dir, output_dir):
                             print(f"error: " + str(ret.value) + " {pat_id " + str(pats[pat["id"]][1] + [(fn, i)]))
 
     os.makedirs(f"{output_dir}/Patient", exist_ok=True)
-    widgets=[
-        ' <Patient write output> ',
-        ' [', progressbar.Timer(), '] ',
-        progressbar.Bar(),
-        ' (', progressbar.ETA(), ') ',
-    ]
-    for pat, pos in progressbar.progressbar(pats.values(), redirect_stdout=True, widgets=widgets):
-        pat_id = pat["id"]
-        with open(f"{output_dir}/Patient/{pat_id}.json", "w+") as ofp:
-            json.dump(pat, ofp)
+    with open(f"{output_dir}/Patient/all.json", "w+") as ofp:
+        json.dump({
+            "resourceType":"Bundle",
+            "entry": list(map(lambda x: {"resource": x[0]}, pats.values()))
+        }, ofp)
 
             
 def merge_fhir_resource(resc, resc_dirs, input_dir, output_dir):

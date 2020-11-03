@@ -44,7 +44,7 @@ class EnvDataSource(spark: SparkSession, config: EnvDataCoordinatesConfig) {
     val dfs = coors.flatMap {
       case (year, (row, col)) =>
         val filename = f"${config.environmental_data}/cmaq$year/C$col%03dR$row%03dDaily.csv"
-        loadEnvDataFrame(filename, Mapper.envInputColumns1, envSchema)
+        loadEnvDataFrame(filename, Mapper.mappedRawEnvColumns1, envSchema)
     }
     if (dfs.nonEmpty) {
       dfs.reduce((a, b) => a.unionByName(b))
