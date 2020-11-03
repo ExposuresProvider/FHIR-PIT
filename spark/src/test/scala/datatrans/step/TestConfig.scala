@@ -61,4 +61,17 @@ step:
 """.stripMargin) != None)
   }
 
+  "parseYAML" should "parse CAFO step" in {
+    assert(parseYAML[Step]("""
+name: CAFO
+dependsOn: []
+skip: true
+step: 
+  function: datatrans.step.PreprocPerPatSeriesNearestPoint
+  arguments:
+    patgeo_data: patgeo
+    nearestpoint_data: /other/spatial/cafo/Permitted_Animal_Facilities-4-1-2020.shp"
+    output_file: cafo_output_path
+""".stripMargin) != None)
+  }
 }
