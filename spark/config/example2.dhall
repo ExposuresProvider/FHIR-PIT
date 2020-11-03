@@ -13,6 +13,7 @@ in pipeline "report" "progress" "/share/spark/hao/datatrans/spark/config" "/var/
     acs2 = True,
     nearestRoad = True,
     nearestRoad2 = True,
+    cafo = True,
     toVector = True,
     perPatSeriesCSVTable = True
   },

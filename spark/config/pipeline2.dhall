@@ -36,6 +36,7 @@ let FhirConfig : Type = {
       acs2 : Bool,
       nearestRoad : Bool,
       nearestRoad2 : Bool,
+      cafo: Bool,
       toVector : Bool,
       perPatSeriesCSVTable : Bool
     },
@@ -125,6 +126,12 @@ let PerPatSeriesNearestRoadStep : Type = GenericStep {
     output_file : Text
 }
 
+let PerPatSeriesNearestPointStep : Type = GenericStep {
+    patgeo_data : Text,
+    nearestpoint_data : Text,
+    output_file : Text
+}
+
 let PerPatSeriesCSVTableStep : Type = GenericStep {
     patient_file : Text,
     environment_file : Text,
@@ -154,6 +161,7 @@ let Step : Type = <
     EnvDataAggregate : EnvDataAggregateStep |
     ACS : PerPatSeriesACSStep |
     NearestRoad : PerPatSeriesNearestRoadStep |
+    NearestPoint : PerPatSeriesNearestPointStep |
     csvTable : csvTableStep |
     PerPatSeriesCSVTable : PerPatSeriesCSVTableStep
 >
@@ -171,6 +179,7 @@ let acs = "${basedir}/other_processed/acs.csv"
 let acs2 = "${basedir}/other_processed/acs2.csv"
 let nearestroad = "${basedir}/other_processed/nearestroad.csv"
 let nearestroad2 = "${basedir}/other_processed/nearestroad2.csv"
+let cafo_output_path = "${basedir}/other_processed/cafo.csv"
 
 let fhirStep = λ(skip : Bool) → λ(skip_preproc : List Text) → Step.FHIR {
     name = "FHIR",
@@ -404,6 +413,22 @@ let nearestRoad2Step = λ(skip : Bool) → Step.NearestRoad {
   }
 }
 
+let cafoStep = λ(skip : Bool) → Step.NearestPoint {
+  name = "PerPatSeriesCAFO",
+  dependsOn = [
+    "FHIR"
+  ],
+  skip = skip,
+  step = {
+    function = "datatrans.step.PreprocPerPatSeriesNearestPoint",
+    arguments = {
+      patgeo_data = patgeo,
+      nearestpoint_data = "${basedirinput}/other/spatial/cafo/Permitted_Animal_Facilities-4-1-2020.shp",
+      output_file = cafo_output_path
+    }
+  }
+}
+
 let perPatSeriesCSVTableStep = λ(skip : Bool) →  λ(year_start : Natural) →  λ(year_end : Natural) →  Step.PerPatSeriesCSVTable {
   name = "PerPatSeriesCSVTable",
   dependsOn = [
@@ -412,6 +437,7 @@ let perPatSeriesCSVTableStep = λ(skip : Bool) →  λ(year_start : Natural) →
     "PerPatSeriesACS2",
     "PerPatSeriesNearestRoad",
     "PerPatSeriesNearestRoad2",
+    "PerPatSeriesCAFO",
     "EnvDataAggregateCoordinates",
     "EnvDataAggregateFIPS"
   ],
@@ -426,7 +452,8 @@ let perPatSeriesCSVTableStep = λ(skip : Bool) →  λ(year_start : Natural) →
         acs,
         acs2,
         nearestroad,
-        nearestroad2
+        nearestroad2,
+	cafo_output_path
       ],
       output_dir = "${basedir}/icees",
       start_date = start_year year_start,
@@ -470,6 +497,7 @@ in {
       acs2Step fhirConfig.skip.acs2,
       nearestRoadStep fhirConfig.skip.nearestRoad,
       nearestRoad2Step fhirConfig.skip.nearestRoad2,
+      cafoStep fhirConfig.skip.cafo,
       toVectorStep fhirConfig.skip.toVector,
       perPatSeriesCSVTableStep fhirConfig.skip.perPatSeriesCSVTable fhirConfig.yearStart fhirConfig.yearEnd
     ] # List/fold YearConfig skipList (List Step) (λ(yearSkip : YearConfig) → λ(stepList : List Step) → [
