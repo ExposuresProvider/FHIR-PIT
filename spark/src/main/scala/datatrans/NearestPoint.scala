@@ -22,18 +22,25 @@ import scala.util.control.Breaks._
 // from provided point to closest feature in the point shapefile - via the getDistanceToNearestPoint() method.
 
 object NearestPoint {
-	private var features: SimpleFeatureCollection = null
+  val feature_collections : scala.collection.mutable.Map[String, SimpleFeatureCollection] = scala.collection.mutable.Map()
 }
 
 class NearestPoint(pointShapefilePath : String) {
     
-	val log = Logger.getLogger(getClass.getName)
-	log.setLevel(Level.INFO)
+  val log = Logger.getLogger(getClass.getName)
+  log.setLevel(Level.INFO)
 			
-	val shp = new ShapefileHandler(pointShapefilePath)
-	val features = shp.getFeatureCollection
+  val features = NearestPoint.feature_collections.get(pointShapefilePath) match {
+    case None =>
+      val shp = new ShapefileHandler(pointShapefilePath)
+      val features = shp.getFeatureCollection
+      NearestPoint.feature_collections(pointShapefilePath) = features
+      features
+    case Some(features) =>
+      features
+  }
 
-	def getDistanceToNearestPoint(lat : Double, lon : Double) : Option[Double] = {
+  def getDistanceToNearestPoint(lat : Double, lon : Double) : Option[Double] = {
 		   var minDist: Option[Double] = None
 		   
  		   val p = createPoint(lat, lon)
