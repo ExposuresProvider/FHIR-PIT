@@ -423,7 +423,7 @@ let cafoStep = λ(skip : Bool) → Step.NearestPoint {
     function = "datatrans.step.PreprocPerPatSeriesNearestPoint",
     arguments = {
       patgeo_data = patgeo,
-      nearestpoint_data = "${basedirinput}/other/spatial/cafo/Permitted_Animal_Facilities-4-1-2020.shp",
+      nearestpoint_data = "${basedirinput}/other/spatial/cafo/BDT_PointDatasets/Permitted_Animal_Facilities-4-1-2020.shp",
       output_file = cafo_output_path
     }
   }
