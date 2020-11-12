@@ -33,12 +33,8 @@ class NearestPoint(pointShapefilePath : String) {
 	val shp = new ShapefileHandler(pointShapefilePath)
 	val features = shp.getFeatureCollection
 
-	def getDistanceToNearestPoint(lat : Double, lon : Double) : Double = {
-		   var destination: Point = null
-		   var minDist: Double = Double.PositiveInfinity
-		   var distance: Double = 0
-		   var minDistPoint: Point = null
-		   var lastMatched: SimpleFeature = null
+	def getDistanceToNearestPoint(lat : Double, lon : Double) : Option[Double] = {
+		   var minDist: Option[Double] = None
 		   
  		   val p = createPoint(lat, lon)
 		   
@@ -58,29 +54,29 @@ class NearestPoint(pointShapefilePath : String) {
 		       "AUTHORITY[\"EPSG\",\"4326\"]]"
 		       val crs = CRS.parseWKT(EPSG4326)
 		       
-		       destination = feature.getDefaultGeometry().asInstanceOf[Point]
+		       val destination = feature.getDefaultGeometry().asInstanceOf[Point]
 		       try {
 		         JTS.checkCoordinatesRange(feature.getDefaultGeometry().asInstanceOf[Geometry], crs)
+		         val gc = new GeodeticCalculator(crs)
+		         gc.setStartingPosition(
+		           JTS.toDirectPosition( p.getCoordinate(), crs))
+		         gc.setDestinationPosition(
+		           JTS.toDirectPosition(destination.getCoordinate(), crs))
+		         val distance = gc.getOrthodromicDistance()
+		         if (minDist == None || distance < minDist.get) {
+		           minDist = Some(distance)
+		         }
 		       }
 		       catch {
 		         case ex: PointOutsideEnvelopeException => {
 		           // ignore any invalid points in the point dataset
 		           log.info(s"invalid coordinates found in point dataset")
-		           break
 		         }
+                         case e: Throwable => {
+		           log.info(e)
+                         }
 		       }
 		       
-		       val gc = new GeodeticCalculator(crs)
-		       gc.setStartingPosition(
-		         JTS.toDirectPosition( p.getCoordinate(), crs))
-		       gc.setDestinationPosition(
-		         JTS.toDirectPosition(destination.getCoordinate(), crs))
-		       distance = gc.getOrthodromicDistance()
-		       if (distance < minDist) {
-		         minDist = distance
-		         minDistPoint = destination
-		         lastMatched = feature
-		       }
       		     }
       		   }
 	  return minDist
