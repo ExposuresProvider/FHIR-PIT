@@ -290,7 +290,7 @@ let splitStep = λ(skip : Bool) → Step.Split {
   }
 }
 
-let indices = ["pm25", "o3"]
+let indices = ["pm25_max", "pm25_avg", "o3_max", "o3_avg"]
 
 let indices2 = [
     "pm25_daily_average",
