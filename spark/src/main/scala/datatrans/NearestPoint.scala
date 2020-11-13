@@ -41,12 +41,12 @@ class NearestPoint(pointShapefilePath : String) {
   }
 
   def getDistanceToNearestPoint(lat : Double, lon : Double) : Option[Double] = {
-		   var minDist: Option[Double] = None
-		   
- 		   val p = createPoint(lat, lon)
-		   
-		   val itr = features.features()
-		   
+    var minDist: Option[Double] = None
+
+    val p = createPoint(lat, lon)
+
+    val itr = features.features()
+    try {
 		   breakable {
 		     while (itr.hasNext()) {
 		       val feature = itr.next();
@@ -86,8 +86,11 @@ class NearestPoint(pointShapefilePath : String) {
 		       
       		     }
       		   }
-	  return minDist
-	}
+    } finally {
+      itr.close()
+    }
+    return minDist
+  }
 	
 	def createPoint(lat : Double, lon : Double) : Point = {
 	    val geometryFactory = new GeometryFactory()
