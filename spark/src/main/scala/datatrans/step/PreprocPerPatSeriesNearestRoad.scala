@@ -4,7 +4,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 import datatrans.Utils._
 import org.apache.hadoop.fs.Path
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{SparkSession, Row}
 import scopt._
 import io.circe._
 import io.circe.generic.semiauto._
@@ -16,7 +16,9 @@ case class PreprocPerPatSeriesNearestRoadConfig(
   patgeo_data : String,
   nearestroad_data : String,
   maximum_search_radius : Double, // = 500,
-  output_file : String
+  output_file : String,
+  feature_map : String,
+  feature_name: String
 )
 
 object PreprocPerPatSeriesNearestRoad extends StepImpl {
@@ -38,15 +40,24 @@ object PreprocPerPatSeriesNearestRoad extends StepImpl {
       if(output_file_file_system.exists(output_file_path)) {
         println(config.output_file + " exists")
       } else {
+        val mapper = new Mapper(hc, config.feature_map)
+        val nearestRoad = mapper.nearest_road_map_map(config.feature_name)
+        val distance_feature_name = nearestRoad.distance_feature_name
+        val attributes_to_features_map = nearestRoad.attributes_to_features_map
+        val (attributes, features) = attributes_to_features_map.unzip
+
         val pddf0 = spark.read.format("csv").option("header", value = true).load(config.patgeo_data)
         val rows = pddf0.mapPartitions(partition => {
           val nearestRoad = new NearestRoad(config.nearestroad_data, config.maximum_search_radius)
           partition.map(r => {
-            (r.getString(0), nearestRoad.getMinimumDistance(r.getString(1).toDouble, r.getString(2).toDouble))
+            val distance_to_nearest_road = nearestRoad.getMinimumDistance(r.getString(1).toDouble, r.getString(2).toDouble)
+            Seq(r.getString(0), distance_to_nearest_road) ++ attributes.map(attribute =>
+              nearestRoad.getMatchedAttribute(attribute)
+            )
           })
         })
 
-        val df = rows.toDF("patient_num", "MajorRoadwayHighwayExposure")
+        val df = rows.toDF(("patient_num" +: distance_feature_name +: features.toSeq) : _*)
 
         writeDataframe(hc, config.output_file, df)
       }

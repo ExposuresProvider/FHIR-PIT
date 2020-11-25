@@ -16,7 +16,7 @@ import datatrans.Utils._
 class DhallSpec extends FlatSpec {
   
   "Spec" should "typecheck" in {
-    val res = "dhall-to-yaml --file config/example2.dhall".!
+    val res = "dhall-to-yaml --file config/example.dhall".!
     assert(res == 0)
 
   }

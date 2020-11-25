@@ -103,16 +103,18 @@ class NearestRoad(roadShapefilePath : String, maximum_search_radius : Double) {
 
   }
 
-  def getMatchedRoadName : Option[String] = lastMatched.map(_.getAttribute("FULLNAME").asInstanceOf[String])
+  def getMatchedRoadName : Option[String] = getMatchedAttribute("FULLNAME").map(_.asInstanceOf[String])
 
-  def getMatchedRouteId : Option[String] = lastMatched.map(_.getAttribute("ROUTE_ID").asInstanceOf[String])
+  def getMatchedRouteId : Option[String] = getMatchedAttribute("ROUTE_ID").map(_.asInstanceOf[String])
   
-  def getMatchedAADT : Option[String] = lastMatched.map(_.getAttribute("AADT").toString)
+  def getMatchedAADT : Option[String] = getMatchedAttribute("AADT").map(_.toString)
 
-  def getMatchedNumLanes : Option[String] = lastMatched.map(_.getAttribute("THROUGH_LA").toString)
+  def getMatchedNumLanes : Option[String] = getMatchedAttribute("THROUGH_LA").map(_.toString)
   
-  def getMatchedSpeed : Option[String] = lastMatched.map(_.getAttribute("SPEED").toString)
+  def getMatchedSpeed : Option[String] = getMatchedAttribute("SPEED").map(_.toString)
   
-  def getMatchedRoadType : Option[String] = lastMatched.map(_.getAttribute("ROADTYPE").asInstanceOf[String])
+  def getMatchedRoadType : Option[String] = getMatchedAttribute("ROADTYPE").map(_.asInstanceOf[String])
+
+  def getMatchedAttribute(attributeName : String) : Option[Any] = lastMatched.map(_.getAttribute(attributeName).asInstanceOf[String])
 
 }

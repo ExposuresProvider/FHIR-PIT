@@ -1788,7 +1788,22 @@ GEOID:
       prp_not_insured: EstProbabilityNoHealthIns
       total_pop2016: EstResidentialDensity
       total_25plus: EstResidentialDensity25Plus
-  acs2:
+  acsUR:
     GEOID: geoid
     columns:
       ur: ur
+NearestRoad:
+  nearestRoadTL:
+    distance_feature_name: MajorRoadwayHighwayExposure
+    attributes_to_features_map: {}
+  nearestRoadHPMS:
+    distance_feature_name: RoadwayDistanceExposure
+    attributes_to_features_map:
+      ROADTYPE: RoadwayType
+      AADT: RoadwayAADT
+      SPEED: RoadwaySpeedLimit
+      THROUGH_LA: RoadwayLanes
+NearestPoint:
+  cafo:
+    distance_feature_name: CAFOExposure
+    attributes_to_features_map: {}

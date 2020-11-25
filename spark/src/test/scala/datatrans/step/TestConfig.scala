@@ -72,6 +72,8 @@ step:
     patgeo_data: patgeo
     nearestpoint_data: /other/spatial/cafo/Permitted_Animal_Facilities-4-1-2020.shp"
     output_file: cafo_output_path
+    feature_name: cafo
+    feature_map: icees_features.yaml
 """.stripMargin) != None)
   }
 }

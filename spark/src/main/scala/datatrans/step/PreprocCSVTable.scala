@@ -175,10 +175,10 @@ object PreprocCSVTable extends StepImpl {
           }
         }
 
-        val visit = mapper.conds | mapper.meds
+        val binary = mapper.conds | mapper.meds
 
         var df_all = spark.read.format("csv").option("header", value = true).load(output_file_all)
-        (visit -- df_all.columns.toSet).foreach(col => {
+        (binary -- df_all.columns.toSet).foreach(col => {
           df_all = df_all.withColumn(col, lit(0))
         })
 
@@ -200,9 +200,14 @@ object PreprocCSVTable extends StepImpl {
         var df_all_visit = df_all.filter($"VisitType" !== "study")
           .withColumn("AgeVisit", ageDiff($"birth_date", $"start_date"))
 
-        visit.foreach(v => {
-          df_all_visit = df_all_visit.withColumnRenamed(v,v + "Visit")
-        })
+        val binarySeq = binary.toSeq
+        val binaryVisitSeq = binarySeq.map(v => v + "Visit")
+
+        (binarySeq zip binaryVisitSeq).foreach{
+          case (b, bv) => {
+            df_all_visit = df_all_visit.withColumnRenamed(b, bv)
+          }
+        }
 
         val df_all_visit_column_set = df_all_visit.columns.toSet
         for ((feature1, feature2) <- Mapper.visitEnvFeatureMapping)
@@ -215,9 +220,9 @@ object PreprocCSVTable extends StepImpl {
           df_all_visit = df_all_visit.drop(feature)
 
         df_all_visit = df_all_visit
-          .withColumnRenamed("ObesityBMIVisit", "ObesityBMIVisit0")
-          .withColumn("ObesityBMIVisit", procObesityBMI($"ObesityBMIVisit0"))
-          .drop("ObesityBMIVisit0")
+          .withColumn("ObesityBMIVisit", procObesityBMI($"ObesityBMIVisit"))
+
+        df_all_visit = df_all_visit.na.fill(0, "ObesityBMIVisit" +: binaryVisitSeq)
 
         val deidentify = df_all_visit.columns.intersect(config.deidentify)
         df_all_visit = df_all_visit
@@ -241,24 +246,21 @@ object PreprocCSVTable extends StepImpl {
             (new TotalTypeVisits(emerTypes)($"VisitType", $"RespiratoryDx") + new TotalTypeVisits(inpatientTypes, emerTypes)($"VisitType", $"RespiratoryDx")).alias("TotalEDInpatientVisits")
           ) ++ (("Sex2" +: Mapper.demograph) ++ Mapper.nearestRoad ++ Mapper.nearestRoad2 ++ mapper.geoid_map_map.values.flatMap(_.columns.values)).map(
             v => first(df_all.col(v)).alias(v)
-          ) ++ visit.map(
-            v => max(df_all.col(v)).alias(v)
+          ) ++ binary.map(
+            v => sum(df_all.col(v)).cast(IntegerType).alias(v)
           )
 
         val df_all2 = df_all
           .withColumn("RespiratoryDx", $"AsthmaDx".cast(IntegerType) === 1 || $"CroupDx".cast(IntegerType) === 1 || $"ReactiveAirwayDx".cast(IntegerType) === 1 || $"CoughDx".cast(IntegerType) === 1 || $"PneumoniaDx".cast(IntegerType) === 1)
           .groupBy("patient_num", "year").agg(patient_aggs.head, patient_aggs.tail:_*)
 
-        val df_active_in_year = df_all_visit.select("patient_num", "year").distinct().withColumn("Active_In_Year0", lit(1))
+        val df_active_in_year = df_all_visit.select("patient_num", "year").distinct().withColumn("Active_In_Year", lit(1))
 
         var df_all_patient = df_all2
           .withColumn("AgeStudyStart", ageYear($"birth_date", $"year"))
-          .withColumnRenamed("ObesityBMI", "ObesityBMI0")
-          .withColumn("ObesityBMI", procObesityBMI($"ObesityBMI0"))
-          .drop("ObesityBMI0")
+          .withColumn("ObesityBMI", procObesityBMI($"ObesityBMI"))
           .join(broadcast(df_active_in_year), Seq("patient_num", "year"), "left")
-          .withColumn("Active_In_Year", when($"Active_In_Year0".isNull, 0).otherwise($"Active_In_Year0"))
-          .drop("Active_In_Year0")
+          .na.fill(0, "Active_In_Year" +: "ObesityBMI" +: binary.toSeq)
 
         val deidentify2 = df_all_patient.columns.intersect(config.deidentify)
         df_all_patient = df_all_patient.drop(deidentify2 : _*)

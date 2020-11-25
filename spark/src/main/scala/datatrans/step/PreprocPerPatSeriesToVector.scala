@@ -151,6 +151,14 @@ object PreprocPerPatSeriesToVector extends StepImpl {
               val age = Years.yearsBetween (birth_date_joda, encounter_start_date_joda).getYears
               rec0 += ("start_date" -> encounter_start_date_joda.toDateTime(timeZone).toString("yyyy-MM-dd"), "AgeVisit" -> age) 
 
+              def incrementName(rec: Map[String, Any], n: String): Map[String, Any] =
+                rec.get(n) match {
+                  case Some(i) =>
+                    rec + (n -> (i.asInstanceOf[Int] + 1))
+                  case None =>
+                    rec + (n -> 1)
+                }
+
               def toVector(enc : Encounter) = {
                 var rec = rec0 + ("encounter_num" -> enc.id, "VisitType" -> enc.classAttr.map(_.code).getOrElse(""))
                 val med = enc.medication
@@ -161,25 +169,25 @@ object PreprocPerPatSeriesToVector extends StepImpl {
 
                 med.foreach(m =>
                   m.coding.foreach(coding => Mapper.map_coding_to_feature(mapper.med_map, coding).foreach(n => {
-                    rec += (n -> 1)
+                    rec = incrementName(rec, n)
                   }))
                 )
 
                 cond.foreach(m =>
                   m.coding.foreach(coding => Mapper.map_coding_to_feature(mapper.cond_map, coding).foreach(n => {
-                    rec += (n -> 1)
+                    rec = incrementName(rec, n)
                   }))
                 )
 
                 lab.foreach(m =>
                   m.coding.foreach(coding => Mapper.map_coding_to_feature(mapper.obs_map, coding).foreach(n => {
-                    rec += (n -> 1)
+                    rec = incrementName(rec, n)
                   }))
                 )
 
                 proc.foreach(m =>
                   m.coding.foreach(coding => Mapper.map_coding_to_feature(mapper.proc_map, coding).foreach(n => {
-                    rec += (n -> 1)
+                    rec = incrementName(rec, n)
                   }))
                 )
 

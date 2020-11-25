@@ -40,6 +40,8 @@ class NearestPoint(pointShapefilePath : String) {
       features
   }
 
+  var lastMatched: Option[SimpleFeature] = None
+
   def getDistanceToNearestPoint(lat : Double, lon : Double) : Option[Double] = {
     var minDist: Option[Double] = None
 
@@ -47,8 +49,8 @@ class NearestPoint(pointShapefilePath : String) {
 
     val itr = features.features()
     try {
-		   breakable {
-		     while (itr.hasNext()) {
+      breakable {
+	while (itr.hasNext()) {
 		       val feature = itr.next();
 		       val EPSG4326 =
 		         "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\","+
@@ -71,6 +73,7 @@ class NearestPoint(pointShapefilePath : String) {
 		           JTS.toDirectPosition(destination.getCoordinate(), crs))
 		         val distance = gc.getOrthodromicDistance()
 		         if (minDist == None || distance < minDist.get) {
+                           lastMatched = Some(feature)
 		           minDist = Some(distance)
 		         }
 		       }
@@ -85,19 +88,20 @@ class NearestPoint(pointShapefilePath : String) {
 		       }
 		       
       		     }
-      		   }
+      }
     } finally {
       itr.close()
     }
     return minDist
   }
 	
-	def createPoint(lat : Double, lon : Double) : Point = {
-	    val geometryFactory = new GeometryFactory()
-	    val coordinate = new Coordinate(lon, lat);
-	    val point = geometryFactory.createPoint(coordinate)
-	    
-	    return point
-	}
+  def createPoint(lat : Double, lon : Double) : Point = {
+    val geometryFactory = new GeometryFactory()
+    val coordinate = new Coordinate(lon, lat);
+    val point = geometryFactory.createPoint(coordinate)
 
+    return point
+  }
+
+  def getMatchedAttribute(attributeName : String) : Option[Any] = lastMatched.map(_.getAttribute(attributeName).asInstanceOf[String])
 }

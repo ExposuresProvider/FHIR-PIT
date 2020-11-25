@@ -1,91 +1,73 @@
 let pipeline = ./pipeline.dhall
 
-let resc_types1 = {
-    Condition = "Condition",
-    Lab = "Observation_Labs",
-    Encounter = "Encounter",
-    MedicationRequest = "MedicationRequest",
-    Patient = "Patient",
-    Procedure = "Procedure"
-}
-
-let resc_types2 = {
-    Condition = "Condition",
-    Lab = "Lab",
-    Encounter = "Encounter",
-    MedicationRequest = "MedicationRequest",
-    Patient = "Patient",
-    Procedure = "Procedure"
-}
-
-in pipeline "report" "progress" "/share/spark/hao/data" "/share/spark/hao/data" "/share/spark/hao/data" [{
-  year = 2012,
+in pipeline "report" "progress" "/share/spark/hao/datatrans/spark/config" "/var/fhir" "/var/fhir" "/share/spark/hao/data" {
   skip = {
     fhir = True,
-    toVector = True,
-    envDataSource = True,
+    envDataCoordinates = True,
+    latLonToGeoid = True,
+    envDataFIPS = True,
+    split = True,
+    envDataAggregateCoordinates = True,
+    envDataAggregateFIPS = True,
     acs = True,
-    acs2 = True,
-    nearestRoad = True,
-    nearestRoad2 = True,
-    envCSVTable = True
+    acsUR = True,
+    nearestRoadTL = True,
+    nearestRoadHPMS = True,
+    cafo = True,
+    toVector = True,
+    perPatSeriesCSVTable = True
   },
-  resourceTypes = resc_types1,
-  skip_preproc = [] : List Text
+  skip_preproc = [] : List Text,
+  yearStart = 2010,
+  yearEnd = 2019
+} [{
+  year = 2010,
+  skip = {
+    csvTable = True
+  }
+}, {
+  year = 2011,
+  skip = {
+    csvTable = True
+  }
+}, {
+  year = 2012,
+  skip = {
+    csvTable = True
+  }
 }, {
   year = 2013,
   skip = {
-    fhir = True,
-    toVector = True,
-    envDataSource = True,
-    acs = True,
-    acs2 = True,
-    nearestRoad = True,
-    nearestRoad2 = True,
-    envCSVTable = True
-  },
-  resourceTypes = resc_types1,
-  skip_preproc = [] : List Text
+    csvTable = True
+  }
 }, {
   year = 2014,
   skip = {
-    fhir = True,
-    toVector = True,
-    envDataSource = True,
-    acs = True,
-    acs2 = True,
-    nearestRoad = True,
-    nearestRoad2 = True,
-    envCSVTable = True
-  },
-  resourceTypes = resc_types1,
-  skip_preproc = [] : List Text
+    csvTable = True
+  }
 }, {
   year = 2015,
   skip = {
-    fhir = True,
-    toVector = True,
-    envDataSource = True,
-    acs = True,
-    acs2 = True,
-    nearestRoad = True,
-    nearestRoad2 = True,
-    envCSVTable = True
-  },
-  resourceTypes = resc_types2,
-  skip_preproc = [] : List Text
+    csvTable = True
+  }
 }, {
   year = 2016,
   skip = {
-    fhir = True,
-    toVector = True,
-    envDataSource = True,
-    acs = True,
-    acs2 = True,
-    nearestRoad = True,
-    nearestRoad2 = True,
-    envCSVTable = True
-  },
-  resourceTypes = resc_types1,
-  skip_preproc = [] : List Text
+    csvTable = True
+  }
+}, {
+  year = 2017,
+  skip = {
+    csvTable = True
+  }
+}, {
+  year = 2018,
+  skip = {
+    csvTable = True
+  }
+}, {
+  year = 2019,
+  skip = {
+    csvTable = True
+  }
 }]
