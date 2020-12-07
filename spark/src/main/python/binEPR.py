@@ -1,5 +1,6 @@
-import pandas as pd
 import sys
+import json
+import pandas as pd
 from preprocUtils import *
 
 input_file, crosswalk_file, icees_dir, pat_geo_file, output_file = sys.argv[1:]
@@ -11,34 +12,38 @@ df = df[(df["TLR4_AGE"].isna() | df["TLR4_AGE"] < 90) & (df["CURRENT_AGE"].isna(
 
 df.drop(["BMI", "HE_COMPLETION_DATE", "GEOID", "ROUTE_ID"], axis=1, inplace=True)
 
-preprocAge(df, "TLR4_AGE")
+bins = []                                                                                                                                                
+                                                                                                                                                         
+bins += preprocAge(df, "TLR4_AGE")                                                                                                                       
+                                                                                                                                                         
+bins += preprocAge(df, "CURRENT_AGE")                                                                                                                    
 
-preprocAge(df, "CURRENT_AGE")
+bins += preprocAge(df, "QXAGE")                                                                                                                          
 
-preprocAge(df, "QXAGE")
+bins += preprocAge(df, "D28A_ASTHMA_AD_TEXT")                                                                                                            
 
-preprocAge(df, "D28A_ASTHMA_AD_TEXT")
+bins += cut(df, "TLR4_DIST_1X", 5)                                                                                                                       
 
-cut(df, "TLR4_DIST_1X", 5)
+bins += cut(df, "TLR4_DIST_2X", 5)                                                                                                                       
 
-cut(df, "TLR4_DIST_2X", 5)
+bins += cut(df, "TLR4_DIST_3X", 5)                                                                                                                       
 
-cut(df, "TLR4_DIST_3X", 5)
+bins += cut(df, "O3_ANNUAL_AVERAGE", 5)                                                                                                                  
 
-cut(df, "O3_ANNUAL_AVERAGE", 5)
+bins += cut(df, "PM25_ANNUAL_AVERAGE", 5)                                                                                                                
 
-cut(df, "PM25_ANNUAL_AVERAGE", 5)
+df["ESTTOTALPOP"], binsadd = pd.cut(df["ESTTOTALPOP"], [0,2500,50000,float("inf")], labels=["1","2","3"], include_lowest=True, right=False, retbins=True)
 
-df["ESTTOTALPOP"] = pd.cut(df["ESTTOTALPOP"], [0,2500,50000,float("inf")], labels=["1","2","3"], include_lowest=True, right=False)
+bins += [("ESTTOTALPOP", binsadd.tolist())]                                                                                                              
 
-cut(df, "ESTTOTALPOP25PLUS", 5)
-cut(df, "ESTPROPPERSONSNONHISPWHITE", 4)
-# quantile(df, "EstProbabilityHouseholdNonHispWhite", 4)                                                                                                                                                                                                                                                                                                                   
-cut(df, "ESTPROPPERSONS25PLUSHSMAX", 4)
-cut(df, "ESTPROPHOUSEHOLDSNOAUTO", 4)
-cut(df, "ESTPROPPERSONSNOHEALTHINS", 4)
-cut(df, "ESTPROPPERSONS5PLUSNOENGLISH", 4)
-cut(df, "MEDIANHOUSEHOLDINCOME", 5)
+bins += cut(df, "ESTTOTALPOP25PLUS", 5)                                                                                                                  
+bins += cut(df, "ESTPROPPERSONSNONHISPWHITE", 4)                                                                                                         
+ # quantile(df, "EstProbabilityHouseholdNonHispWhite", 4)
+bins += cut(df, "ESTPROPPERSONS25PLUSHSMAX", 4)                                                                                                          
+bins += cut(df, "ESTPROPHOUSEHOLDSNOAUTO", 4)                                                                                                            
+bins += cut(df, "ESTPROPPERSONSNOHEALTHINS", 4)                                                                                                          
+bins += cut(df, "ESTPROPPERSONS5PLUSNOENGLISH", 4)                                                                                                       
+bins += cut(df, "MEDIANHOUSEHOLDINCOME", 5)                                                                                                              
 df.drop(["ESTTOTALPOP_SE", "ESTTOTALPOP25PLUS_SE", "ESTPROPPERSONSNONHISPWHITE_SE", "ESTPROPPERSONS25PLUSHSMAX_SE", "ESTPROPHOUSEHOLDSNOAUTO_SE", "ESTPROPPERSONSNOHEALTHINS_SE", "ESTPROPPERSONS5PLUSNOENGLISH_SE", "MEDIANHOUSEHOLDINCOME_SE"], axis=1, inplace=True)
 df["DISTANCE2"] = pd.cut(df["DISTANCE"].apply(preprocHighwayExposure), [0, 50, 100, 150, 200, 250, float("inf")], labels=list(map(str, [1, 2, 3, 4, 5, 6])), include_lowest=True, right=False)
 df["DISTANCE"] = pd.cut(df["DISTANCE"].apply(preprocHighwayExposure), [0, 50, 100, 200, 300, 500, float("inf")], labels=list(map(str, [1, 2, 3, 4, 5, 6])), include_lowest=True, right=False)
@@ -55,7 +60,10 @@ df_pat_ord = df_hash_value.merge(cw, on="HASH_VALUE", how="left").merge(df_pat_g
 df_pat_ord["index"] = df_pat_ord.index
 
 
-for year in range(2010, 2017):
+with open(f"{output_file}_bins.json", "w") as out:
+    json.dump(dict(bins), out)                    
+                                                  
+for year in range(2010, 2020):                    
     print(year)
     dfp = pd.read_csv(f"{icees_dir}/{year}patient")
     dfp["IN_ICEES"] = 1

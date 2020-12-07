@@ -222,7 +222,10 @@ object PreprocCSVTable extends StepImpl {
         df_all_visit = df_all_visit
           .withColumn("ObesityBMIVisit", procObesityBMI($"ObesityBMIVisit"))
 
-        df_all_visit = df_all_visit.na.fill(0, "ObesityBMIVisit" +: binaryVisitSeq)
+        // df_all_visit = df_all_visit.na.fill(0, "ObesityBMIVisit" +: binaryVisitSeq) // spark has a bug in na such that column with dot doesn't work
+        ("ObesityBMIVisit" +: binaryVisitSeq.map(colname => s"`$colname`")).foreach(colname => {
+          df_all_visit = df_all_visit.withColumn(colname, when(df_all_visit.col(colname).isNull, 0).otherwise(df_all_visit.col(colname)))
+        })
 
         val deidentify = df_all_visit.columns.intersect(config.deidentify)
         df_all_visit = df_all_visit
@@ -244,7 +247,7 @@ object PreprocCSVTable extends StepImpl {
             new TotalTypeVisits(emerTypes)($"VisitType", $"RespiratoryDx").alias("TotalEDVisits"),
             new TotalTypeVisits(inpatientTypes)($"VisitType", $"RespiratoryDx").alias("TotalInpatientVisits"),
             (new TotalTypeVisits(emerTypes)($"VisitType", $"RespiratoryDx") + new TotalTypeVisits(inpatientTypes, emerTypes)($"VisitType", $"RespiratoryDx")).alias("TotalEDInpatientVisits")
-          ) ++ (("Sex2" +: Mapper.demograph) ++ Mapper.nearestRoad ++ Mapper.nearestRoad2 ++ mapper.geoid_map_map.values.flatMap(_.columns.values)).map(
+          ) ++ (("Sex2" +: Mapper.demograph) ++ mapper.nearest_road_map_map.values.flatMap(x => x.distance_feature_name +: x.attributes_to_features_map.values.toSeq) ++ mapper.nearest_point_map_map.values.flatMap(x => x.distance_feature_name +: x.attributes_to_features_map.values.toSeq) ++ mapper.geoid_map_map.values.flatMap(_.columns.values)).map(
             v => first(df_all.col(v)).alias(v)
           ) ++ binary.map(
             v => sum(df_all.col(v)).cast(IntegerType).alias(v)
@@ -260,7 +263,11 @@ object PreprocCSVTable extends StepImpl {
           .withColumn("AgeStudyStart", ageYear($"birth_date", $"year"))
           .withColumn("ObesityBMI", procObesityBMI($"ObesityBMI"))
           .join(broadcast(df_active_in_year), Seq("patient_num", "year"), "left")
-          .na.fill(0, "Active_In_Year" +: "ObesityBMI" +: binary.toSeq)
+        // .na.fill(0, "Active_In_Year" +: "ObesityBMI" +: binary.toSeq) spark has a bug
+
+        ("Active_In_Year" +: "ObesityBMI" +: binary.toSeq).foreach(colname => {
+          df_all_patient = df_all_patient.withColumn(colname, when(df_all_patient.col(colname).isNull, 0).otherwise(df_all_patient.col(colname)))
+        })
 
         val deidentify2 = df_all_patient.columns.intersect(config.deidentify)
         df_all_patient = df_all_patient.drop(deidentify2 : _*)

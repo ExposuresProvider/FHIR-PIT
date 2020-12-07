@@ -1,11 +1,15 @@
-from preprocPatient import *
+import os                               
+import sys                              
+import json                             
+from preprocPatient import *            
 from preprocVisit import *
-import os
 
-input_dir = "/var/fhir/icees2"
-output_dir = "/var/fhir/icees2/output"
+# input_dir = "/var/fhir/icees2"        
+# output_dir = "/var/fhir/icees2/output"
+                                        
+input_dir, output_dir = sys.argv[1:]    
 
-for year in range(2010, 2017):
+for year in range(2010, 2020):          
     print(year)
     input_file_p = f"{input_dir}/{year}/all_patient"
     output_file_p = f"{output_dir}/{year}patient"

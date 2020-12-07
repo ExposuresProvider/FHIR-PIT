@@ -212,7 +212,7 @@ let toVectorStep = λ(skip : Bool) → Step.ToVector {
       input_directory = "${basedir}/FHIR_processed/Patient",
       output_directory = "${basedir}/FHIR_vector",
       start_date = start_year 2010,
-      end_date = end_year 2016,
+      end_date = end_year 2019,
       offset_hours = -5,
       feature_map = "${configdir}/icees_features.yaml"
     }

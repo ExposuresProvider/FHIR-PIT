@@ -1,6 +1,11 @@
 import pandas as pd
 import numpy as np
 
+binary = ["AsthmaDx", "CoughDx", "FibromyalgiaDx", "AnxietyDx", "Albuterol", "Ipratropium", "Sertraline", "DiabetesDx", "ObesityDx", "DepressionDx", "Diphenhydramine", "DrugDependenceDx", "Fluticasone", "Salmeterol", "Formoterol", "ReactiveAirwayDx", "Escitalopram", "Hydroxyzine", "Beclomethasone", "Fexofenadine", "PneumoniaDx", "OvarianDysfunctionDx", "PregnancyDx", "MenopauseDx", "TesticularDysfunctionDx", "EndometriosisDx", "AlcoholDependenceDx", "Fluoxetine", "CervicalCancerDx", "AutismDx", "Paroxetine", "Mometasone", "Budesonide", "Venlafaxine", "CroupDx", "Estradiol", "AlopeciaDx", "Arformoterol", "Mepolizumab", "Testosterone", "KidneyCancerDx", "UterineCancerDx", "OvarianCancerDx", "Medroxyprogresterone", "Propranolol", "TesticularCancerDx", "Theophylline", "Ciclesonide", "Flunisolide", "Tamoxifen", "Indacaterol", "Prasterone", "Progesterone", "Leuprolide", "Estropipate", "Goserelin", "Prednisone", "Cetirizine", "Citalopram", "Histrelin", "Triptorelin", "ProstateCancerDx", "Metaproterenol", "Omalizumab", "Trazodone", "Duloxetine", "Estrogen", "Androstenedione", "Nandrolone"]
+
+patient_cols = binary
+visit_cols = [f"{col}Visit" for col in binary]
+
 features = ["PM2.5", "Ozone"]
 features2 = ["PM2.5", "Ozone", "CO", "NO", "NO2", "NOx", "SO2", "Acetaldehyde", "Formaldehyde", "Benzene"]
 
@@ -17,8 +22,13 @@ def addSex2(df):
     df["Sex2"] = df["Sex"].apply(sex2gen)
 
 
+def cut_col(col):
+    print(col.name, col.describe().loc["max"])
+    new_col = pd.cut(col, [-float("inf"), 0.5, 1.5, float("inf")], right=False, include_lowest=True, labels=["0", "1", ">1"])
+    return new_col
+
 def quantile(df, col, n, bin="qcut", column=None):
-    # print(f"{bin} {col} -> {column}")                                                                                                                      
+    # print(f"{bin} {col} -> {column}")                                                                                                                              
     if col in df:
         try:
             if column is None:
@@ -29,14 +39,17 @@ def quantile(df, col, n, bin="qcut", column=None):
                 df[column], bins = pd.cut(df[col], n, labels=list(map(str, range(1,n+1))), retbins=True)
             else:
                 raise "unsupported binning method"
+            return [(column, bins.tolist())]
         except Exception as e:
-            print(f"cannot bin {col}: {e}")            
+            print(f"cannot bin {col}: {e}")
             df[column] = None
+            return [(column, None)]
     else:
         print(f"cannot find column {col}")
+        return []
 
 
-        
+
 def preprocHighwayExposure(i):
     if i < 0:
         return 500
@@ -44,42 +57,57 @@ def preprocHighwayExposure(i):
         return i
 
 def preprocAge(df, col):
-    df[f"{col}2"] = pd.cut(df[col], [np.NINF, 5, 18, 45, 65, 90], labels=['<5', '5-17', '18-44', '45-64', '65-89'], include_lowest=False, right=False)
-    df[f"{col}"] = pd.cut(df[col], [np.NINF, 3, 18, 35, 51, 70, 90], labels=['0-2', '3-17', '18-34', '35-50', '51-69', '70-89'], include_lowest=False, right=False)
+    df[f"{col}2"], bins_bigger = pd.cut(df[col], [np.NINF, 5, 18, 45, 65, 90], labels=['<5', '5-17', '18-44', '45-64', '65-89'], include_lowest=False, right=False, retbins=True)
+    df[f"{col}"], bins_smaller = pd.cut(df[col], [np.NINF, 3, 18, 35, 51, 70, 90], labels=['0-2', '3-17', '18-34', '35-50', '51-69', '70-89'], include_lowest=False, right=False, retbins=True)
+    return [
+        (f"{col}2", bins_bigger.tolist()),
+        (col, bins_smaller.tolist())
+    ]
 
 def cut(df, col, n):
-    quantile(df, col, n, "qcut", f"{col}_qcut")
-    quantile(df, col, n, "cut", f"{col}_cut")
+    qcut_bins = quantile(df, col, n, "qcut", f"{col}_qcut")
+    cut_bins = quantile(df, col, n, "cut", f"{col}_cut")
     df.drop([col], axis=1, inplace=True)
+    return [
+        (f"{col}_qcut", qcut_bins),
+        (f"{col}_cut", cut_bins)
+    ]
 
 
 def preprocEnv(df, period):
+    bins = []
     for binning, binstr in [("_qcut", "qcut"), ("", "cut")]:
         for feature in features:
             for stat in ["Avg", "Max"]:
                 for suffix in ["_StudyAvg", "_StudyMax", ""]:
                     col = stat + period + feature + "Exposure" + suffix
-                    quantile(df, col, 5, binstr, col + binning)
+                    bins += quantile(df, col, 5, binstr, col + binning)
         for feature in features2:
             for stat in ["Avg", "Max"]:
-                for suffix in ["_StudyAvg", "_StudyMax", ""]:
-                    col_2 = stat + period + feature + "Exposure" + suffix + "_2"
-                    quantile(df, col_2, 5, binstr, col_2 + binning)
+                col_2 = stat + period + feature + "Exposure_2"
+                bins += quantile(df, col_2, 5, binstr, col_2 + binning)
+    return bins
 
 
 def preprocSocial(df):
-    df["EstResidentialDensity"] = pd.cut(df["EstResidentialDensity"], [0,2500,50000,float("inf")], labels=["1","2","3"], include_lowest=True, right=False)
-    quantile(df, "EstResidentialDensity25Plus", 5)
-    quantile(df, "EstProbabilityNonHispWhite", 4)
-    quantile(df, "EstProbabilityHouseholdNonHispWhite", 4)
-    quantile(df, "EstProbabilityHighSchoolMaxEducation", 4)
-    quantile(df, "EstProbabilityNoAuto", 4)
-    quantile(df, "EstProbabilityNoHealthIns", 4)
-    quantile(df, "EstProbabilityESL", 4)
-    quantile(df, "EstHouseholdIncome", 5)
-    df["MajorRoadwayHighwayExposure2"] = pd.cut(df["MajorRoadwayHighwayExposure"].apply(preprocHighwayExposure), [0, 50, 100, 150, 200, 250, float("inf")], labels=list(map(str, [1, 2, 3, 4, 5, 6])), include_lowest=True, right=False)
-    df["MajorRoadwayHighwayExposure"] = pd.cut(df["MajorRoadwayHighwayExposure"].apply(preprocHighwayExposure), [0, 50, 100, 200, 300, 500, float("inf")], labels=list(map(str, [1, 2, 3, 4, 5, 6])), include_lowest=True, right=False)
-    df["RoadwayDistanceExposure2"] = pd.cut(df["RoadwayDistanceExposure"].apply(preprocHighwayExposure), [0, 50, 100, 150, 200, 250, float("inf")], labels=list(map(str, [1, 2, 3, 4, 5, 6])), include_lowest=True, right=False)
-    df["RoadwayDistanceExposure"] = pd.cut(df["RoadwayDistanceExposure"].apply(preprocHighwayExposure), [0, 50, 100, 200, 300, 500, float("inf")], labels=list(map(str, [1, 2, 3, 4, 5, 6])), include_lowest=True, right=False)
+    bins = []
+    df["EstResidentialDensity"], binsadd = pd.cut(df["EstResidentialDensity"], [0,2500,50000,float("inf")], labels=["1","2","3"], include_lowest=True, right=False, retbins=True)
+    bins += [("EstResidentialDensity", binsadd.tolist())]
+    bins += quantile(df, "EstResidentialDensity25Plus", 5)
+    bins += quantile(df, "EstProbabilityNonHispWhite", 4)
+    bins += quantile(df, "EstProbabilityHouseholdNonHispWhite", 4)
+    bins += quantile(df, "EstProbabilityHighSchoolMaxEducation", 4)
+    bins += quantile(df, "EstProbabilityNoAuto", 4)
+    bins += quantile(df, "EstProbabilityNoHealthIns", 4)
+    bins += quantile(df, "EstProbabilityESL", 4)
+    bins += quantile(df, "EstHouseholdIncome", 5)
+    df["MajorRoadwayHighwayExposure2"], binsadd = pd.cut(df["MajorRoadwayHighwayExposure"].apply(preprocHighwayExposure), [0, 50, 100, 150, 200, 250, float("inf")], labels=list(map(str, [1, 2, 3, 4, 5, 6])), include_lowest=True, right=False, retbins=True)
+    bins += [("MajorRoadwayHighwayExposure2", binsadd.tolist())]
+    df["MajorRoadwayHighwayExposure"], binsadd = pd.cut(df["MajorRoadwayHighwayExposure"].apply(preprocHighwayExposure), [0, 50, 100, 200, 300, 500, float("inf")], labels=list(map(str, [1, 2, 3, 4, 5, 6])), include_lowest=True, right=False, retbins=True)
+    bins += [("MajorRoadwayHighwayExposure", binsadd.tolist())]
+    df["RoadwayDistanceExposure2"], binsadd = pd.cut(df["RoadwayDistanceExposure"].apply(preprocHighwayExposure), [0, 50, 100, 150, 200, 250, float("inf")], labels=list(map(str, [1, 2, 3, 4, 5, 6])), include_lowest=True, right=False, retbins=True)
+    bins += [("RoadwayDistanceExposure2", binsadd.tolist())]
+    df["RoadwayDistanceExposure"], binsadd = pd.cut(df["RoadwayDistanceExposure"].apply(preprocHighwayExposure), [0, 50, 100, 200, 300, 500, float("inf")], labels=list(map(str, [1, 2, 3, 4, 5, 6])), include_lowest=True, right=False, retbins=True)
+    bins += [("RoadwayDistanceExposure", binsadd.tolist())]
 
-
+    return bins
