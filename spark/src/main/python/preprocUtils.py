@@ -18,6 +18,7 @@ def sex2gen(a):
     else:
         return ""
 
+    
 def addSex2(df):
     df["Sex2"] = df["Sex"].apply(sex2gen)
 
@@ -26,6 +27,7 @@ def cut_col(col):
     print(col.name, col.describe().loc["max"])
     new_col = pd.cut(col, [-float("inf"), 0.5, 1.5, float("inf")], right=False, include_lowest=True, labels=["0", "1", ">1"])
     return new_col
+
 
 def quantile(df, col, n, bin="qcut", column=None):
     # print(f"{bin} {col} -> {column}")                                                                                                                              
@@ -49,13 +51,13 @@ def quantile(df, col, n, bin="qcut", column=None):
         return []
 
 
-
 def preprocHighwayExposure(i):
     if i < 0:
         return 500
     else:
         return i
 
+    
 def preprocAge(df, col):
     df[f"{col}2"], bins_bigger = pd.cut(df[col], [np.NINF, 5, 18, 45, 65, 90], labels=['<5', '5-17', '18-44', '45-64', '65-89'], include_lowest=False, right=False, retbins=True)
     df[f"{col}"], bins_smaller = pd.cut(df[col], [np.NINF, 3, 18, 35, 51, 70, 90], labels=['0-2', '3-17', '18-34', '35-50', '51-69', '70-89'], include_lowest=False, right=False, retbins=True)
@@ -64,14 +66,12 @@ def preprocAge(df, col):
         (col, bins_smaller.tolist())
     ]
 
+
 def cut(df, col, n):
     qcut_bins = quantile(df, col, n, "qcut", f"{col}_qcut")
     cut_bins = quantile(df, col, n, "cut", f"{col}_cut")
     df.drop([col], axis=1, inplace=True)
-    return [
-        (f"{col}_qcut", qcut_bins),
-        (f"{col}_cut", cut_bins)
-    ]
+    return qcut_bins + cut_bins
 
 
 def preprocEnv(df, period):

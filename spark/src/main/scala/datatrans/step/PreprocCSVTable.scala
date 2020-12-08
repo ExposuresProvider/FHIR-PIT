@@ -223,7 +223,7 @@ object PreprocCSVTable extends StepImpl {
           .withColumn("ObesityBMIVisit", procObesityBMI($"ObesityBMIVisit"))
 
         // df_all_visit = df_all_visit.na.fill(0, "ObesityBMIVisit" +: binaryVisitSeq) // spark has a bug in na such that column with dot doesn't work
-        ("ObesityBMIVisit" +: binaryVisitSeq.map(colname => s"`$colname`")).foreach(colname => {
+        ("ObesityBMIVisit" +: binaryVisitSeq).foreach(colname => {
           df_all_visit = df_all_visit.withColumn(colname, when(df_all_visit.col(colname).isNull, 0).otherwise(df_all_visit.col(colname)))
         })
 

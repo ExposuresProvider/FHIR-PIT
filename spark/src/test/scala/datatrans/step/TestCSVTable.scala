@@ -17,7 +17,7 @@ class CSVTableSpec extends FlatSpec {
   
   lazy val spark = SparkSession.builder().master("local").appName("datatrans preproc").getOrCreate()
 
-  "EnvData" should "handle subset columns" in {
+  "CSVTable" should "handle subset columns" in {
     val tempDir = Files.createTempDirectory("icees")
     val tempDir2 = Files.createTempDirectory("icees2")
 
@@ -29,7 +29,8 @@ class CSVTableSpec extends FlatSpec {
         "src/test/data/other_processed/2010/acs.csv",
         "src/test/data/other_processed/2010/acs2.csv",
         "src/test/data/other_processed/2010/nearestroad.csv",
-        "src/test/data/other_processed/2010/nearestroad2.csv"
+        "src/test/data/other_processed/2010/nearestroad2.csv",
+        "src/test/data/other_processed/2010/cafo.csv"
       ),
       output_dir = f"${tempDir.toString()}",
       start_date = stringToDateTime("2010-01-01T00:00:00Z"),
@@ -73,7 +74,7 @@ class CSVTableSpec extends FlatSpec {
 
   }
 
-  "EnvData" should "handle inactive years" in {
+  "CSVTable" should "handle inactive years" in {
     val tempDir = Files.createTempDirectory("icees")
     val tempDir2 = Files.createTempDirectory("icees2")
 
@@ -85,7 +86,8 @@ class CSVTableSpec extends FlatSpec {
         "src/test/data/other_processed/2010/acs.csv",
         "src/test/data/other_processed/2010/acs2.csv",
         "src/test/data/other_processed/2010/nearestroad.csv",
-        "src/test/data/other_processed/2010/nearestroad2.csv"
+        "src/test/data/other_processed/2010/nearestroad2.csv",
+        "src/test/data/other_processed/2010/cafo.csv"
       ),
       output_dir = f"${tempDir.toString()}",
       start_date = stringToDateTime("2009-01-01T00:00:00Z"),
@@ -129,7 +131,7 @@ class CSVTableSpec extends FlatSpec {
 
   }
 
-  "EnvData" should "convert twice" in {
+  "CSVTable" should "convert twice" in {
     val tempDir = Files.createTempDirectory("icees")
     val tempDir2 = Files.createTempDirectory("icees2")
 
@@ -141,7 +143,8 @@ class CSVTableSpec extends FlatSpec {
         "src/test/data/other_processed/2010/acs.csv",
         "src/test/data/other_processed/2010/acs2.csv",
         "src/test/data/other_processed/2010/nearestroad.csv",
-        "src/test/data/other_processed/2010/nearestroad2.csv"
+        "src/test/data/other_processed/2010/nearestroad2.csv",
+        "src/test/data/other_processed/2010/cafo.csv"
       ),
       output_dir = f"${tempDir.toString()}",
       start_date = stringToDateTime("2010-01-01T00:00:00Z"),
@@ -185,7 +188,7 @@ class CSVTableSpec extends FlatSpec {
 
   }
 
-  "EnvData" should "convert thrice" in {
+  "CSVTable" should "convert thrice" in {
     val tempDir = Files.createTempDirectory("icees")
     val tempDir2 = Files.createTempDirectory("icees2")
 
@@ -197,7 +200,8 @@ class CSVTableSpec extends FlatSpec {
         "src/test/data/other_processed/2010/acs.csv",
         "src/test/data/other_processed/2010/acs2.csv",
         "src/test/data/other_processed/2010/nearestroad.csv",
-        "src/test/data/other_processed/2010/nearestroad2.csv"
+        "src/test/data/other_processed/2010/nearestroad2.csv",
+        "src/test/data/other_processed/2010/cafo.csv"
       ),
       output_dir = f"${tempDir.toString()}",
       start_date = stringToDateTime("2010-01-01T00:00:00Z"),
