@@ -486,7 +486,7 @@ let csvTableStep = λ(skip : Bool) → λ(year : Natural) → Step.csvTable {
       output_dir = "${basediroutput}/icees2/${Natural/show year}",
       deidentify = [] : List Text,
       offset_hours = -5,
-      feature_map = "${basedir}/other/medical/icees_features.yaml"
+      feature_map = "${configdir}/icees_features.yaml"
     }
   }
 }
