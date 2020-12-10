@@ -14,6 +14,7 @@ in pipeline "report" "progress" "/share/spark/hao/datatrans/spark/config" "/var/
     nearestRoadTL = True,
     nearestRoadHPMS = True,
     cafo = True,
+    landfill = True,
     toVector = True,
     perPatSeriesCSVTable = True
   },

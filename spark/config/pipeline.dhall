@@ -35,8 +35,9 @@ let FhirConfig : Type = {
       acs : Bool,
       acsUR : Bool,
       nearestRoadTL : Bool,
-      nearestRoadHPMS : Bool,
+      nearestRoadHPMS : Bool
       cafo: Bool,
+      landfill: Bool,
       toVector : Bool,
       perPatSeriesCSVTable : Bool
     },
@@ -184,6 +185,7 @@ let acsUR_output_path = "${basedir}/other_processed/acsUR.csv"
 let nearestRoadTL_output_path = "${basedir}/other_processed/nearestRoadTL.csv"
 let nearestRoadHPMS_output_path = "${basedir}/other_processed/nearestRoadHPMS.csv"
 let cafo_output_path = "${basedir}/other_processed/cafo.csv"
+let landfill_output_path = "${basedir}/other_processed/landfill.csv"
 
 let fhirStep = λ(skip : Bool) → λ(skip_preproc : List Text) → Step.FHIR {
     name = "FHIR",
@@ -439,6 +441,24 @@ let cafoStep = λ(skip : Bool) → Step.NearestPoint {
   }
 }
 
+let landfillStep = λ(skip : Bool) → Step.NearestPoint {
+  name = "PerPatSeriesLandfill",
+  dependsOn = [
+    "FHIR"
+  ],
+  skip = skip,
+  step = {
+    function = "datatrans.step.PreprocPerPatSeriesNearestPoint",
+    arguments = {
+      patgeo_data = patgeo_output_path,
+      nearestpoint_data = "${basedirinput}/other/spatial/BDT_PointDatasets/Active_Permitted_Landfills_geo.shp",
+      output_file = landfill_output_path,
+      feature_name = "landfill",
+      feature_map = "${configdir}/icees_features.yaml"
+    }
+  }
+}
+
 let perPatSeriesCSVTableStep = λ(skip : Bool) →  λ(year_start : Natural) →  λ(year_end : Natural) →  Step.PerPatSeriesCSVTable {
   name = "PerPatSeriesCSVTable",
   dependsOn = [
@@ -448,6 +468,7 @@ let perPatSeriesCSVTableStep = λ(skip : Bool) →  λ(year_start : Natural) →
     "PerPatSeriesNearestRoadTL",
     "PerPatSeriesNearestRoadHPMS",
     "PerPatSeriesCAFO",
+    "PerPatSeriesLandfill",
     "EnvDataAggregateCoordinates",
     "EnvDataAggregateFIPS"
   ],
@@ -463,7 +484,8 @@ let perPatSeriesCSVTableStep = λ(skip : Bool) →  λ(year_start : Natural) →
         acsUR_output_path,
         nearestRoadTL_output_path,
         nearestRoadHPMS_output_path,
-	cafo_output_path
+	cafo_output_path,
+	landfill_output_path
       ],
       output_dir = "${basedir}/icees",
       start_date = start_year year_start,
@@ -508,6 +530,7 @@ in {
       nearestRoadTLStep fhirConfig.skip.nearestRoadTL,
       nearestRoadHPMSStep fhirConfig.skip.nearestRoadHPMS,
       cafoStep fhirConfig.skip.cafo,
+      landfillStep fhirConfig.skip.landfill,
       toVectorStep fhirConfig.skip.toVector,
       perPatSeriesCSVTableStep fhirConfig.skip.perPatSeriesCSVTable fhirConfig.yearStart fhirConfig.yearEnd
     ] # List/fold YearConfig skipList (List Step) (λ(yearSkip : YearConfig) → λ(stepList : List Step) → [

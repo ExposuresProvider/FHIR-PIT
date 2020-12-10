@@ -1805,5 +1805,8 @@ NearestRoad:
       THROUGH_LA: RoadwayLanes
 NearestPoint:
   cafo:
-    distance_feature_name: CAFOExposure
+    distance_feature_name: CAFO_Exposure
+    attributes_to_features_map: {}
+  landfill:
+    distance_feature_name: LandfillExposure
     attributes_to_features_map: {}

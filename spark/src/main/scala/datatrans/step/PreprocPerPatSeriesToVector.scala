@@ -159,6 +159,9 @@ object PreprocPerPatSeriesToVector extends StepImpl {
                     rec + (n -> 1)
                 }
 
+              def setName(rec: Map[String, Any], n: String, v: Any): Map[String, Any] =
+                rec + (n -> v)
+
               def toVector(enc : Encounter) = {
                 var rec = rec0 + ("encounter_num" -> enc.id, "VisitType" -> enc.classAttr.map(_.code).getOrElse(""))
                 val med = enc.medication
@@ -180,9 +183,11 @@ object PreprocPerPatSeriesToVector extends StepImpl {
                 )
 
                 lab.foreach(m =>
-                  m.coding.foreach(coding => Mapper.map_coding_to_feature(mapper.obs_map, coding).foreach(n => {
-                    rec = incrementName(rec, n)
-                  }))
+                  m.coding.foreach(coding => Mapper.map_coding_to_feature_and_quantity(mapper.obs_map, coding, m).foreach{
+                    case (n, v, _) => {
+                      rec = setName(rec, n, v)
+                    }
+                  })
                 )
 
                 proc.foreach(m =>
