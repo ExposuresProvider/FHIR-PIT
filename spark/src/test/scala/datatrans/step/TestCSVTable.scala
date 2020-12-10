@@ -30,7 +30,8 @@ class CSVTableSpec extends FlatSpec {
         "src/test/data/other_processed/2010/acs2.csv",
         "src/test/data/other_processed/2010/nearestroad.csv",
         "src/test/data/other_processed/2010/nearestroad2.csv",
-        "src/test/data/other_processed/2010/cafo.csv"
+        "src/test/data/other_processed/2010/cafo.csv",
+        "src/test/data/other_processed/2010/landfill.csv"
       ),
       output_dir = f"${tempDir.toString()}",
       start_date = stringToDateTime("2010-01-01T00:00:00Z"),
@@ -87,7 +88,8 @@ class CSVTableSpec extends FlatSpec {
         "src/test/data/other_processed/2010/acs2.csv",
         "src/test/data/other_processed/2010/nearestroad.csv",
         "src/test/data/other_processed/2010/nearestroad2.csv",
-        "src/test/data/other_processed/2010/cafo.csv"
+        "src/test/data/other_processed/2010/cafo.csv",
+        "src/test/data/other_processed/2010/landfill.csv"
       ),
       output_dir = f"${tempDir.toString()}",
       start_date = stringToDateTime("2009-01-01T00:00:00Z"),
@@ -144,7 +146,8 @@ class CSVTableSpec extends FlatSpec {
         "src/test/data/other_processed/2010/acs2.csv",
         "src/test/data/other_processed/2010/nearestroad.csv",
         "src/test/data/other_processed/2010/nearestroad2.csv",
-        "src/test/data/other_processed/2010/cafo.csv"
+        "src/test/data/other_processed/2010/cafo.csv",
+        "src/test/data/other_processed/2010/landfill.csv"
       ),
       output_dir = f"${tempDir.toString()}",
       start_date = stringToDateTime("2010-01-01T00:00:00Z"),
@@ -201,7 +204,8 @@ class CSVTableSpec extends FlatSpec {
         "src/test/data/other_processed/2010/acs2.csv",
         "src/test/data/other_processed/2010/nearestroad.csv",
         "src/test/data/other_processed/2010/nearestroad2.csv",
-        "src/test/data/other_processed/2010/cafo.csv"
+        "src/test/data/other_processed/2010/cafo.csv",
+        "src/test/data/other_processed/2010/landfill.csv"
       ),
       output_dir = f"${tempDir.toString()}",
       start_date = stringToDateTime("2010-01-01T00:00:00Z"),

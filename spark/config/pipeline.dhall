@@ -35,7 +35,7 @@ let FhirConfig : Type = {
       acs : Bool,
       acsUR : Bool,
       nearestRoadTL : Bool,
-      nearestRoadHPMS : Bool
+      nearestRoadHPMS : Bool,
       cafo: Bool,
       landfill: Bool,
       toVector : Bool,
