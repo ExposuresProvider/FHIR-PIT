@@ -35,14 +35,14 @@ class NearestRoad(roadShapefilePath : String, maximum_search_radius : Double) {
   var lastMatched : Option[SimpleFeature] = None
   index.addAll(features)
 
-  def getMinimumDistance(lat : Double, lon : Double) : Double = {
+  def getMinimumDistance(lat : Double, lon : Double) : Option[Double] = {
 
     val p = createPointLCC(lat, lon)
     findMinimumDistance(p)
 
   }
 
-  private def findMinimumDistance(p : Point) : Double = {
+  private def findMinimumDistance(p : Point) : Option[Double] = {
 
     val coordinate = p.getCoordinate
     val search = new ReferencedEnvelope(new Envelope(coordinate),
@@ -53,7 +53,7 @@ class NearestRoad(roadShapefilePath : String, maximum_search_radius : Double) {
 
     val candidates = index.subCollection(bbox)
 
-    var minDist: Double = -1
+    var minDist: Option[Double] = None
     val itr = candidates.features()
 
     while (itr.hasNext) {
@@ -68,8 +68,8 @@ class NearestRoad(roadShapefilePath : String, maximum_search_radius : Double) {
       val here = line.project(coordinate)
       val point = line.extractPoint(here)
       val dist = point.distance(coordinate)
-      if (dist <= maximum_search_radius && (minDist < 0 || dist < minDist)) {
-        minDist = dist
+      if (dist <= maximum_search_radius && (minDist == None || dist < minDist.get)) {
+        minDist = Some(dist)
         lastMatched = Some(feature)
       }
     }
