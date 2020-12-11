@@ -49,7 +49,7 @@ object PreprocPerPatSeriesNearestPoint extends StepImpl {
 
         val schema = StructType(
           StructField("patient_num", StringType) +:
-            StructField(distance_feature_name, DoubleType) +: features.toSeq.map(x => StructField(x, StringType)))
+            StructField(distance_feature_name, DoubleType, true) +: features.toSeq.map(x => StructField(x, StringType, true)))
 
         val encoder : Encoder[Row] = RowEncoder(schema)
 
