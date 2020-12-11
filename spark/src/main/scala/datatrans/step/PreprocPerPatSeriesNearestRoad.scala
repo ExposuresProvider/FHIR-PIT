@@ -60,7 +60,6 @@ object PreprocPerPatSeriesNearestRoad extends StepImpl {
           partition.map(r => {
             val distance_to_nearest_road = nearestRoad.getMinimumDistance(r.getString(1).toDouble, r.getString(2).toDouble)
             Row.fromSeq(Seq(r.getString(0), distance_to_nearest_road.getOrElse(null)) ++ attributes.map(attribute => nearest_road.getMatchedAttribute(attribute).getOrElse(null)))
-            )
           })
         })(encoder)
 
