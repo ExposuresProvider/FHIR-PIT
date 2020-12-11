@@ -58,7 +58,7 @@ object PreprocPerPatSeriesNearestPoint extends StepImpl {
           val nearest_point = new NearestPoint(config.nearestpoint_data)
           partition.map(r => {
             val distance_to_nearest_point = nearest_point.getDistanceToNearestPoint(r.getString(1).toDouble, r.getString(2).toDouble)
-            Row.fromSeq(Seq(r.getString(0), distance_to_nearest_point) ++ attributes.map(attribute => nearest_point.getMatchedAttribute(attribute)))
+            Row.fromSeq(Seq(r.getString(0), distance_to_nearest_point.getOrElse(null)) ++ attributes.map(attribute => nearest_point.getMatchedAttribute(attribute).getOrElse(null)))
           })
         })(encoder)
 
