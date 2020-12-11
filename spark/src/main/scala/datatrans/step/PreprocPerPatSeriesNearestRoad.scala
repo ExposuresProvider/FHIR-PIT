@@ -4,9 +4,11 @@ import java.util.concurrent.atomic.AtomicInteger
 
 import datatrans.Utils._
 import org.apache.hadoop.fs.Path
-import org.apache.spark.sql.{SparkSession, Row}
+import org.apache.spark.sql.{SparkSession, Row, Encoder}
+import org.apache.spark.sql.types.{StructType, StructField, StringType, DoubleType}
+import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import scopt._
-import io.circe._
+import io.circe.{Decoder}
 import io.circe.generic.semiauto._
 import datatrans.Config._
 import datatrans.Implicits._
@@ -46,18 +48,22 @@ object PreprocPerPatSeriesNearestRoad extends StepImpl {
         val attributes_to_features_map = nearestRoad.attributes_to_features_map
         val (attributes, features) = attributes_to_features_map.unzip
 
+        val schema = StructType(
+          StructField("patient_num", StringType) +:
+            StructField(distance_feature_name, DoubleType) +: features.toSeq.map(x => StructField(x, StringType)))
+
+        val encoder : Encoder[Row] = RowEncoder(schema)
+
         val pddf0 = spark.read.format("csv").option("header", value = true).load(config.patgeo_data)
-        val rows = pddf0.mapPartitions(partition => {
+        val df = pddf0.mapPartitions(partition => {
           val nearestRoad = new NearestRoad(config.nearestroad_data, config.maximum_search_radius)
           partition.map(r => {
             val distance_to_nearest_road = nearestRoad.getMinimumDistance(r.getString(1).toDouble, r.getString(2).toDouble)
-            Seq(r.getString(0), distance_to_nearest_road) ++ attributes.map(attribute =>
-              nearestRoad.getMatchedAttribute(attribute)
+            Row.fromSeq(Seq(r.getString(0), distance_to_nearest_road) ++ attributes.map(attribute =>
+              nearestRoad.getMatchedAttribute(attribute))
             )
           })
-        })
-
-        val df = rows.toDF(("patient_num" +: distance_feature_name +: features.toSeq) : _*)
+        })(encoder)
 
         writeDataframe(hc, config.output_file, df)
       }

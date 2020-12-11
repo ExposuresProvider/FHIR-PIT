@@ -4,9 +4,11 @@ import java.util.concurrent.atomic.AtomicInteger
 
 import datatrans.Utils._
 import org.apache.hadoop.fs.Path
-import org.apache.spark.sql.{SparkSession, Row}
+import org.apache.spark.sql.{SparkSession, Row, Encoder}
+import org.apache.spark.sql.types.{StructType, StructField, StringType, DoubleType}
+import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import scopt._
-import io.circe._
+import io.circe.{Decoder}
 import io.circe.generic.semiauto._
 import datatrans.Config._
 import datatrans.Implicits._
@@ -44,16 +46,21 @@ object PreprocPerPatSeriesNearestPoint extends StepImpl {
         val distance_feature_name = nearest_point_mapping.distance_feature_name
         val attributes_to_features_map = nearest_point_mapping.attributes_to_features_map
         val (attributes, features) = attributes_to_features_map.unzip
+
+        val schema = StructType(
+          StructField("patient_num", StringType) +:
+            StructField(distance_feature_name, DoubleType) +: features.toSeq.map(x => StructField(x, StringType)))
+
+        val encoder : Encoder[Row] = RowEncoder(schema)
+
         val pddf0 = spark.read.format("csv").option("header", value = true).load(config.patgeo_data)
-        val rows = pddf0.mapPartitions(partition => {
+        val df = pddf0.mapPartitions(partition => {
           val nearest_point = new NearestPoint(config.nearestpoint_data)
           partition.map(r => {
             val distance_to_nearest_point = nearest_point.getDistanceToNearestPoint(r.getString(1).toDouble, r.getString(2).toDouble)
-            Seq(r.getString(0), distance_to_nearest_point) ++ attributes.map(attribute => nearest_point.getMatchedAttribute(attribute))
+            Row.fromSeq(Seq(r.getString(0), distance_to_nearest_point) ++ attributes.map(attribute => nearest_point.getMatchedAttribute(attribute)))
           })
-        })
-
-        val df = rows.toDF(("patient_num" +: distance_feature_name +: features.toSeq) : _*)
+        })(encoder)
 
         writeDataframe(hc, config.output_file, df)
       }
