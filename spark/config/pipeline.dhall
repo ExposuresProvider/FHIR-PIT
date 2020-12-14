@@ -541,7 +541,7 @@ let perPatSeriesCSVTableStep = λ(skip : Text) →  λ(year_start : Natural) →
 }
 
 let perPatSeriesCSVTableLocalStep = λ(skip : Text) →  λ(year_start : Natural) →  λ(year_end : Natural) →  Step.PerPatSeriesCSVTable {
-  name = "PerPatSeriesCSVTable",
+  name = "PerPatSeriesCSVTableLocal",
   dependsOn = [
     ["PerPatSeriesToVector"],
     ["PerPatSeriesACS"],
@@ -586,7 +586,7 @@ let csvTableStep = λ(skip : Text) → λ(year : Natural) → Step.csvTable {
     function = "datatrans.step.PreprocCSVTable",
     arguments = {
       input_dir = "${basedir}/icees/${Natural/show year}/per_patient",
-      output_dir = "${basediroutput}/icees2/${Natural/show year}",
+      output_dir = "${basedir}/icees2/${Natural/show year}",
       deidentify = [] : List Text,
       offset_hours = -5,
       feature_map = "${configdir}/icees_features.yaml"
