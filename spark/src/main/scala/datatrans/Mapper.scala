@@ -19,13 +19,15 @@ object Mapper {
   case class QuantityMapping(coding: Coding, unit: Option[String])
   case class FHIRFeatureMapping(Condition: Option[Seq[Coding]], Observation: Option[Seq[QuantityMapping]], MedicationRequest: Option[Seq[Coding]], Procedure: Option[Seq[Coding]])
 
+  case class Feature(feature_name: String, feature_type: String)
   case class GEOIDMapping(GEOID: String, columns: Map[String, String])
-  case class NearestMapping(distance_feature_name: String, attributes_to_features_map: Map[String, String])
+  case class NearestMapping(distance_feature_name: String, attributes_to_features_map: Map[String, Feature])
 
   case class FeatureMapping(FHIR: Option[Map[String, FHIRFeatureMapping]], GEOID: Option[Map[String, GEOIDMapping]], NearestRoad: Option[Map[String, NearestMapping]], NearestPoint: Option[Map[String, NearestMapping]])
 
   import Implicits._
   implicit val quantityMappingDecoder: Decoder[QuantityMapping] = deriveDecoder
+  implicit val featureDecoder: Decoder[Feature] = deriveDecoder
   implicit val geoidMappingDecoder: Decoder[GEOIDMapping] = deriveDecoder
   implicit val nearestMappingDecoder: Decoder[NearestMapping] = deriveDecoder
   implicit val featureMappingDecoder: Decoder[FeatureMapping] = deriveDecoder
@@ -351,6 +353,7 @@ class Mapper(hc : Configuration, feature_map_input_path : String) {
   val meds = med_map.values.toSet
   val conds = cond_map.values.toSet
   val labs = obs_map.values.map(_._1).toSet
-  val procs = obs_map.values.toSet
+  val procs = proc_map.values.toSet
+
 
 }

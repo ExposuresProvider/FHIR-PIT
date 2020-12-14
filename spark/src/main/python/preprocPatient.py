@@ -15,13 +15,13 @@ def preproc_patient(input_file, output_file):
                                                                                                                                                                       
     bins += preprocSocial(df)                                                                                                                                         
                                                                                                                                                                       
-    addSex2(df)                                                                                                                                                       
-                                                                                                                                                                      
-    for c in patient_cols:                                                                                                                                            
-         df[c].fillna(0, inplace=True)                                                                                                                               
-        df[c] = cut_col(df[c])                                                                                                                                        
-                                                                                                                                                                      
-    df.drop(["birth_date"], axis=1, inplace=True)                                                                                                                    
+    addSex2(df)
+
+    for c in patient_cols:
+        df[c].fillna(0, inplace=True)
+        df[c] = cut_col(df[c])
+
+    df.drop(["birth_date"], axis=1, inplace=True)
                                                                                                                                                                       
     df.to_csv(output_file, index=False)                                                                                                                              
                                                                                                                                                                       

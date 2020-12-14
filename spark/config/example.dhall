@@ -24,51 +24,51 @@ in pipeline "report" "progress" "/share/spark/hao/datatrans/spark/config" "/var/
 } [{
   year = 2010,
   skip = {
-    csvTable = True
+    csvTable = "reuse"
   }
 }, {
   year = 2011,
   skip = {
-    csvTable = True
+    csvTable = "reuse"
   }
 }, {
   year = 2012,
   skip = {
-    csvTable = True
+    csvTable = "reuse"
   }
 }, {
   year = 2013,
   skip = {
-    csvTable = True
+    csvTable = "reuse"
   }
 }, {
   year = 2014,
   skip = {
-    csvTable = True
+    csvTable = "reuse"
   }
 }, {
   year = 2015,
   skip = {
-    csvTable = True
+    csvTable = "reuse"
   }
 }, {
   year = 2016,
   skip = {
-    csvTable = True
+    csvTable = "reuse"
   }
 }, {
   year = 2017,
   skip = {
-    csvTable = True
+    csvTable = "reuse"
   }
 }, {
   year = 2018,
   skip = {
-    csvTable = True
+    csvTable = "reuse"
   }
 }, {
   year = 2019,
   skip = {
-    csvTable = True
+    csvTable = "reuse"
   }
 }]

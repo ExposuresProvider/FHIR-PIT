@@ -149,14 +149,16 @@ object PreprocPerPatSeriesToVector extends StepImpl {
             case (encounter_start_date_joda, encset) =>
               var rec0 = demographic
               val age = Years.yearsBetween (birth_date_joda, encounter_start_date_joda).getYears
-              rec0 += ("start_date" -> encounter_start_date_joda.toDateTime(timeZone).toString("yyyy-MM-dd"), "AgeVisit" -> age) 
+              rec0 += ("start_date" -> encounter_start_date_joda.toDateTime(timeZone).toString("yyyy-MM-dd"), "AgeVisit" -> age)
 
-              def incrementName(rec: Map[String, Any], n: String): Map[String, Any] =
+              def incrementName(rec: Map[String, Any], n: String): Map[String, Any] = incrementNameBy(rec, n, 1)
+
+              def incrementNameBy(rec: Map[String, Any], n: String, l: Int): Map[String, Any] =
                 rec.get(n) match {
                   case Some(i) =>
-                    rec + (n -> (i.asInstanceOf[Int] + 1))
+                    rec + (n -> (i.asInstanceOf[Int] + l))
                   case None =>
-                    rec + (n -> 1)
+                    rec + (n -> l)
                 }
 
               def setName(rec: Map[String, Any], n: String, v: Any): Map[String, Any] =
@@ -182,13 +184,23 @@ object PreprocPerPatSeriesToVector extends StepImpl {
                   }))
                 )
 
+               var labRecEnc = Map[String, Seq[(String, (Option[Any], Option[String]))]]()
                 lab.foreach(m =>
                   m.coding.foreach(coding => Mapper.map_coding_to_feature_and_quantity(mapper.obs_map, coding, m).foreach{
-                    case (n, v, _) => {
-                      rec = setName(rec, n, v)
+                    case (n, value, flag) => {
+                      labRecEnc = labRecEnc + (n -> (labRecEnc.getOrElse(n, Seq()) :+ (m.id, (value, flag))))
                     }
                   })
                 )
+               labRecEnc.foreach {
+                   case (n, values) =>
+                     val valuesSorted = values.sortBy {case (id, _) => id}
+                     val len = values.size
+                     val (value_first, flag_first) = valuesSorted.head._2
+                     val (value_last, flag_last) = valuesSorted.last._2
+                    incrementNameBy(rec, n, len)
+                    rec = rec + (f"${n}_value_first" -> value_first, f"${n}_value_last" -> value_last, f"${n}_flag_first" -> flag_first, f"${n}_flag_last" -> flag_last)
+                }
 
                 proc.foreach(m =>
                   m.coding.foreach(coding => Mapper.map_coding_to_feature(mapper.proc_map, coding).foreach(n => {

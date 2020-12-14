@@ -3,6 +3,7 @@ import json
 import pandas as pd
 from preprocUtils import *
 
+print(sys.argv)
 input_file, crosswalk_file, icees_dir, pat_geo_file, output_file = sys.argv[1:]
 df = pd.read_csv(input_file)
 

@@ -11,7 +11,7 @@ tf.close()
 
 tfname = tf.name
 
-subprocess.call(["dhall-to-yaml-ng", "--file", config, "--output", tfname])
+subprocess.call(["dhall-to-yaml", "--file", config, "--output", tfname])
 
 def submit(host_name, cls, *args, **kwargs):
     if host_name == "local":

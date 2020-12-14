@@ -49,7 +49,7 @@ object PreprocPerPatSeriesNearestPoint extends StepImpl {
 
         val schema = StructType(
           StructField("patient_num", StringType) +:
-            StructField(distance_feature_name, DoubleType, true) +: features.toSeq.map(x => StructField(x, StringType, true)))
+            StructField(distance_feature_name, DoubleType, true) +: features.toSeq.map(x => StructField(x.feature_name, feature_type_to_sql_type(x.feature_type), true)))
 
         val encoder : Encoder[Row] = RowEncoder(schema)
 
@@ -57,8 +57,17 @@ object PreprocPerPatSeriesNearestPoint extends StepImpl {
         val df = pddf0.mapPartitions(partition => {
           val nearest_point = new NearestPoint(config.nearestpoint_data)
           partition.map(r => {
-            val distance_to_nearest_point = nearest_point.getDistanceToNearestPoint(r.getString(1).toDouble, r.getString(2).toDouble)
-            Row.fromSeq(Seq(r.getString(0), distance_to_nearest_point.getOrElse(null)) ++ attributes.map(attribute => nearest_point.getMatchedAttribute(attribute).getOrElse(null)))
+           val pid = r.getString(0)
+           val latstr = r.getString(1)
+           val lonstr = r.getString(2)
+            val distance_to_nearest_point = if (latstr == null || lonstr == null)
+               null +: Seq.fill(attributes.size + 1)(null)
+           else {
+               val lat = latstr.toDouble
+               val lon = lonstr.toDouble
+               nearest_point.getDistanceToNearestPoint(lat, lon).getOrElse(Double.PositiveInfinity) +: attributes.map(attribute => nearest_point.getMatchedAttribute(attribute).getOrElse(null)).toSeq
+            }
+            Row.fromSeq(pid +: distance_to_nearest_point)
           })
         })(encoder)
 

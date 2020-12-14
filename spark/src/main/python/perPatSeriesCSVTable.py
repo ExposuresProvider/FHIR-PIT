@@ -26,10 +26,10 @@ def extractYear(x):
 
 
 def proc_pid(config, p):
-        # print(f"processing {p}")                                                                                                                                                                                                                                                                                                                                         
+        # print(f"processing {p}")
         v = config["patient_file"]
-        env_fn = config["environmental_file"]
-        env2_fn = config["environmental2_file"]
+        env_fn = config["environment_file"]
+        env2_fn = config["environment2_file"]
         input_files = config["input_files"]
         output_dir = config["output_dir"]
         offset_hours = config["offset_hours"]
@@ -81,5 +81,5 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     with open(args.config) as f:
-        config = yaml.load(f)
+        config = yaml.safe_load(f)
     step({"n_jobs": args.n_jobs}, config)

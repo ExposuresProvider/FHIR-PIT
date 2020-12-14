@@ -1,3 +1,5 @@
+let Prelude = ./dhall-lang/Prelude/package.dhall
+
 let ResourceTypes : Type = {
     Condition: Text,
     Lab: Text,
@@ -10,7 +12,7 @@ let ResourceTypes : Type = {
 let YearConfig : Type = {
     year : Natural,
     skip : {
-      csvTable : Bool
+      csvTable : Text
     }
 }
 
@@ -25,21 +27,25 @@ let resc_types = {
 
 let FhirConfig : Type = {
     skip: {
-      fhir: Bool,
-      envDataCoordinates : Bool,
-      latLonToGeoid: Bool,
-      envDataFIPS : Bool,
-      split : Bool,
-      envDataAggregateFIPS : Bool,
-      envDataAggregateCoordinates : Bool,
-      acs : Bool,
-      acsUR : Bool,
-      nearestRoadTL : Bool,
-      nearestRoadHPMS : Bool,
-      cafo: Bool,
-      landfill: Bool,
-      toVector : Bool,
-      perPatSeriesCSVTable : Bool
+      mergeLocal: Text,
+      fhir: Text,
+      envDataCoordinates : Text,
+      latLonToGeoid: Text,
+      envDataFIPS : Text,
+      split : Text,
+      envDataAggregateFIPS : Text,
+      envDataAggregateCoordinates : Text,
+      acs : Text,
+      acsUR : Text,
+      nearestRoadTL : Text,
+      nearestRoadHPMS : Text,
+      cafo: Text,
+      landfill: Text,
+      toVector : Text,
+      perPatSeriesCSVTable : Text,
+      perPatSeriesCSVTableLocal : Text,
+      binICEES: Text,
+      binEPR: Text
     },
     skip_preproc: List Text,
     yearStart: Natural,
@@ -168,7 +174,8 @@ let Step : Type = <
     NearestRoad : PerPatSeriesNearestRoadStep |
     NearestPoint : PerPatSeriesNearestPointStep |
     csvTable : csvTableStep |
-    PerPatSeriesCSVTable : PerPatSeriesCSVTableStep
+    PerPatSeriesCSVTable : PerPatSeriesCSVTableStep |
+    System : SystemStep
 >
 
 let Config: Type = {
@@ -513,11 +520,44 @@ let csvTableStep = λ(skip : Bool) → λ(year : Natural) → Step.csvTable {
   }
 }
 
+let binICEESStep = ?(skip : Text) ? ?(year_start : Natural) ? ?(year_end : Natural) ? Step.System {
+    name = "BinICEES",
+    dependsOn = Prelude.List.map Natural (List Text) (?(enumeration : Natural) ? ["csvTable${Natural/show (enumeration + year_start)}"]) (Prelude.Natural.enumerate (Natural/subtract year_start (year_end + 1))),
+    skip = skip,
+    step = {
+        function = "datatrans.step.PreprocSystem",
+        arguments = {
+            pyexec = pyexec,
+            requirements = requirements,
+            command = ["src/main/python/preprocBinning.py", "${basedir}/icees2", "${basediroutput}/icees2_bins"],
+            workdir = "."
+        }
+    }
+}
+
+let binEPRStep = \(skip : Text) -> Step.System {
+    name = "BinEPR",
+    dependsOn = [["BinICEES"]],
+    skip = skip,
+    step = {
+        function = "datatrans.step.PreprocSystem",
+        arguments = {
+            pyexec = pyexec,
+           requirements = requirements,
+            command = ["src/main/python/binEPR.py", "${basedirinput}/EPR/TLR4_AllData_NewHash_01292020 NO PII_no_new_line.csv", "${basedirinput}/EPR/UNC_NIEHS_XWalk_for_Hao_shape_h3.csv", "${basediroutput}/icees2_bins/", "${basedir}/FHIR_processed/geo.csv", "${basediroutput}/EPR_binned/EPR_binned"],
+            workdir = "."
+        }
+    }
+}
+
+
+
 in {
   report_output = report,
   progress_output = progress,
   steps =
     [
+      mergeLocalStep fhirConfig.skip.mergeLocal,
       fhirStep fhirConfig.skip.fhir fhirConfig.skip_preproc,
       envDataCoordinatesStep fhirConfig.skip.envDataCoordinates fhirConfig.yearStart fhirConfig.yearEnd,
       latLonToGeoidStep fhirConfig.skip.latLonToGeoid,

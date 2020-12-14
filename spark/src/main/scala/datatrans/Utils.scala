@@ -605,4 +605,10 @@ class Cache[K,V <: AnyRef](fun : K => V) {
 
   def stringToDateTime(str : String, dateTimeParser : DateTimeFormatter = ISODateTimeFormat.dateTimeParser()) : DateTime = DateTime.parse(str, dateTimeParser)
 
+  def feature_type_to_sql_type(feature_type: String): DataType = feature_type match {
+    case "integer" => IntegerType
+    case "number" => DoubleType
+    case "string" => StringType
+  }
+
 }

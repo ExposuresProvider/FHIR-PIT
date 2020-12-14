@@ -101,13 +101,22 @@ def preprocSocial(df):
     bins += quantile(df, "EstProbabilityNoHealthIns", 4)
     bins += quantile(df, "EstProbabilityESL", 4)
     bins += quantile(df, "EstHouseholdIncome", 5)
-    df["MajorRoadwayHighwayExposure2"], binsadd = pd.cut(df["MajorRoadwayHighwayExposure"].apply(preprocHighwayExposure), [0, 50, 100, 150, 200, 250, float("inf")], labels=list(map(str, [1, 2, 3, 4, 5, 6])), include_lowest=True, right=False, retbins=True)
+
+    df["MajorRoadwayHighwayExposure"].replace(float("inf"), 500, inplace=True)
+    df["RoadwayDistanceExposure"].replace(float("inf"), 500, inplace=True)
+
+    df["MajorRoadwayHighwayExposure2"], binsadd = pd.cut(df["MajorRoadwayHighwayExposure"], [0, 50, 100, 150, 200, 250, float("inf")], labels=list(map(str, [1, 2, 3, 4, 5, 6])), include_lowest=True, right=False, retbins=True)
     bins += [("MajorRoadwayHighwayExposure2", binsadd.tolist())]
-    df["MajorRoadwayHighwayExposure"], binsadd = pd.cut(df["MajorRoadwayHighwayExposure"].apply(preprocHighwayExposure), [0, 50, 100, 200, 300, 500, float("inf")], labels=list(map(str, [1, 2, 3, 4, 5, 6])), include_lowest=True, right=False, retbins=True)
+    df["MajorRoadwayHighwayExposure"], binsadd = pd.cut(df["MajorRoadwayHighwayExposure"], [0, 50, 100, 200, 300, 500, float("inf")], labels=list(map(str, [1, 2, 3, 4, 5, 6])), include_lowest=True, right=False, retbins=True)
     bins += [("MajorRoadwayHighwayExposure", binsadd.tolist())]
-    df["RoadwayDistanceExposure2"], binsadd = pd.cut(df["RoadwayDistanceExposure"].apply(preprocHighwayExposure), [0, 50, 100, 150, 200, 250, float("inf")], labels=list(map(str, [1, 2, 3, 4, 5, 6])), include_lowest=True, right=False, retbins=True)
+    df["RoadwayDistanceExposure2"], binsadd = pd.cut(df["RoadwayDistanceExposure"], [0, 50, 100, 150, 200, 250, float("inf")], labels=list(map(str, [1, 2, 3, 4, 5, 6])), include_lowest=True, right=False, retbins=True)
     bins += [("RoadwayDistanceExposure2", binsadd.tolist())]
-    df["RoadwayDistanceExposure"], binsadd = pd.cut(df["RoadwayDistanceExposure"].apply(preprocHighwayExposure), [0, 50, 100, 200, 300, 500, float("inf")], labels=list(map(str, [1, 2, 3, 4, 5, 6])), include_lowest=True, right=False, retbins=True)
+    df["RoadwayDistanceExposure"], binsadd = pd.cut(df["RoadwayDistanceExposure"], [0, 50, 100, 200, 300, 500, float("inf")], labels=list(map(str, [1, 2, 3, 4, 5, 6])), include_lowest=True, right=False, retbins=True)
     bins += [("RoadwayDistanceExposure", binsadd.tolist())]
+    df["CAFO_Exposure"], binsadd = pd.cut(df["CAFO_Exposure"], [0, 500, 1000, 2000, 4000, float("inf")], labels=list(map(str, [1, 2, 3, 4, 5])), include_lowest=True, right=False, retbins=True)
+    bins += [("CAFO_Exposure", binsadd.tolist())]
+    df["LandfillExposure"], binsadd = pd.cut(df["LandfillExposure"], [0, 500, 1000, 2000, 4000, float("inf")], labels=list(map(str, [1, 2, 3, 4, 5])), include_lowest=True, right=False, retbins=True)
+    bins += [("LandfillExposure", binsadd.tolist())]
+
 
     return bins

@@ -103,5 +103,5 @@ class NearestPoint(pointShapefilePath : String) {
     return point
   }
 
-  def getMatchedAttribute(attributeName : String) : Option[Any] = lastMatched.map(_.getAttribute(attributeName).asInstanceOf[String])
+  def getMatchedAttribute(attributeName : String) : Option[Any] = lastMatched.map(_.getAttribute(attributeName))
 }

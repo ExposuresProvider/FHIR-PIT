@@ -392,7 +392,7 @@ object PreprocFHIR extends StepImpl {
     })
   }
 
-  case class PatientGeo(patient_num: String, lat: Double, lon: Double)
+  case class PatientGeo(patient_num: String, lat: Option[Double], lon: Option[Double])
   private def gen_geodata(spark: SparkSession, config: PreprocFHIRConfig, hc: Configuration, output_dir_file_system: FileSystem) {
     import spark.implicits._
 
@@ -410,12 +410,12 @@ object PreprocFHIR extends StepImpl {
         val pat = Utils.loadJson[Patient](new Configuration(), new Path(output_file))
         if (pat.address.length == 0) {
           log.info("no lat lon")
-          PatientGeo(patient_num, 0xffff, 0xffff)
+          PatientGeo(patient_num, None, None)
         } else {
           if(pat.address.length > 1) {
             log.info("more than one lat lon using first")
           }
-          PatientGeo(patient_num, pat.address(0).lat, pat.address(0).lon)
+          PatientGeo(patient_num, Some(pat.address(0).lat), Some(pat.address(0).lon))
         }
       } catch {
         case e : Exception =>

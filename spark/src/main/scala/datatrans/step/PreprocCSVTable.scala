@@ -247,7 +247,7 @@ object PreprocCSVTable extends StepImpl {
             new TotalTypeVisits(emerTypes)($"VisitType", $"RespiratoryDx").alias("TotalEDVisits"),
             new TotalTypeVisits(inpatientTypes)($"VisitType", $"RespiratoryDx").alias("TotalInpatientVisits"),
             (new TotalTypeVisits(emerTypes)($"VisitType", $"RespiratoryDx") + new TotalTypeVisits(inpatientTypes, emerTypes)($"VisitType", $"RespiratoryDx")).alias("TotalEDInpatientVisits")
-          ) ++ (("Sex2" +: Mapper.demograph) ++ mapper.nearest_road_map_map.values.flatMap(x => x.distance_feature_name +: x.attributes_to_features_map.values.toSeq) ++ mapper.nearest_point_map_map.values.flatMap(x => x.distance_feature_name +: x.attributes_to_features_map.values.toSeq) ++ mapper.geoid_map_map.values.flatMap(_.columns.values)).map(
+          ) ++ (("Sex2" +: Mapper.demograph) ++ mapper.nearest_road_map_map.values.flatMap(x => x.distance_feature_name +: x.attributes_to_features_map.values.map(_.feature_name).toSeq) ++ mapper.nearest_point_map_map.values.flatMap(x => x.distance_feature_name +: x.attributes_to_features_map.values.map(_.feature_name).toSeq) ++ mapper.geoid_map_map.values.flatMap(_.columns.values)).map(
             v => first(df_all.col(v)).alias(v)
           ) ++ binary.map(
             v => sum(df_all.col(v)).cast(IntegerType).alias(v)

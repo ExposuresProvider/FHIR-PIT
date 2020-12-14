@@ -1799,10 +1799,18 @@ NearestRoad:
   nearestRoadHPMS:
     distance_feature_name: RoadwayDistanceExposure
     attributes_to_features_map:
-      ROADTYPE: RoadwayType
-      AADT: RoadwayAADT
-      SPEED: RoadwaySpeedLimit
-      THROUGH_LA: RoadwayLanes
+      ROADTYPE:
+        feature_name: RoadwayType
+        feature_type: string
+      AADT:
+        feature_name: RoadwayAADT
+        feature_type: number
+      SPEED:
+        feature_name: RoadwaySpeedLimit
+        feature_type: number
+      THROUGH_LA:
+        feature_name: RoadwayLanes
+        feature_type: number
 NearestPoint:
   cafo:
     distance_feature_name: CAFO_Exposure

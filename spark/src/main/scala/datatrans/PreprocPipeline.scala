@@ -36,6 +36,7 @@ object PreprocPipeline {
   implicit val preprocPipelineDecoder : Decoder[PreprocPipelineConfig] = deriveDecoder
 
   case class Report(
+    reuse: Set[String],
     success: Set[String],
     skip: Set[String],
     failure: Set[(String, String)],
@@ -79,14 +80,25 @@ object PreprocPipeline {
         val success = Set[String]()
         val failure = Set[(String, Throwable)]()
         val notRun = Set[String]()
+        val reuse = Set[String]()
         val skip = Set[String]()
+
+  def canNotRun(step : Step) : Boolean = {
+    val blocked = failure.map(_._1) | notRun | skip
+    step.dependsOn.exists(_.forall(blocked contains _))
+  }
+
+  def canRun(step: Step) : Boolean = {
+    val unblocked = success | reuse
+    step.dependsOn.forall(_.exists(unblocked contains _))
+  }
 
         queued.enqueue(steps:_*)
         breakable {
           while(!queued.isEmpty) {
             breakable {
               while (true) {
-                queued.dequeueFirst(step => !(step.dependsOn.toSet & (failure.map(_._1) | notRun)).isEmpty) match {
+                queued.dequeueFirst(canNotRun) match {
                   case None => break
                   case Some(step) =>
                     notRun.add(step.name)
@@ -95,17 +107,20 @@ object PreprocPipeline {
               }
             }
 
-            queued.dequeueFirst(step => step.dependsOn.toSet.subsetOf(success | skip)) match {
+            queued.dequeueFirst(canRun) match {
               case None => break
               case Some(step) =>
 
                 log.info(step)
-                if(step.skip) {
+                if(step.skip == "skip") {
                   log.info("skipped: " + step.name)
                   skip.add(step.name)
+                } else if(step.skip == "reuse") {
+                  log.info("reused: " + step.name)
+                  reuse.add(step.name)
                 } else {
                   try {
-                    val report = Report(success, skip, failure.map{case (step, err) => (step, err.toString)}, notRun, Some(step.name), queued.map(_.name))
+                    val report = Report(reuse, success, skip, failure.map{case (step, err) => (step, err.toString)}, notRun, Some(step.name), queued.map(_.name))
                     writeToFile(hc, config.progress_output, report.asJson.noSpaces)
                     val stepImpl = step.impl
                     stepImpl.step(spark, step.config.asInstanceOf[stepImpl.ConfigType])
@@ -139,10 +154,11 @@ object PreprocPipeline {
           }
         }
         printSeq("===success===", success)
+        printSeq("===reused===", reuse)
         printSeq("===skipped===", skip)
         printSeq("===failure===", failure)
         printSeq("===not run===", notRun)
-        val report = Report(success, skip, failure.map{case (step, err) => (step, err.toString)}, notRun, None, Seq())
+        val report = Report(reuse, success, skip, failure.map{case (step, err) => (step, err.toString)}, notRun, None, Seq())
         writeToFile(hc, config.report_output, report.asJson.noSpaces)
       case None =>
 

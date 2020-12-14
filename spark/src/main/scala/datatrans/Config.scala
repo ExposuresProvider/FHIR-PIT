@@ -75,8 +75,8 @@ case class Step(
   config: Any,
   impl: StepImpl,
   name: String,
-  skip: Boolean,
-  dependsOn: Seq[String]
+  skip: String,
+  dependsOn: Seq[Seq[String]]
 )
 
 
@@ -128,8 +128,8 @@ object StepImplicits {
     final def apply(c : HCursor) : Decoder.Result[Step] =
       for(
         name <- c.downField("name").as[String];
-        skip <- c.downField("skip").as[Boolean];
-        dependsOn <- c.downField("dependsOn").as[Seq[String]];
+        skip <- c.downField("skip").as[String];
+        dependsOn <- c.downField("dependsOn").as[Seq[Seq[String]]];
         config <- c.downField("step").as[Any];
         impl <- c.downField("step").as[StepImpl]
       ) yield Step(config, impl, name, skip, dependsOn)

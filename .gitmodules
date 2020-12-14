@@ -1,0 +1,3 @@
+[submodule "spark/config/dhall-lang"]
+	path = spark/config/dhall-lang
+	url = https://github.com/dhall-lang/dhall-lang
