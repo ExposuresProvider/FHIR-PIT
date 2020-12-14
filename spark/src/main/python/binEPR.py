@@ -63,7 +63,12 @@ df_pat_ord["index"] = df_pat_ord.index
 
 with open(f"{output_file}_bins.json", "w") as out:
     json.dump(dict(bins), out)                    
-                                                  
+
+
+def convert_float_to_int(df):
+    return df.applymap(lambda x: int(x) if isinstance(x, float) and float.is_integer(x) else x)
+
+    
 for year in range(2010, 2020):                    
     print(year)
     dfp = pd.read_csv(f"{icees_dir}/{year}patient")
@@ -73,6 +78,7 @@ for year in range(2010, 2020):
     dfpe["IN_EPR"].fillna(0, inplace=True)
     dfpe["year"].fillna(year, inplace=True)
     dfpe.sort_values(by=["index"], inplace=True)
+    dfpe = convert_float_to_int(dfpe)
     dfpe.to_csv(f"{output_file}{year}patient", index=False)
     dfpe.drop(["patient_num", "HASH_VALUE"], axis=1).to_csv(f"{output_file}{year}patient_deidentified", index=False)
 
@@ -83,6 +89,7 @@ for year in range(2010, 2020):
     dfpe["IN_EPR"].fillna(0, inplace=True)
     dfpe["year"].fillna(year, inplace=True)
     dfpe["index"] = dfpe.index
+    dfpe = convert_float_to_int(dfpe)
     dfpe.to_csv(f"{output_file}{year}visit", index=False)
     dfpe.drop(["patient_num", "HASH_VALUE"], axis=1).to_csv(f"{output_file}{year}visit_deidentified", index=False)
 

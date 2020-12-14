@@ -650,5 +650,5 @@ in {
       perPatSeriesCSVTableLocalStep fhirConfig.skip.perPatSeriesCSVTableLocal fhirConfig.yearStart fhirConfig.yearEnd,
       binICEESStep fhirConfig.skip.binICEES fhirConfig.yearStart fhirConfig.yearEnd,
       binEPRStep fhirConfig.skip.binEPR
-    ] # Prelude.List.map YearConfig Step (<CE><BB>(yearSkip : YearConfig) <E2><86><92> csvTableStep yearSkip.skip.csvTable yearSkip.year) skipList
+    ] # Prelude.List.map YearConfig Step (\(yearSkip : YearConfig) -> csvTableStep yearSkip.skip.csvTable yearSkip.year) skipList
 } : Config
