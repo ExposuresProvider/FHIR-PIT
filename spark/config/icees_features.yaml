@@ -1813,8 +1813,8 @@ NearestRoad:
         feature_type: number
 NearestPoint:
   cafo:
-    distance_feature_name: CAFO_Exposure
+    distance_feature_name: CAFO_Distance
     attributes_to_features_map: {}
   landfill:
-    distance_feature_name: LandfillExposure
+    distance_feature_name: LandfillDistance
     attributes_to_features_map: {}
