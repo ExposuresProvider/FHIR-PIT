@@ -1,10 +1,16 @@
 import pandas as pd
 import numpy as np
+import yaml
 
-binary = ["AsthmaDx", "CoughDx", "FibromyalgiaDx", "AnxietyDx", "Albuterol", "Ipratropium", "Sertraline", "DiabetesDx", "ObesityDx", "DepressionDx", "Diphenhydramine", "DrugDependenceDx", "Fluticasone", "Salmeterol", "Formoterol", "ReactiveAirwayDx", "Escitalopram", "Hydroxyzine", "Beclomethasone", "Fexofenadine", "PneumoniaDx", "OvarianDysfunctionDx", "PregnancyDx", "MenopauseDx", "TesticularDysfunctionDx", "EndometriosisDx", "AlcoholDependenceDx", "Fluoxetine", "CervicalCancerDx", "AutismDx", "Paroxetine", "Mometasone", "Budesonide", "Venlafaxine", "CroupDx", "Estradiol", "AlopeciaDx", "Arformoterol", "Mepolizumab", "Testosterone", "KidneyCancerDx", "UterineCancerDx", "OvarianCancerDx", "Medroxyprogresterone", "Propranolol", "TesticularCancerDx", "Theophylline", "Ciclesonide", "Flunisolide", "Tamoxifen", "Indacaterol", "Prasterone", "Progesterone", "Leuprolide", "Estropipate", "Goserelin", "Prednisone", "Cetirizine", "Citalopram", "Histrelin", "Triptorelin", "ProstateCancerDx", "Metaproterenol", "Omalizumab", "Trazodone", "Duloxetine", "Estrogen", "Androstenedione", "Nandrolone"]
+def getBinary(input_conf):  
+    with open(input_conf) as icf:
+        configuration = yaml.safe_load(icf)
 
-patient_cols = binary
-visit_cols = [f"{col}Visit" for col in binary]
+    binary = list(configuration["FHIR"].keys())
+
+    patient_cols = binary
+    visit_cols = [f"{col}Visit" for col in binary]
+    return (binary, patient_cols, visit_cols)
 
 features = ["PM2.5", "Ozone"]
 features2 = ["PM2.5", "Ozone", "CO", "NO", "NO2", "NOx", "SO2", "Acetaldehyde", "Formaldehyde", "Benzene"]
