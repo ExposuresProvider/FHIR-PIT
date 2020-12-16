@@ -501,7 +501,7 @@ let landfillStep = λ(skip : Text) → Step.NearestPoint {
       nearestpoint_data = "${basedirinput}/other/spatial/BDT_PointDatasets/Active_Permitted_Landfills_geo.shp",
       output_file = landfill_output_path,
       feature_name = "landfill",
-      feature_map = "${configdir}/icees_features.yaml"
+      feature_map = feature_map_path
     }
   }
 }
