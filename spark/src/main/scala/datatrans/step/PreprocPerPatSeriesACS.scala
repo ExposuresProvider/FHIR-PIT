@@ -10,6 +10,8 @@ import io.circe.Decoder
 import io.circe.generic.semiauto.deriveDecoder
 import datatrans.Implicits._
 import datatrans.{Mapper, GeoidFinder, StepImpl}
+import org.apache.spark.sql.types.StructType
+import org.apache.spark.sql.catalyst.ScalaReflection
 
 case class PreprocPerPatSeriesACSConfig(
   time_series : String,
@@ -22,8 +24,8 @@ case class PreprocPerPatSeriesACSConfig(
 
 case class PatientCoordinates(
   patient_num: String,
-  lat: Double,
-  lon : Double
+  lat: Option[Double],
+  lon : Option[Double]
 )
 
 object PreprocPerPatSeriesACS extends StepImpl {
@@ -47,14 +49,25 @@ object PreprocPerPatSeriesACS extends StepImpl {
         val mapper = new Mapper(hc, config.feature_map)
         val acs = mapper.geoid_map_map(config.feature_name)
         val geoid = acs.GEOID
-        val pddf0 = spark.read.format("csv").option("header", value = true).load(config.time_series).as[PatientCoordinates]
+        val schema = ScalaReflection.schemaFor[PatientCoordinates].dataType.asInstanceOf[StructType]
+        val pddf0 = spark.read.format("csv").option("header", value = true).schema(schema).load(config.time_series).as[PatientCoordinates]
 
         val df = pddf0.mapPartitions(partition => {
           val geoidFinder = new GeoidFinder(config.geoid_data, "15000US")
-          partition.map(r => {
-            val geoid = geoidFinder.getGeoidForLatLon(r.lat, r.lon)
-            (r.patient_num, geoid)
-          })
+          partition.flatMap(r =>
+            r.lat match {
+              case Some(lat) =>
+                r.lon match {
+                  case Some(lon) =>
+                   val geoid = geoidFinder.getGeoidForLatLon(lat, lon)
+                    Some((r.patient_num, geoid))
+                  case _ =>
+                    None
+                }
+              case _ =>
+                None
+            }
+          )
         }).toDF("patient_num", geoid)
 
         val acs_df = spark.read.format("csv").option("header", value = true).load(config.acs_data)

@@ -36,7 +36,7 @@ object PreprocLatLonToGeoid extends StepImpl {
       val patient_dimension = config.patgeo_data
       log.info("loading patient_dimension from " + patient_dimension)
       val pddf0 = spark.read.format("csv").option("header", value = true).load(patient_dimension)
-      val patl = pddf0.select("patient_num", "lat", "lon").map(r => (r.getString(0), r.getString(1).toDouble, r.getString(2).toDouble)).collect.toList
+      val patl = pddf0.select("patient_num", "lat", "lon").map(r => (r.getString(0), Option(r.getString(1)).map(_.toDouble), Option(r.getString(2)).map(_.toDouble))).collect.toList
 
       val hc = spark.sparkContext.hadoopConfiguration
 
@@ -44,9 +44,11 @@ object PreprocLatLonToGeoid extends StepImpl {
 
       val geoidfinder = new GeoidFinder(config.fips_data, "")
       log.info("generating geoid")
-      val patl_geoid = patl.par.map {
-        case (r, lat, lon) =>
-          (r, geoidfinder.getGeoidForLatLon(lat, lon))
+      val patl_geoid = patl.par.flatMap {
+        case (r, Some(lat), Some(lon)) =>
+          Some((r, geoidfinder.getGeoidForLatLon(lat, lon)))
+        case _ =>
+          None
       }.seq
       log.info("computing geoids")
       val pat_geoid = pddf0.select("patient_num", "lat", "lon").join(patl_geoid.toDF("patient_num", "FIPS"), Seq("patient_num"), "left")

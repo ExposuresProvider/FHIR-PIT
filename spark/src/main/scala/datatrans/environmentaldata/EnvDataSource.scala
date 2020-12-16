@@ -65,7 +65,7 @@ class EnvDataSource(spark: SparkSession, config: EnvDataCoordinatesConfig) {
       log.info("loading patient_dimension from " + patient_dimension)
       val pddf0 = spark.read.format("csv").option("header", value = true).load(patient_dimension)
 
-      val patl = pddf0.select("patient_num", "lat", "lon").map(r => (r.getString(0), r.getString(1).toDouble, r.getString(2).toDouble)).collect.toList
+      val patl = pddf0.select("patient_num", "lat", "lon").map(r => (r.getString(0), Option(r.getString(1)).map(_.toDouble), Option(r.getString(2)).map(_.toDouble))).collect.toList
 
 
       val n = patl.size
@@ -73,7 +73,7 @@ class EnvDataSource(spark: SparkSession, config: EnvDataCoordinatesConfig) {
       withCounter(count => 
 
         patl.par.foreach{
-          case (r, lat, lon) =>
+          case (r, Some(lat), Some(lon)) =>
             log.info("processing patient " + count.incrementAndGet() + " / " + n + " " + r)
             val timeZone = DateTimeZone.forOffsetHours(config.offset_hours)
             val start_date_local = config.start_date.toDateTime(timeZone)
@@ -96,6 +96,7 @@ class EnvDataSource(spark: SparkSession, config: EnvDataCoordinatesConfig) {
               val df = generateOutputDataFrame(coors)
               writeDataframe(hc, output_file, df)
             }
+          case _ =>
         })
     }
   }

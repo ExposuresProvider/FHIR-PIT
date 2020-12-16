@@ -54,9 +54,9 @@ def proc_pid(config, p):
 
         padf = penv2df.merge(sdf, on="patient_num", how="left") if sdf is not None else penv2df
         for year in years:
-            output_dir = f"/var/fhir/icees/{year}/per_patient"
-            os.makedirs(output_dir, exist_ok=True)
-            padf[padf["year"] == year].to_csv(f"{output_dir}/{p}", index=False)
+            per_patient = f"{output_dir}/{year}/per_patient"
+            os.makedirs(per_patient, exist_ok=True)
+            padf[padf["year"] == year].to_csv(f"{per_patient}/{p}", index=False)
 
 
 def parseTimestamp(a, offset_hours):
