@@ -506,19 +506,9 @@ let landfillStep = λ(skip : Text) → Step.NearestPoint {
   }
 }
 
-let perPatSeriesCSVTableStep = λ(skip : Text) →  λ(year_start : Natural) →  λ(year_end : Natural) →  Step.PerPatSeriesCSVTable {
+let perPatSeriesCSVTableStep = λ(skip : Text) →  λ(year_start : Natural) →  λ(year_end : Natural) → \(dependencies: List (List Text)) -> Step.PerPatSeriesCSVTable {
   name = "PerPatSeriesCSVTable",
-  dependsOn = [
-    ["PerPatSeriesToVector"],
-    ["PerPatSeriesACS"],
-    ["PerPatSeriesACSUR"],
-    ["PerPatSeriesNearestRoadTL"],
-    ["PerPatSeriesNearestRoadHPMS"],
-    ["PerPatSeriesCAFO"],
-    ["PerPatSeriesLandfill"],
-    ["EnvDataAggregateCoordinates"],
-    ["EnvDataAggregateFIPS"]
-  ],
+  dependsOn = dependencies,
   skip = skip,
   step = {
     function = "datatrans.step.PreprocPerPatSeriesCSVTable",
@@ -542,19 +532,9 @@ let perPatSeriesCSVTableStep = λ(skip : Text) →  λ(year_start : Natural) →
   }
 }
 
-let perPatSeriesCSVTableLocalStep = λ(skip : Text) →  λ(year_start : Natural) →  λ(year_end : Natural) →  Step.PerPatSeriesCSVTable {
+let perPatSeriesCSVTableLocalStep = λ(skip : Text) →  λ(year_start : Natural) → λ(year_end : Natural) → λ(dependencies: List (List Text)) → Step.PerPatSeriesCSVTable {
   name = "PerPatSeriesCSVTableLocal",
-  dependsOn = [
-    ["PerPatSeriesToVector"],
-    ["PerPatSeriesACS"],
-    ["PerPatSeriesACSUR"],
-    ["PerPatSeriesNearestRoadTL"],
-    ["PerPatSeriesNearestRoadHPMS"],
-    ["PerPatSeriesCAFO"],
-    ["PerPatSeriesLandfill"],
-    ["EnvDataAggregateCoordinates"],
-    ["EnvDataAggregateFIPS"]
-  ],
+  dependsOn = dependencies,
   skip = skip,
   step = {
     function = "datatrans.step.PreprocPerPatSeriesCSVTableLocal",
