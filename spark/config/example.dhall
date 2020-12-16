@@ -23,6 +23,17 @@ in pipeline "report" "progress" "/share/spark/hao/datatrans/spark/config" "/var/
     binEPR = "run"
   },
   skip_preproc = [] : List Text,
+  data_input = [
+    ["PerPatSeriesToVector"],
+    ["PerPatSeriesACS"],
+    ["PerPatSeriesACSUR"],
+    ["PerPatSeriesNearestRoadTL"],
+    ["PerPatSeriesNearestRoadHPMS"],
+    ["PerPatSeriesCAFO"],
+    ["PerPatSeriesLandfill"],
+    ["EnvDataAggregateCoordinates"],
+    ["EnvDataAggregateFIPS"]
+  ],
   yearStart = 2010,
   yearEnd = 2019
 } [{

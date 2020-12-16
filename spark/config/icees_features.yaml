@@ -1818,3 +1818,9 @@ NearestPoint:
   landfill:
     distance_feature_name: LandfillDistance
     attributes_to_features_map: {}
+Visit:
+  - AsthmaDx
+  - CroupDx
+  - ReactiveAirwayDx
+  - CoughDx
+  - PneumoniaDx

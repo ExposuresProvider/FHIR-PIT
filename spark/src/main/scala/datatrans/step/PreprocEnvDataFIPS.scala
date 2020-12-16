@@ -58,8 +58,8 @@ object PreprocEnvDataFIPS extends StepImpl {
         if (names.forall(x => df.columns.contains(x))) {
           df
         } else {
-          log.error(f"$filename doesn't contain all required columns")
           val namesNotInDf = names.filter(x => !df.columns.contains(x))
+          log.error(f"$filename doesn't contain all required columns adding columns $namesNotInDf")
           namesNotInDf.foldLeft(df)((df : DataFrame, x : String) => df.withColumn(x, lit(null)))
         })
     } else {

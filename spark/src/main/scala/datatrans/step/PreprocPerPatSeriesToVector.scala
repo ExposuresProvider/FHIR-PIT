@@ -45,6 +45,7 @@ object PreprocPerPatSeriesToVector extends StepImpl {
   val configDecoder : Decoder[ConfigType] = deriveDecoder
 
   def proc_pid(config : PreprocPerPatSeriesToVectorConfig, hc : Configuration, p:String, start_date: DateTime, end_date: DateTime, mapper: Mapper): Unit =
+
     time {
       val input_file = f"${config.input_directory}/$p"
       val input_file_path = new Path(input_file)
@@ -184,9 +185,9 @@ object PreprocPerPatSeriesToVector extends StepImpl {
                   }))
                 )
 
-               var labRecEnc = Map[String, Seq[(String, (Option[Any], Option[String]))]]()
+               var labRecEnc = Map[String, Seq[(String, (Option[Value], Option[String]))]]()
                 lab.foreach(m =>
-                  m.coding.foreach(coding => Mapper.map_coding_to_feature_and_quantity(mapper.obs_map, coding, m).foreach{
+                  m.coding.foreach(coding => Mapper.map_coding_to_feature_and_value(mapper.obs_map, coding, m).foreach{
                     case (n, value, flag) => {
                       labRecEnc = labRecEnc + (n -> (labRecEnc.getOrElse(n, Seq()) :+ (m.id, (value, flag))))
                     }
@@ -198,8 +199,8 @@ object PreprocPerPatSeriesToVector extends StepImpl {
                      val len = values.size
                      val (value_first, flag_first) = valuesSorted.head._2
                      val (value_last, flag_last) = valuesSorted.last._2
-                    incrementNameBy(rec, n, len)
-                    rec = rec + (f"${n}_value_first" -> value_first, f"${n}_value_last" -> value_last, f"${n}_flag_first" -> flag_first, f"${n}_flag_last" -> flag_last)
+                     incrementNameBy(rec, n, len)
+                     rec = rec + (f"${n}_value_first" -> value_first.map(Mapper.value_to_string).getOrElse(null), f"${n}_value_last" -> value_last.map(Mapper.value_to_string).getOrElse(null), f"${n}_flag_first" -> flag_first.getOrElse(null), f"${n}_flag_last" -> flag_last.getOrElse(null))
                 }
 
                 proc.foreach(m =>

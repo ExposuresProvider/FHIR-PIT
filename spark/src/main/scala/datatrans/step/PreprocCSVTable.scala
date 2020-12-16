@@ -175,7 +175,9 @@ object PreprocCSVTable extends StepImpl {
           }
         }
 
-        val binary = mapper.conds | mapper.meds
+        val binary = mapper.conds | mapper.meds | mapper.procs | mapper.labs
+       val values_first = mapper.labs.flatMap(x => Seq(f"${x}_value_first", f"${x}_flag_first"))
+       val values_last = mapper.labs.flatMap(x => Seq(f"${x}_value_last", f"${x}_flag_last"))
 
         var df_all = spark.read.format("csv").option("header", value = true).load(output_file_all)
         (binary -- df_all.columns.toSet).foreach(col => {
@@ -237,6 +239,8 @@ object PreprocCSVTable extends StepImpl {
         val emerTypes = Seq("AMB","EMER")
         val inpatientTypes = Seq("IMP")
 
+       val dfc = df_all.columns
+       val dfcs = dfc.toSet
         val patient_aggs =
           (
             for (
@@ -249,13 +253,20 @@ object PreprocCSVTable extends StepImpl {
             (new TotalTypeVisits(emerTypes)($"VisitType", $"RespiratoryDx") + new TotalTypeVisits(inpatientTypes, emerTypes)($"VisitType", $"RespiratoryDx")).alias("TotalEDInpatientVisits")
           ) ++ (("Sex2" +: Mapper.demograph) ++ mapper.nearest_road_map_map.values.flatMap(x => x.distance_feature_name +: x.attributes_to_features_map.values.map(_.feature_name).toSeq) ++ mapper.nearest_point_map_map.values.flatMap(x => x.distance_feature_name +: x.attributes_to_features_map.values.map(_.feature_name).toSeq) ++ mapper.geoid_map_map.values.flatMap(_.columns.values)).map(
             v => first(df_all.col(v)).alias(v)
-          ) ++ binary.map(
+          ) ++ (binary intersect dfcs).map(
             v => sum(df_all.col(v)).cast(IntegerType).alias(v)
+          ) ++ (values_first intersect dfcs).map(
+           v => first(df_all.col(v)).alias(v)
+          ) ++ (values_last intersect dfcs).map(
+            v => last(df_all.col(v)).alias(v)
           )
 
-        val df_all2 = df_all
-          .withColumn("RespiratoryDx", $"AsthmaDx".cast(IntegerType) === 1 || $"CroupDx".cast(IntegerType) === 1 || $"ReactiveAirwayDx".cast(IntegerType) === 1 || $"CoughDx".cast(IntegerType) === 1 || $"PneumoniaDx".cast(IntegerType) === 1)
-          .groupBy("patient_num", "year").agg(patient_aggs.head, patient_aggs.tail:_*)
+        val df_all15 = if (mapper.visit.isEmpty)
+         df_all.withColumn("RespiratoryDx", lit(true))
+        else
+          df_all.withColumn("RespiratoryDx", (mapper.visit intersect dfc.toSeq).map(a => df_all.col(a).cast(IntegerType) === 1).reduce(_ || _))
+
+        val df_all2 = df_all15.groupBy("patient_num", "year").agg(patient_aggs.head, patient_aggs.tail:_*)
 
         val df_active_in_year = df_all_visit.select("patient_num", "year").distinct().withColumn("Active_In_Year", lit(1))
 

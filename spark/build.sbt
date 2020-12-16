@@ -57,6 +57,8 @@ testOptions += Tests.Argument("-oF")
 
 logLevel in assembly := Level.Error
 
+test in assembly := {}
+
 assemblyMergeStrategy in assembly := {
   case PathList("com", "vividsolutions", _*) => MergeStrategy.last
   case PathList("javax", "inject", _*) => MergeStrategy.last

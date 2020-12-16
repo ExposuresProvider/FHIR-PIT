@@ -48,6 +48,7 @@ let FhirConfig : Type = {
       binEPR: Text
     },
     skip_preproc: List Text,
+    data_input: List (List Text),
     yearStart: Natural,
     yearEnd: Natural
 }
@@ -200,6 +201,7 @@ let nearestRoadTL_output_path = "${basedir}/other_processed/nearestRoadTL.csv"
 let nearestRoadHPMS_output_path = "${basedir}/other_processed/nearestRoadHPMS.csv"
 let cafo_output_path = "${basedir}/other_processed/cafo.csv"
 let landfill_output_path = "${basedir}/other_processed/landfill.csv"
+let feature_map_path = "${configdir}/icees_features.yaml"
 let pyexec = "/opt/rh/rh-python38/root/usr/bin/python"
 let requirements = [
     "isodate==0.6.0",
@@ -261,7 +263,7 @@ let toVectorStep = λ(skip : Text) → λ(year_start : Natural) → λ(year_end 
       start_date = start_year year_start,
       end_date = end_year year_end,
       offset_hours = -5,
-      feature_map = "${configdir}/icees_features.yaml"
+      feature_map = feature_map_path
     }
   }
 }
@@ -407,7 +409,7 @@ let acsStep = λ(skip : Text) → Step.ACS {
       geoid_data = "${basedirinput}/other/spatial/acs/tl_2016_37_bg_lcc.shp",
       output_file = acs_output_path,
       feature_name = "acs",
-      feature_map = "${configdir}/icees_features.yaml"
+      feature_map = feature_map_path
     }
   }
 }
@@ -426,7 +428,7 @@ let acsURStep = λ(skip : Text) → Step.ACS {
       geoid_data = "${basedirinput}/other/spatial/acs/tl_2016_37_bg_lcc.shp",
       output_file = acsUR_output_path,
       feature_name = "acsUR",
-      feature_map = "${configdir}/icees_features.yaml"
+      feature_map = feature_map_path
     }
   }                                                                                                                                    }
 
@@ -444,7 +446,7 @@ let nearestRoadTLStep = λ(skip : Text) → Step.NearestRoad {
       maximum_search_radius = Integer/toDouble (Natural/toInteger 500),
       output_file = nearestRoadTL_output_path,
       feature_name = "nearestRoadTL",
-      feature_map = "${configdir}/icees_features.yaml"
+      feature_map = feature_map_path
     }
   }
 }
@@ -463,7 +465,7 @@ let nearestRoadHPMSStep = λ(skip : Text) → Step.NearestRoad {
       maximum_search_radius = Integer/toDouble (Natural/toInteger 500),
       output_file = nearestRoadHPMS_output_path,
       feature_name = "nearestRoadHPMS",
-      feature_map = "${configdir}/icees_features.yaml"
+      feature_map = feature_map_path
     }
   }
 }
@@ -481,7 +483,7 @@ let cafoStep = λ(skip : Text) → Step.NearestPoint {
       nearestpoint_data = "${basedirinput}/other/spatial/BDT_PointDatasets/Permitted_Animal_Facilities-4-1-2020.shp",
       output_file = cafo_output_path,
       feature_name = "cafo",
-      feature_map = "${configdir}/icees_features.yaml"
+      feature_map = feature_map_path
     }
   }
 }
@@ -589,7 +591,7 @@ let csvTableStep = λ(skip : Text) → λ(year : Natural) → Step.csvTable {
       output_dir = "${basedir}/icees2/${Natural/show year}",
       deidentify = [] : List Text,
       offset_hours = -5,
-      feature_map = "${configdir}/icees_features.yaml"
+      feature_map = feature_map_path
     }
   }
 }
@@ -603,13 +605,13 @@ let binICEESStep = \(skip : Text) -> \(year_start : Natural) -> \(year_end : Nat
         arguments = {
             pyexec = pyexec,
             requirements = requirements,
-            command = ["src/main/python/preprocBinning.py", "${basedir}/icees2", "${basediroutput}/icees2_bins"],
+            command = ["src/main/python/preprocBinning.py", Natural/show year_start, Natural/show year_end, feature_map_path, "${basedir}/icees2", "${basediroutput}/icees2_bins"],
             workdir = "."
         }
     }
 }
 
-let binEPRStep = \(skip : Text) -> Step.System {
+let binEPRStep = \(skip : Text) -> \(year_start : Natural) -> \(year_end : Natural) -> Step.System {
     name = "BinEPR",
     dependsOn = [["BinICEES"]],
     skip = skip,
@@ -617,8 +619,8 @@ let binEPRStep = \(skip : Text) -> Step.System {
         function = "datatrans.step.PreprocSystem",
         arguments = {
             pyexec = pyexec,
-           requirements = requirements,
-            command = ["src/main/python/binEPR.py", "${basedirinput}/EPR/TLR4_AllData_NewHash_01292020 NO PII_no_new_line.csv", "${basedirinput}/EPR/UNC_NIEHS_XWalk_for_Hao_shape_h3.csv", "${basediroutput}/icees2_bins/", "${basedir}/FHIR_processed/geo.csv", "${basediroutput}/EPR_binned/EPR_binned"],
+            requirements = requirements,
+            command = ["src/main/python/binEPR.py", Natural/show year_start, Natural/show year_end, "${basedirinput}/EPR/TLR4_AllData_NewHash_01292020 NO PII_no_new_line.csv", "${basedirinput}/EPR/UNC_NIEHS_XWalk_for_Hao_shape_h3.csv", "${basediroutput}/icees2_bins/", "${basedir}/FHIR_processed/geo.csv", "${basediroutput}/EPR_binned/EPR_binned"],
             workdir = "."
         }
     }
@@ -646,9 +648,9 @@ in {
       cafoStep fhirConfig.skip.cafo,
       landfillStep fhirConfig.skip.landfill,
       toVectorStep fhirConfig.skip.toVector fhirConfig.yearStart fhirConfig.yearEnd,
-      perPatSeriesCSVTableStep fhirConfig.skip.perPatSeriesCSVTable fhirConfig.yearStart fhirConfig.yearEnd,
-      perPatSeriesCSVTableLocalStep fhirConfig.skip.perPatSeriesCSVTableLocal fhirConfig.yearStart fhirConfig.yearEnd,
+      perPatSeriesCSVTableStep fhirConfig.skip.perPatSeriesCSVTable fhirConfig.yearStart fhirConfig.yearEnd fhirConfig.data_input,
+      perPatSeriesCSVTableLocalStep fhirConfig.skip.perPatSeriesCSVTableLocal fhirConfig.yearStart fhirConfig.yearEnd fhirConfig.data_input,
       binICEESStep fhirConfig.skip.binICEES fhirConfig.yearStart fhirConfig.yearEnd,
-      binEPRStep fhirConfig.skip.binEPR
+      binEPRStep fhirConfig.skip.binEPR fhirConfig.yearStart fhirConfig.yearEnd
     ] # Prelude.List.map YearConfig Step (\(yearSkip : YearConfig) -> csvTableStep yearSkip.skip.csvTable yearSkip.year) skipList
 } : Config

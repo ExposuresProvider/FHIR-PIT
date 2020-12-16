@@ -112,7 +112,7 @@ object Utils {
 
     form match {
       case CSV(sep) =>
-        prependStringToFile(hc, wide.columns.mkString(sep) + "\n", fname)
+        prependStringToFile(hc, wide.columns.map(quoteCSV).mkString(sep) + "\n", fname)
       case JSON =>
     }
     if(skipCRC)
@@ -148,6 +148,11 @@ object Utils {
     fieldsNotInFile.foldLeft(csv0)((csv1:DataFrame, f : StructField)=> csv1.withColumn(f.name, lit(null).cast(f.dataType)))
   }
 
+  def quoteCSV(s: String): String =
+    if(s.contains('"') || s.contains(','))
+      "\"" + s.replace("\"", "\"\"") + "\""
+    else
+      s
 
   def writeDataframe(hc: Configuration, output_file: String, table: DataFrame, skipCRC : Boolean = true): Unit = {
     val dname = output_file + "_temp"
@@ -159,7 +164,7 @@ object Utils {
     output_file_file_system.delete(output_file_path, true)
     copyMerge(hc, output_file_file_system, overwrite = true, output_file, dpath)
 
-    prependStringToFile(hc, table.columns.mkString(",") + "\n", output_file)
+    prependStringToFile(hc, table.columns.map(quoteCSV).mkString(",") + "\n", output_file)
     if(skipCRC)
       deleteCRCFile(output_file_file_system, output_file_path)
   }

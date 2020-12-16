@@ -23,7 +23,7 @@ object Mapper {
   case class GEOIDMapping(GEOID: String, columns: Map[String, String])
   case class NearestMapping(distance_feature_name: String, attributes_to_features_map: Map[String, Feature])
 
-  case class FeatureMapping(FHIR: Option[Map[String, FHIRFeatureMapping]], GEOID: Option[Map[String, GEOIDMapping]], NearestRoad: Option[Map[String, NearestMapping]], NearestPoint: Option[Map[String, NearestMapping]])
+  case class FeatureMapping(FHIR: Option[Map[String, FHIRFeatureMapping]], GEOID: Option[Map[String, GEOIDMapping]], NearestRoad: Option[Map[String, NearestMapping]], NearestPoint: Option[Map[String, NearestMapping]], Visit: Option[Seq[String]])
 
   import Implicits._
   implicit val quantityMappingDecoder: Decoder[QuantityMapping] = deriveDecoder
@@ -36,7 +36,7 @@ object Mapper {
   type CodingToFeatureMap = Map[Coding, String]
   type CodingToQuantityFeatureMap = Map[Coding, (String, Option[String])]
 
-  def loadFeatureMap(hc : Configuration, feature_map_input_path : String) : (CodingToFeatureMap, CodingToFeatureMap, CodingToFeatureMap, CodingToQuantityFeatureMap, Map[String, GEOIDMapping], Map[String, NearestMapping], Map[String, NearestMapping]) = {
+  def loadFeatureMap(hc : Configuration, feature_map_input_path : String) : (CodingToFeatureMap, CodingToFeatureMap, CodingToFeatureMap, CodingToQuantityFeatureMap, Map[String, GEOIDMapping], Map[String, NearestMapping], Map[String, NearestMapping], Seq[String]) = {
     val med_map_path = new Path(feature_map_input_path)
     val input_directory_file_system = med_map_path.getFileSystem(hc)
 
@@ -76,7 +76,7 @@ object Mapper {
             }
           }
         )
-        (cond_map.toMap, med_map.toMap, proc_map.toMap, obs_map.toMap, obj.GEOID.getOrElse(Map()), obj.NearestRoad.getOrElse(Map()), obj.NearestPoint.getOrElse(Map()))
+        (cond_map.toMap, med_map.toMap, proc_map.toMap, obs_map.toMap, obj.GEOID.getOrElse(Map()), obj.NearestRoad.getOrElse(Map()), obj.NearestPoint.getOrElse(Map()), obj.Visit.getOrElse(Seq()))
     }
   }
 
@@ -158,18 +158,25 @@ object Mapper {
     else
       q
 
-  def extractQuantity(unit: Option[String], lab: Lab) : Option[Double] = lab.value.map {
-    case x : ValueQuantity => convert_unit(unit, x.valueNumber, x.unit)
-//    case x : ValueString => x.valueText
+  def extractQuantity(unit: Option[String], lab: Lab) : Option[Value] = lab.value.map {
+    case ValueQuantity(valueNumber, unit) => ValueQuantity(convert_unit(unit, valueNumber, unit), unit)
+    case ValueString(text) => ValueString(text)
   }
 
   def extractFlag(lab: Lab) : Option[String] = lab.flag
 
-  def map_coding_to_feature_and_quantity(medmap : CodingToQuantityFeatureMap, coding: Coding, lab: Lab) : Option[(String, Option[Any], Option[String])] =
+  def map_coding_to_feature_and_value(medmap : CodingToQuantityFeatureMap, coding: Coding, lab: Lab) : Option[(String, Option[Value], Option[String])] =
     medmap.view.filter {
       case (coding_pattern, (feature_name, feature_unit)) =>
         match_str(coding_pattern.code, coding.code) && match_str(coding_pattern.system, coding.system)
     }.headOption.map (x => (x._2._1, extractQuantity(x._2._2, lab), extractFlag(lab)))
+
+  def value_to_string(value: Value): String =
+    value match {
+      case ValueQuantity(valueNumber, Some(unit)) => f"${valueNumber} ${unit}"
+      case ValueQuantity(valueNumber, None) => valueNumber.toString
+      case ValueString(text) => text
+    }
 
   def map_race(race : Seq[String]) : String =
     if(race.isEmpty) {
@@ -348,7 +355,7 @@ class Mapper(hc : Configuration, feature_map_input_path : String) {
 
   import Mapper.{CodingToFeatureMap, CodingToQuantityFeatureMap, GEOIDMapping, NearestMapping, loadFeatureMap}
 
-  val (cond_map, med_map, proc_map, obs_map, geoid_map_map, nearest_road_map_map, nearest_point_map_map) : (CodingToFeatureMap, CodingToFeatureMap, CodingToFeatureMap, CodingToQuantityFeatureMap, Map[String, GEOIDMapping], Map[String, NearestMapping], Map[String, NearestMapping]) = loadFeatureMap(hc, feature_map_input_path)
+  val (cond_map, med_map, proc_map, obs_map, geoid_map_map, nearest_road_map_map, nearest_point_map_map, visit) : (CodingToFeatureMap, CodingToFeatureMap, CodingToFeatureMap, CodingToQuantityFeatureMap, Map[String, GEOIDMapping], Map[String, NearestMapping], Map[String, NearestMapping], Seq[String]) = loadFeatureMap(hc, feature_map_input_path)
 
   val meds = med_map.values.toSet
   val conds = cond_map.values.toSet

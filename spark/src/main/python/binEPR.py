@@ -1,11 +1,12 @@
+import os
+import os.path
 import sys
 import json
 import pandas as pd
 from preprocUtils import *
 
-print(sys.argv)
-input_file, crosswalk_file, icees_dir, pat_geo_file, output_file = sys.argv[1:]
-df = pd.read_csv(input_file)
+year_start, year_end, input_file, crosswalk_file, icees_dir, pat_geo_file, output_file = sys.argv[1:]
+df = pd.read_csv(input_file, quotechar='"')
 
 cw = pd.read_csv(crosswalk_file)
 
@@ -48,6 +49,8 @@ bins += cut(df, "MEDIANHOUSEHOLDINCOME", 5)
 df.drop(["ESTTOTALPOP_SE", "ESTTOTALPOP25PLUS_SE", "ESTPROPPERSONSNONHISPWHITE_SE", "ESTPROPPERSONS25PLUSHSMAX_SE", "ESTPROPHOUSEHOLDSNOAUTO_SE", "ESTPROPPERSONSNOHEALTHINS_SE", "ESTPROPPERSONS5PLUSNOENGLISH_SE", "MEDIANHOUSEHOLDINCOME_SE"], axis=1, inplace=True)
 df["DISTANCE2"] = pd.cut(df["DISTANCE"].apply(preprocHighwayExposure), [0, 50, 100, 150, 200, 250, float("inf")], labels=list(map(str, [1, 2, 3, 4, 5, 6])), include_lowest=True, right=False)
 df["DISTANCE"] = pd.cut(df["DISTANCE"].apply(preprocHighwayExposure), [0, 50, 100, 200, 300, 500, float("inf")], labels=list(map(str, [1, 2, 3, 4, 5, 6])), include_lowest=True, right=False)
+dir_path = os.path.dirname(output_file)
+os.makedirs(dir_path, exist_ok=True)
 df.to_csv(output_file, index=False)
 
 df_pat = df.merge(cw, how="left")
@@ -69,7 +72,7 @@ def convert_float_to_int(df):
     return df.applymap(lambda x: int(x) if isinstance(x, float) and float.is_integer(x) else x)
 
     
-for year in range(2010, 2020):                    
+for year in range(int(year_start), int(year_end) + 1):
     print(year)
     dfp = pd.read_csv(f"{icees_dir}/{year}patient")
     dfp["IN_ICEES"] = 1
