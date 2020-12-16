@@ -34,7 +34,7 @@ object PreprocSystem extends StepImpl {
       val tempDir = Files.createTempDirectory(null)
       try {
         f"virtualenv -p ${config.pyexec} ${tempDir.toString}/venv".!
-        Process(Seq(f"${tempDir.toString}/venv/bin/pip", "install") ++ config.requirements).!
+        Process(Seq(f"${tempDir.toString}/venv/bin/pip", "install", "--no-cache-dir") ++ config.requirements).!
         val exitValue = Process(f"${tempDir.toString}/venv/bin/python" +: config.command, new File(config.workdir)).!(ProcessLogger(println, println))
         println(f"exitValue = ${exitValue}")
         if (exitValue != 0) {

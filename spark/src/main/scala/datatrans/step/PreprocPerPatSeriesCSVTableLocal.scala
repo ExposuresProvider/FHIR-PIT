@@ -43,7 +43,7 @@ object PreprocPerPatSeriesCSVTableLocal extends StepImpl {
         }
 
         f"virtualenv -p /usr/bin/python3 ${tempDir.toString}/venv".!
-        f"${tempDir.toString}/venv/bin/pip install -r requirements.txt".!
+        f"${tempDir.toString}/venv/bin/pip install --no-cache-dir -r requirements.txt".!
         val exitValue = Process(f"${tempDir.toString}/venv/bin/python src/main/python/perPatSeriesCSVTable.py --n_jobs 32 --config ${tempFi.toString}").!(ProcessLogger(println, println))
         if (exitValue < 0) {
           throw new RuntimeException(f"error: {exitValue}")
