@@ -228,7 +228,7 @@ let mergeLocalStep = \(skip : Text) -> Step.System {
         arguments = {
             pyexec = pyexec,
             requirements = requirements,
-            command = ["src/main/python/merge_fhir.py", "${basedirinput}/FHIR", "${basedirinput}/FHIR_merged"],
+            command = ["src/main/python/merge_fhir.py", "${basedirinput}/FHIR", "${basedir}/FHIR_merged"],
             workdir = "."
         }
     }
