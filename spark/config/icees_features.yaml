@@ -1629,152 +1629,202 @@ FHIR:
     Condition:
       - system: http://hl7.org/fhir/sid/icd-9-cm
         code: "(493[.]).*"
+        code_is_regex: true
       - system: http://hl7.org/fhir/sid/icd-10-cm
         code: "(J45[.]).*"
+        code_is_regex: true
   CroupDx:
     Condition:
       - system: http://hl7.org/fhir/sid/icd-9-cm
         code: "(464[.]).*"
+        code_is_regex: true
       - system: http://hl7.org/fhir/sid/icd-10-cm
         code: "(J05[.]).*"
+        code_is_regex: true
   ReactiveAirwayDx:
     Condition:
       - system: http://hl7.org/fhir/sid/icd-9-cm
         code: "(496[.]).*"
+        code_is_regex: true
       - system: http://hl7.org/fhir/sid/icd-10-cm
         code: "(J44[.]|J66[.]).*"
+        code_is_regex: true
   CoughDx:
     Condition:
       - system: http://hl7.org/fhir/sid/icd-9-cm
         code: "(786[.]).*"
+        code_is_regex: true
       - system: http://hl7.org/fhir/sid/icd-10-cm
         code: "(R05[.]).*"
+        code_is_regex: true
   PneumoniaDx:
     Condition:
       - system: http://hl7.org/fhir/sid/icd-9-cm
         code: "(48[1-6][.]).*"
+        code_is_regex: true
       - system: http://hl7.org/fhir/sid/icd-10-cm
         code: "(J1[2-8].).*"
+        code_is_regex: true
   ObesityDx:
     Condition:
       - system: http://hl7.org/fhir/sid/icd-9-cm
         code: "(278[.]).*"
+        code_is_regex: true
       - system: http://hl7.org/fhir/sid/icd-10-cm
         code: "(E66.[^3]).*"
+        code_is_regex: true
   UterineCancerDx:
     Condition:
       - system: http://hl7.org/fhir/sid/icd-9-cm
         code: "(179|182)[.].*"
+        code_is_regex: true
       - system: http://hl7.org/fhir/sid/icd-10-cm
         code: "(C55)[.].*"
+        code_is_regex: true
   CervicalCancerDx:
     Condition:
       - system: http://hl7.org/fhir/sid/icd-9-cm
         code: "(180)[.].*"
+        code_is_regex: true
       - system: http://hl7.org/fhir/sid/icd-10-cm
         code: "(C53)[.].*"
+        code_is_regex: true
   OvarianCancerDx:
     Condition:
       - system: http://hl7.org/fhir/sid/icd-9-cm
         code: "(183)[.].*"
+        code_is_regex: true
       - system: http://hl7.org/fhir/sid/icd-10-cm
         code: "(C56)[.].*"
+        code_is_regex: true
   ProstateCancerDx:
     Condition:
       - system: http://hl7.org/fhir/sid/icd-9-cm
         code: "(185)[.].*"
+        code_is_regex: true
       - system: http://hl7.org/fhir/sid/icd-10-cm
         code: "(C61)[.].*"
+        code_is_regex: true
   TesticularCancerDx:
     Condition:
       - system: http://hl7.org/fhir/sid/icd-9-cm
         code: "(186)[.].*"
+        code_is_regex: true
       - system: http://hl7.org/fhir/sid/icd-10-cm
         code: "(C62)[.].*"
+        code_is_regex: true
   KidneyCancerDx:
     Condition:
       - system: http://hl7.org/fhir/sid/icd-9-cm
         code: "(189)[.].*"
+        code_is_regex: true
       - system: http://hl7.org/fhir/sid/icd-10-cm
         code: "(C64)[.].*"
+        code_is_regex: true
   EndometriosisDx:
     Condition:
       - system: http://hl7.org/fhir/sid/icd-9-cm
         code: "(617)[.].*"
+        code_is_regex: true
       - system: http://hl7.org/fhir/sid/icd-10-cm
         code: "(N80)[.].*"
+        code_is_regex: true
   OvarianDysfunctionDx:
     Condition:
       - system: http://hl7.org/fhir/sid/icd-9-cm
         code: "(256)[.].*"
+        code_is_regex: true
       - system: http://hl7.org/fhir/sid/icd-10-cm
         code: "(E28)[.].*"
+        code_is_regex: true
   TesticularDysfunctionDx:
     Condition:
       - system: http://hl7.org/fhir/sid/icd-9-cm
         code: "(257)[.].*"
+        code_is_regex: true
       - system: http://hl7.org/fhir/sid/icd-10-cm
         code: "(E29)[.].*"
+        code_is_regex: true
   PregnancyDx:
     Condition:
       - system: http://hl7.org/fhir/sid/icd-9-cm
         code: "(V22)[.].*"
+        code_is_regex: true
       - system: http://hl7.org/fhir/sid/icd-10-cm
         code: "(Z34)[.].*"
+        code_is_regex: true
   MenopauseDx:
     Condition:
       - system: http://hl7.org/fhir/sid/icd-9-cm
         code: "(627)[.].*"
+        code_is_regex: true
       - system: http://hl7.org/fhir/sid/icd-10-cm
         code: "(N95)[.].*"
+        code_is_regex: true
   DiabetesDx:
     Condition:
       - system: http://hl7.org/fhir/sid/icd-9-cm
         code: "(249|250)[.].*"
+        code_is_regex: true
       - system: http://hl7.org/fhir/sid/icd-10-cm
         code: "(E08|E09|E10|E11|E13)[.].*"
+        code_is_regex: true
   AlopeciaDx:
     Condition:
       - system: http://hl7.org/fhir/sid/icd-9-cm
         code: "(704)[.].*"
+        code_is_regex: true
       - system: http://hl7.org/fhir/sid/icd-10-cm
         code: "(L63|L64)[.].*"
+        code_is_regex: true
   FibromyalgiaDx:
     Condition:
       - system: http://hl7.org/fhir/sid/icd-9-cm
         code: "(729)[.].*"
+        code_is_regex: true
       - system: http://hl7.org/fhir/sid/icd-10-cm
         code: "(M79)[.].*"
+        code_is_regex: true
   AlcoholDependenceDx:
     Condition:
       - system: http://hl7.org/fhir/sid/icd-9-cm
         code: "(303)[.].*"
+        code_is_regex: true
       - system: http://hl7.org/fhir/sid/icd-10-cm
         code: "(F10)[.].*"
+        code_is_regex: true
   DrugDependenceDx:
     Condition:
       - system: http://hl7.org/fhir/sid/icd-9-cm
         code: "(304)[.].*"
+        code_is_regex: true
       - system: http://hl7.org/fhir/sid/icd-10-cm
         code: "(F11|F12|F13|F14|F15|F16|F17|F18|F19)[.].*"
+        code_is_regex: true
   DepressionDx:
     Condition:
       - system: http://hl7.org/fhir/sid/icd-9-cm
         code: "(311)[.].*"
+        code_is_regex: true
       - system: http://hl7.org/fhir/sid/icd-10-cm
         code: "(F32|F33)[.].*"
+        code_is_regex: true
   AnxietyDx:
     Condition:
       - system: http://hl7.org/fhir/sid/icd-9-cm
         code: "(300)[.].*"
+        code_is_regex: true
       - system: http://hl7.org/fhir/sid/icd-10-cm
         code: -> "(F40|F41)[.].*"
+        code_is_regex: true
   AutismDx:
     Condition:
       - system: http://hl7.org/fhir/sid/icd-9-cm
         code: "(299)[.].*"
+        code_is_regex: true
       - system: http://hl7.org/fhir/sid/icd-10-cm
         code: "(F84)[.].*"
+        code_is_regex: true
 GEOID:
   acs:
     GEOID: GEOID

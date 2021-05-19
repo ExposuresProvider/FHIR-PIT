@@ -16,8 +16,9 @@ object Mapper {
 
   log.setLevel(Level.INFO)
 
-  case class QuantityMapping(coding: Coding, unit: Option[String])
-  case class FHIRFeatureMapping(Condition: Option[Seq[Coding]], Observation: Option[Seq[QuantityMapping]], MedicationRequest: Option[Seq[Coding]], Procedure: Option[Seq[Coding]])
+  case class CodingPattern(system: String, code: String, system_is_regex: Option[Boolean], code_is_regex: Option[Boolean])
+  case class QuantityMapping(coding: CodingPattern, unit: Option[String])
+  case class FHIRFeatureMapping(Condition: Option[Seq[CodingPattern]], Observation: Option[Seq[QuantityMapping]], MedicationRequest: Option[Seq[CodingPattern]], Procedure: Option[Seq[CodingPattern]])
 
   case class Feature(feature_name: String, feature_type: String)
   case class GEOIDMapping(GEOID: String, columns: Map[String, String])
@@ -26,6 +27,7 @@ object Mapper {
   case class FeatureMapping(FHIR: Option[Map[String, FHIRFeatureMapping]], GEOID: Option[Map[String, GEOIDMapping]], NearestRoad: Option[Map[String, NearestMapping]], NearestPoint: Option[Map[String, NearestMapping]], Visit: Option[Seq[String]])
 
   import Implicits._
+  implicit val codingPatternDecoder: Decoder[CodingPattern] = deriveDecoder
   implicit val quantityMappingDecoder: Decoder[QuantityMapping] = deriveDecoder
   implicit val featureDecoder: Decoder[Feature] = deriveDecoder
   implicit val geoidMappingDecoder: Decoder[GEOIDMapping] = deriveDecoder
@@ -33,8 +35,8 @@ object Mapper {
   implicit val featureMappingDecoder: Decoder[FeatureMapping] = deriveDecoder
   implicit val fhirFeatureMappingDecoder: Decoder[FHIRFeatureMapping] = deriveDecoder
 
-  type CodingToFeatureMap = Map[Coding, String]
-  type CodingToQuantityFeatureMap = Map[Coding, (String, Option[String])]
+  type CodingToFeatureMap = Seq[(CodingPattern, String)]
+  type CodingToQuantityFeatureMap = Seq[(CodingPattern, (String, Option[String]))]
 
   def loadFeatureMap(hc : Configuration, feature_map_input_path : String) : (CodingToFeatureMap, CodingToFeatureMap, CodingToFeatureMap, CodingToQuantityFeatureMap, Map[String, GEOIDMapping], Map[String, NearestMapping], Map[String, NearestMapping], Seq[String]) = {
     val med_map_path = new Path(feature_map_input_path)
@@ -44,39 +46,39 @@ object Mapper {
     json.as[FeatureMapping] match {
       case Left(error) => throw new RuntimeException(error)
       case Right(obj) =>
-        val cond_map = scala.collection.mutable.Map[Coding, String]()
-        val med_map = scala.collection.mutable.Map[Coding, String]()
-        val obs_map = scala.collection.mutable.Map[Coding, (String, Option[String])]()
-        val proc_map = scala.collection.mutable.Map[Coding, String]()
+        val cond_map = scala.collection.mutable.ArrayBuffer.empty[(CodingPattern, String)]
+        val med_map = scala.collection.mutable.ArrayBuffer.empty[(CodingPattern, String)]
+        val obs_map = scala.collection.mutable.ArrayBuffer.empty[(CodingPattern, (String, Option[String]))]
+        val proc_map = scala.collection.mutable.ArrayBuffer.empty[(CodingPattern, String)]
         obj.FHIR.foreach(obj =>
           for((feature_name, feature_mapping) <- obj) {
             for(
               condlist <- feature_mapping.Condition.toSeq;
               coding <- condlist
             ) {
-              cond_map(coding) = feature_name
+              cond_map += ((coding, feature_name))
             }
             for(
               medlist <- feature_mapping.MedicationRequest.toSeq;
               coding <- medlist
             ) {
-              med_map(coding) = feature_name
+              med_map += ((coding, feature_name))
             }
             for(
               obslist <- feature_mapping.Observation.toSeq;
               quantity_mapping <- obslist
             ) {
-              obs_map(quantity_mapping.coding) = (feature_name, quantity_mapping.unit)
+              obs_map += ((quantity_mapping.coding, (feature_name, quantity_mapping.unit)))
             }
             for(
               proclist <- feature_mapping.Procedure.toSeq;
               coding <- proclist
             ) {
-              proc_map(coding) = feature_name
+              proc_map += ((coding, feature_name))
             }
           }
         )
-        (cond_map.toMap, med_map.toMap, proc_map.toMap, obs_map.toMap, obj.GEOID.getOrElse(Map()), obj.NearestRoad.getOrElse(Map()), obj.NearestPoint.getOrElse(Map()), obj.Visit.getOrElse(Seq()))
+        (cond_map.toSeq, med_map.toSeq, proc_map.toSeq, obs_map.toSeq, obj.GEOID.getOrElse(Map()), obj.NearestRoad.getOrElse(Map()), obj.NearestPoint.getOrElse(Map()), obj.Visit.getOrElse(Seq()))
     }
   }
 
@@ -138,17 +140,24 @@ object Mapper {
 
   }
 
-  def match_str(pattern: String, str: String): Boolean =
-    if (pattern.contains("*")) {
-      pattern.r.pattern.matcher(str).matches()
-    } else {
-      pattern == str
+  def match_str(pattern: String, is_regex: Option[Boolean], str: String): Boolean =
+    is_regex match {
+      case Some(a) =>
+        if (a)
+          pattern.r.pattern.matcher(str).matches()
+        else
+          pattern == str
+      case None =>
+        if (pattern.contains('*'))
+          pattern.replace(".", "\\.").replace("*", ".*").r.pattern.matcher(str).matches()
+        else
+          pattern == str
     }
 
   def map_coding_to_feature(medmap : CodingToFeatureMap, coding : Coding) : Option[String] = 
-    medmap.view.filter {
+    medmap.filter {
       case (coding_pattern, feature_name) =>
-        match_str(coding_pattern.code, coding.code) && match_str(coding_pattern.system, coding.system)
+        match_str(coding_pattern.code, coding_pattern.code_is_regex, coding.code) && match_str(coding_pattern.system, coding_pattern.system_is_regex, coding.system)
     }.headOption.map (_._2)
 
   def convert_unit(to_unit: Option[String], q: Double, from_unit: Option[String]) : Double =
@@ -166,9 +175,9 @@ object Mapper {
   def extractFlag(lab: Lab) : Option[String] = lab.flag
 
   def map_coding_to_feature_and_value(medmap : CodingToQuantityFeatureMap, coding: Coding, lab: Lab) : Option[(String, Option[Value], Option[String])] =
-    medmap.view.filter {
+    medmap.filter {
       case (coding_pattern, (feature_name, feature_unit)) =>
-        match_str(coding_pattern.code, coding.code) && match_str(coding_pattern.system, coding.system)
+        match_str(coding_pattern.code, coding_pattern.code_is_regex, coding.code) && match_str(coding_pattern.system, coding_pattern.system_is_regex, coding.system)
     }.headOption.map (x => (x._2._1, extractQuantity(x._2._2, lab), extractFlag(lab)))
 
   def value_to_string(value: Value): String =
@@ -357,10 +366,10 @@ class Mapper(hc : Configuration, feature_map_input_path : String) {
 
   val (cond_map, med_map, proc_map, obs_map, geoid_map_map, nearest_road_map_map, nearest_point_map_map, visit) : (CodingToFeatureMap, CodingToFeatureMap, CodingToFeatureMap, CodingToQuantityFeatureMap, Map[String, GEOIDMapping], Map[String, NearestMapping], Map[String, NearestMapping], Seq[String]) = loadFeatureMap(hc, feature_map_input_path)
 
-  val meds = med_map.values.toSet
-  val conds = cond_map.values.toSet
-  val labs = obs_map.values.map(_._1).toSet
-  val procs = proc_map.values.toSet
+  val meds = med_map.map(_._2).toSet
+  val conds = cond_map.map(_._2).toSet
+  val labs = obs_map.map(_._2._1).toSet
+  val procs = proc_map.map(_._2).toSet
 
 
 }
