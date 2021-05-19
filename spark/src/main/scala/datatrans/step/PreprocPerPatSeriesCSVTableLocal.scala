@@ -42,11 +42,17 @@ object PreprocPerPatSeriesCSVTableLocal extends StepImpl {
           w.close()
         }
 
-        Process(Seq("virtualenv", "-p", "/usr/bin/python3", f"${tempDir.toString}/venv")).!
-        Process(Seq(f"${tempDir.toString}/venv/bin/pip", "install", "--no-cache-dir", "requirements.txt")).!
-        val exitValue = Process(f"${tempDir.toString}/venv/bin/python src/main/python/perPatSeriesCSVTable.py --n_jobs 32 --config ${tempFi.toString}").!(ProcessLogger(println, println))
+        val exitValue = Process(Seq("virtualenv", "-p", "/usr/bin/python3", f"${tempDir.toString}/venv")).!
         if (exitValue < 0) {
-          throw new RuntimeException(f"error: {exitValue}")
+          throw new RuntimeException(f"error: virtualenv {exitValue}")
+        }
+        val exitValue2 = Process(Seq(f"${tempDir.toString}/venv/bin/pip", "install", "--no-cache-dir", "-r", "requirements.txt")).!
+        if (exitValue2 < 0) {
+          throw new RuntimeException(f"error: pip install {exitValue2}")
+        }
+        val exitValue3 = Process(f"${tempDir.toString}/venv/bin/python src/main/python/perPatSeriesCSVTable.py --n_jobs 32 --config ${tempFi.toString}").!(ProcessLogger(println, println))
+        if (exitValue3 < 0) {
+          throw new RuntimeException(f"error: {exitValue3}")
         } 
       } finally {
         Files.delete(tempFi)

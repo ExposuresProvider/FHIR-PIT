@@ -22,8 +22,10 @@ in pipeline "report" "progress" "/share/spark/hao/datatrans/spark/config/COVID" 
     binICEES = "run",
     binEPR = "run"
   },
-  skip_preproc = ["Encounter", "Procedure", "Lab"] : List Text,
+  skip_preproc = [] : List Text,
   data_input = [
+    ["EnvDataAggregateCoordinates"],
+    ["EnvDataAggregateFIPS"],       
     ["PerPatSeriesToVector"],
     ["PerPatSeriesACS"],
     ["PerPatSeriesACSUR"],

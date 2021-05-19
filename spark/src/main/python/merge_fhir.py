@@ -197,7 +197,11 @@ def merge_fhir_patient(input_dir, output_dir):
             for filename in progressbar.progressbar(os.listdir(sub_dir), redirect_stdout=True, widgets=widgets):
                 fn = f"{sub_dir}/{filename}"
                 with open(fn) as ifp:
-                    pat_bundle = json.load(ifp)
+                    try:
+                        pat_bundle = json.load(ifp)
+                    except Exception as e:
+                        sys.stderr.write(f"error loading {fn}: {e}\n")
+                        sys.exit(-1)
                     for i, x in enumerate(pat_bundle.get("entry", [])):
                         pat = x["resource"]
                         ret = merge_pat(pats, pat, fn, i)

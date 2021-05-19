@@ -1,10 +1,12 @@
 package datatrans.step
 
+import scala.collection.JavaConverters._
+
 import datatrans.GeoidFinder
 import java.util.concurrent.atomic.AtomicInteger
 import datatrans.Utils.{time, readCSV, writeDataframe}
-import org.apache.spark.sql.{DataFrame, SparkSession, Column}
-import org.apache.spark.sql.types.{StructType, StructField, StringType, DoubleType}
+import org.apache.spark.sql.{DataFrame, SparkSession, Column, Row}                           
+import org.apache.spark.sql.types.{StructType, StructField, StringType, DoubleType, DateType}
 import org.joda.time.{DateTime, DateTimeZone}
 
 import org.apache.spark.sql.functions.{lit, to_date, year, broadcast}
@@ -94,6 +96,7 @@ object PreprocEnvDataFIPS extends StepImpl {
 
   def step(spark: SparkSession, config: EnvDataFIPSConfig) = {
     time {
+      log.info("starting EnvDataFIPS")
       import spark.implicits._
 
       val patient_dimension = config.fips_data
@@ -113,23 +116,42 @@ object PreprocEnvDataFIPS extends StepImpl {
       val yearseq = start_date_local.year.get to end_date_local.year.get
 
       log.info("loading env data")
-      loadFIPSDataFrame(spark, config, yearseq) match {
+      val df3 = loadFIPSDataFrame(spark, config, yearseq) match {
         case Some(df3) =>
           log.info(f"columns1 = ${df3.columns.toSeq}, nrows1 = ${df3.count()}")
-
-          val df3year = df3.withColumn("year", year($"start_date"))
-          //        df3year.cache()
-          log.info(f"columns2 = ${df3year.columns.toSeq}, nrows1 = ${df3year.count()}")
-
-          val df3year_pat = df3.join(broadcast(pat_geoid), Seq("FIPS"), "inner")
-          //        df3year_pat.cache()
-          log.info(f"columns3 = ${df3year_pat.columns.toSeq}, nrows1 = ${df3year_pat.count()}")
-
-          writeDataframe(hc, output_file_all, df3year_pat)
-
+          df3
         case None =>
           log.error(f"input fips df is not available ${yearseq}")
+          val schema = StructType(Seq(
+            StructField("Date", StringType, true),
+            StructField("FIPS", StringType, true),
+            StructField("Longitude", DoubleType, true),
+            StructField("Latitude", DoubleType, true),
+            StructField("CO_ppbv", DoubleType, true),
+            StructField("NO_ppbv", DoubleType, true),
+            StructField("NO2_ppbv", DoubleType, true),
+            StructField("NOX_ppbv", DoubleType, true),
+            StructField("SO2_ppbv", DoubleType, true),
+            StructField("ALD2_ppbv", DoubleType, true),
+            StructField("FORM_ppbv", DoubleType, true),
+            StructField("pm25_daily_average", DoubleType, true),
+            StructField("pm25_daily_average_stderr", DoubleType, true),
+            StructField("ozone_daily_8hour_maximum", DoubleType, true),
+            StructField("ozone_daily_8hour_maximum_stderr", DoubleType, true),
+            StructField("start_date", DateType, true)
+          ))
+          spark.createDataFrame(Seq[Row]().asJava, schema)
       }
+
+      val df3year = df3.withColumn("year", year($"start_date"))
+      //        df3year.cache()
+      log.info(f"columns2 = ${df3year.columns.toSeq}, nrows1 = ${df3year.count()}")
+
+      val df3year_pat = df3.join(broadcast(pat_geoid), Seq("FIPS"), "inner")
+      //        df3year_pat.cache()
+      log.info(f"columns3 = ${df3year_pat.columns.toSeq}, nrows1 = ${df3year_pat.count()}")
+
+      writeDataframe(hc, output_file_all, df3year_pat)
 
     }
   }

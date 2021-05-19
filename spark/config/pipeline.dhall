@@ -279,7 +279,7 @@ let envDataCoordinatesStep = λ(skip : Text) → λ(year_start : Natural) → λ
     arguments = {
       patgeo_data = patgeo_output_path,
       environmental_data = "${basedirinput}/other/env",
-      output_dir = "${basedir}/other_processed/env",
+      output_dir = "${basedir}/other_processed/env_coordinates",
       start_date = start_year year_start,
       end_date = end_year year_end,
       offset_hours = -5
@@ -381,7 +381,7 @@ let envDataAggregateCoordinatesStep = λ(skip : Text) → Step.EnvDataAggregate 
 let envDataAggregateFIPSStep = λ(skip : Text) → Step.EnvDataAggregate {
   name = "EnvDataAggregateFIPS",
   dependsOn = [
-    ["EnvDataFIPS"]
+    ["Split"]
   ],
   skip = skip,
   step = {

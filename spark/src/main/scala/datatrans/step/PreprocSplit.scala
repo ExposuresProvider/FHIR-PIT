@@ -61,6 +61,11 @@ object PreprocSplit extends StepImpl {
       val index = headers.indexOf(config.split_index)
       val rows = csvParser.iterator()
       var i = 0
+
+      if (!output_dir_file_system.exists(output_dir_path)) {
+        output_dir_file_system.mkdirs(output_dir_path)
+      }
+
       while(rows.hasNext()) {
         log.info(f"processing row $i")
         i += 1
