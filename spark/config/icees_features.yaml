@@ -1863,10 +1863,10 @@ NearestRoad:
         feature_type: number
 NearestPoint:
   cafo:
-    distance_feature_name: CAFO_Distance
+    distance_feature_name: CAFO_Exposure
     attributes_to_features_map: {}
   landfill:
-    distance_feature_name: LandfillDistance
+    distance_feature_name: Landfill_Exposure
     attributes_to_features_map: {}
 Visit:
   - AsthmaDx

@@ -167,7 +167,7 @@ let csvTableStep : Type = GenericStep {
     output_dir : Text,
     deidentify : List Text,
     offset_hours : Integer,
-    feature_map: Text
+    feature_map: Text,
 }
 
 let Step : Type = <
@@ -311,7 +311,7 @@ let statistics = [
 let envDataFIPSStep = λ(skip : Text) → λ(year_start : Natural) → λ(year_end : Natural) → Step.EnvDataFIPS {
   name = "EnvDataFIPS",
   dependsOn = [
-    ["FHIR"]
+    ["LatLonToGeoid"]
   ],
   skip = skip,
   step = {
@@ -514,8 +514,8 @@ let perPatSeriesCSVTableStep = λ(skip : Text) →  λ(year_start : Natural) →
     function = "datatrans.step.PreprocPerPatSeriesCSVTable",
     arguments = {
       patient_file = "${basedir}/FHIR_vector",
-      environment_file = "${basedir}/other_processed/env6",
-      environment2_file = "${basedir}/other_processed/env5",
+      environment_file = "${basedir}/other_processed/env_agg_coordinates",
+      environment2_file = "${basedir}/other_processed/env_agg_FIPS",
       input_files = [
         acs_output_path,
         acsUR_output_path,
@@ -540,8 +540,8 @@ let perPatSeriesCSVTableLocalStep = λ(skip : Text) →  λ(year_start : Natural
     function = "datatrans.step.PreprocPerPatSeriesCSVTableLocal",
     arguments = {
       patient_file = "${basedir}/FHIR_vector",
-      environment_file = "${basedir}/other_processed/env6",
-      environment2_file = "${basedir}/other_processed/env5",
+      environment_file = "${basedir}/other_processed/env_agg_coordinates",
+      environment2_file = "${basedir}/other_processed/env_agg_FIPS",
       input_files = [
         acs_output_path,
         acsUR_output_path,

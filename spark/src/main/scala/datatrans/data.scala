@@ -156,6 +156,16 @@ object Implicits{
       }
     }).toSeq
 
+  def getFlag(interpretation : ACursor) : Decoder.Result[Seq[String]] = 
+    for(                                                                
+      codingJson <- interpretation.downField("coding").as[Seq[Json]]    
+    ) yield (for(                                                       
+      json <- codingJson;                                               
+      s <- root.system.string.getOption(json);                          
+      if s == "http://hl7.org/fhir/ValueSet/observation-interpretation";
+      s <- root.code.string.getOption(json)                             
+    ) yield s).toSeq                                                    
+
   implicit val conditionDecoder: Decoder[Condition] = new Decoder[Condition] {
     override def apply(json: HCursor): Decoder.Result[Condition] = {
       val resource = json.downField("resource");
@@ -164,7 +174,7 @@ object Implicits{
         subjectReference <- resource.downField("subject").downField("reference").as[String];
         contextReference = resource.downField("context").downField("reference").as[String].right.toOption;
         coding <- getCoding(resource.downField("code"));
-        assertedDate <- resource.downField("assertedDate").as[String]
+        assertedDate <- resource.downField("recordedDate").as[String]
       ) yield Condition(id, subjectReference, contextReference, coding, assertedDate)
     }
   }
@@ -192,7 +202,7 @@ object Implicits{
         contextReference = resource.downField("context").downField("reference").as[String].right.toOption;
         coding <- getCoding(resource.downField("code"));
         value = resource.as[Value].right.toOption;
-        flag = None;
+        flag = getFlag(resource.downField("interpretation")).toOption.flatMap(_.headOption); // assuming that there is at most one flag
         effectiveDateTime0 = resource.downField("effectiveDateTime");
         effectiveDateTime <- if (effectiveDateTime0.succeeded) effectiveDateTime0.as[String] else resource.downField("issued").as[String]
       ) yield Lab(id, subjectReference, contextReference, coding, value, flag, effectiveDateTime)

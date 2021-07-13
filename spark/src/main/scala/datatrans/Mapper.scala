@@ -17,7 +17,10 @@ object Mapper {
   log.setLevel(Level.INFO)
 
   case class CodingPattern(system: String, code: String, system_is_regex: Option[Boolean], code_is_regex: Option[Boolean])
-  case class QuantityMapping(coding: CodingPattern, unit: Option[String])
+  case class QuantityMapping(system: String, code: String, system_is_regex: Option[Boolean], code_is_regex: Option[Boolean], unit: Option[String])
+  def convertQuantityMappingToCodingPattern(qm: QuantityMapping) : CodingPattern = qm match {                                                     
+    case QuantityMapping(system, code, system_is_regex, code_is_regex, _) => CodingPattern(system, code, system_is_regex, code_is_regex)          
+  }                                                                                                                                               
   case class FHIRFeatureMapping(Condition: Option[Seq[CodingPattern]], Observation: Option[Seq[QuantityMapping]], MedicationRequest: Option[Seq[CodingPattern]], Procedure: Option[Seq[CodingPattern]])
 
   case class Feature(feature_name: String, feature_type: String)
@@ -68,7 +71,7 @@ object Mapper {
               obslist <- feature_mapping.Observation.toSeq;
               quantity_mapping <- obslist
             ) {
-              obs_map += ((quantity_mapping.coding, (feature_name, quantity_mapping.unit)))
+              obs_map += ((convertQuantityMappingToCodingPattern(quantity_mapping), (feature_name, quantity_mapping.unit)))
             }
             for(
               proclist <- feature_mapping.Procedure.toSeq;
@@ -141,24 +144,24 @@ object Mapper {
   }
 
   def match_str(pattern: String, is_regex: Option[Boolean], str: String): Boolean =
-    is_regex match {
+    is_regex match {                                                       
       case Some(a) =>
         if (a)
           pattern.r.pattern.matcher(str).matches()
         else
           pattern == str
       case None =>
-        if (pattern.contains('*'))
+        if (pattern.contains("*"))                                                            
           pattern.replace(".", "\\.").replace("*", ".*").r.pattern.matcher(str).matches()
-        else
-          pattern == str
+        else                                                                                  
+          pattern == str                                                                 
     }
 
-  def map_coding_to_feature(medmap : CodingToFeatureMap, coding : Coding) : Option[String] = 
+  def map_coding_to_feature(medmap : CodingToFeatureMap, coding : Coding) : Seq[String] = 
     medmap.filter {
       case (coding_pattern, feature_name) =>
         match_str(coding_pattern.code, coding_pattern.code_is_regex, coding.code) && match_str(coding_pattern.system, coding_pattern.system_is_regex, coding.system)
-    }.headOption.map (_._2)
+    }.map (_._2)
 
   def convert_unit(to_unit: Option[String], q: Double, from_unit: Option[String]) : Double =
     // add unit conversion code here
@@ -174,11 +177,11 @@ object Mapper {
 
   def extractFlag(lab: Lab) : Option[String] = lab.flag
 
-  def map_coding_to_feature_and_value(medmap : CodingToQuantityFeatureMap, coding: Coding, lab: Lab) : Option[(String, Option[Value], Option[String])] =
+  def map_coding_to_feature_and_value(medmap : CodingToQuantityFeatureMap, coding: Coding, lab: Lab) : Seq[(String, Option[Value], Option[String])] =
     medmap.filter {
       case (coding_pattern, (feature_name, feature_unit)) =>
         match_str(coding_pattern.code, coding_pattern.code_is_regex, coding.code) && match_str(coding_pattern.system, coding_pattern.system_is_regex, coding.system)
-    }.headOption.map (x => (x._2._1, extractQuantity(x._2._2, lab), extractFlag(lab)))
+    }.map (x => (x._2._1, extractQuantity(x._2._2, lab), extractFlag(lab)))
 
   def value_to_string(value: Value): String =
     value match {

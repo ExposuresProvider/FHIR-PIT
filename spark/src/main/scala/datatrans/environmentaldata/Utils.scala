@@ -23,14 +23,14 @@ object Utils {
       DateTime.parse(x, ISODateTimeFormat.dateParser()).plusDays(1).toString("yyyy-MM-dd")
   )
 
-  val aggFuncs = Map[String, String => Column](
+  val aggFuncs = Map[String, Column => Column](
     "avg" -> avg,
     "max" -> max,
     "min" -> min,
     "stddev" -> stddev
   )
 
-  val yearlyStatsToCompute : Seq[(String => Column, String)] = Mapper.studyPeriodMappedEnvStats.map(stat => (aggFuncs(stat), stat))
+  val yearlyStatsToCompute : Seq[(Column => Column, String)] = Mapper.studyPeriodMappedEnvStats.map(stat => (aggFuncs(stat), stat))
 
   def aggregateByYear(spark: SparkSession, df: DataFrame, names: Seq[String], statistics:Seq[String], additional_primary_keys : Seq[String]) = {
     import spark.implicits._
@@ -38,7 +38,7 @@ object Utils {
     val stats = statistics.flatMap((stat: String) => yearlyStatsToCompute.find{
       case (_, suffix) => suffix == stat
     })
-    val exprs = for(name <- names; (func, suffix) <- stats) yield func(name).alias(name + "_" + suffix)
+    val exprs = for(name <- names; (func, suffix) <- stats) yield func(col(name).cast(DoubleType)).alias(name + "_" + suffix)
     
     val df_with_agg = if (!exprs.isEmpty) {
       val aggregate = df_with_year.groupBy("year", additional_primary_keys : _*).agg(

@@ -1,10 +1,13 @@
 import os                               
+import os.path
 import sys                              
 import json                             
 from preprocPatient import *            
 from preprocVisit import *
 
 year_start, year_end, config_file, input_dir, output_dir = sys.argv[1:]
+
+os.makedirs(output_dir, exist_ok=True)
 
 for year in range(int(year_start), int(year_end) + 1):
     print(year)
