@@ -380,7 +380,7 @@ let envDataAggregateCoordinatesStep = λ(skip : Text) → \(study_period_bounds 
   }
 }
 
-let envDataAggregateFIPSStep = λ(skip : Text) → Step.EnvDataAggregate {
+let envDataAggregateFIPSStep = λ(skip : Text) → \(study_period_bounds : List Text) -> \(study_periods : List Text) → Step.EnvDataAggregate {
   name = "EnvDataAggregateFIPS",
   dependsOn = [
     ["Split"]
@@ -392,7 +392,9 @@ let envDataAggregateFIPSStep = λ(skip : Text) → Step.EnvDataAggregate {
       input_dir = "${basedir}/other_processed/env_split_FIPS",
       output_dir = "${basedir}/other_processed/env_agg_FIPS",
       indices = indices2,
-      statistics = statistics
+      statistics = statistics,
+      study_period_bounds = study_period_bounds,
+      study_periods = study_periods
     }
   }
 }

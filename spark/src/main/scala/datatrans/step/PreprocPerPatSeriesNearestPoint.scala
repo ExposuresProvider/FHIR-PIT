@@ -57,9 +57,9 @@ object PreprocPerPatSeriesNearestPoint extends StepImpl {
         val df = pddf0.mapPartitions(partition => {
           val nearest_point = new NearestPoint(config.nearestpoint_data)
           partition.map(r => {
-           val pid = r.getString(0)
-           val latstr = r.getString(1)
-           val lonstr = r.getString(2)
+            val pid = r.getString(r.fieldIndex("patient_num"))
+            val latstr = r.getString(r.fieldIndex("lat"))
+            val lonstr = r.getString(r.fieldIndex("lon"))
             val distance_to_nearest_point = if (latstr == null || lonstr == null)
                null +: Seq.fill(attributes.size + 1)(null)
            else {

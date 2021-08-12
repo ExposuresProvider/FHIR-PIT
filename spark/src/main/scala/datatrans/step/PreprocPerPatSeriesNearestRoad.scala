@@ -58,9 +58,9 @@ object PreprocPerPatSeriesNearestRoad extends StepImpl {
         val df = pddf0.mapPartitions(partition => {
           val nearestRoad = new NearestRoad(config.nearestroad_data, config.maximum_search_radius)
           partition.map(r => {
-           val pid = r.getString(0)
-           val latstr = r.getString(1)
-           val lonstr = r.getString(2)
+            val pid = r.getString(r.fieldIndex("patient_num"))
+            val latstr = r.getString(r.fieldIndex("lat"))
+            val lonstr = r.getString(r.fieldIndex("lon"))
             val distance_to_nearest_road = if (latstr == null || lonstr == null)
                null +: Seq.fill(attributes.size)(null)
            else {

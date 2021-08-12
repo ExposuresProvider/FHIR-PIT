@@ -4,7 +4,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 import datatrans.Utils.{time, fileExists, writeDataframe}
 import org.apache.hadoop.fs.Path
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{SparkSession, Row}
 import org.apache.hadoop.fs.{FileStatus, FileSystem, Path, PathFilter}
 import io.circe.Decoder
 import io.circe.generic.semiauto.deriveDecoder
@@ -20,12 +20,6 @@ case class PreprocPerPatSeriesACSConfig(
   output_file : String,
   feature_map : String,
   feature_name: String
-)
-
-case class PatientCoordinates(
-  patient_num: String,
-  lat: Option[Double],
-  lon : Option[Double]
 )
 
 object PreprocPerPatSeriesACS extends StepImpl {
@@ -49,25 +43,29 @@ object PreprocPerPatSeriesACS extends StepImpl {
         val mapper = new Mapper(hc, config.feature_map)
         val acs = mapper.geoid_map_map(config.feature_name)
         val geoid = acs.GEOID
-        val schema = ScalaReflection.schemaFor[PatientCoordinates].dataType.asInstanceOf[StructType]
-        val pddf0 = spark.read.format("csv").option("header", value = true).schema(schema).load(config.time_series).as[PatientCoordinates]
+        val pddf0 = spark.read.format("csv").option("header", value = true).load(config.time_series)
 
         val df = pddf0.mapPartitions(partition => {
           val geoidFinder = new GeoidFinder(config.geoid_data, "15000US")
-          partition.flatMap(r =>
-            r.lat match {
-              case Some(lat) =>
-                r.lon match {
-                  case Some(lon) =>
-                   val geoid = geoidFinder.getGeoidForLatLon(lat, lon)
-                    Some((r.patient_num, geoid))
-                  case _ =>
-                    None
-                }
-              case _ =>
-                None
+          partition.flatMap(r => {
+            val patient_num = r.getString(r.fieldIndex("patient_num"))
+            val latstr = r.getString(r.fieldIndex("lat"))
+            val lonstr = r.getString(r.fieldIndex("lon"))
+            if (latstr == "" || lonstr == "")
+              None
+            else {
+              (try {
+                Some ( latstr.toDouble,
+                  lonstr.toDouble )
+              } catch {
+                case e : Exception =>
+                  println(s"cannot convert [$latstr, $lonstr]")
+                  None
+              }).flatMap {
+                case (lat, lon) => geoidFinder.getGeoidForLatLon(lat, lon).map(geoid => (patient_num, geoid))
+              }
             }
-          )
+          })
         }).toDF("patient_num", geoid)
 
         val acs_df = spark.read.format("csv").option("header", value = true).load(config.acs_data)
