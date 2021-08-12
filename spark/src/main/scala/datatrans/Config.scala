@@ -1,6 +1,6 @@
 package datatrans
 
-import scopt._
+import scopt.OptionParser
 import io.circe.yaml
 import io.circe._
 import io.circe.generic.semiauto._

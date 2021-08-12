@@ -4,7 +4,7 @@ import datatrans.Utils._
 import org.apache.spark.sql.SparkSession
 
 import scala.collection.mutable.ListBuffer
-import scopt._
+import scopt.OptionParser
 
 // cut -f3 -d, observation_fact.csv | tail -n +2 | tr -d '"' | sed '/^\s*$/d' | sort -u > json/header0
 // cut -f6 -d, visit_dimension.csv | tail -n +2 | tr -d '"' | sed '/^\s*$/d' | sort -u > json/header1
