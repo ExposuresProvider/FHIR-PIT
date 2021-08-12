@@ -34,9 +34,7 @@ class CSVTableSpec extends FlatSpec {
         "src/test/data/other_processed/2010/landfill.csv"
       ),
       output_dir = f"${tempDir.toString()}",
-      start_date = stringToDateTime("2010-01-01T00:00:00Z"),
-      end_date = stringToDateTime("2011-01-01T00:00:00Z"),
-      offset_hours = 0
+      study_periods = Seq("2010")
     )
 
     PreprocPerPatSeriesCSVTable.step(spark, config)
@@ -92,9 +90,7 @@ class CSVTableSpec extends FlatSpec {
         "src/test/data/other_processed/2010/landfill.csv"
       ),
       output_dir = f"${tempDir.toString()}",
-      start_date = stringToDateTime("2009-01-01T00:00:00Z"),
-      end_date = stringToDateTime("2011-01-01T00:00:00Z"),
-      offset_hours = 0
+      study_periods = Seq("2009", "2010")
     )
 
     PreprocPerPatSeriesCSVTable.step(spark, config)
@@ -150,9 +146,7 @@ class CSVTableSpec extends FlatSpec {
         "src/test/data/other_processed/2010/landfill.csv"
       ),
       output_dir = f"${tempDir.toString()}",
-      start_date = stringToDateTime("2010-01-01T00:00:00Z"),
-      end_date = stringToDateTime("2011-01-01T00:00:00Z"),
-      offset_hours = 0
+      study_periods = Seq("2010")
     )
 
     PreprocPerPatSeriesCSVTable.step(spark, config)
@@ -208,9 +202,7 @@ class CSVTableSpec extends FlatSpec {
         "src/test/data/other_processed/2010/landfill.csv"
       ),
       output_dir = f"${tempDir.toString()}",
-      start_date = stringToDateTime("2010-01-01T00:00:00Z"),
-      end_date = stringToDateTime("2011-01-01T00:00:00Z"),
-      offset_hours = 0
+      study_periods = Seq("2010")
     )
 
     PreprocPerPatSeriesCSVTable.step(spark, config)

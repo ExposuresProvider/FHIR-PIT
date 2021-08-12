@@ -205,7 +205,9 @@ class EnvDataFIPSSpec extends FlatSpec {
       input_dir=s"${tempDir2.toString()}",
       output_dir = s"${tempDir3.toString()}",
       indices = Mapper.envInputColumns2,
-      statistics = Mapper.studyPeriodMappedEnvStats
+      statistics = Mapper.studyPeriodMappedEnvStats,
+      study_period_bounds = Seq(stringToDateTime("2009-01-01T00:00:00Z"), stringToDateTime("2011-01-01T00:00:00Z")),
+      study_periods = Seq("2010")
     )
 
     PreprocEnvDataAggregate.step(spark, config2)

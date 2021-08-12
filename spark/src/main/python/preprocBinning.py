@@ -5,11 +5,11 @@ import json
 from preprocPatient import *            
 from preprocVisit import *
 
-year_start, year_end, config_file, input_dir, output_dir = sys.argv[1:]
+config_file, input_dir, output_dir, *study_periods = sys.argv[1:]
 
 os.makedirs(output_dir, exist_ok=True)
 
-for year in range(int(year_start), int(year_end) + 1):
+for year in study_periods:
     print(year)
     input_file_p = f"{input_dir}/{year}/all_patient"
     output_file_p = f"{output_dir}/{year}patient"

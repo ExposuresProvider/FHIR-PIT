@@ -32,14 +32,7 @@ def proc_pid(config, p):
         env2_fn = config["environment2_file"]
         input_files = config["input_files"]
         output_dir = config["output_dir"]
-        offset_hours = config["offset_hours"]
-        start_date_str = config["start_date"]
-        end_date_str = config["end_date"]
-        start_date = parseTimestamp(start_date_str, offset_hours)
-        end_date = parseTimestamp(end_date_str, offset_hours)
-        start_year = start_date.year
-        end_year = end_date.year
-        years = range(start_year, end_year)
+        study_periods = config["study_periods"]
 
         input_dfs = list(map(lambda nr: pd.read_csv(nr), input_files))
         sdf = functools.reduce(lambda l,r: l.merge(r, on="patient_num", how="outer"), input_dfs) if len(input_dfs) != 0 else None
@@ -53,10 +46,10 @@ def proc_pid(config, p):
         penv2df["year"] = penv2df["start_date"].apply(extractYear)
 
         padf = penv2df.merge(sdf, on="patient_num", how="left") if sdf is not None else penv2df
-        for year in years:
+        for year in study_periods:
             per_patient = f"{output_dir}/{year}/per_patient"
             os.makedirs(per_patient, exist_ok=True)
-            padf[padf["year"] == year].to_csv(f"{per_patient}/{p}", index=False)
+            padf[padf["study_period"] == year].to_csv(f"{per_patient}/{p}", index=False)
 
 
 def parseTimestamp(a, offset_hours):

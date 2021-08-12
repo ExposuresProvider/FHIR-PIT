@@ -9,8 +9,8 @@ let ResourceTypes : Type = {
     Procedure: Text
 }
 
-let YearConfig : Type = {
-    year : Natural,
+let StudyPeriodConfig : Type = {
+    study_periods : Text,
     skip : {
       csvTable : Text
     }
@@ -49,11 +49,13 @@ let FhirConfig : Type = {
     },
     skip_preproc: List Text,
     data_input: List (List Text),
-    yearStart: Natural,
-    yearEnd: Natural
+    study_period_splits: List Text,
+    study_periods: List Text,
+    start_date: Text,
+    end_date: Text
 }
 
-in λ(report : Text) → λ(progress : Text) → λ(configdir : Text) → λ(basedirinput : Text) → λ(basedir : Text) → λ(basediroutput : Text) → λ(fhirConfig : FhirConfig) → λ(skipList : List YearConfig) →
+in λ(report : Text) → λ(progress : Text) → λ(configdir : Text) → λ(basedirinput : Text) → λ(basedir : Text) → λ(basediroutput : Text) → λ(fhirConfig : FhirConfig) → λ(skipList : List StudyPeriodConfig) →
 
 let GenericStep : Type → Type = λ(a : Type) → {
     name : Text,
@@ -122,7 +124,9 @@ let EnvDataAggregateStep : Type = GenericStep {
     input_dir: Text,
     output_dir: Text,
     indices: List Text,
-    statistics: List Text
+    statistics: List Text,
+    study_period_bounds: List Text,
+    study_periods: List Text
 }
 
 let PerPatSeriesACSStep : Type = GenericStep {
@@ -157,9 +161,7 @@ let PerPatSeriesCSVTableStep : Type = GenericStep {
     environment2_file : Text,
     input_files : List Text,
     output_dir : Text,
-    start_date : Text,
-    end_date : Text,
-    offset_hours : Integer
+    study_periods : List Text
 }
 
 let csvTableStep : Type = GenericStep {
@@ -192,8 +194,6 @@ let Config: Type = {
     steps : List Step
 }
 
-let start_year = λ(year : Natural) → "${Natural/show year}-01-01T00:00:00-05:00"
-let end_year = λ(year : Natural) → start_year (year + 1)
 let patgeo_output_path = "${basedir}/FHIR_processed/geo.csv"
 let acs_output_path = "${basedir}/other_processed/acs.csv"
 let acsUR_output_path = "${basedir}/other_processed/acsUR.csv"
@@ -249,7 +249,7 @@ let fhirStep = λ(skip : Text) → λ(skip_preproc : List Text) → Step.FHIR {
     }
 }
 
-let toVectorStep = λ(skip : Text) → λ(year_start : Natural) → λ(year_end : Natural) → Step.ToVector {
+let toVectorStep = λ(skip : Text) → λ(start_date : Text) → λ(end_date : Text) → Step.ToVector {
   name = "PerPatSeriesToVector",
   dependsOn = [
     ["FHIR"]
@@ -260,15 +260,15 @@ let toVectorStep = λ(skip : Text) → λ(year_start : Natural) → λ(year_end 
     arguments = {
       input_directory = "${basedir}/FHIR_processed/Patient",
       output_directory = "${basedir}/FHIR_vector",
-      start_date = start_year year_start,
-      end_date = end_year year_end,
+      start_date = start_date,
+      end_date = end_date,
       offset_hours = -5,
       feature_map = feature_map_path
     }
   }
 }
 
-let envDataCoordinatesStep = λ(skip : Text) → λ(year_start : Natural) → λ(year_end : Natural) → Step.EnvDataCoordinates {
+let envDataCoordinatesStep = λ(skip : Text) → λ(start_date : Text) → λ(end_date : Text) → Step.EnvDataCoordinates {
   name = "EnvDataCoordinates",
   dependsOn = [
     ["FHIR"]
@@ -280,8 +280,8 @@ let envDataCoordinatesStep = λ(skip : Text) → λ(year_start : Natural) → λ
       patgeo_data = patgeo_output_path,
       environmental_data = "${basedirinput}/other/env",
       output_dir = "${basedir}/other_processed/env_coordinates",
-      start_date = start_year year_start,
-      end_date = end_year year_end,
+      start_date = start_date,
+      end_date = end_date,
       offset_hours = -5
     }
   }
@@ -308,7 +308,7 @@ let statistics = [
   "avg"
 ]
 
-let envDataFIPSStep = λ(skip : Text) → λ(year_start : Natural) → λ(year_end : Natural) → Step.EnvDataFIPS {
+let envDataFIPSStep = λ(skip : Text) → λ(start_date : Text) → λ(end_date : Text) → Step.EnvDataFIPS {
   name = "EnvDataFIPS",
   dependsOn = [
     ["LatLonToGeoid"]
@@ -320,8 +320,8 @@ let envDataFIPSStep = λ(skip : Text) → λ(year_start : Natural) → λ(year_e
       environmental_data = "${basedirinput}/other/env",
       fips_data = "${basedir}/other_processed/lat_lon_to_geoid/geoids.csv",
       output_file = "${basedir}/other_processed/env_FIPS/preagg",
-      start_date = start_year year_start,
-      end_date = end_year year_end,
+      start_date = start_date,
+      end_date = end_date,
       offset_hours = -5
     }
   }
@@ -361,7 +361,7 @@ let indices2 = [
 let statistics = ["avg", "max"]
 
 
-let envDataAggregateCoordinatesStep = λ(skip : Text) → Step.EnvDataAggregate {
+let envDataAggregateCoordinatesStep = λ(skip : Text) → \(study_period_bounds : List Text) -> \(study_periods : List Text) -> Step.EnvDataAggregate {
   name = "EnvDataAggregateCoordinates",
   dependsOn = [
     ["EnvDataCoordinates"]
@@ -373,7 +373,9 @@ let envDataAggregateCoordinatesStep = λ(skip : Text) → Step.EnvDataAggregate 
       input_dir = "${basedir}/other_processed/env_coordinates",
       output_dir = "${basedir}/other_processed/env_agg_coordinates",
       indices = indices,
-      statistics = statistics
+      statistics = statistics,
+      study_period_bounds = study_period_bounds,
+      study_periods = study_periods
     }
   }
 }
@@ -506,7 +508,7 @@ let landfillStep = λ(skip : Text) → Step.NearestPoint {
   }
 }
 
-let perPatSeriesCSVTableStep = λ(skip : Text) →  λ(year_start : Natural) →  λ(year_end : Natural) → \(dependencies: List (List Text)) -> Step.PerPatSeriesCSVTable {
+let perPatSeriesCSVTableStep = λ(skip : Text) →  λ(study_periods : List Text) → \(dependencies: List (List Text)) -> Step.PerPatSeriesCSVTable {
   name = "PerPatSeriesCSVTable",
   dependsOn = dependencies,
   skip = skip,
@@ -525,14 +527,12 @@ let perPatSeriesCSVTableStep = λ(skip : Text) →  λ(year_start : Natural) →
 	landfill_output_path
       ],
       output_dir = "${basedir}/icees",
-      start_date = start_year year_start,
-      end_date = end_year year_end,
-      offset_hours = -5
+      study_periods = study_periods
     }
   }
 }
 
-let perPatSeriesCSVTableLocalStep = λ(skip : Text) →  λ(year_start : Natural) → λ(year_end : Natural) → λ(dependencies: List (List Text)) → Step.PerPatSeriesCSVTable {
+let perPatSeriesCSVTableLocalStep = λ(skip : Text) →  λ(study_periods : List Text) → λ(dependencies: List (List Text)) → Step.PerPatSeriesCSVTable {
   name = "PerPatSeriesCSVTableLocal",
   dependsOn = dependencies,
   skip = skip,
@@ -551,15 +551,13 @@ let perPatSeriesCSVTableLocalStep = λ(skip : Text) →  λ(year_start : Natural
 	landfill_output_path
       ],
       output_dir = "${basedir}/icees",
-      start_date = start_year year_start,
-      end_date = end_year year_end,
-      offset_hours = -5
+      study_periods = study_periods
     }
   }
 }
 
-let csvTableStep = λ(skip : Text) → λ(year : Natural) → Step.csvTable {
-  name = "csvTable${Natural/show year}",
+let csvTableStep = λ(skip : Text) → λ(study_period : Text) → Step.csvTable {
+  name = "csvTable${study_period}",
   dependsOn = [
     ["PerPatSeriesCSVTable", "PerPatSeriesCSVTableLocal"]
   ],
@@ -567,8 +565,8 @@ let csvTableStep = λ(skip : Text) → λ(year : Natural) → Step.csvTable {
   step = {
     function = "datatrans.step.PreprocCSVTable",
     arguments = {
-      input_dir = "${basedir}/icees/${Natural/show year}/per_patient",
-      output_dir = "${basedir}/icees2/${Natural/show year}",
+      input_dir = "${basedir}/icees/${study_period}/per_patient",
+      output_dir = "${basedir}/icees2/${study_period}",
       deidentify = [] : List Text,
       offset_hours = -5,
       feature_map = feature_map_path
@@ -576,22 +574,22 @@ let csvTableStep = λ(skip : Text) → λ(year : Natural) → Step.csvTable {
   }
 }
 
-let binICEESStep = \(skip : Text) -> \(year_start : Natural) -> \(year_end : Natural) -> Step.System {
+let binICEESStep = \(skip : Text) -> \(study_periods : List Text) -> Step.System {
     name = "BinICEES",
-    dependsOn = Prelude.List.map Natural (List Text) (\(enumeration : Natural) -> ["csvTable${Natural/show (enumeration + year_start)}"]) (Prelude.Natural.enumerate (Natural/subtract year_start (year_end + 1))),
+    dependsOn = Prelude.List.map Text (List Text) (\(enumeration : Text) -> ["csvTable${enumeration}"]) study_periods,
     skip = skip,
     step = {
         function = "datatrans.step.PreprocSystem",
         arguments = {
             pyexec = pyexec,
             requirements = requirements,
-            command = ["src/main/python/preprocBinning.py", Natural/show year_start, Natural/show year_end, feature_map_path, "${basedir}/icees2", "${basediroutput}/icees2_bins"],
+            command = ["src/main/python/preprocBinning.py", feature_map_path, "${basedir}/icees2", "${basediroutput}/icees2_bins"] # study_periods,
             workdir = "."
         }
     }
 }
 
-let binEPRStep = \(skip : Text) -> \(year_start : Natural) -> \(year_end : Natural) -> Step.System {
+let binEPRStep = \(skip : Text) -> \(study_periods : List Text) -> Step.System {
     name = "BinEPR",
     dependsOn = [["BinICEES"]],
     skip = skip,
@@ -600,7 +598,7 @@ let binEPRStep = \(skip : Text) -> \(year_start : Natural) -> \(year_end : Natur
         arguments = {
             pyexec = pyexec,
             requirements = requirements,
-            command = ["src/main/python/binEPR.py", Natural/show year_start, Natural/show year_end, "${basedirinput}/EPR/TLR4_AllData_NewHash_01292020 NO PII_no_new_line.csv", "${basedirinput}/EPR/UNC_NIEHS_XWalk_for_Hao_shape_h3.csv", "${basediroutput}/icees2_bins/", "${basedir}/FHIR_processed/geo.csv", "${basediroutput}/EPR_binned/EPR_binned"],
+            command = ["src/main/python/binEPR.py", "${basedirinput}/EPR/TLR4_AllData_NewHash_01292020 NO PII_no_new_line.csv", "${basedirinput}/EPR/UNC_NIEHS_XWalk_for_Hao_shape_h3.csv", "${basediroutput}/icees2_bins/", "${basedir}/FHIR_processed/geo.csv", "${basediroutput}/EPR_binned/EPR_binned"] # study_periods,
             workdir = "."
         }
     }
@@ -615,22 +613,22 @@ in {
     [
       mergeLocalStep fhirConfig.skip.mergeLocal,
       fhirStep fhirConfig.skip.fhir fhirConfig.skip_preproc,
-      envDataCoordinatesStep fhirConfig.skip.envDataCoordinates fhirConfig.yearStart fhirConfig.yearEnd,
+      envDataCoordinatesStep fhirConfig.skip.envDataCoordinates fhirConfig.start_date fhirConfig.end_date,
       latLonToGeoidStep fhirConfig.skip.latLonToGeoid,
-      envDataFIPSStep fhirConfig.skip.envDataFIPS fhirConfig.yearStart fhirConfig.yearEnd,
+      envDataFIPSStep fhirConfig.skip.envDataFIPS fhirConfig.start_date fhirConfig.end_date,
       splitStep fhirConfig.skip.split,
-      envDataAggregateCoordinatesStep fhirConfig.skip.envDataAggregateCoordinates,
-      envDataAggregateFIPSStep fhirConfig.skip.envDataAggregateFIPS,
+      envDataAggregateCoordinatesStep fhirConfig.skip.envDataAggregateCoordinates ([fhirConfig.start_date] # fhirConfig.study_period_splits # [fhirConfig.end_date]) fhirConfig.study_periods,
+      envDataAggregateFIPSStep fhirConfig.skip.envDataAggregateFIPS ([fhirConfig.start_date] # fhirConfig.study_period_splits # [fhirConfig.end_date]) fhirConfig.study_periods,
       acsStep fhirConfig.skip.acs,
       acsURStep fhirConfig.skip.acsUR,
       nearestRoadTLStep fhirConfig.skip.nearestRoadTL,
       nearestRoadHPMSStep fhirConfig.skip.nearestRoadHPMS,
       cafoStep fhirConfig.skip.cafo,
       landfillStep fhirConfig.skip.landfill,
-      toVectorStep fhirConfig.skip.toVector fhirConfig.yearStart fhirConfig.yearEnd,
-      perPatSeriesCSVTableStep fhirConfig.skip.perPatSeriesCSVTable fhirConfig.yearStart fhirConfig.yearEnd fhirConfig.data_input,
-      perPatSeriesCSVTableLocalStep fhirConfig.skip.perPatSeriesCSVTableLocal fhirConfig.yearStart fhirConfig.yearEnd fhirConfig.data_input,
-      binICEESStep fhirConfig.skip.binICEES fhirConfig.yearStart fhirConfig.yearEnd,
-      binEPRStep fhirConfig.skip.binEPR fhirConfig.yearStart fhirConfig.yearEnd
-    ] # Prelude.List.map YearConfig Step (\(yearSkip : YearConfig) -> csvTableStep yearSkip.skip.csvTable yearSkip.year) skipList
+      toVectorStep fhirConfig.skip.toVector fhirConfig.start_date fhirConfig.end_date,
+      perPatSeriesCSVTableStep fhirConfig.skip.perPatSeriesCSVTable fhirConfig.study_periods fhirConfig.data_input,
+      perPatSeriesCSVTableLocalStep fhirConfig.skip.perPatSeriesCSVTableLocal fhirConfig.study_periods fhirConfig.data_input,
+      binICEESStep fhirConfig.skip.binICEES fhirConfig.study_periods,
+      binEPRStep fhirConfig.skip.binEPR fhirConfig.study_periods
+    ] # Prelude.List.map StudyPeriodConfig Step (\(study_period_skip : StudyPeriodConfig) -> csvTableStep study_period_skip.skip.csvTable study_period_skip.study_period) skipList
 } : Config

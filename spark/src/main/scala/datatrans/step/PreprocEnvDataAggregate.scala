@@ -8,10 +8,12 @@ import org.apache.spark.sql.{DataFrame, SparkSession, Column}
 import org.apache.hadoop.fs.Path
 import org.apache.log4j.{Logger, Level}
 
+import org.joda.time._
+
 import io.circe.Decoder
 import io.circe.generic.semiauto.deriveDecoder
 
-import datatrans.environmentaldata.Utils.aggregateByYear
+import datatrans.environmentaldata.Utils.aggregateByStudyPeriod
 import datatrans.{StepImpl, Mapper}
 
 
@@ -19,12 +21,16 @@ case class EnvDataAggregateConfig(
   input_dir : String,
   output_dir : String,
   indices: Seq[String],
-  statistics: Seq[String]
+  statistics: Seq[String],
+  study_period_bounds: Seq[DateTime],
+  study_periods: Seq[String]
 )
 
 object PreprocEnvDataAggregate extends StepImpl {
 
   type ConfigType = EnvDataAggregateConfig
+
+  import datatrans.SharedImplicits._
 
   val configDecoder : Decoder[ConfigType] = deriveDecoder
 
@@ -58,7 +64,7 @@ object PreprocEnvDataAggregate extends StepImpl {
           val df3year_pat = spark.read.format("csv").option("header", value = true).load(patient_dimension)
 
           log.info(f"aggregating $indices")
-          val df3year_pat_aggbyyear = aggregateByYear(spark, df3year_pat, indices, statistics, Seq())
+          val df3year_pat_aggbyyear = aggregateByStudyPeriod(spark, df3year_pat, config.study_period_bounds, config.study_periods, indices, statistics, Seq())
           //        df3year_pat_aggbyyear.cache()
           // log.info(f"columns4 = ${df3year_pat_aggbyyear.columns.toSeq}, nrows1 = ${df3year_pat_aggbyyear.count()}")
 

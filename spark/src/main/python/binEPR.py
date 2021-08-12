@@ -5,7 +5,7 @@ import json
 import pandas as pd
 from preprocUtils import *
 
-year_start, year_end, input_file, crosswalk_file, icees_dir, pat_geo_file, output_file = sys.argv[1:]
+input_file, crosswalk_file, icees_dir, pat_geo_file, output_file, *study_periods = sys.argv[1:]
 df = pd.read_csv(input_file, quotechar='"')
 
 cw = pd.read_csv(crosswalk_file)
@@ -72,7 +72,7 @@ def convert_float_to_int(df):
     return df.applymap(lambda x: int(x) if isinstance(x, float) and float.is_integer(x) else x)
 
     
-for year in range(int(year_start), int(year_end) + 1):
+for year in study_periods:
     print(year)
     dfp = pd.read_csv(f"{icees_dir}/{year}patient")
     dfp["IN_ICEES"] = 1

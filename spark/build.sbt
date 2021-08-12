@@ -2,20 +2,21 @@ name := "Preproc"
 
 version := "1.0"
 
-scalaVersion := "2.11.12"
+scalaVersion := "2.12.14"
 
 resolvers ++= Seq(
   "Open Source Geospatial Foundation Repository" at "https://repo.osgeo.org/repository/release/",
-  "Java.net repository" at "http://download.java.net/maven/2"
+  "Java.net repository" at "https://download.java.net/maven/2"
 )
 
-libraryDependencies += "org.apache.spark" % "spark-core_2.11" % "2.4.5"
-libraryDependencies += "org.apache.spark" % "spark-sql_2.11" % "2.4.5"
-libraryDependencies += "org.deeplearning4j" % "deeplearning4j-core" % "1.0.0-beta4"
-libraryDependencies += "org.nd4j" % "nd4j-native-platform" % "1.0.0-beta4"
-libraryDependencies += "org.nd4j" %% "nd4j-parameter-server-node" % "1.0.0-beta4"
-libraryDependencies += "org.deeplearning4j" %% "dl4j-spark-parameterserver" % "1.0.0-beta4_spark_2"
-libraryDependencies += "org.datavec" %% "datavec-spark" % "1.0.0-beta4_spark_2"
+libraryDependencies += "org.apache.spark" %% "spark-core" % "2.4.5"
+libraryDependencies += "org.apache.spark" %% "spark-sql" % "2.4.5"
+libraryDependencies += "org.apache.spark" %% "spark-mllib" % "2.4.5" % "provided"
+libraryDependencies += "org.deeplearning4j" % "deeplearning4j-core" % "1.0.0-beta7"
+libraryDependencies += "org.nd4j" % "nd4j-native-platform" % "1.0.0-beta7"
+libraryDependencies += "org.nd4j" %% "nd4j-parameter-server-node" % "1.0.0-beta7"
+libraryDependencies += "org.deeplearning4j" %% "dl4j-spark-parameterserver" % "1.0.0-beta7"
+libraryDependencies += "org.datavec" %% "datavec-spark" % "1.0.0-beta7"
 libraryDependencies += "org.apache.commons" % "commons-text" % "1.3"
 libraryDependencies += "com.github.scopt" %% "scopt" % "3.7.1"
 libraryDependencies += "org.locationtech.geotrellis" %% "geotrellis-proj4" % "3.2.0"
@@ -55,9 +56,9 @@ libraryDependencies += "org.gnieh" %% "diffson-circe" % "4.0.0-M3" % Test
 
 testOptions += Tests.Argument("-oF")
 
-logLevel in assembly := Level.Error
+assembly / logLevel := Level.Error
 
-assemblyMergeStrategy in assembly := {
+assembly / assemblyMergeStrategy := {
   case PathList("com", "vividsolutions", _*) => MergeStrategy.last
   case PathList("javax", "inject", _*) => MergeStrategy.last
   case PathList("javax", "xml", _*) => MergeStrategy.last
@@ -68,7 +69,11 @@ assemblyMergeStrategy in assembly := {
   case PathList("org", "apache", _*) => MergeStrategy.last
   case PathList("com", "google", _*) => MergeStrategy.last
   case PathList("net", "jpountz", _*) => MergeStrategy.last
+  case PathList("io", "netty", _*) => MergeStrategy.last
+  case PathList("javax", "annotation", _*) => MergeStrategy.last
+  case PathList("javax", "activation", _*) => MergeStrategy.last
   case PathList("git.properties") => MergeStrategy.discard
+  case PathList("module-info.class") => MergeStrategy.discard
   case PathList("META-INF", xs @ _*) =>
     xs map {_.toLowerCase} match {
       case ("manifest.mf" :: Nil) | ("index.list" :: Nil) | ("dependencies" :: Nil) =>
@@ -84,9 +89,10 @@ assemblyMergeStrategy in assembly := {
       case _ => MergeStrategy.discard
     }
   case x =>
-    val oldStrategy = (assemblyMergeStrategy in assembly).value
+    val oldStrategy = (assembly / assemblyMergeStrategy).value
     oldStrategy(x)
 }
 
 maxErrors := 1
 
+assembly / test := {}

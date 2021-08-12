@@ -19,9 +19,7 @@ case class PreprocPerPatSeriesCSVTableConfig(
   environment2_file : Option[String] = None,
   input_files : Seq[String] = Seq(),
   output_dir : String = "",
-  start_date : DateTime = new DateTime(0),
-  end_date : DateTime = new DateTime(0),
-  offset_hours : Int = 0
+  study_periods : Seq[String]
 )
 
 object PreprocPerPatSeriesCSVTable extends StepImpl {
@@ -66,21 +64,12 @@ object PreprocPerPatSeriesCSVTable extends StepImpl {
     time {
       val hc = spark.sparkContext.hadoopConfiguration
 
-      val timeZone = DateTimeZone.forOffsetHours(config.offset_hours)
-
-      val start_date_joda = config.start_date.toDateTime(timeZone)
-      val end_date_joda = config.end_date.toDateTime(timeZone)
-
-      val years = start_date_joda.year.get to end_date_joda.minusSeconds(1).year.get
-
-
       val dfs = config.input_files.map(input_file => {
         spark.read.format("csv").option("header", value = true).load(input_file)
       })
 
       val df = if (config.input_files.isEmpty) None else Some(dfs.reduce(_.join(_, Seq("patient_num"), "left")))
 
-      val year = udf((date : String) => DateTime.parse(date, ISODateTimeFormat.dateParser()).year.get)
       withCounter(count =>
         new HDFSCollection(hc, new Path(config.patient_file)).foreach(f => {
           val p = f.getName().stripSuffix(".csv")
@@ -92,16 +81,14 @@ object PreprocPerPatSeriesCSVTable extends StepImpl {
 
               val patenv_df1 = join_env(hc, pat_df, env2_schema, config.environment2_file.map(env2 => s"${env2}/$p"), "start_date")
 
-              val patenv_df15 = (if (patenv_df1.columns.contains("year")) patenv_df1.drop("year") else patenv_df1).withColumn("year", year($"start_date"))
-              
               val patenv_df2 = df match {
-                case Some(df) => patenv_df15.join(df, Seq("patient_num"), "left")
+                case Some(df) => patenv_df1.join(df, Seq("patient_num"), "left")
                 case _ => patenv_df1
               }
-              for (year <- years) {
+              for (year <- config.study_periods) {
                 val per_pat_output_dir = f"${config.output_dir}/$year"
                 val output_file = f"$per_pat_output_dir/$p"
-                writeDataframe(hc, output_file, patenv_df2.filter($"year" === year))
+                writeDataframe(hc, output_file, patenv_df2.filter($"study_period" === year))
               }
 
             }

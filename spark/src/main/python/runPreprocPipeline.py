@@ -32,7 +32,7 @@ def submit(host_name, cls, *args, **kwargs):
            "30",
            "--class",
            cls,
-           "target/scala-2.11/Preproc-assembly-1.0.jar"] + list(args)
+           "target/scala-2.12/Preproc-assembly-1.0.jar"] + list(args)
     print(cmd)
     if "log" in kwargs and "log2" in kwargs:
         log = kwargs["log"]
