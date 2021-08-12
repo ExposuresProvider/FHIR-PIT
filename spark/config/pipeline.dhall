@@ -10,7 +10,7 @@ let ResourceTypes : Type = {
 }
 
 let StudyPeriodConfig : Type = {
-    study_periods : Text,
+    study_period : Text,
     skip : {
       csvTable : Text
     }
@@ -169,7 +169,7 @@ let csvTableStep : Type = GenericStep {
     output_dir : Text,
     deidentify : List Text,
     offset_hours : Integer,
-    feature_map: Text,
+    feature_map: Text
 }
 
 let Step : Type = <
@@ -603,8 +603,6 @@ let binEPRStep = \(skip : Text) -> \(study_periods : List Text) -> Step.System {
         }
     }
 }
-
-
 
 in {
   report_output = report,

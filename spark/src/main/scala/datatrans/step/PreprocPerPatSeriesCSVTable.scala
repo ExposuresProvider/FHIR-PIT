@@ -19,7 +19,7 @@ case class PreprocPerPatSeriesCSVTableConfig(
   environment2_file : Option[String] = None,
   input_files : Seq[String] = Seq(),
   output_dir : String = "",
-  study_periods : Seq[String]
+  study_periods : Seq[String] = Seq()
 )
 
 object PreprocPerPatSeriesCSVTable extends StepImpl {
