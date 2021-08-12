@@ -2,16 +2,16 @@ name := "Preproc"
 
 version := "1.0"
 
-scalaVersion := "2.12.14"
+scalaVersion := "2.11.12"
 
 resolvers ++= Seq(
   "Open Source Geospatial Foundation Repository" at "https://repo.osgeo.org/repository/release/",
   "Java.net repository" at "https://download.java.net/maven/2"
 )
 
-libraryDependencies += "org.apache.spark" %% "spark-core" % "3.1.2"
-libraryDependencies += "org.apache.spark" %% "spark-sql" % "3.1.2"
-libraryDependencies += "org.apache.spark" %% "spark-mllib" % "3.1.2" % "provided"
+libraryDependencies += "org.apache.spark" %% "spark-core" % "2.4.5"
+libraryDependencies += "org.apache.spark" %% "spark-sql" % "2.4.5"
+libraryDependencies += "org.apache.spark" %% "spark-mllib" % "2.4.5" % "provided"
 libraryDependencies += "org.deeplearning4j" % "deeplearning4j-core" % "1.0.0-beta7"
 libraryDependencies += "org.nd4j" % "nd4j-native-platform" % "1.0.0-beta7"
 libraryDependencies += "org.nd4j" %% "nd4j-parameter-server-node" % "1.0.0-beta7"
@@ -38,8 +38,8 @@ libraryDependencies ++= Seq(
 )
 // https://mvnrepository.com/artifact/com.jsoniter/jsoniter
 libraryDependencies += "com.jsoniter" % "jsoniter" % "0.9.23"
-libraryDependencies += "org.apache.hadoop" % "hadoop-mapreduce-client-core" % "3.2.2"
-libraryDependencies += "org.apache.hadoop" % "hadoop-common" % "3.2.2"
+libraryDependencies += "org.apache.hadoop" % "hadoop-mapreduce-client-core" % "2.7.7"
+libraryDependencies += "org.apache.hadoop" % "hadoop-common" % "2.7.7"
 
 libraryDependencies += "org.scalactic" %% "scalactic" % "3.1.0" % Test
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.1.0" % Test
