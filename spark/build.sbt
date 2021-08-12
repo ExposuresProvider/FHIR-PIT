@@ -72,6 +72,7 @@ assembly / assemblyMergeStrategy := {
   case PathList("io", "netty", _*) => MergeStrategy.last
   case PathList("javax", "annotation", _*) => MergeStrategy.last
   case PathList("javax", "activation", _*) => MergeStrategy.last
+  case PathList("jersey", "repackaged", _*) => MergeStrategy.last
   case PathList("git.properties") => MergeStrategy.discard
   case PathList("module-info.class") => MergeStrategy.discard
   case PathList("META-INF", xs @ _*) =>
@@ -89,8 +90,9 @@ assembly / assemblyMergeStrategy := {
       case _ => MergeStrategy.discard
     }
   case x =>
-    val oldStrategy = (assembly / assemblyMergeStrategy).value
-    oldStrategy(x)
+    MergeStrategy.first
+    // val oldStrategy = (assembly / assemblyMergeStrategy).value
+    // oldStrategy(x)
 }
 
 maxErrors := 1
