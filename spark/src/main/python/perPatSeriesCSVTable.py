@@ -10,6 +10,7 @@ from dateutil.parser import *
 from datetime import datetime, timedelta
 from dateutil.tz import *
 import functools
+from functools import partial
 import yaml
 
 
@@ -21,8 +22,17 @@ def join_env(pdf, env_fn):
         penvdf = pdf
     return penvdf
 
-def extractYear(x):
-    return int(x[0:4])
+def extract_study_period(study_period_bounds_datetime, study_periods, offset_hours, x):
+    ts = parseTimestamp(x, offset_hours)
+    study_period_index = -1
+    for study_period_bound_datetime, i in enumerate(study_period_bounds_datetime):
+        if study_period_bounds_datetime > ts:
+            study_period_index = i - 1
+            break
+    if study_period_index == -1:
+        raise ArgumentError("out of bounds")
+    else:
+        return study_periods[study_period_index]
 
 
 def proc_pid(config, p):
@@ -33,6 +43,10 @@ def proc_pid(config, p):
         input_files = config["input_files"]
         output_dir = config["output_dir"]
         study_periods = config["study_periods"]
+        study_period_bounds = config["study_period_bounds"]
+        offset_hours = config["offset_hours"]
+
+        study_periods_bounds_datetime = [parseTimestamp(study_period_bound, offset_hours) for study_period_bound in study_period_bounds]
 
         input_dfs = list(map(lambda nr: pd.read_csv(nr), input_files))
         sdf = functools.reduce(lambda l,r: l.merge(r, on="patient_num", how="outer"), input_dfs) if len(input_dfs) != 0 else None
@@ -43,7 +57,7 @@ def proc_pid(config, p):
         penvdf = join_env(pdf, f"{env_fn}/{p}")
         penv2df = join_env(penvdf, f"{env2_fn}/{p}")
 
-        penv2df["year"] = penv2df["start_date"].apply(extractYear)
+        penv2df["study_period"] = penv2df["start_date"].apply(partial(extract_study_period, study_period_bounds_datetime, study_periods, offset_hours))
 
         padf = penv2df.merge(sdf, on="patient_num", how="left") if sdf is not None else penv2df
         for year in study_periods:

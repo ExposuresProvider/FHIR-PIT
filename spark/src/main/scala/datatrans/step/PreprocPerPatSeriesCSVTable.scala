@@ -2,16 +2,17 @@ package datatrans.step
 
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
-import org.apache.spark.sql.types.{StructType, StructField, DateType, DoubleType}
-import org.apache.spark.sql.{Column, Row, SparkSession, DataFrame}
-import org.joda.time.format.{ISODateTimeFormat, DateTimeFormat}
+import org.apache.spark.sql.types.{DateType, DoubleType, StructField, StructType}
+import org.apache.spark.sql.{Column, DataFrame, Row, SparkSession}
+import org.joda.time.format.{DateTimeFormat, ISODateTimeFormat}
 import org.joda.time.{DateTime, DateTimeZone}
 import org.apache.spark.sql.functions.udf
 import io.circe.Decoder
 import io.circe.generic.semiauto.deriveDecoder
-import datatrans.Utils.{fileExists, readCSV2, time, withCounter, HDFSCollection, writeDataframe}
+import datatrans.Utils.{HDFSCollection, fileExists, readCSV2, time, withCounter, writeDataframe}
 import datatrans.StepImpl
 import datatrans.Mapper
+import datatrans.environmentaldata.Utils
 
 case class PreprocPerPatSeriesCSVTableConfig(
   patient_file : String = "",
@@ -19,7 +20,9 @@ case class PreprocPerPatSeriesCSVTableConfig(
   environment2_file : Option[String] = None,
   input_files : Seq[String] = Seq(),
   output_dir : String = "",
-  study_periods : Seq[String] = Seq()
+  study_period_bounds : Seq[DateTime] = Seq(),
+  study_periods : Seq[String] = Seq(),
+  offset_hours : Int = 0
 )
 
 object PreprocPerPatSeriesCSVTable extends StepImpl {
@@ -85,6 +88,8 @@ object PreprocPerPatSeriesCSVTable extends StepImpl {
                 case Some(df) => patenv_df1.join(df, Seq("patient_num"), "left")
                 case _ => patenv_df1
               }
+
+              val patenv_df2_with_study_period = Utils.bucketize(spark, patenv_df2, config.study_period_bounds, config.study_periods)
               for (year <- config.study_periods) {
                 val per_pat_output_dir = f"${config.output_dir}/$year"
                 val output_file = f"$per_pat_output_dir/$p"
