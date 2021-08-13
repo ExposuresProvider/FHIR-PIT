@@ -1,6 +1,7 @@
 package datatrans.step
 
 import org.apache.commons.csv._
+
 import java.io._
 import java.util.concurrent.atomic.AtomicInteger
 import org.apache.hadoop.conf.Configuration
@@ -8,21 +9,25 @@ import org.apache.hadoop.fs.Path
 import org.apache.spark.sql.SparkSession
 import org.joda.time._
 import org.joda.time.format.{DateTimeFormat, ISODateTimeFormat}
-import scala.collection.mutable.{ ListBuffer, MultiMap }
+
+import scala.collection.mutable.{ListBuffer, MultiMap}
 import scopt._
+
 import scala.collection.JavaConverters._
 import com.github.plokhotnyuk.jsoniter_scala.macros._
 import com.github.plokhotnyuk.jsoniter_scala.core._
 import io.circe._
 import io.circe.generic.semiauto._
-import org.apache.log4j.{Logger, Level}
-
+import org.apache.log4j.{Level, Logger}
 import datatrans.Mapper
 import datatrans.Utils._
 import datatrans.Config._
 import datatrans.Implicits._
 import datatrans.Config._
 import datatrans._
+import org.apache.hadoop.fs
+
+import scala.collection.mutable
 
 case class PreprocPerPatSeriesToVectorConfig(
   input_directory : String = null,
@@ -52,8 +57,10 @@ object PreprocPerPatSeriesToVector extends StepImpl {
       val input_file_path = new Path(input_file)
       val input_file_file_system = input_file_path.getFileSystem(hc)
 
-      val output_file = config.output_directory + "/" + p + ".csv"
+      val output_file = config.output_directory + "/visit/" + p + ".csv"
+      val output_file_patient = config.output_directory + "/patient/" + p + ".csv"
       val output_file_path = new Path(output_file)
+      val output_file_path_patient = new Path(output_file_patient)
       val output_file_file_system = output_file_path.getFileSystem(hc)
 
       if(output_file_file_system.exists(output_file_path)) {
@@ -77,7 +84,7 @@ object PreprocPerPatSeriesToVector extends StepImpl {
           val demographic = Map[String, Any]("patient_num" -> pat.id, "birth_date" -> birth_date_joda.toString("yyyy-MM-dd"), "Sex" -> Mapper.map_sex(sex), "Race" -> Mapper.map_race(race), "Ethnicity" -> Mapper.map_ethnicity(ethnicity))
           val intv = new Interval(start_date, end_date)
 
-          val encounter_map = new scala.collection.mutable.HashMap[DateTime, scala.collection.mutable.Set[Encounter]] with MultiMap[DateTime, Encounter]
+          val encounter_map = new mutable.HashMap[DateTime, mutable.Set[Encounter]] with mutable.MultiMap[DateTime, Encounter]
           encounter.foreach(enc => {
             (enc.startDate match {
               case Some(s) =>
@@ -143,9 +150,7 @@ object PreprocPerPatSeriesToVector extends StepImpl {
           })
 
           // log.info(f"start_date = $start_date end_date = $end_date start_date.year = ${start_date.year.get} end_date.year = ${end_date.year.get}")
-          for (study_period <- config.study_periods) {
-            recs.append(demographic + ("study_period" -> study_period, "VisitType" -> "study"))
-          }
+          val recs_patient = Seq(demographic)
 
           encounter_map.foreach {
             case (encounter_start_date_joda, encset) =>
@@ -260,19 +265,24 @@ object PreprocPerPatSeriesToVector extends StepImpl {
 
           }
 
-          val colnames = recs.map(m => m.keySet).fold(Set())((s, s2) => s.union(s2)).toSeq
-          val output_file_csv_writer = new CSVPrinter( new OutputStreamWriter(output_file_file_system.create(output_file_path), "UTF-8" ) , CSVFormat.DEFAULT.withHeader(colnames:_*))
-          
-          recs.foreach(m => {
-            val row = colnames.map(colname => m.get(colname).getOrElse(""))
-            output_file_csv_writer.printRecord(row.asJava)
-          })
-          output_file_csv_writer.close()
-          deleteCRCFile(output_file_file_system, output_file_path)
+          writeCSV(output_file_path, output_file_file_system, recs)
+          writeCSV(output_file_path_patient, output_file_file_system, recs_patient)
 
         }
       }
     }
+
+  private def writeCSV(output_file_path: Path, output_file_file_system: fs.FileSystem, recs: Seq[Map[String, Any]]) = {
+    val colnames = recs.map(m => m.keySet).fold(Set())((s, s2) => s.union(s2)).toSeq
+    val output_file_csv_writer = new CSVPrinter(new OutputStreamWriter(output_file_file_system.create(output_file_path), "UTF-8"), CSVFormat.DEFAULT.withHeader(colnames: _*))
+
+    recs.foreach(m => {
+      val row = colnames.map(colname => m.get(colname).getOrElse(""))
+      output_file_csv_writer.printRecord(row.asJava)
+    })
+    output_file_csv_writer.close()
+    deleteCRCFile(output_file_file_system, output_file_path)
+  }
 
   def step(spark: SparkSession, config: PreprocPerPatSeriesToVectorConfig): Unit = {
     // For implicit conversions like converting RDDs to DataFrames
