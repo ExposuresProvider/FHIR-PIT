@@ -35,8 +35,7 @@ case class PreprocPerPatSeriesToVectorConfig(
   start_date : org.joda.time.DateTime = null,
   end_date : org.joda.time.DateTime = null,
   offset_hours: Int = 0,
-  feature_map : String = null,
-  study_periods : Seq[String] = Seq()
+  feature_map : String = null
 )
 
 object PreprocPerPatSeriesToVector extends StepImpl {
