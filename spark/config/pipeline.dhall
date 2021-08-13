@@ -171,8 +171,10 @@ let PerPatSeriesCSVTableStep : Type = GenericStep {
 
 let csvTableStep : Type = GenericStep {
     input_dir : Text,
+    input_dir_patient : Text,
     output_dir : Text,
     deidentify : List Text,
+    study_period_start : Text,
     offset_hours : Integer,
     feature_map: Text
 }

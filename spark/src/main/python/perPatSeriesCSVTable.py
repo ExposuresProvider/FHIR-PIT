@@ -56,19 +56,22 @@ def proc_pid(config, p):
         sdf = functools.reduce(lambda l,r: l.merge(r, on="patient_num", how="outer"), input_dfs) if len(input_dfs) != 0 else None
 
         fn = f"{v}/{p}.csv"
-        pdf = pd.read_csv(fn)
+        try:
+            pdf = pd.read_csv(fn)
 
-        penvdf = join_env(pdf, f"{env_fn}/{p}")
-        penv2df = join_env(penvdf, f"{env2_fn}/{p}")
 
-        penv2df["study_period"] = penv2df["start_date"].apply(partial(extract_study_period, study_period_bounds_datetime, study_periods, offset_hours))
+            penvdf = join_env(pdf, f"{env_fn}/{p}")
+            penv2df = join_env(penvdf, f"{env2_fn}/{p}")
 
-        padf = penv2df.merge(sdf, on="patient_num", how="left") if sdf is not None else penv2df
-        for year in study_periods:
-            per_patient = f"{output_dir}/{year}/per_patient"
-            os.makedirs(per_patient, exist_ok=True)
-            padf[padf["study_period"] == year].to_csv(f"{per_patient}/{p}", index=False)
+            penv2df["study_period"] = penv2df["start_date"].apply(partial(extract_study_period, study_period_bounds_datetime, study_periods, offset_hours))
 
+            padf = penv2df.merge(sdf, on="patient_num", how="left") if sdf is not None else penv2df
+            for year in study_periods:
+                per_patient = f"{output_dir}/{year}/per_patient"
+                os.makedirs(per_patient, exist_ok=True)
+                padf[padf["study_period"] == year].to_csv(f"{per_patient}/{p}", index=False)
+        except Exception as e:
+            logger.warning(f"error loading {fn}: {e}")
 
 def parseTimestamp(a, offset_hours):
     dt = parse(a)
