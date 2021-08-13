@@ -12,7 +12,10 @@ from dateutil.tz import *
 import functools
 from functools import partial
 import yaml
+import logging
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def join_env(pdf, env_fn):
     if os.path.isfile(env_fn):
@@ -25,12 +28,13 @@ def join_env(pdf, env_fn):
 def extract_study_period(study_period_bounds_datetime, study_periods, offset_hours, x):
     ts = parseTimestamp(x, offset_hours)
     study_period_index = -1
-    for study_period_bound_datetime, i in enumerate(study_period_bounds_datetime):
-        if study_period_bounds_datetime > ts:
+    for i, study_period_bound_datetime in enumerate(study_period_bounds_datetime):
+        if study_period_bound_datetime > ts:
             study_period_index = i - 1
             break
     if study_period_index == -1:
-        raise ArgumentError("out of bounds")
+        logger.warning(f"{ts} out of bounds {study_period_bounds_datetime}")
+        return None
     else:
         return study_periods[study_period_index]
 
@@ -46,7 +50,7 @@ def proc_pid(config, p):
         study_period_bounds = config["study_period_bounds"]
         offset_hours = config["offset_hours"]
 
-        study_periods_bounds_datetime = [parseTimestamp(study_period_bound, offset_hours) for study_period_bound in study_period_bounds]
+        study_period_bounds_datetime = [parseTimestamp(study_period_bound, offset_hours) for study_period_bound in study_period_bounds]
 
         input_dfs = list(map(lambda nr: pd.read_csv(nr), input_files))
         sdf = functools.reduce(lambda l,r: l.merge(r, on="patient_num", how="outer"), input_dfs) if len(input_dfs) != 0 else None

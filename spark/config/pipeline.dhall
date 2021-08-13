@@ -52,7 +52,7 @@ let FhirConfig : Type = {
     study_period_splits: List Text,
     study_periods: List Text,
     start_date: Text,
-    end_date: Text
+    end_date: Text,
     offset_hours: Integer
 }
 
@@ -128,7 +128,7 @@ let EnvDataAggregateStep : Type = GenericStep {
     statistics: List Text,
     study_period_bounds: List Text,
     study_periods: List Text,
-    offset_hours: Int
+    offset_hours: Integer
 }
 
 let PerPatSeriesACSStep : Type = GenericStep {
@@ -639,9 +639,9 @@ in {
       cafoStep fhirConfig.skip.cafo,
       landfillStep fhirConfig.skip.landfill,
       toVectorStep fhirConfig.skip.toVector fhirConfig.start_date fhirConfig.end_date fhirConfig.offset_hours,
-      perPatSeriesCSVTableStep fhirConfig.skip.perPatSeriesCSVTable study_period_bounds fhirConfig.study_periods fhirConfig.offset_hours, fhirConfig.data_input,
+      perPatSeriesCSVTableStep fhirConfig.skip.perPatSeriesCSVTable study_period_bounds fhirConfig.study_periods fhirConfig.offset_hours fhirConfig.data_input,
       perPatSeriesCSVTableLocalStep fhirConfig.skip.perPatSeriesCSVTableLocal study_period_bounds fhirConfig.study_periods fhirConfig.offset_hours fhirConfig.data_input,
       binICEESStep fhirConfig.skip.binICEES fhirConfig.study_periods,
       binEPRStep fhirConfig.skip.binEPR fhirConfig.study_periods
-    ] # Prelude.List.map StudyPeriodConfig Step (\(study_period_skip : StudyPeriodConfig) -> csvTableStep study_period_skip.skip.csvTable study_period_skip.study_period study_period_skip.offset_hours) skipList
+    ] # Prelude.List.map StudyPeriodConfig Step (\(study_period_skip : StudyPeriodConfig) -> csvTableStep study_period_skip.skip.csvTable study_period_skip.study_period fhirConfig.offset_hours) skipList
 } : Config

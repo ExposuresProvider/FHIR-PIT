@@ -30,7 +30,8 @@ case class PreprocPerPatSeriesToVectorConfig(
   start_date : org.joda.time.DateTime = null,
   end_date : org.joda.time.DateTime = null,
   offset_hours: Int = 0,
-  feature_map : String = null
+  feature_map : String = null,
+  study_periods : Seq[String] = Seq()
 )
 
 object PreprocPerPatSeriesToVector extends StepImpl {
@@ -142,8 +143,8 @@ object PreprocPerPatSeriesToVector extends StepImpl {
           })
 
           // log.info(f"start_date = $start_date end_date = $end_date start_date.year = ${start_date.year.get} end_date.year = ${end_date.year.get}")
-          for (year <- start_date.toDateTime(timeZone).year.get until end_date.toDateTime(timeZone).year.get) {
-            recs.append(demographic + ("start_date" -> f"$year-01-01", "VisitType" -> "study"))
+          for (study_period <- config.study_periods) {
+            recs.append(demographic + ("study_period" -> study_period, "VisitType" -> "study"))
           }
 
           encounter_map.foreach {
