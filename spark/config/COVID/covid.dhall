@@ -34,10 +34,13 @@ in pipeline "report" "progress" "/share/spark/hao/datatrans/spark/config/COVID" 
     ["PerPatSeriesCAFO"],
     ["PerPatSeriesLandfill"]
   ],
-  yearStart = 2020,
-  yearEnd = 2020
+  start_date = "2020-02-01T00:00:00Z",
+  end_date = "2021-02-01T00:00:00Z",
+  study_period_splits = [] : List Text,
+  study_periods = ["Jan2021"],
+  offset_hours = -5
 } [{
-  year = 2020,
+  study_period = "Jan2021",
   skip = {
     csvTable = "run"
   }

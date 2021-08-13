@@ -23,7 +23,8 @@ case class EnvDataAggregateConfig(
   indices: Seq[String],
   statistics: Seq[String],
   study_period_bounds: Seq[DateTime],
-  study_periods: Seq[String]
+  study_periods: Seq[String],
+  offset_hours: Int = 0
 )
 
 object PreprocEnvDataAggregate extends StepImpl {

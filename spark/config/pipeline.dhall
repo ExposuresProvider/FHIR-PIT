@@ -53,7 +53,7 @@ let FhirConfig : Type = {
     study_periods: List Text,
     start_date: Text,
     end_date: Text
-    offset_hours: Int
+    offset_hours: Integer
 }
 
 in λ(report : Text) → λ(progress : Text) → λ(configdir : Text) → λ(basedirinput : Text) → λ(basedir : Text) → λ(basediroutput : Text) → λ(fhirConfig : FhirConfig) → λ(skipList : List StudyPeriodConfig) →
@@ -127,7 +127,8 @@ let EnvDataAggregateStep : Type = GenericStep {
     indices: List Text,
     statistics: List Text,
     study_period_bounds: List Text,
-    study_periods: List Text
+    study_periods: List Text,
+    offset_hours: Int
 }
 
 let PerPatSeriesACSStep : Type = GenericStep {
@@ -164,7 +165,7 @@ let PerPatSeriesCSVTableStep : Type = GenericStep {
     output_dir : Text,
     study_period_bounds : List Text,
     study_periods : List Text,
-    offset_hours : Int
+    offset_hours : Integer
 }
 
 let csvTableStep : Type = GenericStep {
@@ -252,7 +253,7 @@ let fhirStep = λ(skip : Text) → λ(skip_preproc : List Text) → Step.FHIR {
     }
 }
 
-let toVectorStep = λ(skip : Text) → λ(start_date : Text) → λ(end_date : Text) → Step.ToVector {
+let toVectorStep = λ(skip : Text) → λ(start_date : Text) → λ(end_date : Text) → λ(offset_hours : Integer) → Step.ToVector {
   name = "PerPatSeriesToVector",
   dependsOn = [
     ["FHIR"]
@@ -265,13 +266,13 @@ let toVectorStep = λ(skip : Text) → λ(start_date : Text) → λ(end_date : T
       output_directory = "${basedir}/FHIR_vector",
       start_date = start_date,
       end_date = end_date,
-      offset_hours = -5,
+      offset_hours = offset_hours,
       feature_map = feature_map_path
     }
   }
 }
 
-let envDataCoordinatesStep = λ(skip : Text) → λ(start_date : Text) → λ(end_date : Text) → Step.EnvDataCoordinates {
+let envDataCoordinatesStep = λ(skip : Text) → λ(start_date : Text) → λ(end_date : Text) → λ(offset_hours : Integer) → Step.EnvDataCoordinates {
   name = "EnvDataCoordinates",
   dependsOn = [
     ["FHIR"]
@@ -285,7 +286,7 @@ let envDataCoordinatesStep = λ(skip : Text) → λ(start_date : Text) → λ(en
       output_dir = "${basedir}/other_processed/env_coordinates",
       start_date = start_date,
       end_date = end_date,
-      offset_hours = -5
+      offset_hours = offset_hours
     }
   }
 }
@@ -311,7 +312,7 @@ let statistics = [
   "avg"
 ]
 
-let envDataFIPSStep = λ(skip : Text) → λ(start_date : Text) → λ(end_date : Text) → Step.EnvDataFIPS {
+let envDataFIPSStep = λ(skip : Text) → λ(start_date : Text) → λ(end_date : Text) → λ(offset_hours : Integer) → Step.EnvDataFIPS {
   name = "EnvDataFIPS",
   dependsOn = [
     ["LatLonToGeoid"]
@@ -325,7 +326,7 @@ let envDataFIPSStep = λ(skip : Text) → λ(start_date : Text) → λ(end_date 
       output_file = "${basedir}/other_processed/env_FIPS/preagg",
       start_date = start_date,
       end_date = end_date,
-      offset_hours = -5
+      offset_hours = offset_hours
     }
   }
 }
@@ -364,7 +365,7 @@ let indices2 = [
 let statistics = ["avg", "max"]
 
 
-let envDataAggregateCoordinatesStep = λ(skip : Text) → \(study_period_bounds : List Text) -> \(study_periods : List Text) -> Step.EnvDataAggregate {
+let envDataAggregateCoordinatesStep = λ(skip : Text) → \(study_period_bounds : List Text) -> \(study_periods : List Text) -> \(offset_hours : Integer) -> Step.EnvDataAggregate {
   name = "EnvDataAggregateCoordinates",
   dependsOn = [
     ["EnvDataCoordinates"]
@@ -378,12 +379,13 @@ let envDataAggregateCoordinatesStep = λ(skip : Text) → \(study_period_bounds 
       indices = indices,
       statistics = statistics,
       study_period_bounds = study_period_bounds,
-      study_periods = study_periods
+      study_periods = study_periods,
+      offset_hours = offset_hours
     }
   }
 }
 
-let envDataAggregateFIPSStep = λ(skip : Text) → \(study_period_bounds : List Text) -> \(study_periods : List Text) → Step.EnvDataAggregate {
+let envDataAggregateFIPSStep = λ(skip : Text) → \(study_period_bounds : List Text) -> \(study_periods : List Text) -> \(offset_hours : Integer) → Step.EnvDataAggregate {
   name = "EnvDataAggregateFIPS",
   dependsOn = [
     ["Split"]
@@ -397,7 +399,8 @@ let envDataAggregateFIPSStep = λ(skip : Text) → \(study_period_bounds : List 
       indices = indices2,
       statistics = statistics,
       study_period_bounds = study_period_bounds,
-      study_periods = study_periods
+      study_periods = study_periods,
+      offset_hours = offset_hours
     }
   }
 }
@@ -514,7 +517,7 @@ let landfillStep = λ(skip : Text) → Step.NearestPoint {
   }
 }
 
-let perPatSeriesCSVTableStep = λ(skip : Text) → λ(study_period_bounds : List Text) → λ(study_periods : List Text) → λ(offset_hours : Int) → \(dependencies: List (List Text)) -> Step.PerPatSeriesCSVTable {
+let perPatSeriesCSVTableStep = λ(skip : Text) → λ(study_period_bounds : List Text) → λ(study_periods : List Text) → λ(offset_hours : Integer) → \(dependencies: List (List Text)) -> Step.PerPatSeriesCSVTable {
   name = "PerPatSeriesCSVTable",
   dependsOn = dependencies,
   skip = skip,
@@ -540,7 +543,7 @@ let perPatSeriesCSVTableStep = λ(skip : Text) → λ(study_period_bounds : List
   }
 }
 
-let perPatSeriesCSVTableLocalStep = λ(skip : Text) → λ(study_period_bounds : List Text) → λ(study_periods : List Text) → λ(offset_hours : Int) → λ(dependencies: List (List Text)) → Step.PerPatSeriesCSVTable {
+let perPatSeriesCSVTableLocalStep = λ(skip : Text) → λ(study_period_bounds : List Text) → λ(study_periods : List Text) → λ(offset_hours : Integer) → λ(dependencies: List (List Text)) → Step.PerPatSeriesCSVTable {
   name = "PerPatSeriesCSVTableLocal",
   dependsOn = dependencies,
   skip = skip,
@@ -566,7 +569,7 @@ let perPatSeriesCSVTableLocalStep = λ(skip : Text) → λ(study_period_bounds :
   }
 }
 
-let csvTableStep = λ(skip : Text) → λ(study_period : Text) → Step.csvTable {
+let csvTableStep = λ(skip : Text) → λ(study_period : Text) → λ(offset_hours : Integer) → Step.csvTable {
   name = "csvTable${study_period}",
   dependsOn = [
     ["PerPatSeriesCSVTable", "PerPatSeriesCSVTableLocal"]
@@ -578,7 +581,7 @@ let csvTableStep = λ(skip : Text) → λ(study_period : Text) → Step.csvTable
       input_dir = "${basedir}/icees/${study_period}/per_patient",
       output_dir = "${basedir}/icees2/${study_period}",
       deidentify = [] : List Text,
-      offset_hours = -5,
+      offset_hours = offset_hours,
       feature_map = feature_map_path
     }
   }
@@ -623,22 +626,22 @@ in {
     [
       mergeLocalStep fhirConfig.skip.mergeLocal,
       fhirStep fhirConfig.skip.fhir fhirConfig.skip_preproc,
-      envDataCoordinatesStep fhirConfig.skip.envDataCoordinates fhirConfig.start_date fhirConfig.end_date,
+      envDataCoordinatesStep fhirConfig.skip.envDataCoordinates fhirConfig.start_date fhirConfig.end_date fhirConfig.offset_hours,
       latLonToGeoidStep fhirConfig.skip.latLonToGeoid,
-      envDataFIPSStep fhirConfig.skip.envDataFIPS fhirConfig.start_date fhirConfig.end_date,
+      envDataFIPSStep fhirConfig.skip.envDataFIPS fhirConfig.start_date fhirConfig.end_date fhirConfig.offset_hours,
       splitStep fhirConfig.skip.split,
-      envDataAggregateCoordinatesStep fhirConfig.skip.envDataAggregateCoordinates study_period_bounds fhirConfig.study_periods,
-      envDataAggregateFIPSStep fhirConfig.skip.envDataAggregateFIPS study_period_bounds fhirConfig.study_periods,
+      envDataAggregateCoordinatesStep fhirConfig.skip.envDataAggregateCoordinates study_period_bounds fhirConfig.study_periods fhirConfig.offset_hours,
+      envDataAggregateFIPSStep fhirConfig.skip.envDataAggregateFIPS study_period_bounds fhirConfig.study_periods fhirConfig.offset_hours,
       acsStep fhirConfig.skip.acs,
       acsURStep fhirConfig.skip.acsUR,
       nearestRoadTLStep fhirConfig.skip.nearestRoadTL,
       nearestRoadHPMSStep fhirConfig.skip.nearestRoadHPMS,
       cafoStep fhirConfig.skip.cafo,
       landfillStep fhirConfig.skip.landfill,
-      toVectorStep fhirConfig.skip.toVector fhirConfig.start_date fhirConfig.end_date,
+      toVectorStep fhirConfig.skip.toVector fhirConfig.start_date fhirConfig.end_date fhirConfig.offset_hours,
       perPatSeriesCSVTableStep fhirConfig.skip.perPatSeriesCSVTable study_period_bounds fhirConfig.study_periods fhirConfig.offset_hours, fhirConfig.data_input,
       perPatSeriesCSVTableLocalStep fhirConfig.skip.perPatSeriesCSVTableLocal study_period_bounds fhirConfig.study_periods fhirConfig.offset_hours fhirConfig.data_input,
       binICEESStep fhirConfig.skip.binICEES fhirConfig.study_periods,
       binEPRStep fhirConfig.skip.binEPR fhirConfig.study_periods
-    ] # Prelude.List.map StudyPeriodConfig Step (\(study_period_skip : StudyPeriodConfig) -> csvTableStep study_period_skip.skip.csvTable study_period_skip.study_period) skipList
+    ] # Prelude.List.map StudyPeriodConfig Step (\(study_period_skip : StudyPeriodConfig) -> csvTableStep study_period_skip.skip.csvTable study_period_skip.study_period study_period_skip.offset_hours) skipList
 } : Config
