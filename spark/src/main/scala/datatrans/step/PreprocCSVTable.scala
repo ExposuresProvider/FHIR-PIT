@@ -21,8 +21,10 @@ import datatrans.Mapper
 
 case class PreprocCSVTableConfig(
   input_dir : String = null,
+  input_dir_patient : String = null,
   output_dir : String = null,
   deidentify : Seq[String] = Seq(),
+  study_period_start: DateTime = null,
   offset_hours : Int = 0,
   feature_map : String = null
 )
@@ -105,15 +107,23 @@ object PreprocCSVTable extends StepImpl {
       //   case _ =>
       // }
 
-      val per_pat_output_dir = config.input_dir
+      val input_dir_visit = config.input_dir
+      val input_dir_patient = config.input_dir_patient
 
       println("combining output")
-      val output_file_all = config.output_dir + "/all"
-      if(fileExists(hc, output_file_all)) {
-        println(output_file_all +  " exists")
+      val output_file_visit_combined = config.output_dir + "/visit_combined"
+      if(fileExists(hc, output_file_visit_combined)) {
+        println(output_file_visit_combined +  " exists")
       } else {
-        combineCSVs(hc, per_pat_output_dir, output_file_all)
+        combineCSVs(hc, input_dir_visit, output_file_visit_combined)
       }
+
+//      val output_file_patient_combined = config.output_dir + "/patient_combined"
+//      if(fileExists(hc, output_file_patient_combined)) {
+//        println(output_file_patient_combined +  " exists")
+//      } else {
+//        combineCSVs(hc, input_dir_patient, output_file_patient_combined)
+//      }
 
       println("aggregation")
 
@@ -122,10 +132,9 @@ object PreprocCSVTable extends StepImpl {
       if(fileExists(hc, output_all_patient)) {
         println(output_all_patient + " exists")
       } else {
-        val year = udf((date : String) => DateTime.parse(date, ISODateTimeFormat.dateParser()).year.get)
-        val ageYear = udf((birthDate : String, year: Int) => {
+        val ageYear = udf((birthDate : String) => {
           val birth_date_joda = DateTime.parse(birthDate, ISODateTimeFormat.dateParser())
-          val study_start_joda = new DateTime(year, 1, 1, 0, 0, 0)
+          val study_start_joda = config.study_period_start
           Years.yearsBetween(birth_date_joda, study_start_joda).getYears
         })
 
@@ -179,9 +188,10 @@ object PreprocCSVTable extends StepImpl {
        val values_first = mapper.labs.flatMap(x => Seq(f"${x}_value_first", f"${x}_flag_first"))
        val values_last = mapper.labs.flatMap(x => Seq(f"${x}_value_last", f"${x}_flag_last"))
 
-        var df_all = spark.read.format("csv").option("header", value = true).load(output_file_all)
-        (binary -- df_all.columns.toSet).foreach(col => {
-          df_all = df_all.withColumn(col, lit(0))
+        var df_visit_combined = spark.read.format("csv").option("header", value = true).load(output_file_visit_combined)
+//        var df_patient_combined = spark.read.format("csv").option("header", value = true).load(output_file_patient_combined)
+        (binary -- df_visit_combined.columns.toSet).foreach(col => {
+          df_visit_combined = df_visit_combined.withColumn(col, lit(0))
         })
 
         val sex2gen = udf((s : String) => s match {
@@ -190,16 +200,16 @@ object PreprocCSVTable extends StepImpl {
           case _ => null
         })
         
-        df_all = df_all
-          .withColumn("year", year($"start_date"))
+        df_visit_combined = df_visit_combined
+          // .withColumn("year", year($"start_date"))
           .withColumn("Sex2", sex2gen($"Sex"))
 
-        df_all = expandDataFrame(df_all, env_schema)
-        df_all = expandDataFrame(df_all, env2_schema)
+        df_visit_combined = expandDataFrame(df_visit_combined, env_schema)
+        df_visit_combined = expandDataFrame(df_visit_combined, env2_schema)
 
         val procObesityBMI = udf((x : Double) => if(x >= 30) 1 else 0)
 
-        var df_all_visit = df_all.filter($"VisitType" !== "study")
+        var df_all_visit = df_visit_combined
           .withColumn("AgeVisit", ageDiff($"birth_date", $"start_date"))
 
         val binarySeq = binary.toSeq
@@ -239,32 +249,32 @@ object PreprocCSVTable extends StepImpl {
         val emerTypes = Seq("AMB","EMER")
         val inpatientTypes = Seq("IMP")
 
-       val dfc = df_all.columns
+       val dfc = df_visit_combined.columns
        val dfcs = dfc.toSet
         val patient_aggs =
           (
             for (
               (feature1, feature2) <- Mapper.patientEnvFeatureMapping
-            ) yield first(df_all.col(feature1)).alias(feature2)
+            ) yield first(df_visit_combined.col(feature1)).alias(feature2)
           ) ++ Seq(
-            max(df_all.col("ObesityBMIVisit")).alias("ObesityBMI"),
+            max(df_visit_combined.col("ObesityBMIVisit")).alias("ObesityBMI"),
             new TotalTypeVisits(emerTypes)($"VisitType", $"RespiratoryDx").alias("TotalEDVisits"),
             new TotalTypeVisits(inpatientTypes)($"VisitType", $"RespiratoryDx").alias("TotalInpatientVisits"),
             (new TotalTypeVisits(emerTypes)($"VisitType", $"RespiratoryDx") + new TotalTypeVisits(inpatientTypes, emerTypes)($"VisitType", $"RespiratoryDx")).alias("TotalEDInpatientVisits")
           ) ++ (("Sex2" +: Mapper.demograph) ++ mapper.nearest_road_map_map.values.flatMap(x => x.distance_feature_name +: x.attributes_to_features_map.values.map(_.feature_name).toSeq) ++ mapper.nearest_point_map_map.values.flatMap(x => x.distance_feature_name +: x.attributes_to_features_map.values.map(_.feature_name).toSeq) ++ mapper.geoid_map_map.values.flatMap(_.columns.values)).map(
-            v => first(df_all.col(v)).alias(v)
+            v => first(df_visit_combined.col(v)).alias(v)
           ) ++ (binary intersect dfcs).map(
-            v => sum(df_all.col(v)).cast(IntegerType).alias(v)
+            v => sum(df_visit_combined.col(v)).cast(IntegerType).alias(v)
           ) ++ (values_first intersect dfcs).map(
-           v => first(df_all.col(v)).alias(v)
+           v => first(df_visit_combined.col(v)).alias(v)
           ) ++ (values_last intersect dfcs).map(
-            v => last(df_all.col(v)).alias(v)
+            v => last(df_visit_combined.col(v)).alias(v)
           )
 
         val df_all15 = if (mapper.visit.isEmpty)
-         df_all.withColumn("RespiratoryDx", lit(true))
+         df_visit_combined.withColumn("RespiratoryDx", lit(true))
         else
-          df_all.withColumn("RespiratoryDx", (mapper.visit intersect dfc.toSeq).map(a => df_all.col(a).cast(IntegerType) === 1).reduce(_ || _))
+          df_visit_combined.withColumn("RespiratoryDx", (mapper.visit intersect dfc.toSeq).map(a => df_visit_combined.col(a).cast(IntegerType) === 1).reduce(_ || _))
 
         val df_all2 = df_all15.groupBy("patient_num", "year").agg(patient_aggs.head, patient_aggs.tail:_*)
 

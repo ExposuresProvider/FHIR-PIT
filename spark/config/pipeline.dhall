@@ -11,6 +11,7 @@ let ResourceTypes : Type = {
 
 let StudyPeriodConfig : Type = {
     study_period : Text,
+    study_period_start : Text,
     skip : {
       csvTable : Text
     }
@@ -524,7 +525,7 @@ let perPatSeriesCSVTableStep = λ(skip : Text) → λ(study_period_bounds : List
   step = {
     function = "datatrans.step.PreprocPerPatSeriesCSVTable",
     arguments = {
-      patient_file = "${basedir}/FHIR_vector",
+      patient_file = "${basedir}/FHIR_vector/visit",
       environment_file = "${basedir}/other_processed/env_agg_coordinates",
       environment2_file = "${basedir}/other_processed/env_agg_FIPS",
       input_files = [
@@ -550,7 +551,7 @@ let perPatSeriesCSVTableLocalStep = λ(skip : Text) → λ(study_period_bounds :
   step = {
     function = "datatrans.step.PreprocPerPatSeriesCSVTableLocal",
     arguments = {
-      patient_file = "${basedir}/FHIR_vector",
+      patient_file = "${basedir}/FHIR_vector/visit",
       environment_file = "${basedir}/other_processed/env_agg_coordinates",
       environment2_file = "${basedir}/other_processed/env_agg_FIPS",
       input_files = [
@@ -569,7 +570,7 @@ let perPatSeriesCSVTableLocalStep = λ(skip : Text) → λ(study_period_bounds :
   }
 }
 
-let csvTableStep = λ(skip : Text) → λ(study_period : Text) → λ(offset_hours : Integer) → Step.csvTable {
+let csvTableStep = λ(skip : Text) → λ(study_period_start : Text) → λ(study_period : Text) → λ(offset_hours : Integer) → Step.csvTable {
   name = "csvTable${study_period}",
   dependsOn = [
     ["PerPatSeriesCSVTable", "PerPatSeriesCSVTableLocal"]
@@ -579,8 +580,10 @@ let csvTableStep = λ(skip : Text) → λ(study_period : Text) → λ(offset_hou
     function = "datatrans.step.PreprocCSVTable",
     arguments = {
       input_dir = "${basedir}/icees/${study_period}/per_patient",
+      input_dir_patient = "${basedir}/FHIR_Vector/patient",
       output_dir = "${basedir}/icees2/${study_period}",
       deidentify = [] : List Text,
+      study_period_start = study_period_start,
       offset_hours = offset_hours,
       feature_map = feature_map_path
     }
@@ -643,5 +646,5 @@ in {
       perPatSeriesCSVTableLocalStep fhirConfig.skip.perPatSeriesCSVTableLocal study_period_bounds fhirConfig.study_periods fhirConfig.offset_hours fhirConfig.data_input,
       binICEESStep fhirConfig.skip.binICEES fhirConfig.study_periods,
       binEPRStep fhirConfig.skip.binEPR fhirConfig.study_periods
-    ] # Prelude.List.map StudyPeriodConfig Step (\(study_period_skip : StudyPeriodConfig) -> csvTableStep study_period_skip.skip.csvTable study_period_skip.study_period fhirConfig.offset_hours) skipList
+    ] # Prelude.List.map StudyPeriodConfig Step (\(study_period_skip : StudyPeriodConfig) -> csvTableStep study_period_skip.skip.csvTable study_period_skip.study_period_start study_period_skip.study_period fhirConfig.offset_hours) skipList
 } : Config
