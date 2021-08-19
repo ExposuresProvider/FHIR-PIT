@@ -18,9 +18,9 @@ object Mapper {
 
   case class CodingPattern(system: String, code: String, system_is_regex: Option[Boolean], code_is_regex: Option[Boolean])
   case class QuantityMapping(system: String, code: String, system_is_regex: Option[Boolean], code_is_regex: Option[Boolean], unit: Option[String])
-  def convertQuantityMappingToCodingPattern(qm: QuantityMapping) : CodingPattern = qm match {                                                     
-    case QuantityMapping(system, code, system_is_regex, code_is_regex, _) => CodingPattern(system, code, system_is_regex, code_is_regex)          
-  }                                                                                                                                               
+  def convertQuantityMappingToCodingPattern(qm: QuantityMapping) : CodingPattern = qm match {
+    case QuantityMapping(system, code, system_is_regex, code_is_regex, _) => CodingPattern(system, code, system_is_regex, code_is_regex)
+  }
   case class FHIRFeatureMapping(Condition: Option[Seq[CodingPattern]], Observation: Option[Seq[QuantityMapping]], MedicationRequest: Option[Seq[CodingPattern]], Procedure: Option[Seq[CodingPattern]])
 
   case class Feature(feature_name: String, feature_type: String)
@@ -373,6 +373,11 @@ class Mapper(hc : Configuration, feature_map_input_path : String) {
   val conds = cond_map.map(_._2).toSet
   val labs = obs_map.map(_._2._1).toSet
   val procs = proc_map.map(_._2).toSet
+
+  Mapper.log.info("meds = " + meds.mkString("\n"))
+  Mapper.log.info(s"conds = " + conds.mkString("\n"))
+  Mapper.log.info(s"labs = " + labs.mkString("\n"))
+  Mapper.log.info(s"procs = " + procs.mkString("\n"))
 
 
 }

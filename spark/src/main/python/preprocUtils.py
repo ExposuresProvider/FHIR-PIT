@@ -119,9 +119,9 @@ def preprocSocial(df):
     bins += [("RoadwayDistanceExposure2", binsadd.tolist())]
     df["RoadwayDistanceExposure"], binsadd = pd.cut(df["RoadwayDistanceExposure"].astype(float), [0, 50, 100, 200, 300, 500, float("inf")], labels=list(map(str, [1, 2, 3, 4, 5, 6])), include_lowest=True, right=False, retbins=True)
     bins += [("RoadwayDistanceExposure", binsadd.tolist())]
-    df["CAFO_Exposure"], binsadd = pd.cut(df["CAFO_Distance"].astype(float), [0, 500, 1000, 2000, 4000, float("inf")], labels=list(map(str, [1, 2, 3, 4, 5])), include_lowest=True, right=False, retbins=True)
+    df["CAFO_Exposure"], binsadd = pd.cut(df["CAFO_Exposure"].astype(float), [0, 500, 1000, 2000, 4000, float("inf")], labels=list(map(str, [1, 2, 3, 4, 5])), include_lowest=True, right=False, retbins=True)
     bins += [("CAFO_Exposure", binsadd.tolist())]
-    df["Landfill_Exposure"], binsadd = pd.cut(df["LandfillDistance"].astype(float), [0, 500, 1000, 2000, 4000, float("inf")], labels=list(map(str, [1, 2, 3, 4, 5])), include_lowest=True, right=False, retbins=True)
+    df["Landfill_Exposure"], binsadd = pd.cut(df["Landfill_Exposure"].astype(float), [0, 500, 1000, 2000, 4000, float("inf")], labels=list(map(str, [1, 2, 3, 4, 5])), include_lowest=True, right=False, retbins=True)
     bins += [("Landfill_Exposure", binsadd.tolist())]
 
 

@@ -191,7 +191,7 @@ object PreprocCSVTable extends StepImpl {
         var df_visit_combined = spark.read.format("csv").option("header", value = true).load(output_file_visit_combined)
 //        var df_patient_combined = spark.read.format("csv").option("header", value = true).load(output_file_patient_combined)
         (binary -- df_visit_combined.columns.toSet).foreach(col => {
-          df_visit_combined = df_visit_combined.withColumn(col, lit(0))
+          df_visit_combined = df_visit_combined.withColumn(col, lit("0"))
         })
 
         val sex2gen = udf((s : String) => s match {
@@ -276,17 +276,17 @@ object PreprocCSVTable extends StepImpl {
         else
           df_visit_combined.withColumn("RespiratoryDx", (mapper.visit intersect dfc.toSeq).map(a => df_visit_combined.col(a).cast(IntegerType) === 1).reduce(_ || _))
 
-        val df_all2 = df_all15.groupBy("patient_num", "year").agg(patient_aggs.head, patient_aggs.tail:_*)
+        val df_all2 = df_all15.groupBy("patient_num", "study_period").agg(patient_aggs.head, patient_aggs.tail:_*)
 
-        val df_active_in_year = df_all_visit.select("patient_num", "year").distinct().withColumn("Active_In_Year", lit(1))
+        val df_active_in_study_period = df_all_visit.select("patient_num", "study_period").distinct().withColumn("Active_In_Study_Period", lit(1))
 
         var df_all_patient = df_all2
-          .withColumn("AgeStudyStart", ageYear($"birth_date", $"year"))
+          .withColumn("AgeStudyStart", ageYear($"birth_date"))
           .withColumn("ObesityBMI", procObesityBMI($"ObesityBMI"))
-          .join(broadcast(df_active_in_year), Seq("patient_num", "year"), "left")
+          .join(broadcast(df_active_in_study_period), Seq("patient_num", "study_period"), "left")
         // .na.fill(0, "Active_In_Year" +: "ObesityBMI" +: binary.toSeq) spark has a bug
 
-        ("Active_In_Year" +: "ObesityBMI" +: binary.toSeq).foreach(colname => {
+        ("Active_In_Study_Period" +: "ObesityBMI" +: binary.toSeq).foreach(colname => {
           df_all_patient = df_all_patient.withColumn(colname, when(df_all_patient.col(colname).isNull, 0).otherwise(df_all_patient.col(colname)))
         })
 

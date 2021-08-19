@@ -79,7 +79,7 @@ for year in study_periods:
     dfpe = df_pat_ord.merge(df_pat.merge(dfp, on="patient_num", how="outer"), on=["patient_num", "HASH_VALUE"], how="right")
     dfpe["IN_ICEES"].fillna(0, inplace=True)
     dfpe["IN_EPR"].fillna(0, inplace=True)
-    dfpe["year"].fillna(year, inplace=True)
+    dfpe["study_period"].fillna(year, inplace=True)
     dfpe.sort_values(by=["index"], inplace=True)
     dfpe = convert_float_to_int(dfpe)
     dfpe.to_csv(f"{output_file}{year}patient", index=False)
@@ -90,7 +90,7 @@ for year in study_periods:
     dfpe = df_pat.merge(dfp, on="patient_num", how="outer")
     dfpe["IN_ICEES"].fillna(0, inplace=True)
     dfpe["IN_EPR"].fillna(0, inplace=True)
-    dfpe["year"].fillna(year, inplace=True)
+    dfpe["study_period"].fillna(year, inplace=True)
     dfpe["index"] = dfpe.index
     dfpe = convert_float_to_int(dfpe)
     dfpe.to_csv(f"{output_file}{year}visit", index=False)
