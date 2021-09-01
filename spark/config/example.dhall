@@ -1,6 +1,6 @@
 let pipeline = ./pipeline.dhall
 
-in pipeline "report" "progress" "/share/spark/hao/datatrans/spark/config" "/var/fhir" "/var/fhir" "/share/spark/hao/data" {
+in pipeline "report" "progress" "/home/a/git/FHIR-PIT/spark/config" "/home/a/git/fhir_sample_data" "/home/a/fhir-pit/temp" "/home/a/fhir-pit/output" {
   skip = {
     mergeLocal = "run",
     fhir = "run",
@@ -41,52 +41,62 @@ in pipeline "report" "progress" "/share/spark/hao/datatrans/spark/config" "/var/
   offset_hours = -5
 } [{
   study_period = "2010",
+  study_period_start = "2010-01-01T00:00:00Z",
   skip = {
     csvTable = "run"
   }
 }, {
   study_period = "2011",
+  study_period_start = "2011-01-01T00:00:00Z",
   skip = {
     csvTable = "run"
   }
 }, {
   study_period = "2012",
+  study_period_start = "2012-01-01T00:00:00Z",
   skip = {
     csvTable = "run"
   }
 }, {
   study_period = "2013",
+  study_period_start = "2013-01-01T00:00:00Z",
   skip = {
     csvTable = "run"
   }
 }, {
   study_period = "2014",
+  study_period_start = "2014-01-01T00:00:00Z",
   skip = {
     csvTable = "run"
   }
 }, {
   study_period = "2015",
+  study_period_start = "2015-01-01T00:00:00Z",
   skip = {
     csvTable = "run"
   }
 }, {
   study_period = "2016",
+  study_period_start = "2016-01-01T00:00:00Z",
   skip = {
     csvTable = "run"
   }
 }, {
   study_period = "2017",
+  study_period_start = "2017-01-01T00:00:00Z",
   skip = {
     csvTable = "run"
   }
 }, {
   study_period = "2018",
+  study_period_start = "2018-01-01T00:00:00Z",
   skip = {
     csvTable = "run"
   }
 }, {
   study_period = "2019",
+  study_period_start = "2019-01-01T00:00:00Z",
   skip = {
     csvTable = "run"
   }
-}]
+}] "/home/a/miniconda3/envs/sample/bin/python"

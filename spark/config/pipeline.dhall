@@ -57,7 +57,7 @@ let FhirConfig : Type = {
     offset_hours: Integer
 }
 
-in λ(report : Text) → λ(progress : Text) → λ(configdir : Text) → λ(basedirinput : Text) → λ(basedir : Text) → λ(basediroutput : Text) → λ(fhirConfig : FhirConfig) → λ(skipList : List StudyPeriodConfig) →
+in λ(report : Text) → λ(progress : Text) → λ(configdir : Text) → λ(basedirinput : Text) → λ(basedir : Text) → λ(basediroutput : Text) → λ(fhirConfig : FhirConfig) → λ(skipList : List StudyPeriodConfig) →  λ(pyexec : Text) → 
 
 let GenericStep : Type → Type = λ(a : Type) → {
     name : Text,
@@ -209,7 +209,6 @@ let nearestRoadHPMS_output_path = "${basedir}/other_processed/nearestRoadHPMS.cs
 let cafo_output_path = "${basedir}/other_processed/cafo.csv"
 let landfill_output_path = "${basedir}/other_processed/landfill.csv"
 let feature_map_path = "${configdir}/icees_features.yaml"
-let pyexec = "/opt/rh/rh-python38/root/usr/bin/python"
 let requirements = [
     "isodate==0.6.0",
     "joblib==0.17.0",
