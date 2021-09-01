@@ -34,55 +34,58 @@ in pipeline "report" "progress" "/share/spark/hao/datatrans/spark/config" "/var/
     ["EnvDataAggregateCoordinates"],
     ["EnvDataAggregateFIPS"]
   ],
-  yearStart = 2010,
-  yearEnd = 2019
+  start_date = "2010-01-01T00:00:00Z",
+  end_date = "2020-01-01T00:00:00Z",
+  study_period_splits = ["2011-01-01T00:00:00Z", "2012-01-01T00:00:00Z", "2013-01-01T00:00:00Z", "2014-01-01T00:00:00Z", "2015-01-01T00:00:00Z", "2016-01-01T00:00:00Z", "2017-01-01T00:00:00Z", "2018-01-01T00:00:00Z", "2019-01-01T00:00:00Z"],
+  study_periods = ["2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019"],
+  offset_hours = -5
 } [{
-  year = 2010,
+  study_period = "2010",
   skip = {
     csvTable = "run"
   }
 }, {
-  year = 2011,
+  study_period = "2011",
   skip = {
     csvTable = "run"
   }
 }, {
-  year = 2012,
+  study_period = "2012",
   skip = {
     csvTable = "run"
   }
 }, {
-  year = 2013,
+  study_period = "2013",
   skip = {
     csvTable = "run"
   }
 }, {
-  year = 2014,
+  study_period = "2014",
   skip = {
     csvTable = "run"
   }
 }, {
-  year = 2015,
+  study_period = "2015",
   skip = {
     csvTable = "run"
   }
 }, {
-  year = 2016,
+  study_period = "2016",
   skip = {
     csvTable = "run"
   }
 }, {
-  year = 2017,
+  study_period = "2017",
   skip = {
     csvTable = "run"
   }
 }, {
-  year = 2018,
+  study_period = "2018",
   skip = {
     csvTable = "run"
   }
 }, {
-  year = 2019,
+  study_period = "2019",
   skip = {
     csvTable = "run"
   }
