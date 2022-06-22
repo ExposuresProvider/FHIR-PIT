@@ -1,6 +1,6 @@
 isodate==0.6.0
 joblib==0.17.0
-numpy==1.19.4
+numpy==1.22.0
 pandas==1.1.4
 parsedatetime==2.6
 progressbar2==3.53.1
