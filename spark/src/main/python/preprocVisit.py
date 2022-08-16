@@ -13,6 +13,10 @@ def preproc_visit(input_conf, input_file, output_file):
     df = pd.read_csv(input_file, quotechar='"')
 
     visit_cols = set(visit_cols) & set(df.columns)
+    
+    # filter out non-number columns
+    cols_type = df.dtypes
+    visit_cols = [col for col in visit_cols if cols_type[col] == np.float or cols_type[col] == np.int]
 
     bins = []
 
