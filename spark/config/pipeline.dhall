@@ -616,7 +616,7 @@ let binICEESStep = \(skip : Text) -> \(study_periods : List Text) -> Step.System
         arguments = {
             pyexec = pyexec,
             requirements = requirements,
-            command = ["src/main/python/preprocBinning.py", feature_map_path, "${basedir}/icees2", "${basediroutput}/icees2_bins"] # study_periods,
+            command = ["src/main/python/preprocBinning.py", feature_map_path, "${basedir}/icees2_xwalk", "${basediroutput}/icees2_bins"] # study_periods,
             workdir = "."
         }
     }
