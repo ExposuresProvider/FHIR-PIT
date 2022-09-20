@@ -10,7 +10,7 @@ pat_to_idx_df = None
 for year in study_periods:
     input_file_p = f"{input_dir}/{year}/all_patient"
     df_year = pd.read_csv(input_file_p, quotechar='"', usecols=['patient_num'])
-    if not pat_to_idx_df:
+    if pat_to_idx_df is not None:
         pat_to_idx_df = df_year
     else:
         pat_to_idx_df = pd.concat([pat_to_idx_df, df_year], ignore_index=True)
