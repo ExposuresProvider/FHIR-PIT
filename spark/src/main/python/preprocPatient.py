@@ -6,7 +6,7 @@ import os
 import os.path
 from preprocUtils import *
 
-def preproc_patient(input_conf, input_file, output_file, pat_idx_df):
+def preproc_patient(input_conf, input_file, output_file, pat_idx_file):
 
     _, patient_cols, _ = getBinary(input_conf)
 
@@ -30,6 +30,7 @@ def preproc_patient(input_conf, input_file, output_file, pat_idx_df):
 
     df.drop(["birth_date"], axis=1, inplace=True)
     # add index column
+    pat_idx_df = pd.read_csv(pat_idx_file)
     df = df.merge(pat_idx_df, how='left', on='patient_num')
     # sort by index column and move index column to the first column
     df = df.sort_values(by=['index'])
