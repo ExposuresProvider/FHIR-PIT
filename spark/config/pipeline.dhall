@@ -45,6 +45,7 @@ let FhirConfig : Type = {
       toVector : Text,
       perPatSeriesCSVTable : Text,
       perPatSeriesCSVTableLocal : Text,
+      addXWalkData: Text,
       binICEES: Text,
       binEPR: Text
     },
@@ -591,6 +592,21 @@ let csvTableStep = λ(skip : Text) → λ(study_period_start : Text) → λ(stud
   }
 }
 
+let addXWalkDataStep = \(skip : Text) -> \(study_periods : List Text) -> Step.System {
+    name = "addXWalkData",
+    dependsOn = Prelude.List.map Text (List Text) (\(enumeration : Text) -> ["csvTable${enumeration}"]) study_periods,
+    skip = skip,
+    step = {
+        function = "datatrans.step.PreprocSystem",
+        arguments = {
+            pyexec = pyexec,
+            requirements = requirements,
+            command = ["src/main/python/addXWalkData.py", "${basedirinput}/ICEESPCD/8000PtsXWalkForHao.csv", "${basedirinput}/ICEESPCD/RegistryPtsXWalkForHao.csv", "${basedir}/icees2", "${basediroutput}/icees2_xwalk"] # study_periods,
+            workdir = "."
+        }
+    }
+}
+
 let binICEESStep = \(skip : Text) -> \(study_periods : List Text) -> Step.System {
     name = "BinICEES",
     dependsOn = Prelude.List.map Text (List Text) (\(enumeration : Text) -> ["csvTable${enumeration}"]) study_periods,
@@ -600,7 +616,7 @@ let binICEESStep = \(skip : Text) -> \(study_periods : List Text) -> Step.System
         arguments = {
             pyexec = pyexec,
             requirements = requirements,
-            command = ["src/main/python/preprocBinning.py", feature_map_path, "${basedir}/icees2", "${basediroutput}/icees2_bins"] # study_periods,
+            command = ["src/main/python/preprocBinning.py", feature_map_path, "${basedir}/icees2_xwalk", "${basediroutput}/icees2_bins"] # study_periods,
             workdir = "."
         }
     }
@@ -645,6 +661,7 @@ in {
       toVectorStep fhirConfig.skip.toVector fhirConfig.start_date fhirConfig.end_date fhirConfig.offset_hours,
       perPatSeriesCSVTableStep fhirConfig.skip.perPatSeriesCSVTable study_period_bounds fhirConfig.study_periods fhirConfig.offset_hours fhirConfig.data_input,
       perPatSeriesCSVTableLocalStep fhirConfig.skip.perPatSeriesCSVTableLocal study_period_bounds fhirConfig.study_periods fhirConfig.offset_hours fhirConfig.data_input,
+      addXWalkDataStep fhirConfig.skip.addXWalkData fhirConfig.study_periods,
       binICEESStep fhirConfig.skip.binICEES fhirConfig.study_periods,
       binEPRStep fhirConfig.skip.binEPR fhirConfig.study_periods
     ] # Prelude.List.map StudyPeriodConfig Step (\(study_period_skip : StudyPeriodConfig) -> csvTableStep study_period_skip.skip.csvTable study_period_skip.study_period_start study_period_skip.study_period fhirConfig.offset_hours) skipList

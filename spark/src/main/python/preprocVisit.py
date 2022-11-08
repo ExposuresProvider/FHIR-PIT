@@ -13,7 +13,7 @@ def preproc_visit(input_conf, input_file, output_file):
     df = pd.read_csv(input_file, quotechar='"')
 
     visit_cols = set(visit_cols) & set(df.columns)
-
+    
     bins = []
 
     bins += preprocAge(df, "AgeVisit")
