@@ -57,14 +57,16 @@ def proc_pid(config, p):
 
         fn = f"{v}/{p}.csv"
         try:
-            pdf = pd.read_csv(fn)
+            pdf = pd.read_csv(fn) # Read patient visit vector.
 
+            # Join environments. Same as PreprocCSVTableLocal.
+            penvdf = join_env(pdf, f"{env_fn}/{p}") # Join patient file with environmental exposures.
+            penv2df = join_env(penvdf, f"{env2_fn}/{p}") # Join the previous output with second environmental exposures. 
 
-            penvdf = join_env(pdf, f"{env_fn}/{p}")
-            penv2df = join_env(penvdf, f"{env2_fn}/{p}")
-
+            # Same as bucketize
             penv2df["study_period"] = penv2df["start_date"].apply(partial(extract_study_period, study_period_bounds_datetime, study_periods, offset_hours))
 
+            # Join exposures. Same as PreprocCSVTableLocal. 
             padf = penv2df.merge(sdf, on="patient_num", how="left") if sdf is not None else penv2df
             for year in study_periods:
                 per_patient = f"{output_dir}/{year}/per_patient"

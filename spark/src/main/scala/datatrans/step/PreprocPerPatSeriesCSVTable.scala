@@ -93,7 +93,7 @@ object PreprocPerPatSeriesCSVTable extends StepImpl {
               for (year <- config.study_periods) {
                 val per_pat_output_dir = f"${config.output_dir}/$year"
                 val output_file = f"$per_pat_output_dir/$p"
-                writeDataframe(hc, output_file, patenv_df2.filter($"study_period" === year))
+                writeDataframe(hc, output_file, patenv_df2_with_study_period.filter($"study_period" === year))
               }
 
             }

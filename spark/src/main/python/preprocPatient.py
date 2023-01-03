@@ -23,7 +23,6 @@ def preproc_patient(input_conf, input_file, output_file, pat_idx_file):
     bins += preprocSocial(df)                                                                                                                                         
                                                                                                                                                                       
     addSex2(df)
-
     for c in patient_cols:
         df[c].fillna(0, inplace=True)
         df[c] = cut_col(df[c])

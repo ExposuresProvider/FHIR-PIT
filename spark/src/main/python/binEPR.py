@@ -74,7 +74,7 @@ def convert_float_to_int(df):
     
 for year in study_periods:
     print(year)
-    dfp = pd.read_csv(f"{icees_dir}/{year}patient")
+    dfp = pd.read_csv(f"{icees_dir}/{year}patient", index_col=0)
     dfp["IN_ICEES"] = 1
     dfpe = df_pat_ord.merge(df_pat.merge(dfp, on="patient_num", how="outer"), on=["patient_num", "HASH_VALUE"], how="right")
     dfpe["IN_ICEES"].fillna(0, inplace=True)

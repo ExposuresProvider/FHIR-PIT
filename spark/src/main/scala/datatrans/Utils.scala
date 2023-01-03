@@ -157,7 +157,7 @@ object Utils {
   def writeDataframe(hc: Configuration, output_file: String, table: DataFrame, skipCRC : Boolean = true): Unit = {
     val dname = output_file + "_temp"
     val dpath = new Path(dname)
-    table.write.option("sep", ",").option("header", value = false).csv(dname)
+    table.write.option("sep", ",").option("header", value = false).option("emptyValue","").csv(dname)
 
     val output_file_path = new Path(output_file)
     val output_file_file_system = output_file_path.getFileSystem(hc)
