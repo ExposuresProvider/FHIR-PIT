@@ -6,18 +6,18 @@
 sbt assembly
 ```
 
-## build docker container
+<!-- ## build docker container
 
 ```
 docker build spark -t fhir-pit:0.1.0
-```
+``` -->
 
-## test
+<!-- ## test
 
 ```
 sbt test
 ```
-
+ -->
 
 ## generate config file
 
@@ -25,15 +25,15 @@ install dhall, dhall-to-json from
 
 https://github.com/dhall-lang/dhall-haskell/releases
 
-modify `config/example2.dhall`
+modify `config/example_demo.dhall:2` variable basedir to location of FHIR-PIT repo.
 
 ```
-dhall-to-yaml --file config/example2.dhall --output config/example2.yaml
+dhall-to-yaml --file config/example_demo.dhall --output config/example_demo.yaml
 ```
 
 ## run
 ```
-python src/main/python/runPreprocPipeline.py <master url> <config file>
+python src/main/python/runPreprocPipeline.py "local" "./config/example_demo.yaml"
 ```
 
 ## config file format
@@ -58,7 +58,7 @@ set `SBT_OPTS`
 
 set `SPARK_LOCAL_DIRS`
 
-## utilities:
+<!-- ## utilities:
 
 ### env
 
@@ -111,4 +111,4 @@ set `SPARK_LOCAL_DIRS`
 
 `submit.py`: submit
 
-
+ -->
