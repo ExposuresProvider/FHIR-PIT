@@ -36,6 +36,7 @@ def preproc_patient(input_conf, input_file, output_file, pat_idx_file):
     df = df.sort_values(by=['index'])
     index_col = df.pop('index')
     df.insert(0, 'index', index_col)
+    df.rename(columns={'study_period': 'year', 'Active_In_Study_Period': 'Active_In_Year'}, inplace=True)
     df.to_csv(output_file, index=False)                                                                                                                              
                                                                                                                                                                       
     output_file_deidentified = output_file+"_deidentified"                                                                                                           
