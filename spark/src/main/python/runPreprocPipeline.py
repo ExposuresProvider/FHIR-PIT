@@ -11,7 +11,7 @@ tf.close()
 
 tfname = tf.name
 
-subprocess.call(["dhall-to-yaml", "--file", config, "--output", tfname])
+# subprocess.call(["dhall-to-yaml", "--file", config, "--output", tfname])
 
 def submit(host_name, cls, *args, **kwargs):
     if host_name == "local":
@@ -19,7 +19,7 @@ def submit(host_name, cls, *args, **kwargs):
     else:
         submit_2_target_nodet = "spark://{0}:7077".format(host_name)
 
-    cmd = ["spark-submit",
+    cmd = ["/home/jjgarcia/spark-2.4.7-bin-hadoop2.7/bin/spark-submit",
            "--master",
            submit_2_target_nodet,
            "--executor-memory",
@@ -47,7 +47,7 @@ def submit(host_name, cls, *args, **kwargs):
     if err:
         print("error:", err)
 
-submit(host_name, "datatrans.PreprocPipeline", "--config=" + tfname)
+submit(host_name, "datatrans.PreprocPipeline", "--config=" + config)
 
 os.unlink(tfname)
 

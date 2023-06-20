@@ -1,27 +1,28 @@
 let pipeline = ./pipeline_demo.dhall
-let basedir = "/home/jjgarcia/projects/demo-FHIRPIT/FHIR-PIT" 
+let basedir = "/home/jjgarcia/test/FHIR-PIT" 
+let python_exec = "/home/hyi/fhir-pit/bin/python"
 
 in pipeline "report" "progress" "${basedir}/spark/config" "${basedir}/data/input" "${basedir}/data/output" "${basedir}/data/output" {
   skip = {
     mergeLocal = "skip",
     fhir = "run",
     envDataCoordinates = "run",
-    latLonToGeoid = "skip",
-    envDataFIPS = "skip",
-    split = "skip",
+    latLonToGeoid = "reuse",
+    envDataFIPS = "reuse",
+    split = "reuse",
     envDataAggregateCoordinates = "run",
-    envDataAggregateFIPS = "skip",
+    envDataAggregateFIPS = "reuse",
     acs = "run",
     acsUR = "run",
-    nearestRoadTL = "skip",
-    nearestRoadHPMS = "skip",
+    nearestRoadTL = "reuse",
+    nearestRoadHPMS = "reuse",
     cafo = "run",
     landfill = "run",
     toVector = "run",
-    perPatSeriesCSVTable = "run",
-    perPatSeriesCSVTableLocal = "skip",
+    perPatSeriesCSVTable = "skip",
+    perPatSeriesCSVTableLocal = "run",
     addXWalkData = "skip",
-    binICEES = "run",
+    binICEES = "skip",
     binEPR = "skip"
   },
   skip_preproc = [] : List Text,
@@ -53,5 +54,5 @@ in pipeline "report" "progress" "${basedir}/spark/config" "${basedir}/data/input
   skip = {
     csvTable = "run"
   }
-}] "python"
+}] "${python_exec}"
 
