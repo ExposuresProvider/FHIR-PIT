@@ -18,25 +18,36 @@ docker build spark -t fhir-pit:0.1.0
 sbt test
 ```
 
-
-## generate config file
+## Setup dhall
 
 install dhall, dhall-to-json from
 
 https://github.com/dhall-lang/dhall-haskell/releases
 
-modify `config/example2.dhall`
+## Modify `config/example_demo.dhall`
+
+Update variable `basedir` with the location of the FHIR-PIT repo.
+
+Update variable `python_exec` with the location of the python executable.
+
+## Generate config file.
 
 ```
-dhall-to-yaml --file config/example2.dhall --output config/example2.yaml
+dhall-to-yaml --file config/example_demo.dhall --output config/example_demo.yaml
 ```
 
 ## run
+
+cd into FHIR-PIT/spark folder and execute:
 ```
 python src/main/python/runPreprocPipeline.py <master url> <config file>
 ```
+Where `<master_url>` is the [master url](https://spark.apache.org/docs/latest/submitting-applications.html#master-urls) for the spark cluster and `<config file>` is the desired YAML config file for the run.
+
+For example: `python src/main/python/runPreprocPipeline.py "local" "./config/example_demo.yaml"`
 
 ## config file format
+
 ```
 - name: <name>
   dependsOn: 
