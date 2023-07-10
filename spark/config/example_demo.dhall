@@ -1,21 +1,21 @@
 let pipeline = ./pipeline_demo.dhall
-let basedir = "/home/jjgarcia/projects/test/FHIR-PIT" 
+let basedir = "/home/jjgarcia/test/FHIR-PIT" 
 let python_exec = "/home/hyi/fhir-pit/bin/python"
 
 in pipeline "report" "progress" "${basedir}/spark/config" "${basedir}/data/input" "${basedir}/data/output" "${basedir}/data/output" {
   skip = {
-    mergeLocal = "skip",
+  mergeLocal = "skip",
     fhir = "run",
     envDataCoordinates = "run",
-    latLonToGeoid = "run",
-    envDataFIPS = "run",
-    split = "run",
+    latLonToGeoid = "reuse",
+    envDataFIPS = "reuse",
+    split = "reuse",
     envDataAggregateCoordinates = "run",
-    envDataAggregateFIPS = "run",
+    envDataAggregateFIPS = "reuse",
     acs = "run",
     acsUR = "run",
-    nearestRoadTL = "run",
-    nearestRoadHPMS = "run",
+    nearestRoadTL = "reuse",
+    nearestRoadHPMS = "reuse",
     cafo = "run",
     landfill = "run",
     toVector = "run",
