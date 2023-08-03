@@ -2,7 +2,13 @@
 
 ## Installation
 - install the interactive build tool sbt. Refer to [Scala sbt page](https://www.scala-sbt.org/) for details.
-- install apache spark with hadoop. Refer to [Apache Spark page ](https://spark.apache.org/) for details.
+- install apache spark with hadoop. Refer to [Apache Spark page ](https://spark.apache.org/) for details. 
+Make sure you install pyspark version 2.4.5 since the newer pyspark version may not work with older Java versions 
+such as 1.8. We recommend to create a python 3 virtual environment and install pyspark version 2.4.5 in the virtual 
+environment by following the steps below.
+```
+
+```
 - install dhall by following the sample steps below.
   ```
   mkdir dhall_1.42.0 
