@@ -40,7 +40,9 @@ sbt test
 - Modify `FHIR-PIT/spark/config/example_demo.dhall` as needed. To run FHIR PIT with sample data for demo purposes: 
 
     - Update variable `basedir` with the location of the FHIR-PIT repo. 
-    - Update variable `python_exec` with the location of the python executable.
+    - Update variable `python_exec` with the location of the python executable. FHIR PIT is tested to run successfully 
+  in a virtual environment created in python 3.6.9 and above, so it is advised to create a python virtual environment 
+    - and point the python_exec to the python executable location in your virtual environment. 
 
 - Generate yaml config file.
     ```
@@ -48,7 +50,7 @@ sbt test
     ```
 
 ## run
-cd into FHIR-PIT/spark folder and execute:
+Activate your python virtual environment (python 3.6.9 and above), cd into FHIR-PIT/spark folder and execute:
 ```
 python src/main/python/runPreprocPipeline.py <master url> <yaml config file>
 ```
