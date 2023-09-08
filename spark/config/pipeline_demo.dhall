@@ -212,11 +212,11 @@ let landfill_output_path = "${basedir}/other_processed/landfill.csv"
 let feature_map_path = "${configdir}/icees_features.yaml"
 let requirements = [
     "isodate==0.6.1",
-    "joblib==1.2.0",
-    "numpy==1.24.1",
-    "pandas==1.5.2",
+    "joblib==1.1.1",
+    "numpy==1.19.4",
+    "pandas==1.1.4",
     "parsedatetime==2.6",
-    "progressbar2==4.2.0",
+    "progressbar2==3.53.1",
     "python-dateutil==2.8.2",
     "pytimeparse==1.1.8",
     "pytz==2022.7",
