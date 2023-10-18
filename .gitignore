@@ -3,10 +3,8 @@
 **/.ensime
 **/.ensime_cache
 **/*.img
-**/*.yaml
 **/__pycache__
 data/output
 spark/progress
 spark/report
 spark/target
-
