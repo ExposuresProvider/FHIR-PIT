@@ -4,7 +4,7 @@
 **/.ensime_cache
 **/*.img
 **/__pycache__
-data/output
+data/output/
 spark/progress
 spark/report
 spark/target
