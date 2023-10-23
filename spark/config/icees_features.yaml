@@ -1,2494 +1,1831 @@
+
 FHIR:
-  A1C:
-    Measurement: &id001
-    - code: LP404554-0
-      system: http://loinc.org
-    - code: LP420732-2
-      system: http://loinc.org
-    - code: LP404412-1
-      system: http://loinc.org
-    - code: LP404481-6
-      system: http://loinc.org
-    - code: LP404607-6
-      system: http://loinc.org
-    - code: LP404451-9
-      system: http://loinc.org
-    - code: LP404433-7
-      system: http://loinc.org
-    - code: LP421819-6
-      system: http://loinc.org
-    - code: LP404492-3
-      system: http://loinc.org
-    - code: LP404566-4
-      system: http://loinc.org
-    - code: LP404465-9
-      system: http://loinc.org
-    Observation: *id001
-  ALT:
-    Measurement: &id004
-    - code: LP44699-4
-      system: http://loinc.org
-    Observation: *id004
-  AST:
-    Measurement: &id007
-    - code: LP49559-5
-      system: http://loinc.org
-    - code: LP258695-8
-      system: http://loinc.org
-    - code: LP256455-9
-      system: http://loinc.org
-    - code: LP67698-8
-      system: http://loinc.org
-    - code: LP145360-6
-      system: http://loinc.org
-    - code: LP67860-4
-      system: http://loinc.org
-    - code: LP124866-7
-      system: http://loinc.org
-    - code: LP157608-3
-      system: http://loinc.org
-    - code: LP260801-8
-      system: http://loinc.org
-    - code: LP257002-8
-      system: http://loinc.org
-    - code: LP255823-9
-      system: http://loinc.org
-    - code: LP256399-9
-      system: http://loinc.org
-    - code: LP44838-8
-      system: http://loinc.org
-    - code: LP67736-6
-      system: http://loinc.org
-    - code: LP42612-9
-      system: http://loinc.org
-    - code: LP256104-3
-      system: http://loinc.org
-    - code: LP44824-8
-      system: http://loinc.org
-    - code: LP67850-5
-      system: http://loinc.org
-    - code: LP44682-0
-      system: http://loinc.org
-    - code: LP55113-2
-      system: http://loinc.org
-    - code: LP67858-8
-      system: http://loinc.org
-    - code: LP145524-7
-      system: http://loinc.org
-    - code: LP255839-5
-      system: http://loinc.org
-    - code: LP255908-8
-      system: http://loinc.org
-    - code: LP51245-6
-      system: http://loinc.org
-    - code: LP124878-2
-      system: http://loinc.org
-    - code: LP260820-8
-      system: http://loinc.org
-    - code: LP67834-9
-      system: http://loinc.org
-    - code: LP383822-6
-      system: http://loinc.org
-    - code: LP44810-7
-      system: http://loinc.org
-    - code: LP145388-7
-      system: http://loinc.org
-    - code: LP145352-3
-      system: http://loinc.org
-    - code: LP124870-9
-      system: http://loinc.org
-    - code: LP256109-2
-      system: http://loinc.org
-    - code: LP105229-1
-      system: http://loinc.org
-    - code: LP145394-5
-      system: http://loinc.org
-    - code: LP105234-1
-      system: http://loinc.org
-    - code: LP43475-0
-      system: http://loinc.org
-    - code: LP145395-2
-      system: http://loinc.org
-    - code: LP44898-2
-      system: http://loinc.org
-    - code: LP67738-2
-      system: http://loinc.org
-    - code: LP67740-8
-      system: http://loinc.org
-    - code: LP260841-4
-      system: http://loinc.org
-    - code: LP102451-4
-      system: http://loinc.org
-    - code: LP67832-3
-      system: http://loinc.org
-    - code: LP383816-8
-      system: http://loinc.org
-    - code: LP260749-9
-      system: http://loinc.org
-    - code: LP41453-9
-      system: http://loinc.org
-    - code: LP67728-3
-      system: http://loinc.org
-    - code: LP68019-6
-      system: http://loinc.org
-    - code: LP45480-8
-      system: http://loinc.org
-    - code: LP383819-2
-      system: http://loinc.org
-    - code: LP67726-7
-      system: http://loinc.org
-    - code: LP255982-3
-      system: http://loinc.org
-    - code: LP67862-0
-      system: http://loinc.org
-    - code: LP256240-5
-      system: http://loinc.org
-    - code: LP255880-9
-      system: http://loinc.org
-    - code: LP62051-5
-      system: http://loinc.org
-    - code: LP145399-4
-      system: http://loinc.org
-    - code: LP256427-8
-      system: http://loinc.org
-    - code: LP105248-1
-      system: http://loinc.org
-    - code: LP49940-7
-      system: http://loinc.org
-    - code: LP67734-1
-      system: http://loinc.org
-    - code: LP256057-3
-      system: http://loinc.org
-    - code: LP256447-6
-      system: http://loinc.org
-    - code: LP256080-5
-      system: http://loinc.org
-    - code: LP260233-4
-      system: http://loinc.org
-    - code: LP256096-1
-      system: http://loinc.org
-    - code: LP264867-5
-      system: http://loinc.org
-    - code: LP67852-1
-      system: http://loinc.org
-    - code: LP69321-5
-      system: http://loinc.org
-    - code: LP382838-3
-      system: http://loinc.org
-    - code: LP67742-4
-      system: http://loinc.org
-    - code: LP260758-0
-      system: http://loinc.org
-    - code: LP256263-7
-      system: http://loinc.org
-    - code: LP260476-9
-      system: http://loinc.org
-    - code: LP68009-7
-      system: http://loinc.org
-    - code: LP67748-1
-      system: http://loinc.org
-    - code: LP67766-3
-      system: http://loinc.org
-    - code: LP145882-9
-      system: http://loinc.org
-    - code: LP258984-6
-      system: http://loinc.org
-    - code: LP256003-7
-      system: http://loinc.org
-    - code: LP383823-4
-      system: http://loinc.org
-    - code: LP67856-2
-      system: http://loinc.org
-    - code: LP256195-1
-      system: http://loinc.org
-    - code: LP256073-0
-      system: http://loinc.org
-    - code: LP67672-3
-      system: http://loinc.org
-    - code: LP102467-0
-      system: http://loinc.org
-    - code: LP67848-9
-      system: http://loinc.org
-    - code: LP42853-9
-      system: http://loinc.org
-    - code: LP383817-6
-      system: http://loinc.org
-    - code: LP105236-6
-      system: http://loinc.org
-    - code: LP260268-0
-      system: http://loinc.org
-    - code: LP68007-1
-      system: http://loinc.org
-    - code: LP204067-5
-      system: http://loinc.org
-    - code: LP256225-6
-      system: http://loinc.org
-    - code: LP67872-9
-      system: http://loinc.org
-    - code: LP383815-0
-      system: http://loinc.org
-    - code: LP256203-3
-      system: http://loinc.org
-    - code: LP256286-8
-      system: http://loinc.org
-    - code: LP45313-1
-      system: http://loinc.org
-    - code: LP49939-9
-      system: http://loinc.org
-    - code: LP67840-6
-      system: http://loinc.org
-    - code: LP256129-0
-      system: http://loinc.org
-    - code: LP68013-9
-      system: http://loinc.org
-    - code: LP216077-0
-      system: http://loinc.org
-    - code: LP260779-6
-      system: http://loinc.org
-    - code: LP44842-0
-      system: http://loinc.org
-    - code: LP67846-3
-      system: http://loinc.org
-    - code: LP260787-9
-      system: http://loinc.org
-    - code: LP67844-8
-      system: http://loinc.org
-    - code: LP44806-5
-      system: http://loinc.org
-    - code: LP44862-8
-      system: http://loinc.org
-    - code: LP43730-8
-      system: http://loinc.org
-    - code: LP259001-8
-      system: http://loinc.org
-    - code: LP43342-2
-      system: http://loinc.org
-    - code: LP256169-6
-      system: http://loinc.org
-    - code: LP124882-4
-      system: http://loinc.org
-    - code: LP50240-8
-      system: http://loinc.org
-    - code: LP255831-2
-      system: http://loinc.org
-    - code: LP264608-3
-      system: http://loinc.org
-    - code: LP256015-1
-      system: http://loinc.org
-    - code: LP67732-5
-      system: http://loinc.org
-    - code: LP67866-1
-      system: http://loinc.org
-    - code: LP45520-1
-      system: http://loinc.org
-    - code: LP67730-9
-      system: http://loinc.org
-    - code: LP260378-7
-      system: http://loinc.org
-    - code: LP105240-8
-      system: http://loinc.org
-    - code: LP45656-3
-      system: http://loinc.org
-    - code: LP256036-7
-      system: http://loinc.org
-    - code: LP89516-6
-      system: http://loinc.org
-    - code: LP255947-6
-      system: http://loinc.org
-    - code: LP124868-3
-      system: http://loinc.org
-    - code: LP44846-1
-      system: http://loinc.org
-    - code: LP145367-1
-      system: http://loinc.org
-    - code: LP67854-7
-      system: http://loinc.org
-    - code: LP383821-8
-      system: http://loinc.org
-    - code: LP124884-0
-      system: http://loinc.org
-    - code: LP145358-0
-      system: http://loinc.org
-    - code: LP260829-9
-      system: http://loinc.org
-    - code: LP179771-3
-      system: http://loinc.org
-    - code: LP65475-3
-      system: http://loinc.org
-    - code: LP260755-6
-      system: http://loinc.org
-    - code: LP256023-5
-      system: http://loinc.org
-    - code: LP43473-5
-      system: http://loinc.org
-    - code: LP47197-6
-      system: http://loinc.org
-    - code: LP62240-4
-      system: http://loinc.org
-    - code: LP145363-0
-      system: http://loinc.org
-    - code: LP145354-9
-      system: http://loinc.org
-    - code: LP61918-6
-      system: http://loinc.org
-    - code: LP44681-2
-      system: http://loinc.org
-    - code: LP255815-5
-      system: http://loinc.org
-    - code: LP124872-5
-      system: http://loinc.org
-    - code: LP68015-4
-      system: http://loinc.org
-    - code: LP68011-3
-      system: http://loinc.org
-    - code: LP67836-4
-      system: http://loinc.org
-    - code: LP67744-0
-      system: http://loinc.org
-    - code: LP124864-2
-      system: http://loinc.org
-    - code: LP48138-9
-      system: http://loinc.org
-    - code: LP265225-5
-      system: http://loinc.org
-    - code: LP42067-6
-      system: http://loinc.org
-    - code: LP190320-4
-      system: http://loinc.org
-    - code: LP41768-0
-      system: http://loinc.org
-    - code: LP102447-2
-      system: http://loinc.org
-    - code: LP46089-6
-      system: http://loinc.org
-    - code: LP256065-6
-      system: http://loinc.org
-    - code: LP67828-1
-      system: http://loinc.org
-    - code: LP145387-9
-      system: http://loinc.org
-    - code: LP145291-3
-      system: http://loinc.org
-    - code: LP256211-6
-      system: http://loinc.org
-    - code: LP97386-4
-      system: http://loinc.org
-    - code: LP67842-2
-      system: http://loinc.org
-    - code: LP255853-6
-      system: http://loinc.org
-    - code: LP255810-6
-      system: http://loinc.org
-    - code: LP145346-5
-      system: http://loinc.org
-    - code: LP260849-7
-      system: http://loinc.org
-    - code: LP255990-6
-      system: http://loinc.org
-    - code: LP256463-3
-      system: http://loinc.org
-    - code: LP67746-5
-      system: http://loinc.org
-    - code: LP95098-7
-      system: http://loinc.org
-    - code: LP44686-1
-      system: http://loinc.org
-    - code: LP256318-9
-      system: http://loinc.org
-    - code: LP68021-2
-      system: http://loinc.org
-    - code: LP256252-0
-      system: http://loinc.org
-    - code: LP51247-2
-      system: http://loinc.org
-    - code: LP256182-9
-      system: http://loinc.org
-    - code: LP124880-8
-      system: http://loinc.org
-    - code: LP260762-2
-      system: http://loinc.org
-    - code: LP67764-8
-      system: http://loinc.org
-    - code: LP421220-7
-      system: http://loinc.org
-    - code: LP204334-9
-      system: http://loinc.org
-    - code: LP67838-0
-      system: http://loinc.org
-    - code: LP64881-3
-      system: http://loinc.org
-    - code: LP215487-2
-      system: http://loinc.org
-    - code: LP54096-0
-      system: http://loinc.org
-    - code: LP67830-7
-      system: http://loinc.org
-    - code: LP67760-6
-      system: http://loinc.org
-    - code: LP44782-8
-      system: http://loinc.org
-    - code: LP67870-3
-      system: http://loinc.org
-    - code: LP44965-9
-      system: http://loinc.org
-    Observation: *id007
-  AgeStudyStart:
-    Patient:
-    - code: 21112-8
-      system: http://loinc.org
-  AgeStudyStart2:
-    Patient:
-    - code: 21112-8
-      system: http://loinc.org
-  Albumin:
-    Measurement: &id010
-    - code: LP46230-6
-      system: http://loinc.org
-    - code: LP46234-8
-      system: http://loinc.org
-    - code: LP46251-2
-      system: http://loinc.org
-    - code: LP43038-6
-      system: http://loinc.org
-    - code: LP104917-2
-      system: http://loinc.org
-    Observation: *id010
-  AlbuterolRx:
-    Drug:
-    - code: '435'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  AlcoholDependenceDx:
-    Condition:
-    - code: '303.93'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '303.92'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '303.9'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: F10.2
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '303.90'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '303.91'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '303'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-  AlkalinePhosphatase:
-    Measurement: &id013
-    - code: LP42182-3
-      system: http://loinc.org
-    - code: LP45609-2
-      system: http://loinc.org
-    - code: LP43493-3
-      system: http://loinc.org
-    Observation: *id013
-  AlopeciaDx:
-    Condition:
-    - code: F55
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: Y91
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: X65
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: K70
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: F04
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: Z99
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: Z74
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: F05
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: T51
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: X45
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: F10
-      system: http://hl7.org/fhir/sid/icd-10-cm
-  AndrostenedioneRx:
-    Drug:
+  Albuterol:
+    MedicationRequest:
+    - code: '746763'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '352051'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '901483'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '901484'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '745752'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1649961'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '801095'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '859088'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '197318'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '359144'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '197316'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '745679'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '801092'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1649560'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '755497'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '247044'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '252298'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '245314'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '359145'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '392321'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '104514'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '247840'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '307779'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '351137'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '630208'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '351136'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+  Androstenedione:
+    MedicationRequest:
     - code: '784'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  AntibioticsRx:
-    Drug:
-    - code: '794206'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '367294'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '616929'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '562699'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '261122'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '367322'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '806364'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '261681'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '567340'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '574233'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '206519'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '574460'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '806329'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '365323'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1427295'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '542466'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '215326'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '308509'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '573496'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1427297'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1359359'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '574234'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '367297'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '574366'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '806366'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '630950'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '575482'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '846041'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '616919'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1172234'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1166027'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '806330'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '351575'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '206509'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '367356'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '366132'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '260450'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '846040'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '209773'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '261463'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '209769'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1427298'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1172229'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '806331'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '616928'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '261228'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '575481'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '846039'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '262104'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '614842'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1427296'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '362139'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '616920'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '806365'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '542469'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1184422'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '213625'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1427294'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '806332'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '630952'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '261226'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '806363'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '570349'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '542468'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '542470'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1304960'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '570353'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '542467'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1359358'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '218506'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '220476'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '574458'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '215658'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '367321'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  AntihistamineRx:
-    Drug:
-    - code: '565031'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1166035'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1366500'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '385954'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '569478'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '208686'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '566348'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '844595'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '152652'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '370179'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '205442'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '208734'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1172245'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '215141'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '569454'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '208803'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '569397'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1366499'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1366498'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1166037'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1088360'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '569394'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '570163'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '227700'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '364121'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '573784'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1366496'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '997003'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '369190'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1088358'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '208775'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '152716'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '368686'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '569349'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '350716'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1366497'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '366261'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '208685'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '217058'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '385953'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1166034'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '213939'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '385927'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '844471'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1088357'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '366260'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '565002'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '226137'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1166036'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '366886'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '364124'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '215330'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1366495'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '208829'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '215329'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '209574'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '569348'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '309247'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '370296'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1088359'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '208731'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '215332'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  AnxietyDx:
-    Condition:
-    - code: F41
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: F40
-      system: http://hl7.org/fhir/sid/icd-10-cm
-  ArformoterolRx:
-    Drug:
-    - code: '784'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+  Arformoterol:
+    MedicationRequest:
+    - code: '695935'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '668956'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+  Beclomethasone:
+    MedicationRequest:
+    - code: '1797917'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '966538'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '966542'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1490668'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1490774'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1998772'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1998774'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1797902'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1797921'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '966536'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '966540'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '966629'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '966635'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '966675'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '966765'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1490666'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1490773'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1797900'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1797910'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1797920'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1797926'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1998771'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1998773'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '562655'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+  Budesonide:
+    MedicationRequest:
+    - code: '616817'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '616819'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '616830'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '966524'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '966529'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1797931'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1244215'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1366556'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1596778'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1797929'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '247551'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '141917'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '247047'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '247048'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1244214'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '247042'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '247691'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '247481'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '349094'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '351109'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '153173'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '252559'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '966522'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '966527'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1366550'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1596779'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '250648'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+  Cetirizine:
+    MedicationRequest:
+    - code: '1086794'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1087169'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1549337'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1014583'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1011485'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1014677'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1020021'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1020022'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1020023'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1020026'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1991946'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1020017'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1014573'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1014577'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1014580'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1020019'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1020025'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1428983'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1482533'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1011482'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1014571'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1014643'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1014673'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1014674'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1014675'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1014676'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1014678'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+  Ciclesonide:
+    MedicationRequest:
+    - code: '799037'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '799040'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1797843'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1797840'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '799034'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '799038'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1797841'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1797838'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+  Citalopram:
+    MedicationRequest:
+    - code: '221078'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '2556'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+  Diphenhydramine:
+    MedicationRequest:
+    - code: '1233692'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1052466'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1052469'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1053142'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1085968'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1086767'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1087030'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1087037'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1092093'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1233662'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1090076'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1090078'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1090456'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1092416'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1092428'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1092454'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1093102'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1093113'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1483617'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1488218'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1648369'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1789738'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1297952'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1093222'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1094451'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1094718'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1099876'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1101111'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1111095'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1112713'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1116532'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1146883'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1086857'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1086986'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1049632'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1049725'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1049882'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1049901'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1049908'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1049910'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '882506'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1020479'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1092382'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1092421'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1092422'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1092424'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1092446'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1092447'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1092456'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1092633'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1093377'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1094188'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1232646'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1297519'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1094214'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1117539'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1087609'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1092351'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1092365'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1092464'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1094338'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1094393'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1086859'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1092375'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1092378'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1093077'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1093085'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1092466'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1297412'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1052645'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1297564'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1111764'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1293717'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1294591'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1294592'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1088465'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '901818'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1294350'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1086723'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1088846'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1294196'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1294199'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1294596'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1297516'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1049176'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1297949'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1094385'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1294194'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1190450'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '895666'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '902633'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1314976'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1363475'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1437774'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1549559'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1658757'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1420997'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1437306'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1437725'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1488693'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1488702'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1494599'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1535603'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1535708'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1536447'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1550963'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1593116'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1992526'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1608065'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1609070'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1648227'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1724486'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1789746'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1235322'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1235380'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1248356'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1248360'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1250909'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1241621'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1245403'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1297575'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1310481'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1310485'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1926557'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1919073'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1922727'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1092461'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1926221'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1020477'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1085945'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1087607'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1093075'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1093083'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1298288'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '2059045'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1049091'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1049098'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1049289'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1049633'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1049723'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1049880'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1049884'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1049888'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1049898'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1050077'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1050080'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1050385'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1053138'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1087026'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1092373'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1145951'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1375932'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1420992'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1535702'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1653139'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1723740'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1723776'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1232642'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1235317'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1236048'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1245398'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1248354'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1251836'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1292097'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1292313'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1292321'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1294589'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1294614'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1297514'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1298287'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1298467'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1942340'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1996098'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1049900'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1049904'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1052462'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1052467'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '882504'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1233575'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1251776'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1294348'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1294567'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1099872'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '895664'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1593110'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1291868'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1292323'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1297947'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1291991'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1046751'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1049630'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1049909'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1052928'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1092189'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1092398'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1093098'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1117245'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1147619'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '901814'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1550957'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1659175'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1659960'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1291711'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1294557'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1297517'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1312784'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '2046528'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1293964'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1049906'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1086720'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1094131'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1251783'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1294594'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1294602'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1291867'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1664631'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1664658'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1789740'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1190448'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1294370'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1294372'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1537194'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1537340'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1809636'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1249715'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1249717'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1250907'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1291961'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1294322'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1294365'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1294366'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1294376'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1297410'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1297950'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1298348'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1310475'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1310483'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+  Duloxetine:
+    MedicationRequest:
+    - code: '476250'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '72625'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+  Escitalopram:
+    MedicationRequest:
+    - code: '321988'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '353108'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+  Estradiol:
+    MedicationRequest:
+    - code: '4083'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '24395'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '405416'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '60661'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+  Estrogen:
+    MedicationRequest:
+    - code: '4100'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+  Estropipate:
+    MedicationRequest:
+    - code: '33747'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+  Fexofenadine:
+    MedicationRequest:
+    - code: '1116528'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1670344'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1192737'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '997512'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '997515'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '997422'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '997484'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '997493'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '997502'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1488053'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1190331'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1190334'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '997406'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '997415'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '997420'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '997482'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '997488'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '997491'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '997494'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '997501'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '997550'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+  Flunisolide:
+    MedicationRequest:
+    - code: '1245275'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1245277'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '828927'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1245270'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1245276'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1797863'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+  Fluoxetine:
+    MedicationRequest:
+    - code: '227224'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '4493'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+  Fluticasone:
+    MedicationRequest:
+    - code: '1945044'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1945048'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1872967'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '895697'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '895989'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '895991'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1148646'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '895996'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '896001'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '896006'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '896019'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '896023'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '896027'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '896031'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1797892'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1797933'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1539891'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1539893'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1648785'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1648789'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1547660'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1547664'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1547668'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1547672'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '2045382'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1797919'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1797909'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1797935'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1797849'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1941536'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1941607'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1941613'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1946589'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1869712'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1996212'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1148643'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1148645'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '895487'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '895987'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '895990'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '895994'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '895999'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '896004'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '896018'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '896021'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '896025'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '896030'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '896294'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '896300'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1797847'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1797890'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1797907'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1945039'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1945047'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1424889'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1424899'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1547658'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1547663'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1547666'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1547671'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1648783'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1648788'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '2045377'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1941531'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1941605'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1941611'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1946583'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+  Formoterol:
+    MedicationRequest:
+    - code: '1660934'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1660938'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1246310'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1246313'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1660937'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1246311'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1660933'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1246308'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1246290'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1246306'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1246315'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1246317'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '409732'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '597829'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1246288'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1246304'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1246314'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1246316'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1246328'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1246321'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1790644'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1790639'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1246326'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1246319'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+  Goserelin:
+    MedicationRequest:
+    - code: '50610'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '203146'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+  Histrelin:
+    MedicationRequest:
+    - code: '50975'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1294622'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+  Hydroxyzine:
+    MedicationRequest:
+    - code: '5553'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '154987'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '203182'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+  Indacaterol:
+    MedicationRequest:
+    - code: '1114333'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1720953'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1546335'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1720948'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1114329'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+  Ipratropium:
+    MedicationRequest:
+    - code: '836366'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1190225'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1437704'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '836286'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1190220'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1362214'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '108889'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1437702'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1945738'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '836368'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1797835'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1797845'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '107667'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '836343'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '836344'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '836347'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '836354'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '836356'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '836358'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '836361'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1797833'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1797844'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+  Leuprolide:
+    MedicationRequest:
+    - code: '42375'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '203217'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+  Medroxyprogresterone:
+    MedicationRequest:
+    - code: '6691'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1000112'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+  Mepolizumab:
+    MedicationRequest:
+    - code: '1720606'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1720601'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+  Metaproterenol:
+    MedicationRequest:
+    - code: '979316'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '979379'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '979409'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '979415'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '979444'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '979475'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '979489'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '991632'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+  Metformin:
+    MedicationRequest:
+    - code: '1992685'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1992693'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1992698'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1992701'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1862685'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1862691'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1862695'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1862700'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1043563'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1043570'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1043578'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '860975'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '860981'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '861004'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '861007'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '861010'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '861021'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '861025'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '861731'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '861736'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '861740'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '861743'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '861748'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '861753'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '861760'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '861763'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '861769'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '861783'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '861787'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '861790'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '861795'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '861806'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '861816'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '861819'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '861822'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '899989'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '899996'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1368385'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1368392'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1545150'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1545157'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1545161'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1545164'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1593058'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1593068'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1593070'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1593072'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1664315'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1664323'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1664326'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1665367'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1796089'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1796094'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1807888'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1807894'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1807915'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1807917'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1810997'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1811002'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1811006'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1811010'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1243020'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1243027'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1243034'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1243827'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1243842'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1243846'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1940496'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+  Mometasone:
+    MedicationRequest:
+    - code: '1148523'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1797870'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '92582'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '92583'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '92584'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '746804'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '746811'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '746813'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '746815'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '790280'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '790284'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1536144'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1536148'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1606026'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1666829'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1734665'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1995988'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1148519'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '151029'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '151030'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '311753'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1797865'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1536147'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1536142'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1606021'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '746803'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '746810'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '746812'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '746814'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '790278'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '790283'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1995983'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+  Nandrolone:
+    MedicationRequest:
+    - code: '7244'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '31494'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+  Omalizumab:
+    MedicationRequest:
+    - code: '2058943'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '2058949'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1657209'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+  Paroxetine:
+    MedicationRequest:
+    - code: '32937'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '235830'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '436212'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+  Prasterone:
+    MedicationRequest:
+    - code: '3143'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+  Prednisone:
+    MedicationRequest:
+    - code: '763179'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '763181'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '795858'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '763185'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '763183'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '206837'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '206954'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '206988'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '206997'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '207048'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1303131'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1303134'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1303137'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '198146'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '198148'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '205301'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '312615'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '312617'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '312687'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1303135'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '198144'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '198145'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1303125'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1303132'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+  Progesterone:
+    MedicationRequest:
+    - code: '8727'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+  Propranolol:
+    MedicationRequest:
+    - code: '8787'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '82084'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+  Salmeterol:
+    MedicationRequest:
+    - code: '896165'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '896185'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '896190'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '896212'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '896222'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '896229'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '896235'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '896237'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '896243'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '896245'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '896271'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '896273'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1918199'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1918205'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1918211'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '896161'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '896184'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '896186'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '896209'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '896218'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '896228'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '896231'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '896236'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '896239'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '896244'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '896267'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '896272'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1918194'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1918203'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1918209'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '866047'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '866049'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '312897'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '866044'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '866048'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+  Sertraline:
+    MedicationRequest:
+    - code: '155137'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '36437'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+  Tamoxifen:
+    MedicationRequest:
+    - code: '10324'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '40137'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+  Testosterone:
+    MedicationRequest:
+    - code: '10379'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '10382'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '37858'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+  Theophylline:
+    MedicationRequest:
+    - code: '208266'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '208278'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '313277'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '756226'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '844590'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '844591'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '844813'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '844829'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '844831'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '844832'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '208262'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '108870'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1115987'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '1115993'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '198255'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '198256'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '198257'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '198258'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '198261'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '198262'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '198263'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '237178'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '313263'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '313280'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '313284'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '313285'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '313297'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '313298'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '313302'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '313304'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '313310'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '314240'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '314241'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '317769'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '348472'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '425539'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '701712'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '198260'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '198264'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '199331'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '313264'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '313272'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '313291'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '317831'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '346574'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '411090'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '706550'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '313306'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '199809'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '434104'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '104553'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '346733'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+  Trazodone:
+    MedicationRequest:
+    - code: '82112'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '10737'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+  Triptorelin:
+    MedicationRequest:
+    - code: '38782'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '236538'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+    - code: '338529'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
+  Venlafaxine:
+    MedicationRequest:
+    - code: '39786'
+      system: http://www.nlm.nih.gov/research/umls/rxnorm 
   AsthmaDx:
     Condition:
-    - code: J45
-      system: http://hl7.org/fhir/sid/icd-10-cm
-  AutismDx:
-    Condition:
-    - code: F84.1
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: F84.0
-      system: http://hl7.org/fhir/sid/icd-9-cm
-  AzithromycinRx:
-    Drug:
-    - code: '18631'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  AztreonamRx:
-    Drug:
-    - code: '1272'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  BeclomethasoneRx:
-    Drug:
-    - code: '1347'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  Bilirubin:
-    Measurement: &id016
-    - code: LP43561-7
-      system: http://loinc.org
-    - code: LP157246-2
-      system: http://loinc.org
-    Observation: *id016
-  BronchiectasisDx:
-    Condition:
-    - code: J47
-      system: http://hl7.org/fhir/sid/icd-10-cm
-  BudesonideRx:
-    Drug:
-    - code: '19831'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  CervicalCancerDx:
-    Condition:
-    - code: C53
-      system: http://hl7.org/fhir/sid/icd-10-cm
-  CetirizineRx:
-    Drug:
-    - code: '20610'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  ChronicKidneyDiseaseDx:
-    Condition:
-    - code: N18
-      system: http://hl7.org/fhir/sid/icd-10-cm
-  ChronicNasalCongestionDx:
-    Condition:
-    - code: R09.81
-      system: http://hl7.org/fhir/sid/icd-10-cm
-  ChronicObstructivePulmonaryDiseaseDx:
-    Condition:
-    - code: J44
-      system: http://hl7.org/fhir/sid/icd-10-cm
-  ChronicSinusitisDx:
-    Condition:
-    - code: J32
-      system: http://hl7.org/fhir/sid/icd-10-cm
-  CiclesonideRx:
-    Drug:
-    - code: '274964'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  CitalopramRx:
-    Drug:
-    - code: '2556'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  ClarithromycinRx:
-    Drug:
-    - code: '21212'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  CoughDx:
-    Condition:
-    - code: A37
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: R05
-      system: http://hl7.org/fhir/sid/icd-10-cm
+      - system: http://hl7.org/fhir/sid/icd-9-cm
+        code: "(493[.]).*"
+        code_is_regex: true
+      - system: http://hl7.org/fhir/sid/icd-10-cm
+        code: "(J45[.]).*"
+        code_is_regex: true
   CroupDx:
     Condition:
-    - code: J05
-      system: http://hl7.org/fhir/sid/icd-10-cm
-  CysticFibrosisDx:
-    Condition:
-    - code: P75
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: E84
-      system: http://hl7.org/fhir/sid/icd-10-cm
-  DepressionDx:
-    Condition:
-    - code: '296.30'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: F33.0
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '296.31'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '296.20'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: F33.3
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '301.12'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: F33.9
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '296.26'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '296.33'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '296.2'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '296.36'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '311'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '296.3'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: F41.2
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '296.24'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: F33
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '296.35'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '296.22'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '296.82'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: F33.1
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: F33.2
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '296.32'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: F33.4
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '296.21'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: F92.0
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '296.23'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '296.25'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '296.34'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-  DexamethasoneRx:
-    Drug:
-    - code: '1154538'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1156195'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1154242'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1376061'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1008217'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '748083'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '332984'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '244488'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '371722'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '438884'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '22694'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '2108018'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '566574'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '880656'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '377280'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '371721'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '373027'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1008930'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '371725'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '854177'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '566601'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '48933'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '214478'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '317346'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '822000'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1007854'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '2108017'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '901648'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '815833'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '309691'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '377418'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1154533'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '216523'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1374391'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1089819'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '247484'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '361991'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '332981'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '378023'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '372476'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '376267'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '315777'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '371727'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '371729'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '2045403'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '371726'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '205702'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '364896'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '2378841'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '440626'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1375105'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '367263'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1009150'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '377316'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '329677'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '564044'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '818139'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1152768'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '335018'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '363845'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '363486'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '339981'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '235486'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '22690'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '757088'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '363216'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '333672'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '3265'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '438882'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '315778'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '103217'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '333673'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '371733'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1154539'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '821542'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '376196'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '688244'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '378593'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '371735'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '365690'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '813683'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '367274'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '377456'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '2108345'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1007423'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '438889'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '2286258'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '204510'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1086699'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '365689'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '309692'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1154075'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1154537'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1376064'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '438883'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '317629'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '566605'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '350217'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '465397'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '332983'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1007105'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '365842'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '854179'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '363679'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '369516'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '405942'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '329679'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '438701'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1007483'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '566608'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '315774'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '330802'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '362045'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '2286257'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '330437'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1086700'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '328765'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1154535'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1154532'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '371724'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '367272'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '309686'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '575233'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '3264'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '335766'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '371723'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '216524'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '364966'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '2261801'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '375798'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '331791'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '854176'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1153894'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '358548'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '365691'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '377672'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '323884'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '881354'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '315773'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '608583'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '452194'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '541473'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '363678'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1049385'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '332982'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '315779'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '452787'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '566603'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '438688'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '363482'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '388755'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '854180'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '757087'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '814504'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '451789'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '687304'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '440625'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '438702'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '350226'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1154254'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '438141'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '377671'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1007256'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '92335'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '343643'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '451790'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '315775'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '373028'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1154256'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '2045407'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1154536'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1812094'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1154530'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '566593'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '820465'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '447036'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '328266'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '329678'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1812073'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '823322'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1376057'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '371730'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '369461'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '446662'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '371728'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '393151'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '315776'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '379385'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '349879'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1154531'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '376210'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '328743'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '345816'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '854175'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '883815'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1009387'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '309678'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '438872'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '335274'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '438885'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  DiabetesDx:
-    Condition:
-    - code: E11
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: E14
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: O24
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: E12
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: E10
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: E13
-      system: http://hl7.org/fhir/sid/icd-10-cm
-  DiphenhydramineRx:
-    Drug:
-    - code: '485333'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '3498'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  DrugDependenceDx:
-    Condition:
-    - code: '304.83'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '304.82'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '648.31'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '304.62'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '304.8'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '304.92'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '304.81'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '304.63'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '304.91'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '304.73'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '304.72'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '304.70'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '304.93'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '304.9'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '648.33'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '304'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '648.30'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '304.7'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '304.6'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '648.3'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '304.71'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '304.80'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '304.61'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '648.34'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '304.90'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '648.32'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '304.60'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-  DuloxetineRx:
-    Drug:
-    - code: '72625'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  EndometriosisDx:
-    Condition:
-    - code: N80
-      system: http://hl7.org/fhir/sid/icd-10-cm
-  EscitalopramRx:
-    Drug:
-    - code: '321988'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  EstradiolRx:
-    Drug:
-    - code: '24384'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '483167'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '4083'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '4124'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  EstrogenRx:
-    Drug:
-    - code: '4099'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '253166'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '214549'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '4100'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '618365'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  EstropipateRx:
-    Drug:
-    - code: '33747'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  Ethnicity_UNC:
-    Patient:
-    - code: 2135-2
-      system: http://terminology.hl7.org/ValueSet/v3-Ethnicity
-    - code: 2186-5
-      system: http://terminology.hl7.org/ValueSet/v3-Ethnicity
-  FEV1:
-    Measurement: &id019
-    - code: 43258-3
-      system: http://loinc.org
-    - code: 19926-5
-      system: http://loinc.org
-    - code: 43257-5
-      system: http://loinc.org
-    - code: 43261-7
-      system: http://loinc.org
-    - code: 64030-0
-      system: http://loinc.org
-    - code: 20151-7
-      system: http://loinc.org
-    - code: 43259-1
-      system: http://loinc.org
-    - code: LP115580-5
-      system: http://loinc.org
-    - code: 65657-9
-      system: http://loinc.org
-    - code: 69984-3
-      system: http://loinc.org
-    - code: 65658-7
-      system: http://loinc.org
-    - code: 69970-2
-      system: http://loinc.org
-    - code: 20150-9
-      system: http://loinc.org
-    - code: 43255-9
-      system: http://loinc.org
-    - code: LP115584-7
-      system: http://loinc.org
-    - code: 20153-3
-      system: http://loinc.org
-    - code: 64028-4
-      system: http://loinc.org
-    - code: 20155-8
-      system: http://loinc.org
-    - code: 43254-2
-      system: http://loinc.org
-    - code: 20154-1
-      system: http://loinc.org
-    - code: 43263-3
-      system: http://loinc.org
-    - code: 69983-5
-      system: http://loinc.org
-    - code: 43260-9
-      system: http://loinc.org
-    - code: 43256-7
-      system: http://loinc.org
-    - code: 64026-8
-      system: http://loinc.org
-    - code: 20149-1
-      system: http://loinc.org
-    - code: 43253-4
-      system: http://loinc.org
-    - code: 43262-5
-      system: http://loinc.org
-    - code: 20156-6
-      system: http://loinc.org
-    - code: 20157-4
-      system: http://loinc.org
-    - code: 19925-7
-      system: http://loinc.org
-    - code: 20152-5
-      system: http://loinc.org
-    - code: LP115582-1
-      system: http://loinc.org
-    Observation: *id019
-  FEV1FVC:
-    Measurement: &id020
-    - code: 65657-9
-      system: http://loinc.org
-    - code: 19926-5
-      system: http://loinc.org
-    - code: 69984-3
-      system: http://loinc.org
-    - code: 69970-2
-      system: http://loinc.org
-    - code: 19925-7
-      system: http://loinc.org
-    Observation: *id020
-  FVC:
-    Measurement: &id025
-    - code: 19869-7
-      system: http://loinc.org
-    - code: 19874-7
-      system: http://loinc.org
-    - code: LP309006-7
-      system: http://loinc.org
-    - code: 64027-6
-      system: http://loinc.org
-    - code: LP404754-6
-      system: http://loinc.org
-    - code: 19876-2
-      system: http://loinc.org
-    - code: LP145617-9
-      system: http://loinc.org
-    - code: 64029-2
-      system: http://loinc.org
-    - code: LP404755-3
-      system: http://loinc.org
-    - code: LP115583-9
-      system: http://loinc.org
-    - code: 19877-0
-      system: http://loinc.org
-    - code: LP408947-2
-      system: http://loinc.org
-    - code: LP408945-6
-      system: http://loinc.org
-    - code: LP72220-4
-      system: http://loinc.org
-    - code: 19870-5
-      system: http://loinc.org
-    - code: LP286043-7
-      system: http://loinc.org
-    - code: LP287377-8
-      system: http://loinc.org
-    - code: 19868-9
-      system: http://loinc.org
-    - code: LP308829-3
-      system: http://loinc.org
-    - code: LP115581-3
-      system: http://loinc.org
-    - code: 19875-4
-      system: http://loinc.org
-    - code: LP308830-1
-      system: http://loinc.org
-    Observation: *id025
-  FailureToThriveDx:
-    Condition:
-    - code: '783.7'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '779.34'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '783.41'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-  Fever:
-    Condition:
-    - code: A96
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: A99
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: A75
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: A94
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: A77
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: I00
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: A38
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: A78
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: A95
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: R50
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: A90
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: A91
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: I01
-      system: http://hl7.org/fhir/sid/icd-10-cm
-  FexofenadineRx:
-    Drug:
-    - code: '87636'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  FibromyalgiaDx:
-    Condition:
-    - code: M79.74
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: M79.71
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: M79.75
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: M79.79
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: M79.76
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: M79.78
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: M79.73
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: M79.72
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: M79.7
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: M79.77
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: M79.70
-      system: http://hl7.org/fhir/sid/icd-9-cm
-  FlunisolideRx:
-    Drug:
-    - code: '25120'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  FluoxetineRx:
-    Drug:
-    - code: '4493'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  FluticasoneRx:
-    Drug:
-    - code: '41126'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  FormoterolRx:
-    Drug:
-    - code: '25255'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  GlucoseToleranceTest:
-    Measurement: &id028
-    - code: LP387240-7
-      system: http://loinc.org
-    - code: LP387246-4
-      system: http://loinc.org
-    - code: LP387198-7
-      system: http://loinc.org
-    - code: LP387243-1
-      system: http://loinc.org
-    - code: LP417167-6
-      system: http://loinc.org
-    - code: LP387242-3
-      system: http://loinc.org
-    - code: LP387241-5
-      system: http://loinc.org
-    - code: LP386945-2
-      system: http://loinc.org
-    - code: LP46694-3
-      system: http://loinc.org
-    - code: LP387245-6
-      system: http://loinc.org
-    - code: LP387244-9
-      system: http://loinc.org
-    - code: LP387239-9
-      system: http://loinc.org
-    Observation: *id028
-  GoserelinRx:
-    Drug:
-    - code: '50610'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  Hemoglobin:
-    Measurement: &id031
-    - code: LP53439-3
-      system: http://loinc.org
-    - code: LP53436-9
-      system: http://loinc.org
-    - code: LP94671-2
-      system: http://loinc.org
-    - code: LP51960-0
-      system: http://loinc.org
-    - code: LP100945-7
-      system: http://loinc.org
-    - code: LP42134-4
-      system: http://loinc.org
-    - code: LP53434-4
-      system: http://loinc.org
-    - code: LP69598-8
-      system: http://loinc.org
-    - code: LP53522-6
-      system: http://loinc.org
-    - code: LP216110-9
-      system: http://loinc.org
-    - code: LP53510-1
-      system: http://loinc.org
-    - code: LP66421-6
-      system: http://loinc.org
-    - code: LP66423-2
-      system: http://loinc.org
-    - code: LP53483-1
-      system: http://loinc.org
-    - code: LP53453-4
-      system: http://loinc.org
-    - code: LP53445-0
-      system: http://loinc.org
-    - code: LP45041-8
-      system: http://loinc.org
-    - code: LP53454-2
-      system: http://loinc.org
-    - code: LP48048-0
-      system: http://loinc.org
-    - code: LP70253-7
-      system: http://loinc.org
-    - code: LP53209-0
-      system: http://loinc.org
-    - code: LP53442-7
-      system: http://loinc.org
-    - code: LP45628-2
-      system: http://loinc.org
-    - code: LP50152-5
-      system: http://loinc.org
-    - code: LP53465-8
-      system: http://loinc.org
-    - code: LP66422-4
-      system: http://loinc.org
-    - code: LP53447-6
-      system: http://loinc.org
-    - code: LP43135-0
-      system: http://loinc.org
-    - code: LP50956-9
-      system: http://loinc.org
-    - code: LP94670-4
-      system: http://loinc.org
-    - code: LP53516-8
-      system: http://loinc.org
-    - code: LP94672-0
-      system: http://loinc.org
-    - code: LP50873-6
-      system: http://loinc.org
-    - code: LP49628-8
-      system: http://loinc.org
-    - code: LP53518-4
-      system: http://loinc.org
-    - code: LP48741-0
-      system: http://loinc.org
-    - code: LP50153-3
-      system: http://loinc.org
-    - code: LP53437-7
-      system: http://loinc.org
-    - code: LP50954-4
-      system: http://loinc.org
-    - code: LP49893-8
-      system: http://loinc.org
-    - code: LP53455-9
-      system: http://loinc.org
-    - code: LP94673-8
-      system: http://loinc.org
-    - code: LP53448-4
-      system: http://loinc.org
-    - code: LP70633-0
-      system: http://loinc.org
-    - code: LP53449-2
-      system: http://loinc.org
-    - code: LP53519-2
-      system: http://loinc.org
-    - code: LP40632-9
-      system: http://loinc.org
-    Observation: *id031
-  HistrelinRx:
-    Drug:
-    - code: '50975'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  HydroxyzineRx:
-    Drug:
-    - code: '5553'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  HypertensionDx:
-    Condition:
-    - code: O11
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: O10
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: O16
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: I10
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: O13
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: O12
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: I15
-      system: http://hl7.org/fhir/sid/icd-10-cm
-  IgE:
-    Measurement: &id034
-    - code: LP50617-7
-      system: http://loinc.org
-    - code: LP66628-6
-      system: http://loinc.org
-    - code: LP43239-0
-      system: http://loinc.org
-    - code: LP42944-6
-      system: http://loinc.org
-    Observation: *id034
-  IndacaterolRx:
-    Drug:
-    - code: '1114326'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  IpratropiumRx:
-    Drug:
-    - code: '7213'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  IvacaftorRx:
-    Drug:
-    - code: '1243041'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  KidneyCancerDx:
-    Condition:
-    - code: C64
-      system: http://hl7.org/fhir/sid/icd-10-cm
-  LeuprolideRx:
-    Drug:
-    - code: '42375'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  LungTransplant:
-    Procedure:
-    - code: '32851'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '1006038'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '1006041'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '32854'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '00580'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '33.52'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '32853'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '33.51'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '33.5'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '33935'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '32852'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '33.50'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-  MaleInfertilityDx:
-    Condition:
-    - code: N46
-      system: http://hl7.org/fhir/sid/icd-10-cm
-  MedroxyprogesteroneRx:
-    Drug:
-    - code: '486783'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '6691'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '29438'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  MenopauseDx:
-    Condition:
-    - code: E28.310
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: E28.31
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: '256.31'
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: '627.4'
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: N95.3
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: E28.319
-      system: http://hl7.org/fhir/sid/icd-10-cm
-  MepolizumabRx:
-    Drug:
-    - code: '1720597'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  MetaproterenolRx:
-    Drug:
-    - code: '7688'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  MetforminRx:
-    Drug:
-    - code: '6809'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  MethylprednisoneRx:
-    Drug:
-    - code: '6902'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '665792'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  MiddleEarDiseaseDx:
-    Condition:
-    - code: H74.1
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '385.1'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: '385.10'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-  MometasoneRx:
-    Drug:
-    - code: '108118'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  NandroloneRx:
-    Drug:
-    - code: '7244'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  NeonatalRespiratoryDistressDx:
-    Condition:
-    - code: P22
-      system: http://hl7.org/fhir/sid/icd-10-cm
-  NitricOxideRx:
-    Drug:
-    - code: '7442'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  ObesityDx:
-    Condition:
-    - code: E66
-      system: http://hl7.org/fhir/sid/icd-10-cm
-  OmalizumabRx:
-    Drug:
-    - code: '302379'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  OrkambiRx:
-    Drug:
-    - code: '1655934'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '1812470'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '2053519'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '2053512'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  OvarianCancerDx:
-    Condition:
-    - code: C56
-      system: http://hl7.org/fhir/sid/icd-10-cm
-  OvarianDysfunctionDx:
-    Condition:
-    - code: E28
-      system: http://hl7.org/fhir/sid/icd-10-cm
-  ParoxetineRx:
-    Drug:
-    - code: '32937'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '485039'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  PneumoniaDx:
-    Condition:
-    - code: J12
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: J15
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: J16
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: J17
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: J14
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: J13
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: P23
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: J18
-      system: http://hl7.org/fhir/sid/icd-10-cm
-  PrasteroneRx:
-    Drug:
-    - code: '1366963'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '3143'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  PrednisoneRx:
-    Drug:
-    - code: '8640'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  PregnancyDx:
-    Condition:
-    - code: O99
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: O08
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: O26
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: O23
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: O10
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: O20
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: O24
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: O98
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: O29
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: O21
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: O09
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: O94
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: O25
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: P01
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: P00
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: O48
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: O00
-      system: http://hl7.org/fhir/sid/icd-10-cm
-    - code: O22
-      system: http://hl7.org/fhir/sid/icd-10-cm
-  ProgesteroneRx:
-    Drug:
-    - code: '8727'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  PropranololRx:
-    Drug:
-    - code: '2105554'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '8787'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  ProstateCancerDx:
-    Condition:
-    - code: C61
-      system: http://hl7.org/fhir/sid/icd-10-cm
-  PulmozymeRx:
-    Drug:
-    - code: '337623'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  PulseOximetry:
-    Measurement: &id037
-    - code: LP409177-5
-      system: http://loinc.org
-    - code: LP97749-3
-      system: http://loinc.org
-    - code: LP409088-4
-      system: http://loinc.org
-    - code: LP386838-9
-      system: http://loinc.org
-    - code: LP415666-9
-      system: http://loinc.org
-    - code: LP415667-7
-      system: http://loinc.org
-    Observation: *id037
-  Race_UNC:
-    Patient:
-    - code: 2131-1
-      system: http://terminology.hl7.org/ValueSet/v3-Race
-    - code: 1002-5
-      system: http://terminology.hl7.org/ValueSet/v3-Race
-    - code: 2076-8
-      system: http://terminology.hl7.org/ValueSet/v3-Race
-    - code: 2106-3
-      system: http://terminology.hl7.org/ValueSet/v3-Race
-    - code: 2054-5
-      system: http://terminology.hl7.org/ValueSet/v3-Race
-    - code: 2028-9
-      system: http://terminology.hl7.org/ValueSet/v3-Race
+      - system: http://hl7.org/fhir/sid/icd-9-cm
+        code: "(464[.]).*"
+        code_is_regex: true
+      - system: http://hl7.org/fhir/sid/icd-10-cm
+        code: "(J05[.]).*"
+        code_is_regex: true
   ReactiveAirwayDx:
     Condition:
-    - code: J66
-      system: http://hl7.org/fhir/sid/icd-10-cm
-  SalmeterolRx:
-    Drug:
-    - code: '36117'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  SertralineRx:
-    Drug:
-    - code: '36437'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  Sex:
-    Patient:
-    - code: LP189793-5
-      system: http://loinc.org
-    - code: 76689-9
-      system: http://loinc.org
-  Sex2:
-    Patient:
-    - code: LP189793-5
-      system: http://loinc.org
-    - code: 76689-9
-      system: http://loinc.org
-  SitusInversusDx:
+      - system: http://hl7.org/fhir/sid/icd-9-cm
+        code: "(496[.]).*"
+        code_is_regex: true
+      - system: http://hl7.org/fhir/sid/icd-10-cm
+        code: "(J44[.]|J66[.]).*"
+        code_is_regex: true
+  CoughDx:
     Condition:
-    - code: '759.3'
-      system: http://hl7.org/fhir/sid/icd-9-cm
-    - code: Q89.3
-      system: http://hl7.org/fhir/sid/icd-9-cm
-  SputumCulture:
-    Measurement: &id040
-    - code: LP260677-2
-      system: http://loinc.org
-    - code: LP61737-0
-      system: http://loinc.org
-    - code: LP43777-9
-      system: http://loinc.org
-    - code: LP255924-5
-      system: http://loinc.org
-    - code: LP380047-3
-      system: http://loinc.org
-    - code: LP374548-8
-      system: http://loinc.org
-    - code: LP375267-4
-      system: http://loinc.org
-    - code: LP404183-8
-      system: http://loinc.org
-    - code: LP186337-4
-      system: http://loinc.org
-    - code: LP65834-1
-      system: http://loinc.org
-    - code: LP378694-6
-      system: http://loinc.org
-    - code: LP379022-9
-      system: http://loinc.org
-    - code: LP392772-2
-      system: http://loinc.org
-    - code: LP393828-1
-      system: http://loinc.org
-    - code: LP40853-1
-      system: http://loinc.org
-    - code: LP43437-0
-      system: http://loinc.org
-    - code: LP379846-1
-      system: http://loinc.org
-    - code: LP259744-3
-      system: http://loinc.org
-    - code: LP375211-2
-      system: http://loinc.org
-    - code: LP375336-7
-      system: http://loinc.org
-    - code: LP375821-8
-      system: http://loinc.org
-    - code: LP45631-6
-      system: http://loinc.org
-    - code: LP374963-9
-      system: http://loinc.org
-    - code: LP43465-1
-      system: http://loinc.org
-    - code: LP256542-4
-      system: http://loinc.org
-    - code: LP377079-1
-      system: http://loinc.org
-    - code: LP376431-5
-      system: http://loinc.org
-    - code: LP43459-4
-      system: http://loinc.org
-    - code: LP375687-3
-      system: http://loinc.org
-    - code: LP49768-2
-      system: http://loinc.org
-    - code: LP380295-8
-      system: http://loinc.org
-    - code: LP374896-1
-      system: http://loinc.org
-    - code: LP375120-5
-      system: http://loinc.org
-    - code: LP376162-6
-      system: http://loinc.org
-    - code: LP94526-8
-      system: http://loinc.org
-    - code: LP374552-0
-      system: http://loinc.org
-    - code: LP269654-2
-      system: http://loinc.org
-    - code: LP257831-0
-      system: http://loinc.org
-    - code: LP374976-1
-      system: http://loinc.org
-    - code: LP375557-8
-      system: http://loinc.org
-    - code: LP259287-3
-      system: http://loinc.org
-    - code: LP52894-0
-      system: http://loinc.org
-    - code: LP52893-2
-      system: http://loinc.org
-    - code: LP259730-2
-      system: http://loinc.org
-    - code: LP374969-6
-      system: http://loinc.org
-    - code: LP393483-5
-      system: http://loinc.org
-    - code: LP256570-5
-      system: http://loinc.org
-    - code: LP54205-7
-      system: http://loinc.org
-    - code: LP375234-4
-      system: http://loinc.org
-    - code: LP402091-5
-      system: http://loinc.org
-    - code: LP54355-0
-      system: http://loinc.org
-    - code: LP54318-8
-      system: http://loinc.org
-    - code: LP420349-5
-      system: http://loinc.org
-    - code: LP54079-6
-      system: http://loinc.org
-    - code: LP256614-1
-      system: http://loinc.org
-    - code: LP392786-2
-      system: http://loinc.org
-    - code: LP380102-6
-      system: http://loinc.org
-    - code: LP376134-5
-      system: http://loinc.org
-    - code: LP259738-5
-      system: http://loinc.org
-    - code: LP54402-0
-      system: http://loinc.org
-    - code: LP375752-5
-      system: http://loinc.org
-    - code: LP259803-7
-      system: http://loinc.org
-    - code: LP404358-6
-      system: http://loinc.org
-    - code: LP258673-5
-      system: http://loinc.org
-    - code: LP378578-1
-      system: http://loinc.org
-    - code: LP52033-5
-      system: http://loinc.org
-    - code: LP49791-4
-      system: http://loinc.org
-    - code: LP404153-1
-      system: http://loinc.org
-    - code: LP376489-3
-      system: http://loinc.org
-    - code: LP392733-4
-      system: http://loinc.org
-    - code: LP125273-5
-      system: http://loinc.org
-    - code: LP375340-9
-      system: http://loinc.org
-    - code: LP52558-1
-      system: http://loinc.org
-    - code: LP375229-4
-      system: http://loinc.org
-    - code: LP256590-3
-      system: http://loinc.org
-    - code: LP375691-5
-      system: http://loinc.org
-    - code: LP44811-5
-      system: http://loinc.org
-    - code: LP49784-9
-      system: http://loinc.org
-    - code: LP54291-7
-      system: http://loinc.org
-    - code: LP393486-8
-      system: http://loinc.org
-    - code: LP258328-6
-      system: http://loinc.org
-    - code: LP259823-5
-      system: http://loinc.org
-    - code: LP259772-4
-      system: http://loinc.org
-    - code: LP375829-1
-      system: http://loinc.org
-    - code: LP375129-6
-      system: http://loinc.org
-    - code: LP374727-8
-      system: http://loinc.org
-    - code: LP48825-1
-      system: http://loinc.org
-    - code: LP256537-4
-      system: http://loinc.org
-    - code: LP374185-9
-      system: http://loinc.org
-    - code: LP377005-6
-      system: http://loinc.org
-    - code: LP420350-3
-      system: http://loinc.org
-    - code: LP44727-3
-      system: http://loinc.org
-    - code: LP256846-9
-      system: http://loinc.org
-    - code: LP375114-8
-      system: http://loinc.org
-    - code: LP374821-9
-      system: http://loinc.org
-    - code: LP375255-9
-      system: http://loinc.org
-    - code: LP129050-3
-      system: http://loinc.org
-    - code: LP386737-3
-      system: http://loinc.org
-    - code: LP404288-5
-      system: http://loinc.org
-    - code: LP54178-6
-      system: http://loinc.org
-    - code: LP94529-2
-      system: http://loinc.org
-    - code: LP51498-1
-      system: http://loinc.org
-    - code: LP374655-1
-      system: http://loinc.org
-    - code: LP375791-3
-      system: http://loinc.org
-    - code: LP54334-5
-      system: http://loinc.org
-    - code: LP50397-6
-      system: http://loinc.org
-    - code: LP43448-7
-      system: http://loinc.org
-    - code: LP379784-4
-      system: http://loinc.org
-    - code: LP373744-4
-      system: http://loinc.org
-    - code: LP427566-7
-      system: http://loinc.org
-    - code: LP373800-4
-      system: http://loinc.org
-    - code: LP392809-2
-      system: http://loinc.org
-    - code: LP402081-6
-      system: http://loinc.org
-    - code: LP393843-0
-      system: http://loinc.org
-    - code: LP404391-7
-      system: http://loinc.org
-    - code: LP256580-4
-      system: http://loinc.org
-    - code: LP180481-6
-      system: http://loinc.org
-    - code: LP376161-8
-      system: http://loinc.org
-    - code: LP260541-0
-      system: http://loinc.org
-    - code: LP387804-0
-      system: http://loinc.org
-    - code: LP379833-9
-      system: http://loinc.org
-    - code: LP257825-2
-      system: http://loinc.org
-    - code: LP40614-7
-      system: http://loinc.org
-    - code: LP43383-6
-      system: http://loinc.org
-    - code: LP402067-5
-      system: http://loinc.org
-    - code: LP256698-4
-      system: http://loinc.org
-    - code: LP257833-6
-      system: http://loinc.org
-    - code: LP48827-7
-      system: http://loinc.org
-    - code: LP40964-6
-      system: http://loinc.org
-    - code: LP260474-4
-      system: http://loinc.org
-    - code: LP256689-3
-      system: http://loinc.org
-    - code: LP259787-2
-      system: http://loinc.org
-    - code: LP373980-4
-      system: http://loinc.org
-    - code: LP374465-5
-      system: http://loinc.org
-    - code: LP41777-1
-      system: http://loinc.org
-    - code: LP256596-0
-      system: http://loinc.org
-    - code: LP40963-8
-      system: http://loinc.org
-    - code: LP43403-2
-      system: http://loinc.org
-    - code: LP374541-3
-      system: http://loinc.org
-    - code: LP427588-1
-      system: http://loinc.org
-    - code: LP375219-5
-      system: http://loinc.org
-    - code: LP375958-8
-      system: http://loinc.org
-    - code: LP393321-7
-      system: http://loinc.org
-    - code: LP378579-9
-      system: http://loinc.org
-    - code: LP259786-4
-      system: http://loinc.org
-    - code: LP404347-9
-      system: http://loinc.org
-    - code: LP257900-3
-      system: http://loinc.org
-    - code: LP50626-8
-      system: http://loinc.org
-    - code: LP375007-4
-      system: http://loinc.org
-    - code: LP46746-1
-      system: http://loinc.org
-    - code: LP41594-0
-      system: http://loinc.org
-    - code: LP54354-3
-      system: http://loinc.org
-    - code: LP373745-1
-      system: http://loinc.org
-    - code: LP54303-0
-      system: http://loinc.org
-    - code: LP420348-7
-      system: http://loinc.org
-    - code: LP375568-5
-      system: http://loinc.org
-    - code: LP43267-1
-      system: http://loinc.org
-    - code: LP376475-2
-      system: http://loinc.org
-    - code: LP377224-3
-      system: http://loinc.org
-    - code: LP378657-3
-      system: http://loinc.org
-    - code: LP392617-9
-      system: http://loinc.org
-    - code: LP69928-7
-      system: http://loinc.org
-    - code: LP70271-9
-      system: http://loinc.org
-    - code: LP393008-0
-      system: http://loinc.org
-    Observation: *id040
-  TamoxifenRx:
-    Drug:
-    - code: '10324'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
+      - system: http://hl7.org/fhir/sid/icd-9-cm
+        code: "(786[.]).*"
+        code_is_regex: true
+      - system: http://hl7.org/fhir/sid/icd-10-cm
+        code: "(R05[.]).*"
+        code_is_regex: true
+  PneumoniaDx:
+    Condition:
+      - system: http://hl7.org/fhir/sid/icd-9-cm
+        code: "(48[1-6][.]).*"
+        code_is_regex: true
+      - system: http://hl7.org/fhir/sid/icd-10-cm
+        code: "(J1[2-8].).*"
+        code_is_regex: true
+  ObesityDx:
+    Condition:
+      - system: http://hl7.org/fhir/sid/icd-9-cm
+        code: "(278[.]).*"
+        code_is_regex: true
+      - system: http://hl7.org/fhir/sid/icd-10-cm
+        code: "(E66.[^3]).*"
+        code_is_regex: true
+  UterineCancerDx:
+    Condition:
+      - system: http://hl7.org/fhir/sid/icd-9-cm
+        code: "(179|182)[.].*"
+        code_is_regex: true
+      - system: http://hl7.org/fhir/sid/icd-10-cm
+        code: "(C55)[.].*"
+        code_is_regex: true
+  CervicalCancerDx:
+    Condition:
+      - system: http://hl7.org/fhir/sid/icd-9-cm
+        code: "(180)[.].*"
+        code_is_regex: true
+      - system: http://hl7.org/fhir/sid/icd-10-cm
+        code: "(C53)[.].*"
+        code_is_regex: true
+  OvarianCancerDx:
+    Condition:
+      - system: http://hl7.org/fhir/sid/icd-9-cm
+        code: "(183)[.].*"
+        code_is_regex: true
+      - system: http://hl7.org/fhir/sid/icd-10-cm
+        code: "(C56)[.].*"
+        code_is_regex: true
+  ProstateCancerDx:
+    Condition:
+      - system: http://hl7.org/fhir/sid/icd-9-cm
+        code: "(185)[.].*"
+        code_is_regex: true
+      - system: http://hl7.org/fhir/sid/icd-10-cm
+        code: "(C61)[.].*"
+        code_is_regex: true
   TesticularCancerDx:
     Condition:
-    - code: C62
-      system: http://hl7.org/fhir/sid/icd-10-cm
+      - system: http://hl7.org/fhir/sid/icd-9-cm
+        code: "(186)[.].*"
+        code_is_regex: true
+      - system: http://hl7.org/fhir/sid/icd-10-cm
+        code: "(C62)[.].*"
+        code_is_regex: true
+  KidneyCancerDx:
+    Condition:
+      - system: http://hl7.org/fhir/sid/icd-9-cm
+        code: "(189)[.].*"
+        code_is_regex: true
+      - system: http://hl7.org/fhir/sid/icd-10-cm
+        code: "(C64)[.].*"
+        code_is_regex: true
+  EndometriosisDx:
+    Condition:
+      - system: http://hl7.org/fhir/sid/icd-9-cm
+        code: "(617)[.].*"
+        code_is_regex: true
+      - system: http://hl7.org/fhir/sid/icd-10-cm
+        code: "(N80)[.].*"
+        code_is_regex: true
+  OvarianDysfunctionDx:
+    Condition:
+      - system: http://hl7.org/fhir/sid/icd-9-cm
+        code: "(256)[.].*"
+        code_is_regex: true
+      - system: http://hl7.org/fhir/sid/icd-10-cm
+        code: "(E28)[.].*"
+        code_is_regex: true
   TesticularDysfunctionDx:
     Condition:
-    - code: E29
-      system: http://hl7.org/fhir/sid/icd-10-cm
-  TestosteroneRx:
-    Drug:
-    - code: '37852'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '10379'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '37855'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  TheophyllineRx:
-    Drug:
-    - code: '10438'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  TobramycinRx:
-    Drug:
-    - code: '10627'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  TocilizumabRx:
-    Drug:
-    - code: '612865'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
+      - system: http://hl7.org/fhir/sid/icd-9-cm
+        code: "(257)[.].*"
+        code_is_regex: true
+      - system: http://hl7.org/fhir/sid/icd-10-cm
+        code: "(E29)[.].*"
+        code_is_regex: true
+  PregnancyDx:
+    Condition:
+      - system: http://hl7.org/fhir/sid/icd-9-cm
+        code: "(V22)[.].*"
+        code_is_regex: true
+      - system: http://hl7.org/fhir/sid/icd-10-cm
+        code: "(Z34)[.].*"
+        code_is_regex: true
+  MenopauseDx:
+    Condition:
+      - system: http://hl7.org/fhir/sid/icd-9-cm
+        code: "(627)[.].*"
+        code_is_regex: true
+      - system: http://hl7.org/fhir/sid/icd-10-cm
+        code: "(N95)[.].*"
+        code_is_regex: true
+  DiabetesDx:
+    Condition:
+      - system: http://hl7.org/fhir/sid/icd-9-cm
+        code: "(249|250)[.].*"
+        code_is_regex: true
+      - system: http://hl7.org/fhir/sid/icd-10-cm
+        code: "(E08|E09|E10|E11|E13)[.].*"
+        code_is_regex: true
+  AlopeciaDx:
+    Condition:
+      - system: http://hl7.org/fhir/sid/icd-9-cm
+        code: "(704)[.].*"
+        code_is_regex: true
+      - system: http://hl7.org/fhir/sid/icd-10-cm
+        code: "(L63|L64)[.].*"
+        code_is_regex: true
+  FibromyalgiaDx:
+    Condition:
+      - system: http://hl7.org/fhir/sid/icd-9-cm
+        code: "(729)[.].*"
+        code_is_regex: true
+      - system: http://hl7.org/fhir/sid/icd-10-cm
+        code: "(M79)[.].*"
+        code_is_regex: true
+  AlcoholDependenceDx:
+    Condition:
+      - system: http://hl7.org/fhir/sid/icd-9-cm
+        code: "(303)[.].*"
+        code_is_regex: true
+      - system: http://hl7.org/fhir/sid/icd-10-cm
+        code: "(F10)[.].*"
+        code_is_regex: true
+  DrugDependenceDx:
+    Condition:
+      - system: http://hl7.org/fhir/sid/icd-9-cm
+        code: "(304)[.].*"
+        code_is_regex: true
+      - system: http://hl7.org/fhir/sid/icd-10-cm
+        code: "(F11|F12|F13|F14|F15|F16|F17|F18|F19)[.].*"
+        code_is_regex: true
+  DepressionDx:
+    Condition:
+      - system: http://hl7.org/fhir/sid/icd-9-cm
+        code: "(311)[.].*"
+        code_is_regex: true
+      - system: http://hl7.org/fhir/sid/icd-10-cm
+        code: "(F32|F33)[.].*"
+        code_is_regex: true
+  AnxietyDx:
+    Condition:
+      - system: http://hl7.org/fhir/sid/icd-9-cm
+        code: "(300)[.].*"
+        code_is_regex: true
+      - system: http://hl7.org/fhir/sid/icd-10-cm
+        code: -> "(F40|F41)[.].*"
+        code_is_regex: true
+  AutismDx:
+    Condition:
+      - system: http://hl7.org/fhir/sid/icd-9-cm
+        code: "(299)[.].*"
+        code_is_regex: true
+      - system: http://hl7.org/fhir/sid/icd-10-cm
+        code: "(F84)[.].*"
+        code_is_regex: true
   TotalEDVisits:
     Patient:
     - code: 80110-0
@@ -2499,52 +1836,6 @@ FHIR:
       system: http://loinc.org
     - code: LA21427-2
       system: http://loinc.org
-  TrazodoneRx:
-    Drug:
-    - code: '10737'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  TrikaftaRx:
-    Drug:
-    - code: '2557216'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '2257013'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  TriptorelinRx:
-    Drug:
-    - code: '38782'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '285103'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  UterineCancerDx:
-    Condition:
-    - code: C55
-      system: http://hl7.org/fhir/sid/icd-10-cm
-  VenlafaxineRx:
-    Drug:
-    - code: '38782'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '285103'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  VitaminA_Rx:
-    Drug:
-    - code: '11246'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  VitaminB_Rx:
-    Drug:
-    - code: '220870'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '11251'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-  VitaminK_Rx:
-    Drug:
-    - code: '6728'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '8308'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '11258'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
-    - code: '42781'
-      system: http://www.nlm.nih.gov/research/umls/rxnorm
 GEOID:
   acs:
     GEOID: GEOID
@@ -2556,41 +1847,41 @@ GEOID:
       prp_nHwHHs: EstProbabilityHouseholdNonHispWhite
       prp_no_auto: EstProbabilityNoAuto
       prp_not_insured: EstProbabilityNoHealthIns
-      total_25plus: EstResidentialDensity25Plus
       total_pop2016: EstResidentialDensity
+      total_25plus: EstResidentialDensity25Plus
   acsUR:
     GEOID: geoid
     columns:
       ur: ur
-NearestPoint:
-  cafo:
-    attributes_to_features_map: {}
-    distance_feature_name: CAFO_Exposure
-  landfill:
-    attributes_to_features_map: {}
-    distance_feature_name: Landfill_Exposure
 NearestRoad:
+  nearestRoadTL:
+    distance_feature_name: MajorRoadwayHighwayExposure
+    attributes_to_features_map: {}
   nearestRoadHPMS:
+    distance_feature_name: RoadwayDistanceExposure
     attributes_to_features_map:
-      AADT:
-        feature_name: RoadwayAADT
-        feature_type: number
       ROADTYPE:
         feature_name: RoadwayType
         feature_type: string
+      AADT:
+        feature_name: RoadwayAADT
+        feature_type: number
       SPEED:
         feature_name: RoadwaySpeedLimit
         feature_type: number
       THROUGH_LA:
         feature_name: RoadwayLanes
         feature_type: number
-    distance_feature_name: RoadwayDistanceExposure
-  nearestRoadTL:
+NearestPoint:
+  cafo:
+    distance_feature_name: CAFO_Exposure
     attributes_to_features_map: {}
-    distance_feature_name: MajorRoadwayHighwayExposure
+  landfill:
+    distance_feature_name: Landfill_Exposure
+    attributes_to_features_map: {}
 Visit:
-- AsthmaDx
-- CroupDx
-- ReactiveAirwayDx
-- CoughDx
-- PneumoniaDx      
+  - AsthmaDx
+  - CroupDx
+  - ReactiveAirwayDx
+  - CoughDx
+  - PneumoniaDx
