@@ -1,15 +1,34 @@
-# spark data transformation tool #
+# Set up FHIR PIT and spark data transformation tool #
+
+## Installation
+- install the interactive build tool sbt. Refer to [Scala sbt page](https://www.scala-sbt.org/) for details.
+- install apache spark with hadoop. Refer to [Apache Spark page ](https://spark.apache.org/) for details. 
+Make sure you install pyspark version 2.4.5 since the newer pyspark version may not work with older Java versions 
+such as 1.8. We recommend to create a python 3 virtual environment and install pyspark version 2.4.5 in the virtual 
+environment by following the steps below.
+```
+
+```
+- install dhall by following the sample steps below.
+  ```
+  mkdir dhall_1.42.0 
+  cd dhall_1.42.0
+  wget https://github.com/dhall-lang/dhall-haskell/releases/download/1.42.0/dhall-yaml-1.2.12-x86_64-linux.tar.bz2
+  tar -xvf dhall-yaml-1.2.12-x86_64-linux.tar.bz2
+  export PATH=<absolute_dir>/dhall_1.42.0/bin:$PATH
+  ```
+  Refer to [dhall page](https://github.com/dhall-lang/dhall-haskell/releases) for details.
+
+## Clone this repo
+```
+git clone --recurse-submodules https://github.com/ExposuresProvider/FHIR-PIT.git
+```
 
 ## build sbt jar
 
 ```
-sbt assembly
-```
-
-## build docker container
-
-```
-docker build spark -t fhir-pit:0.1.0
+cd FHIR-PIT/spark
+SBT_OPTS=-Xmx64G sbt 'set test in assembly := {}' assembly
 ```
 
 ## test
@@ -17,26 +36,33 @@ docker build spark -t fhir-pit:0.1.0
 ```
 sbt test
 ```
+## Config FHIR-PIT via dhall
+- Modify `FHIR-PIT/spark/config/example_demo.dhall` as needed. To run FHIR PIT with sample data for demo purposes: 
 
+    - Update variable `basedir` with the location of the FHIR-PIT repo. 
+    - Update variable `python_exec` with the location of the python executable. FHIR PIT is tested to run successfully 
+  in a virtual environment created in python 3.6.9 and above, so it is advised to create a python virtual environment 
+  and point the python_exec to the python executable location in your virtual environment. 
 
-## generate config file
-
-install dhall, dhall-to-json from
-
-https://github.com/dhall-lang/dhall-haskell/releases
-
-modify `config/example2.dhall`
-
-```
-dhall-to-yaml --file config/example2.dhall --output config/example2.yaml
-```
+- Generate yaml config file.
+    ```
+    dhall-to-yaml-ng --file config/example_demo.dhall --output config/example_demo.yaml
+    ```
 
 ## run
+Activate your python virtual environment (python 3.6.9 and above), cd into FHIR-PIT/spark folder and execute:
 ```
-python src/main/python/runPreprocPipeline.py <master url> <config file>
+python src/main/python/runPreprocPipeline.py <master url> <yaml config file>
 ```
+Where `<master_url>` is the [supported master URL](https://spark.apache.org/docs/latest/submitting-applications.html#master-urls)
+for the spark cluster and `<config file>` is the desired dhall or YAML config file for the run. 
+If FHIR-PIT is run via Spark with one worker thread, `local` can be passed as the <master url> to run FHIR-PIT 
+locally with no parallelism. 
+
+For example: `python src/main/python/runPreprocPipeline.py local ./config/example_demo.yaml`
 
 ## config file format
+
 ```
 - name: <name>
   dependsOn: 

@@ -3,4 +3,8 @@
 **/.ensime
 **/.ensime_cache
 **/*.img
-
+**/__pycache__
+data/output/
+spark/progress
+spark/report
+spark/target

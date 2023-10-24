@@ -1,4 +1,3 @@
-import os
 from preprocPatient import *
 from preprocVisit import *
 

@@ -31,7 +31,12 @@ def addSex2(df):
 
 def cut_col(col):
     print(col.name, col.describe())
-    new_col = pd.cut(col, [-float("inf"), 0.5, float("inf")], right=False, include_lowest=True, labels=["0", "1"])
+    try:
+        new_col = pd.cut(col, [-float("inf"), 0.5, float("inf")], right=False, include_lowest=True, labels=["0", "1"])
+    except TypeError as t:
+        print(f"ERROR: {t}")
+        print(f"===== Keeping col {col.name} the same =====")
+        new_col = col
     return new_col
 
 

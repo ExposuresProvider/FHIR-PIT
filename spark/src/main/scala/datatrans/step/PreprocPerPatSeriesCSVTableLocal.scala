@@ -42,7 +42,7 @@ object PreprocPerPatSeriesCSVTableLocal extends StepImpl {
           w.close()
         }
 
-        val exitValue = Process(Seq("virtualenv", "-p", "/usr/bin/python3", f"${tempDir.toString}/venv")).!
+        val exitValue = Process(Seq("python", "-m", "venv", f"${tempDir.toString}/venv")).! 
         if (exitValue < 0) {
           throw new RuntimeException(f"error: virtualenv {exitValue}")
         }
