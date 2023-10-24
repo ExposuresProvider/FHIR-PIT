@@ -213,14 +213,14 @@ let feature_map_path = "${configdir}/icees_features.yaml"
 let requirements = [
     "isodate==0.6.1",
     "joblib==1.1.1",
-    "numpy==1.19.4",
-    "pandas==1.1.4",
+    "numpy",
+    "pandas",
     "parsedatetime==2.6",
     "progressbar2==3.53.1",
     "python-dateutil==2.8.2",
     "pytimeparse==1.1.8",
     "pytz==2022.7",
-    "PyYAML==6.0",
+    "PyYAML",
     "text-unidecode==1.3",
     "tqdm==4.64.1",
     "tx-functional==0.1.2"
