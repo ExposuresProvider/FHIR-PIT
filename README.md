@@ -16,7 +16,7 @@ For additional information on FHIR PIT, including an example use-case applicatio
 
 Issues are welcome! We will work to resolve any issues as quickly as possible.
 
-# Support
+# Funding Support
 
 FHIR PIT is funded by the [National Center for Advancing Translational Sciences](https://ncats.nih.gov/), under a US PHS Other Transaction Award (OT2TR003430), with additional funding provided by the [Renaissance Computing Institute](https://renci.org/).
 
