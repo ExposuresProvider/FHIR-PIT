@@ -12,4 +12,4 @@ FHIR PIT consists of several transformation steps which are building blocks that
 
 FHIR PIT is implemented using Apache Spark, Python, and Singularity. Spark makes it easy to parallelize and distribute the data transformation. Python is used to simplify the application interface to the transformation steps. Singularity allows us to easily make the application run on different machines and platforms portably.
 
-For details regarding how to build and run FHIR-PIT with sample data, refer to [this link](https://github.com/ExposuresProvider/FHIR-PIT/tree/demo-updated/spark).
+For details regarding how to build and run FHIR PIT with sample data, refer to [this link](https://github.com/ExposuresProvider/FHIR-PIT/tree/demo-updated/spark).
