@@ -4,4 +4,4 @@ The /data/input/FHIR/all directory contains sample FHIR files. The files do not 
 
 The sample FHIR files were made openly available by HL7 FHIR and thus carry no licensing or usage restrictions. For more information, please see https://build.fhir.org/index.html.
 
-The sole purpose of including the subdirectories and files contained within the /FHIR/all directory is to provide sample data for users who wish to build and run FHIR PIT using sample data.
+The sole purpose of including the subdirectories and files contained within the /data/input/FHIR/all directory is to provide sample data for users who wish to build and run FHIR PIT using sample data.
