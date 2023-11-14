@@ -25,3 +25,8 @@ FHIR PIT is funded by the [National Center for Advancing Translational Sciences]
 If you use FHIR PIT, we thank you and kindly ask that you consider citing:
 
 Xu H, Cox S, Stillwell L, Pfaff E, Champion J, Ahalt SC, Fecho K. FHIR PIT: an open software application for spatiotemporal integration of clinical data and environmental exposures data. BMC Med Inform Decis Mak. 2020;20(1):53. Published 2020 Mar 11. doi:10.1186/s12911-020-1056-9.
+
+# Contact Information
+
+For assistance with FHIR PIT, please contact the developer team at fhir-pit@renci.org.
+#
