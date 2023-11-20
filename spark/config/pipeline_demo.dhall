@@ -45,9 +45,7 @@ let FhirConfig : Type = {
       toVector : Text,
       perPatSeriesCSVTable : Text,
       perPatSeriesCSVTableLocal : Text,
-      addXWalkData: Text,
-      binICEES: Text,
-      binEPR: Text
+      deidentify: Text,
     },
     skip_preproc: List Text,
     data_input: List (List Text),
@@ -457,7 +455,7 @@ let nearestRoadTLStep = λ(skip : Text) → Step.NearestRoad {
     arguments = {
       patgeo_data = patgeo_output_path,
       nearestroad_data = "${basedirinput}/other/spatial/nearestRoadTL/tl_2015_allstates_prisecroads_lcc.shp",
-      maximum_search_radius = Integer/toDouble (Natural/toInteger 500),
+      maximum_search_radius = Integer/toDouble (Natural/toInteger 2500),
       output_file = nearestRoadTL_output_path,
       feature_name = "nearestRoadTL",
       feature_map = feature_map_path
@@ -476,7 +474,7 @@ let nearestRoadHPMSStep = λ(skip : Text) → Step.NearestRoad {
     arguments = {
       patgeo_data = patgeo_output_path,
       nearestroad_data = "${basedirinput}/other/spatial/nearestRoadHPMS/hpms2016_major_roads_lcc.shp",
-      maximum_search_radius = Integer/toDouble (Natural/toInteger 500),
+      maximum_search_radius = Integer/toDouble (Natural/toInteger 2500),
       output_file = nearestRoadHPMS_output_path,
       feature_name = "nearestRoadHPMS",
       feature_map = feature_map_path
@@ -592,8 +590,8 @@ let csvTableStep = λ(skip : Text) → λ(study_period_start : Text) → λ(stud
   }
 }
 
-let addXWalkDataStep = \(skip : Text) -> \(study_periods : List Text) -> Step.System {
-    name = "addXWalkData",
+let deidentifyStep = \(skip : Text) -> \(study_periods : List Text) -> Step.System {
+    name = "Deidentify",
     dependsOn = Prelude.List.map Text (List Text) (\(enumeration : Text) -> ["csvTable${enumeration}"]) study_periods,
     skip = skip,
     step = {
@@ -601,37 +599,7 @@ let addXWalkDataStep = \(skip : Text) -> \(study_periods : List Text) -> Step.Sy
         arguments = {
             pyexec = pyexec,
             requirements = requirements,
-            command = ["src/main/python/addXWalkData.py", "${basedirinput}/ICEESPCD/8000PtsXWalkForHao.csv", "${basedirinput}/ICEESPCD/RegistryPtsXWalkForHao.csv", "${basedir}/icees2", "${basedir}/icees2_xwalk"] # study_periods,
-            workdir = "."
-        }
-    }
-}
-
-let binICEESStep = \(skip : Text) -> \(study_periods : List Text) -> Step.System {
-    name = "BinICEES",
-    dependsOn = Prelude.List.map Text (List Text) (\(enumeration : Text) -> ["csvTable${enumeration}"]) study_periods,
-    skip = skip,
-    step = {
-        function = "datatrans.step.PreprocSystem",
-        arguments = {
-            pyexec = pyexec,
-            requirements = requirements,
-            command = ["src/main/python/preprocBinning.py", feature_map_path, "${basedir}/icees2", "${basediroutput}/icees2_bins"] # study_periods,
-            workdir = "."
-        }
-    }
-}
-
-let binEPRStep = \(skip : Text) -> \(study_periods : List Text) -> Step.System {
-    name = "BinEPR",
-    dependsOn = [["BinICEES"]],
-    skip = skip,
-    step = {
-        function = "datatrans.step.PreprocSystem",
-        arguments = {
-            pyexec = pyexec,
-            requirements = requirements,
-            command = ["src/main/python/binEPR.py", "${basedirinput}/EPR/TLR4_AllData_NewHash_01292020 NO PII_no_new_line.csv", "${basedirinput}/EPR/UNC_NIEHS_XWalk_for_Hao_shape_h3.csv", "${basediroutput}/icees2_bins/", "${basedir}/FHIR_processed/geo.csv", "${basediroutput}/EPR_binned/EPR_binned"] # study_periods,
+            command = ["src/main/python/deidentify.py", feature_map_path, "${basedir}/icees2", "${basediroutput}/icees2_bins"] # study_periods,
             workdir = "."
         }
     }
@@ -661,9 +629,7 @@ in {
       toVectorStep fhirConfig.skip.toVector fhirConfig.start_date fhirConfig.end_date fhirConfig.offset_hours,
       perPatSeriesCSVTableStep fhirConfig.skip.perPatSeriesCSVTable study_period_bounds fhirConfig.study_periods fhirConfig.offset_hours fhirConfig.data_input,
       perPatSeriesCSVTableLocalStep fhirConfig.skip.perPatSeriesCSVTableLocal study_period_bounds fhirConfig.study_periods fhirConfig.offset_hours fhirConfig.data_input,
-      addXWalkDataStep fhirConfig.skip.addXWalkData fhirConfig.study_periods,
-      binICEESStep fhirConfig.skip.binICEES fhirConfig.study_periods,
-      binEPRStep fhirConfig.skip.binEPR fhirConfig.study_periods
+      deidentifyStep fhirConfig.skip.deidentify fhirConfig.study_periods,
     ] # Prelude.List.map StudyPeriodConfig Step (\(study_period_skip : StudyPeriodConfig) -> csvTableStep study_period_skip.skip.csvTable study_period_skip.study_period_start study_period_skip.study_period fhirConfig.offset_hours) skipList
 } : Config
 

@@ -21,9 +21,7 @@ in pipeline "report" "progress" "${basedir}/spark/config" "${basedir}/data/input
     toVector = "run",
     perPatSeriesCSVTable = "skip",
     perPatSeriesCSVTableLocal = "run",
-    addXWalkData = "skip",
-    binICEES = "run",
-    binEPR = "skip"
+    deidentify = "run",
   },
   skip_preproc = [] : List Text,
   data_input = [
