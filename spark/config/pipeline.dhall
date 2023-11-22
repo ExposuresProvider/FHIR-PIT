@@ -47,6 +47,7 @@ let FhirConfig : Type = {
       perPatSeriesCSVTableLocal : Text,
       addXWalkData: Text,
       binICEES: Text,
+      deidentify: Text,
       binEPR: Text
     },
     skip_preproc: List Text,
@@ -622,6 +623,21 @@ let binICEESStep = \(skip : Text) -> \(study_periods : List Text) -> Step.System
     }
 }
 
+let deidentifyStep = \(skip : Text) -> \(study_periods : List Text) -> Step.System {
+    name = "Deidentify",
+    dependsOn = Prelude.List.map Text (List Text) (\(enumeration : Text) -> ["csvTable${enumeration}"]) study_periods,
+    skip = skip,
+    step = {
+        function = "datatrans.step.PreprocSystem",
+        arguments = {
+            pyexec = pyexec,
+            requirements = requirements,
+            command = ["src/main/python/deidentify.py", feature_map_path, "${basedir}/icees2_bins", "${basediroutput}/icees2_dei"] # study_periods,
+            workdir = "."
+        }
+    }
+}
+
 let binEPRStep = \(skip : Text) -> \(study_periods : List Text) -> Step.System {
     name = "BinEPR",
     dependsOn = [["BinICEES"]],
@@ -663,6 +679,7 @@ in {
       perPatSeriesCSVTableLocalStep fhirConfig.skip.perPatSeriesCSVTableLocal study_period_bounds fhirConfig.study_periods fhirConfig.offset_hours fhirConfig.data_input,
       addXWalkDataStep fhirConfig.skip.addXWalkData fhirConfig.study_periods,
       binICEESStep fhirConfig.skip.binICEES fhirConfig.study_periods,
+      deidentifyStep fhirConfig.skip.deidentify fhirConfig.study_periods,
       binEPRStep fhirConfig.skip.binEPR fhirConfig.study_periods
     ] # Prelude.List.map StudyPeriodConfig Step (\(study_period_skip : StudyPeriodConfig) -> csvTableStep study_period_skip.skip.csvTable study_period_skip.study_period_start study_period_skip.study_period fhirConfig.offset_hours) skipList
 } : Config

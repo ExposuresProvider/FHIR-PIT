@@ -1,6 +1,6 @@
 let pipeline = ./pipeline.dhall
 
-in pipeline "report" "progress" "/home/a/git/FHIR-PIT/spark/config" "/home/a/git/fhir_sample_data" "/home/a/fhir-pit/temp" "/home/a/fhir-pit/output" {
+in pipeline "report" "progress" "/home/user/FHIR-PIT/spark/config" "/working_data/FHIR_PIT_BASE/INPUT/PCD" "/working_data/FHIR_PIT_BASE" "/working_data/FHIR_PIT_BASE/OUTPUT/PCD" {
   skip = {
     mergeLocal = "run",
     fhir = "run",
@@ -19,8 +19,10 @@ in pipeline "report" "progress" "/home/a/git/FHIR-PIT/spark/config" "/home/a/git
     toVector = "run",
     perPatSeriesCSVTable = "skip",
     perPatSeriesCSVTableLocal = "run",
+    addXWalkData = "run",
     binICEES = "run",
-    binEPR = "run"
+    deidentify = "run",
+    binEPR = "skip"
   },
   skip_preproc = [] : List Text,
   data_input = [
@@ -35,9 +37,9 @@ in pipeline "report" "progress" "/home/a/git/FHIR-PIT/spark/config" "/home/a/git
     ["EnvDataAggregateFIPS"]
   ],
   start_date = "2010-01-01T00:00:00Z",
-  end_date = "2020-01-01T00:00:00Z",
-  study_period_splits = ["2011-01-01T00:00:00Z", "2012-01-01T00:00:00Z", "2013-01-01T00:00:00Z", "2014-01-01T00:00:00Z", "2015-01-01T00:00:00Z", "2016-01-01T00:00:00Z", "2017-01-01T00:00:00Z", "2018-01-01T00:00:00Z", "2019-01-01T00:00:00Z"],
-  study_periods = ["2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019"],
+  end_date = "2022-01-01T00:00:00Z",
+  study_period_splits = ["2011-01-01T00:00:00Z", "2012-01-01T00:00:00Z", "2013-01-01T00:00:00Z", "2014-01-01T00:00:00Z", "2015-01-01T00:00:00Z", "2016-01-01T00:00:00Z", "2017-01-01T00:00:00Z", "2018-01-01T00:00:00Z", "2019-01-01T00:00:00Z", "2020-01-01T00:00:00Z", "2021-01-01T00:00:00Z"],
+  study_periods = ["2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021"],
   offset_hours = -5
 } [{
   study_period = "2010",
@@ -99,4 +101,16 @@ in pipeline "report" "progress" "/home/a/git/FHIR-PIT/spark/config" "/home/a/git
   skip = {
     csvTable = "run"
   }
-}] "/home/a/miniconda3/envs/sample/bin/python"
+}, {
+  study_period = "2020",
+  study_period_start = "2020-01-01T00:00:00Z",
+  skip = {
+    csvTable = "run"
+  }
+}, {
+  study_period = "2021",
+  study_period_start = "2021-01-01T00:00:00Z",
+  skip = {
+    csvTable = "run"
+  }
+}] "/home/user/fhir-pit/bin/python"

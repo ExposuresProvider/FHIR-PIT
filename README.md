@@ -10,7 +10,7 @@ FHIR PIT consists of several transformation steps, which are building blocks tha
 
 FHIR PIT is implemented using Apache Spark, Python, and Singularity. Spark makes it easy to parallelize and distribute the data transformation. Python is used to simplify the application interface to the transformation steps. Singularity allows us to easily make the application run portably on different machines and platforms.
 
-For details regarding how to build and run FHIR PIT with sample data, refer to https://github.com/ExposuresProvider/FHIR-PIT/tree/demo-updated/spark.
+For details regarding how to build and run FHIR PIT with sample data, refer to https://github.com/ExposuresProvider/FHIR-PIT/tree/master/spark.
 
 For additional information on FHIR PIT, including an example use-case application, please see [Xu et al. 2020](https://bmcmedinformdecismak.biomedcentral.com/articles/10.1186/s12911-020-1056-9).
 
@@ -25,3 +25,8 @@ FHIR PIT is funded by the [National Center for Advancing Translational Sciences]
 If you use FHIR PIT, we thank you and kindly ask that you consider citing:
 
 Xu H, Cox S, Stillwell L, Pfaff E, Champion J, Ahalt SC, Fecho K. FHIR PIT: an open software application for spatiotemporal integration of clinical data and environmental exposures data. BMC Med Inform Decis Mak. 2020;20(1):53. Published 2020 Mar 11. doi:10.1186/s12911-020-1056-9.
+
+# Contact Information
+
+For assistance with FHIR PIT, please contact the developer team at fhir-pit@renci.org or directly click on [Contact Us](mailto:fhir-pit@renci.org). 
+

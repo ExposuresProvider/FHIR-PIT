@@ -1,23 +1,13 @@
 import pandas as pd
-import numpy as np
-import sys
-import json
-import os
-import os.path
-from preprocUtils import *
-
-def preproc_visit(input_conf, input_file, output_file):
 
 
+def deidentify_visit(input_file, output_file):
     df = pd.read_csv(input_file, quotechar='"')
 
-    cols_to_drop = ["birth_date"] 
-
-    for col in cols_to_drop:
-        try:
-            df = df.drop(col, axis=1)
-        except Exception as e:
-            print(e)
+    try:
+        df.drop(["birth_date"], axis=1, inplace=True)
+    except Exception as e:
+        print(e)
 
     df.to_csv(output_file, index=False)
 
