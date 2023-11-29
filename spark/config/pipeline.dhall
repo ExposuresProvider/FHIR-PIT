@@ -203,13 +203,13 @@ let Config: Type = {
     steps : List Step
 }
 
-let patgeo_output_path = "${basedir}/FHIR_processed/geo.csv"
-let acs_output_path = "${basedir}/other_processed/acs.csv"
-let acsUR_output_path = "${basedir}/other_processed/acsUR.csv"
-let nearestRoadTL_output_path = "${basedir}/other_processed/nearestRoadTL.csv"
-let nearestRoadHPMS_output_path = "${basedir}/other_processed/nearestRoadHPMS.csv"
-let cafo_output_path = "${basedir}/other_processed/cafo.csv"
-let landfill_output_path = "${basedir}/other_processed/landfill.csv"
+let patgeo_output_path = "${basediroutput}/FHIR_processed/geo.csv"
+let acs_output_path = "${basediroutput}/other_processed/acs.csv"
+let acsUR_output_path = "${basediroutput}/other_processed/acsUR.csv"
+let nearestRoadTL_output_path = "${basediroutput}/other_processed/nearestRoadTL.csv"
+let nearestRoadHPMS_output_path = "${basediroutput}/other_processed/nearestRoadHPMS.csv"
+let cafo_output_path = "${basediroutput}/other_processed/cafo.csv"
+let landfill_output_path = "${basediroutput}/other_processed/landfill.csv"
 let feature_map_path = "${configdir}/icees_features.yaml"
 let requirements = [
     "isodate==0.6.0",
@@ -236,7 +236,7 @@ let mergeLocalStep = \(skip : Text) -> Step.System {
         arguments = {
             pyexec = pyexec,
             requirements = requirements,
-            command = ["src/main/python/merge_fhir.py", "${basedirinput}/FHIR", "${basedir}/FHIR_merged"],
+            command = ["src/main/python/merge_fhir.py", "${basedirinput}/FHIR", "${basediroutput}/FHIR_merged"],
             workdir = "."
         }
     }
@@ -249,8 +249,8 @@ let fhirStep = λ(skip : Text) → λ(skip_preproc : List Text) → Step.FHIR {
     step = {
         function = "datatrans.step.PreprocFHIR",
         arguments = {
-            input_directory = "${basedir}/FHIR_merged",
-            output_directory = "${basedir}/FHIR_processed",
+            input_directory = "${basediroutput}/FHIR_merged",
+            output_directory = "${basediroutput}/FHIR_processed",
             resc_types = resc_types,
             skip_preproc = skip_preproc
         }
@@ -266,8 +266,8 @@ let toVectorStep = λ(skip : Text) → λ(start_date : Text) → λ(end_date : T
   step = {
     function = "datatrans.step.PreprocPerPatSeriesToVector",
     arguments = {
-      input_directory = "${basedir}/FHIR_processed/Patient",
-      output_directory = "${basedir}/FHIR_vector",
+      input_directory = "${basediroutput}/FHIR_processed/Patient",
+      output_directory = "${basediroutput}/FHIR_vector",
       start_date = start_date,
       end_date = end_date,
       offset_hours = offset_hours,
@@ -287,7 +287,7 @@ let envDataCoordinatesStep = λ(skip : Text) → λ(start_date : Text) → λ(en
     arguments = {
       patgeo_data = patgeo_output_path,
       environmental_data = "${basedirinput}/other/env",
-      output_dir = "${basedir}/other_processed/env_coordinates",
+      output_dir = "${basediroutput}/other_processed/env_coordinates",
       start_date = start_date,
       end_date = end_date,
       offset_hours = offset_hours
@@ -306,7 +306,7 @@ let latLonToGeoidStep = λ(skip : Text) → Step.LatLonToGeoid {
     arguments = {
       patgeo_data = patgeo_output_path,
       fips_data = "${basedirinput}/other/spatial/env/US_Census_Tracts_LCC/US_Census_Tracts_LCC.shp",
-      output_file = "${basedir}/other_processed/lat_lon_to_geoid/geoids.csv"
+      output_file = "${basediroutput}/other_processed/lat_lon_to_geoid/geoids.csv"
     }
   }
 }
@@ -326,8 +326,8 @@ let envDataFIPSStep = λ(skip : Text) → λ(start_date : Text) → λ(end_date 
     function = "datatrans.step.PreprocEnvDataFIPS",
     arguments = {
       environmental_data = "${basedirinput}/other/env",
-      fips_data = "${basedir}/other_processed/lat_lon_to_geoid/geoids.csv",
-      output_file = "${basedir}/other_processed/env_FIPS/preagg",
+      fips_data = "${basediroutput}/other_processed/lat_lon_to_geoid/geoids.csv",
+      output_file = "${basediroutput}/other_processed/env_FIPS/preagg",
       start_date = start_date,
       end_date = end_date,
       offset_hours = offset_hours
@@ -344,9 +344,9 @@ let splitStep = λ(skip : Text) → Step.Split {
   step = {
     function = "datatrans.step.PreprocSplit",
     arguments = {
-      input_file = "${basedir}/other_processed/env_FIPS/preagg",
+      input_file = "${basediroutput}/other_processed/env_FIPS/preagg",
       split_index = "patient_num",
-      output_dir = "${basedir}/other_processed/env_split_FIPS"
+      output_dir = "${basediroutput}/other_processed/env_split_FIPS"
     }
   }
 }
@@ -378,8 +378,8 @@ let envDataAggregateCoordinatesStep = λ(skip : Text) → \(study_period_bounds 
   step = {
     function = "datatrans.step.PreprocEnvDataAggregate",
     arguments = {
-      input_dir = "${basedir}/other_processed/env_coordinates",
-      output_dir = "${basedir}/other_processed/env_agg_coordinates",
+      input_dir = "${basediroutput}/other_processed/env_coordinates",
+      output_dir = "${basediroutput}/other_processed/env_agg_coordinates",
       indices = indices,
       statistics = statistics,
       study_period_bounds = study_period_bounds,
@@ -398,8 +398,8 @@ let envDataAggregateFIPSStep = λ(skip : Text) → \(study_period_bounds : List 
   step = {
     function = "datatrans.step.PreprocEnvDataAggregate",
     arguments = {
-      input_dir = "${basedir}/other_processed/env_split_FIPS",
-      output_dir = "${basedir}/other_processed/env_agg_FIPS",
+      input_dir = "${basediroutput}/other_processed/env_split_FIPS",
+      output_dir = "${basediroutput}/other_processed/env_agg_FIPS",
       indices = indices2,
       statistics = statistics,
       study_period_bounds = study_period_bounds,
@@ -528,9 +528,9 @@ let perPatSeriesCSVTableStep = λ(skip : Text) → λ(study_period_bounds : List
   step = {
     function = "datatrans.step.PreprocPerPatSeriesCSVTable",
     arguments = {
-      patient_file = "${basedir}/FHIR_vector/visit",
-      environment_file = "${basedir}/other_processed/env_agg_coordinates",
-      environment2_file = "${basedir}/other_processed/env_agg_FIPS",
+      patient_file = "${basediroutput}/FHIR_vector/visit",
+      environment_file = "${basediroutput}/other_processed/env_agg_coordinates",
+      environment2_file = "${basediroutput}/other_processed/env_agg_FIPS",
       input_files = [
         acs_output_path,
         acsUR_output_path,
@@ -539,7 +539,7 @@ let perPatSeriesCSVTableStep = λ(skip : Text) → λ(study_period_bounds : List
 	    cafo_output_path,
 	    landfill_output_path
       ],
-      output_dir = "${basedir}/icees",
+      output_dir = "${basediroutput}/icees",
       study_period_bounds = study_period_bounds,
       study_periods = study_periods,
       offset_hours = offset_hours
@@ -554,9 +554,9 @@ let perPatSeriesCSVTableLocalStep = λ(skip : Text) → λ(study_period_bounds :
   step = {
     function = "datatrans.step.PreprocPerPatSeriesCSVTableLocal",
     arguments = {
-      patient_file = "${basedir}/FHIR_vector/visit",
-      environment_file = "${basedir}/other_processed/env_agg_coordinates",
-      environment2_file = "${basedir}/other_processed/env_agg_FIPS",
+      patient_file = "${basediroutput}/FHIR_vector/visit",
+      environment_file = "${basediroutput}/other_processed/env_agg_coordinates",
+      environment2_file = "${basediroutput}/other_processed/env_agg_FIPS",
       input_files = [
         acs_output_path,
         acsUR_output_path,
@@ -565,7 +565,7 @@ let perPatSeriesCSVTableLocalStep = λ(skip : Text) → λ(study_period_bounds :
 	    cafo_output_path,
 	    landfill_output_path
       ],
-      output_dir = "${basedir}/icees",
+      output_dir = "${basediroutput}/icees",
       study_period_bounds = study_period_bounds,
       study_periods = study_periods,
       offset_hours = offset_hours
@@ -582,9 +582,9 @@ let csvTableStep = λ(skip : Text) → λ(study_period_start : Text) → λ(stud
   step = {
     function = "datatrans.step.PreprocCSVTable",
     arguments = {
-      input_dir = "${basedir}/icees/${study_period}/per_patient",
-      input_dir_patient = "${basedir}/FHIR_Vector/patient",
-      output_dir = "${basedir}/icees2/${study_period}",
+      input_dir = "${basediroutput}/icees/${study_period}/per_patient",
+      input_dir_patient = "${basediroutput}/FHIR_Vector/patient",
+      output_dir = "${basediroutput}/icees2/${study_period}",
       deidentify = [] : List Text,
       study_period_start = study_period_start,
       offset_hours = offset_hours,
@@ -632,7 +632,7 @@ let deidentifyStep = \(skip : Text) -> \(study_periods : List Text) -> Step.Syst
         arguments = {
             pyexec = pyexec,
             requirements = requirements,
-            command = ["src/main/python/deidentify.py", feature_map_path, "${basedir}/icees2_bins", "${basediroutput}/icees2_dei"] # study_periods,
+            command = ["src/main/python/deidentify.py", feature_map_path, "${basediroutput}/icees2_bins", "${basediroutput}/icees2_dei"] # study_periods,
             workdir = "."
         }
     }
@@ -647,7 +647,7 @@ let binEPRStep = \(skip : Text) -> \(study_periods : List Text) -> Step.System {
         arguments = {
             pyexec = pyexec,
             requirements = requirements,
-            command = ["src/main/python/binEPR.py", "${basedirinput}/EPR/TLR4_AllData_NewHash_01292020 NO PII_no_new_line.csv", "${basedirinput}/EPR/UNC_NIEHS_XWalk_for_Hao_shape_h3.csv", "${basediroutput}/icees2_bins/", "${basedir}/FHIR_processed/geo.csv", "${basediroutput}/EPR_binned/EPR_binned"] # study_periods,
+            command = ["src/main/python/binEPR.py", "${basedirinput}/EPR/TLR4_AllData_NewHash_01292020 NO PII_no_new_line.csv", "${basedirinput}/EPR/UNC_NIEHS_XWalk_for_Hao_shape_h3.csv", "${basediroutput}/icees2_bins/", "${basediroutput}/FHIR_processed/geo.csv", "${basediroutput}/EPR_binned/EPR_binned"] # study_periods,
             workdir = "."
         }
     }
