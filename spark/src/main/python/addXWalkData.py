@@ -21,6 +21,21 @@ for year in study_periods:
     df_xwalk_reg = pd.read_csv(xwalk_registry_data_path, header=0, names=['Confirmed_Dx', 'patient_num'])
     df_join_xwalk = pd.merge(df_xwalk, df_xwalk_reg, on=['patient_num'], how='outer')
     df_out = pd.merge(df, df_join_xwalk, on=["patient_num"], how="left")
+    # split Confirmed_Dx column into Confirmed_PCD_Dx, Confirmed_CF_Dx, and Confirmed_IdiopathicBronchiectasisDx column
+    df_out['Confirmed_CF_Dx'] = 0
+    df_out['Confirmed_IdiopathicBronchiectasisDx'] = 0
+    df_out['Confirmed_PCD_Dx'] = 0
+
+    df_out.loc[df_out['Confirmed_Dx'] == 'Brx', 'Confirmed_IdiopathicBronchiectasisDx'] = 1
+    df_out.loc[df_out['Confirmed_Dx'] == 'PCD', 'Confirmed_PCD_Dx'] = 1
+    df_out.loc[df_out['Confirmed_Dx'] == 'CF', 'Confirmed_CF_Dx'] = 1
+
+    # If Confirmed_Dx is None, set all split columns to 0
+    df_out.loc[df_out['Confirmed_Dx'].isnull(),
+               ['Confirmed_IdiopathicBronchiectasisDx', 'Confirmed_PCD_Dx', 'Confirmed_CF_Dx']] = 0
+    # drop the original column after the split is done
+    df.drop(columns = ['Confirmed_Dx'], inplace=True)
+
     df_out.to_csv(output_file_p, index=False)
 
     # get visit data copied over to get ready for the next binning steps
