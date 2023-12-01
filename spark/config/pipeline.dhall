@@ -602,7 +602,7 @@ let addXWalkDataStep = \(skip : Text) -> \(study_periods : List Text) -> Step.Sy
         arguments = {
             pyexec = pyexec,
             requirements = requirements,
-            command = ["src/main/python/addXWalkData.py", "${basedirinput}/ICEESPCD/8000PtsXWalkForHao.csv", "${basedirinput}/ICEESPCD/RegistryPtsXWalkForHao.csv", "${basedir}/icees2", "${basediroutput}/icees2_xwalk"] # study_periods,
+            command = ["src/main/python/addXWalkData.py", "${basedirinput}/ICEESPCD/8000PtsXWalkForHao.csv", "${basedirinput}/ICEESPCD/RegistryPtsXWalkForHao.csv", "${basediroutput}/icees2", "${basediroutput}/icees2_xwalk"] # study_periods,
             workdir = "."
         }
     }
