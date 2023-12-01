@@ -34,7 +34,7 @@ for year in study_periods:
     df_out.loc[df_out['Confirmed_Dx'].isnull(),
                ['Confirmed_IdiopathicBronchiectasisDx', 'Confirmed_PCD_Dx', 'Confirmed_CF_Dx']] = 0
     # drop the original column after the split is done
-    df.drop(columns = ['Confirmed_Dx'], inplace=True)
+    df_out.drop(columns = ['Confirmed_Dx'], inplace=True)
 
     df_out.to_csv(output_file_p, index=False)
 
