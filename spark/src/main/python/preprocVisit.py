@@ -1,10 +1,8 @@
 import pandas as pd
-import numpy as np
-import sys
 import json
 import os
-import os.path
-from preprocUtils import *
+from preprocUtils import getBinary, preprocEnv, preprocSocial, addSex2, cut_col, env_features, env_features2
+
 
 def preproc_visit(input_conf, input_file, output_file):
 
@@ -16,15 +14,16 @@ def preproc_visit(input_conf, input_file, output_file):
     
     bins = []
 
-    bins += preprocAge(df, "AgeVisit")
-
     bins += preprocEnv(df, "24h")
 
     bins += preprocSocial(df)
 
     addSex2(df)
 
-    cols_to_drop = ["birth_date", "encounter_num", "esri_id", "esri_idn", "GEOID", "stcnty", "start_date", "next_date", "year_x", "year_y"] + [feature + stat for feature in env_features2 for stat in ["_avg", "_max", ""]] + [feature + stat + "_prev_date" for feature in env_features for stat in ["_avg", "_max"]]
+    cols_to_drop = ["encounter_num", "esri_id", "esri_idn", "GEOID", "stcnty", "start_date", "next_date",
+                    "year_x", "year_y"] + \
+                   [feature + stat for feature in env_features2 for stat in ["_avg", "_max", ""]] + \
+                   [feature + stat + "_prev_date" for feature in env_features for stat in ["_avg", "_max"]]
 
     for c in visit_cols:
         df[c].fillna(0, inplace=True)
@@ -36,15 +35,7 @@ def preproc_visit(input_conf, input_file, output_file):
         except Exception as e:
             print(e)
 
-    features = ["pm25", "o3"]
-
-    features2 = ["ozone_daily_8hour_maximum", "pm25_daily_average", "CO_ppbv", "NO_ppbv", "NO2_ppbv", "NOX_ppbv", "SO2_ppbv", "ALD2_ppbv", "FORM_ppbv", "BENZ_ppbv"]
-
     df.to_csv(output_file, index=False)
-
-    output_file_deidentified = output_file+"_deidentified"
-
-    df.drop(["patient_num"], axis=1).to_csv(output_file_deidentified, index=False)
 
     output_file_bins = output_file + "_bins.json"
     dir_path = os.path.dirname(output_file_bins)

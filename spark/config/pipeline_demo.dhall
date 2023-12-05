@@ -599,7 +599,7 @@ let deidentifyStep = \(skip : Text) -> \(study_periods : List Text) -> Step.Syst
         arguments = {
             pyexec = pyexec,
             requirements = requirements,
-            command = ["src/main/python/deidentify.py", feature_map_path, "${basedir}/icees2", "${basediroutput}/icees2_bins"] # study_periods,
+            command = ["src/main/python/deidentify.py", feature_map_path, "${basedir}/icees2", "${basediroutput}/icees2_dei"] # study_periods,
             workdir = "."
         }
     }

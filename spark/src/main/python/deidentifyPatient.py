@@ -1,15 +1,8 @@
 import pandas as pd
-import numpy as np
-import sys
-import json
-import os
-import os.path
-from preprocUtils import *
 
-def preproc_patient(input_conf, input_file, output_file, pat_idx_file):
 
+def deidentify_patient(input_file, output_file, pat_idx_file):
     df = pd.read_csv(input_file, quotechar='"')
-
     df.drop(["birth_date"], axis=1, inplace=True)
     # add index column
     pat_idx_df = pd.read_csv(pat_idx_file)
