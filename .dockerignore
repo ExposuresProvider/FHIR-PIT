@@ -3,6 +3,7 @@
 **/.idea
 **/sing
 **/target
+**/test
 **/progress
 **/report
 **/spark-warehouse
