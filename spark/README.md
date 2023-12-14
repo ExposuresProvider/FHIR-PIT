@@ -1,13 +1,35 @@
 # Set up FHIR PIT and spark data transformation tool #
+## Installation through Docker
+Docker is an open platform which provides the ability to package and run an application in a loosely 
+isolated environment called a container. Refer to 
+[Docker documantation](https://docs.docker.com/get-started/overview/) for more details. 
+- Install Docker. Follow instructions in [Docker installation documentation](https://docs.docker.com/engine/install/) 
+for your operating system.
+- Change directory to where you want to run FHIR PIT, e.g., `cd /home/user`
+- Clone this repo.
+```git clone --recursive https://github.com/ExposuresProvider/FHIR-PIT.git```
+- Run FHIR PIT in a docker container with `-v` option to mount a volume from the host into the docker 
+container where FHIR PIT will run. This will allow the output data to persist and be easily 
+- accessible by users on the host.
+```docker run -v /home/user/FHIR-PIT/data/output:/FHIR-PIT/data/output -it renci/fhir-pit:1.0```
+Make sure `/home/user/FHIR-PIT/data/output` directory corresponds to the directory you want to 
+hold FHIR-PIT run output data in your operating system host environment. 
+FHIR PIT should run inside the docker container with status and progress information displayed in 
+the console while it is running. After it is done running, you should be able to access the output
+from FHIR PIT in the directory `/home/user/FHIR-PIT/data/output`.
+- You can run the command `docker rm -fv $(docker ps -a -q)` to clean up the FHIR PIT container after 
+it is done running.
 
-## Installation
+## Installation in your native operating system environment without using Docker
 - install the interactive build tool sbt. Refer to [Scala sbt page](https://www.scala-sbt.org/) for details.
 - install apache spark with hadoop. Refer to [Apache Spark page ](https://spark.apache.org/) for details. 
 Make sure you install pyspark version 2.4.5 since the newer pyspark version may not work with older Java versions 
 such as 1.8. We recommend to create a python 3 virtual environment and install pyspark version 2.4.5 in the virtual 
 environment by following the steps below.
 ```
-
+python -m venv fhir-pit
+source fhir-pit/bin/activate
+pip install pyspark==2.4.5
 ```
 - install dhall by following the sample steps below.
   ```

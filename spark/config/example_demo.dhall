@@ -1,6 +1,6 @@
 let pipeline = ./pipeline_demo.dhall
-let basedir = "/Users/jj/Desktop/FHIR-PIT" 
-let python_exec = "python3"
+let basedir = "/FHIR-PIT"
+let python_exec = "/FHIR-PIT/fhir-pit/bin/python"
 
 in pipeline "report" "progress" "${basedir}/spark/config" "${basedir}/data/input" "${basedir}/data/output" "${basedir}/data/output" {
   skip = {
