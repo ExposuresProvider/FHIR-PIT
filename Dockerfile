@@ -28,3 +28,9 @@ COPY --from=sbt_build /app/target/scala-2.11/Preproc-assembly-1.0.jar /FHIR-PIT/
 RUN wget https://github.com/dhall-lang/dhall-haskell/releases/download/1.42.0/dhall-yaml-1.2.12-x86_64-linux.tar.bz2
 RUN tar -xvf dhall-yaml-1.2.12-x86_64-linux.tar.bz2
 RUN mv bin/dhall-to-yaml-ng /usr/bin && rm dhall-yaml-1.2.12-x86_64-linux.tar.bz2
+RUN dhall-to-yaml-ng --file spark/config/example_demo.dhall --output spark/config/example_demo.yaml
+RUN python -m venv fhir-pit && source fhir-pit/bin/activate
+
+WORKDIR /FHIR-PIT/spark
+ENTRYPOINT ["python", "src/main/python/runPreprocPipeline.py"]
+CMD ["local", "./config/example_demo.yaml"]
