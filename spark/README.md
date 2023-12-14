@@ -7,11 +7,14 @@ isolated environment called a container. Refer to
 for your operating system.
 - Change directory to where you want to run FHIR PIT, e.g., `cd /home/user`
 - Clone this repo.
+
 ```git clone --recursive https://github.com/ExposuresProvider/FHIR-PIT.git```
 - Run FHIR PIT in a docker container with `-v` option to mount a volume from the host into the docker 
 container where FHIR PIT will run. This will allow the output data to persist and be easily 
-- accessible by users on the host.
+accessible by users on the host.
+
 ```docker run -v /home/user/FHIR-PIT/data/output:/FHIR-PIT/data/output -it renci/fhir-pit:1.0```
+
 Make sure `/home/user/FHIR-PIT/data/output` directory corresponds to the directory you want to 
 hold FHIR-PIT run output data in your operating system host environment. 
 FHIR PIT should run inside the docker container with status and progress information displayed in 
