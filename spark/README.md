@@ -6,7 +6,9 @@ isolated environment called a container. Refer to
 - Install Docker. Follow instructions in [Docker installation documentation](https://docs.docker.com/engine/install/) 
 for your operating system.
 - Change directory to where you want to run FHIR PIT, e.g., `cd /home/user`
-- Clone this repo.
+- Clone this repo. This step is optional. You can skip this step and run the next step directly, but make sure you
+change the host mounting directory, i.e., ```/home/user/FHIR-PIT/data/output```, to any existing directory on your
+host machine to see the output data from FHIR PIT run.
 
 ```git clone --recursive https://github.com/ExposuresProvider/FHIR-PIT.git```
 - Run FHIR PIT in a docker container with `-v` option to mount a volume from the host into the docker 
