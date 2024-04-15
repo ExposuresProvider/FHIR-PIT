@@ -5,21 +5,21 @@ output:
 editor_options: 
   chunk_output_type: inline
 ---
-# **A FHIR-PIT tutorial** {.unnumbered}
+# **A FHIR PIT tutorial** {.unnumbered}
 
 |                                                                   |
 |-------------------------------------------------------------------|
-| title: "Linking geocoded addresses to US Census geographic units" |
+| title: "FHIR PIT: FHIR and environmental exposures integration tool" |
 | subtitle: "Tutorial"                                              |
-| date: "March 18, 2024"                                        |
-| author: "Kara Fecho, Juan Garcia, Hong Yi"                                              |
+| date: "April 2, 2024"                                        |
+| author: "Juan Garcia, Kara Fecho, Hong Yi"                                              |
 | format: html                                                      |
 
-*Date*: March 18, 2024
+*Date*: April 2, 2024
 
-*Author(s)*: Kara Fecho, Juan Garcia, Hong Yi
+*Author(s)*: Juan Garcia, Kara Fecho, Hong Yi
 
-# FHIR-PIT: FHIR and environmental exposures integration tool: A tutorial
+# FHIR PIT: FHIR and environmental exposures integration tool: A tutorial
 
 **Key Terms**: Data Integration, Environmental exposures, EHR, FHIR
 
@@ -29,13 +29,19 @@ editor_options:
 
 This tutorial provides example code in `R`:
 
-1.  To setup FHIR-PIT.
+1.  To setup FHIR PIT.
 
-2.  To analyze the results from the FHIR-PIT output.
+2.  To analyze the results from the FHIR PIT output.
+
+### Disclaimer
+
+The data used in this tutorial is synthetic. If you would like to incorporate your own consider a secure enclave.
+
+Note the FHIRPIT application may be memory intensive depending on the size of the input data. For example, this demo  requires 25Gb to run successfully.
 
 ### Motivation
 
-Environmental exposures are increasingly recognized as important to consider when conducting research in numerous scientific fields, including biomedicine, social science, and political science. Unfortunately, associating environmental exposure data with subject-level data is difficult due to varying spatiotemporal resolutions. FHIR-PIT is a tool to link EHR records in FHIR format with environmental exposures. 
+Environmental exposures are increasingly recognized as important to consider when conducting research in numerous scientific fields, including biomedicine, social science, and political science. Unfortunately, associating environmental exposure data with subject-level data is difficult due to varying spatiotemporal resolutions. FHIR PIT is a tool to link EHR records in FHIR format with environmental exposures. 
 
 ### Background 
 
@@ -44,14 +50,13 @@ FHIR PIT (HL7 Fast Healthcare Interoperability Resources Patient data Integratio
 In essence, the pipeline is a sequence of transformations configured from a YAML file.
 The transformation steps join FHIR patient records with environmental exposure estimates using patient geocodes (i.e., primary residence) and date(s) of healthcare visit as the spatiotemporal links. At the end of each linkage step, FHIR PIT saves the linked tables to an intermediate folder to support rapid re-execution, should any given step fail to complete (e.g., lack of disk space). To support multiple healthcare visits, FHIR PIT vectorizes FHIR patient records by grouping daily FHIR domains (e.g., Condition, Laboratory, Medication, Procedures) and counting them. The features associated with the patient are then grouped by user-defined study periods (e.g., yearly) and aggregated with user-defined statistics (e.g., counts, mean, median, first measurement, last measurement).
 
-
 ### Outline
 
 This tutorial includes the following steps:
 
 -   [Step 0. Setup](#step-0)
 
--   [Step 1. Run FHIR-PIT](#step-1)
+-   [Step 1. Run FHIR PIT](#step-1)
 
 -   [Step 2. Analyze results](#step-2)
 
@@ -67,14 +72,14 @@ library(ggplot2)
 
 Install Docker. Follow instructions in [Docker installation](https://docs.docker.com/engine/install/) documentation for your operating system.
 
-Assign WORK_DIR the directory you would like to save FHIR-PIT and its outputs to.
+Assign WORK_DIR the directory you would like to save FHIR PIT and its outputs to.
 
 ```{r}
-work_dir <- "/Users/jj/Desktop/test/FHIR-PIT"
+work_dir <- "/Users/jj/Desktop/FHIR-PIT"
 Sys.setenv(WORK_DIR = work_dir)
 ```
 
-Clone FHIR-PIT into the WORK_DIR directory.
+Clone FHIR PIT into the WORK_DIR directory.
 
 ```{bash}
 mkdir -p $WORK_DIR
@@ -90,72 +95,35 @@ echo "$WORK_DIR/data/output"
 Run FHIR PIT in a docker container with -v. This will allow the output data to persist and be easily accessible by users on the host.
 
 ```{bash}
-docker run -m="32g" -v "$WORK_DIR/data/output":"$WORK_DIR/data/output" renci/fhir-pit:1.0 
+docker run -m="25g" -v "$WORK_DIR/data/output":"$WORK_DIR/data/output" renci/fhir-pit:1.0 
 ```
 
 ### Step 2. Access and analyze results {#step-2}
 
-The main outputs to consider are in ICEES and ICEES2_dei directories. Each directory contains one or multiple csv files with information at different granularities.
+The main outputs to consider are in ICEES, ICEES2 and ICEES2_dei directories. Each directory contains one or multiple csv files with information at different granularities. 
 
 
 ```{r}
-#TODO: Replace basepath url with the work_dir variable.
 year_ <- 2010
-basepath <- "/Users/jj/Desktop/old_FHIR-PIT/data/output"
-icees_dir <- file.path(basepath,"icees", year_, "per_patient")
-icees2_url <- file.path(basepath,"icees2", year_, "all_patient")
+basepath <- file.path(work_dir, "data", "output")
 icees2dei_url <- file.path(basepath,"icees2_dei",  sprintf("%spatient_deidentified", year_))
 ```
 
-ICEES contains a CSV per subject. Each CSV consists of the subject’s visits, concatenated with the corresponding environmental exposures that occurred during that day. If a subject has multiple visits per day, the transformation PreprocPerPatSeriesToVector aggregates multiple daily visits by counting how many times a drug/diagnose appeared. The directory for each subject is indexed by the "patient_num" column.
+ICEES contains a CSV per subject. Each CSV consists of the subject’s visits, concatenated with the corresponding environmental exposures that occurred during that day. If a subject has multiple visits per day, the transformation PreprocPerPatSeriesToVector aggregates multiple daily visits by counting how many times a drug/diagnose appeared. The directory for each subject is indexed by the "patient_num" column. ICEES2 contains a single CSV with the aggregation of all patients  grouped by (Subject, study period). Lastly,ICEES2DEI contains the same information but deidentified. This is the recommended output for data sharing. For exposition purposes we focus on ICEES2DEI and reorder its columns.
 
 ```{r}
-pat_files <- list.files(icees_dir)
-
-file_max_count <- 0
-for (i in 1:length(pat_files)) {
-  pat_file <- file.path(icees_dir, pat_files[i])
-  data <- read.csv(pat_file, header = TRUE)
-  data[['start_date']] <- strptime(data[['start_date']], 
-                                 format = "%Y-%m-%d") 
-  # Printing content of Text File
-  if (file_max_count < length(unique(data[['start_date']])) ){
-    data_max <- data
-    file_max_count <- length(unique(data[['start_date']]))
-  }
-}
-
-```
-
-```{r}
-data_max
-```
-
-ICEES2 
-
-```{r}
-icees2 <- read.csv(icees2_url, header = TRUE)
-```
-
-```{r}
-icees2
-```
-
-
-ICEES2_dei contains a single CSV with the aggregation of all patients  grouped by (Subject, study period) and deidentified. This is the best format for data sharing.
-
-```{r}
-icees2dei <- read.csv(icees2dei_url, header = TRUE)
+icees2dei_colorder <- scan("icees2dei_column_order.txt", what="", sep="\n")
+icees2dei <- read.csv(icees2dei_url, header = TRUE)[, icees2dei_colorder]
 ```
 
 ```{r}
 icees2dei
 ```
 
-Plot `AvgDailyPM2.5Exposure_StudyAvg` vs `MaxDailyOzoneExposure_StudyAvg` to identify any correlation between distance to roadway and avg. daily PM2.5 exposure.
+The output of ICEES2DEI may be used to fo further analysis. For instance, below we plot `AvgDailyPM2.5Exposure` vs `AvgDailyOzoneExposure` to identify any correlation between average daily ozone exposure and average daily PM2.5 exposure.
 
 ```{r}
-ggplot(icees2dei,aes(y=AvgDailyPM2.5Exposure_StudyAvg,x=MaxDailyOzoneExposure_StudyAvg)) + geom_point(color='blue') +
+ggplot(icees2dei,aes(y=AvgDailyPM2.5Exposure,x=AvgDailyOzoneExposure)) + geom_point(color='blue') +
   geom_smooth(method = "lm", se = FALSE)
 ```
 
@@ -165,7 +133,7 @@ FHIR PIT currently assumes a patient or subject resides in a single geolocation 
 FHIR records with exposure data through patient’s address, and environmental data through patient’s address, study period and date-of-visit. 
 
 ## Concluding Remarks
-This tutorial demonstrates how to execute FHIR-PIT and analyze its output. The data used in this tutorial is synthetic for demostranstion purposes. The user may download the complete environmental exposures dataset from [link] and add their own FHIR data for realistic analysis. To add data, simply update the  `data/FHIR/all` directory. 
+This tutorial demonstrates how to execute FHIR PIT and analyze its output. The data used in this tutorial is synthetic for demostranstion purposes. The user may download the complete environmental exposures dataset from [link] and add their own FHIR data for realistic analysis. To add data, update the  `data/FHIR/all` directory. 
 
 ## Resources
 
