@@ -147,12 +147,12 @@ This tutorial demonstrates how to execute FHIR PIT and analyze its output. The p
 
 ## Resources
 
-[1] J.J. Garcia, K. Fecho, H. Yi, and H. Xu, “FHIR-PIT: FHIR Patient data Integration Tool.” [Online]. Available: https://github.com/ExposuresProvider/FHIR-PIT
+[1] Garcia, J. J., Fecho, K., Yi, H., and Xu, H., “FHIR-PIT: FHIR Patient data Integration Tool.” [Online]. Available at: https://github.com/ExposuresProvider/FHIR-PIT.
 
-[2] Garcia, J. J., “FHIR-PIT: Transformations documentation” [Online]. Available: https://github.com/ExposuresProvider/FHIR-PIT/blob/contained_demo/spark/FHIR-PIT-Transformations-Documentation.pdf
+[2] Garcia, J. J., “FHIR-PIT: Transformations documentation” [Online]. Available at: https://github.com/ExposuresProvider/FHIR-PIT/blob/contained_demo/spark/FHIR-PIT-Transformations-Documentation.pdf.
 
-[3] Xu, H. et al., “FHIR PIT: an open software application for spatiotemporal integration of clinical data and environmental exposures data,” BMC Med Inform Decis Mak, vol. 20, no. 1, p. 53, Dec. 2020, doi: 10.1186/s12911-020-1056-9.
+[3] Xu, H., et al., “FHIR PIT: an open software application for spatiotemporal integration of clinical data and environmental exposures data,” BMC Med Inform Decis Mak, vol. 20, no. 1, p. 53, 2020. doi: 10.1186/s12911-020-1056-9.
 
-[4] Fecho K, Pfaff E, Xu H, et al. A novel approach for exposing and sharing clinical data: the Translator Integrated Clinical and Environmental Exposures Service. J Am Med Inform Assoc. 2019;26(10):1064-1073. doi:10.1093/jamia/ocz042.
+[4] Fecho, K., et al., "A novel approach for exposing and sharing clinical data: the Translator Integrated Clinical and Environmental Exposures Service," J Am Med Inform Assoc., vol. 26, no. 10, pp. 1064-1073, 2019. doi:10.1093/jamia/ocz042.
 
-[5] US Department of Health and Human Service, Office for Civil Rights. Guidance Regarding Methods for De-identification of Protected Health Information in Accordance with the Health Insurance Portability and Accountability Act (HIPAA) Privacy Rule, October 25, 2022. https://www.hhs.gov/hipaa/for-professionals/privacy/special-topics/de-identification/index.html
+[5] US Department of Health and Human Service, Office for Civil Rights, "Guidance Regarding Methods for De-identification of Protected Health Information in Accordance with the Health Insurance Portability and Accountability Act (HIPAA) Privacy Rule," October 25, 2022. https://www.hhs.gov/hipaa/for-professionals/privacy/special-topics/de-identification/index.html
