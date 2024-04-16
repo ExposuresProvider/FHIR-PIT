@@ -49,7 +49,7 @@ FHIR PIT (HL7 Fast Healthcare Interoperability Resources Patient data Integratio
 
 In essence, the pipeline is a sequence of transformations configured from a YAML file. The transformation steps join FHIR patient records with environmental exposure estimates using patient geocodes (e.g., primary residence) and date(s) of healthcare visits as the spatiotemporal links. At the end of each linkage step, FHIR PIT saves the linked tables to an intermediate folder to support rapid re-execution, should any given step fail to complete (e.g., lack of disk space). To support multiple healthcare visits, FHIR PIT vectorizes the FHIR patient records by grouping daily FHIR domains (e.g., Condition, Laboratory, Medication, Procedure) and counting them. The features associated with the patient are then grouped by user-defined study periods (e.g., year) and aggregated with user-defined statistics (e.g., counts, mean, median, first measurement, last measurement).
 
-FHIR PIT was developed to support ICEES (Integrated Clinical and Environmental Exposures Service) [4]. However, the tool is not specific to ICEES, but rather can be used to integrate any source of FHIR files with any source of environmental exposures data. In this tutorial, we use synthetic FHIR files and sample environmental exposures data from several public sources: 
+FHIR PIT was developed to support ICEES (Integrated Clinical and Environmental Exposures Service) [4]. However, the tool is not specific to ICEES, but rather can be used to integrate any source of FHIR files with any source of environmental exposures data. In this tutorial, we use synthetic FHIR files and randomly sampled environmental exposures data derived from several public sources: 
 
 * [US Environmental Protection Agency airborne pollutant exposures data](https://www.epa.gov/cmaq) - The US EPA maintains a collection of model-derived estimates of airborne pollutant exposures at varying spatial and temporal resolution. ICEES exposes data on a subset of available airborne pollutants such as PM2.5 and ozone.
 * [US Department of Transportation (DOT), Federal Highway Administration (FHA), Highway Performance Monitoring System (HPMS) major roadway/highway exposures data](https://www.fhwa.dot.gov/policyinformation/hpms.cfm) - ICEES exposes US DOT data on major roadway/highway exposures, including point estimates of residential distance from a major roadway or highway.
@@ -126,7 +126,7 @@ icees2dei <- read.csv(icees2dei_url, header = TRUE)[, icees2dei_colorder]
 icees2dei
 ```
 
-The deidentified ICEES2DEI CSV file may be used for further analysis. For instance, below we plot `AvgDailyPM2.5Exposure` vs `AvgDailyOzoneExposure` to identify any correlation between average daily ozone exposure and average daily PM2.5 exposure.
+The deidentified ICEES2DEI CSV file may be used for further analysis. For instance, below we plot `AvgDailyPM2.5Exposure` vs `AvgDailyOzoneExposure` to identify any correlation between average daily ozone exposure and average daily PM2.5 exposure, noting that a correlation is not expected for this tutorial, as we randomly sampled the exposures data.
 
 ```{r}
 ggplot(icees2dei,aes(y=AvgDailyPM2.5Exposure,x=AvgDailyOzoneExposure)) + geom_point(color='blue') +
