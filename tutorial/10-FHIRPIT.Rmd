@@ -11,7 +11,7 @@ editor_options:
 |-------------------------------------------------------------------|
 | title: "FHIR PIT: HL7 Fast Healthcare Interoperability Resources Patient data Integration Tool" |
 | subtitle: "Tutorial"                                              |
-| date: "April 1, 2024"                                        |
+| date: "April 30, 2024"                                        |
 | author: "Juan Garcia, Kara Fecho, Hong Yi"                                              |
 | format: html                                                      |
 
