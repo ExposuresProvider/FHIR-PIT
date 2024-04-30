@@ -1,6 +1,8 @@
+import os
 import pandas as pd
 import numpy as np
 import yaml
+
 
 def getBinary(input_conf):  
     with open(input_conf) as icf:
@@ -31,7 +33,12 @@ def addSex2(df):
 
 def cut_col(col):
     print(col.name, col.describe())
-    new_col = pd.cut(col, [-float("inf"), 0.5, float("inf")], right=False, include_lowest=True, labels=["0", "1"])
+    try:
+        new_col = pd.cut(col, [-float("inf"), 0.5, float("inf")], right=False, include_lowest=True, labels=["0", "1"])
+    except TypeError as t:
+        print(f"ERROR: {t}")
+        print(f"===== Keeping col {col.name} the same =====")
+        new_col = col
     return new_col
 
 
@@ -124,5 +131,46 @@ def preprocSocial(df):
     df["Landfill_Exposure"], binsadd = pd.cut(df["Landfill_Exposure"].astype(float), [0, 500, 1000, 2000, 4000, float("inf")], labels=list(map(str, [1, 2, 3, 4, 5])), include_lowest=True, right=False, retbins=True)
     bins += [("Landfill_Exposure", binsadd.tolist())]
 
-
     return bins
+
+
+def get_patient_file(in_dir, year, visit=False):
+    # get patient file for the specified year in input directory in_dir
+    if visit:
+        input_file_p = f"{in_dir}/{year}/all_visit"
+    else:
+        input_file_p = f"{in_dir}/{year}/all_patient"
+    if not os.path.exists(input_file_p):
+        if visit:
+            input_file_p = f"{in_dir}/{year}visit"
+        else:
+            input_file_p = f"{in_dir}/{year}patient"
+        if not os.path.exists(input_file_p):
+            raise Exception(f'patient data for {year} cannot be found in file {input_file_p}')
+    return input_file_p
+
+
+def get_all_index_patient_across_years(in_dir, out_dir, years):
+    """
+    get patient to index mapping across study period years
+    :param in_dir: input folder to get patient data for each year
+    :param out_dir: output folder to store the csv file which contains patient to index mapping across all years
+    :param years: list of all years in the study period
+    :return: the output csv file with path which contains patient to index mapping across all years
+    """
+    pat_to_idx_df = None
+    all_index_patient_file_p = f"{out_dir}/all_index_patient.csv"
+    if not os.path.exists(all_index_patient_file_p):
+        for year in years:
+            # if in_dir is icees2 folder, patient file for the year is stored in {in_dir}/{year}/all_patient;
+            # otherwise, if in_dir in icees2_bins folder, patient file for the year is stored in {in_dir}/{year}patient
+            input_file_p = get_patient_file(in_dir, year)
+            df_year = pd.read_csv(input_file_p, quotechar='"', usecols=['patient_num'])
+
+            if pat_to_idx_df is None:
+                pat_to_idx_df = df_year
+            else:
+                pat_to_idx_df = pd.concat([pat_to_idx_df, df_year], ignore_index=True)
+        pat_to_idx_df = pat_to_idx_df.drop_duplicates().reset_index(drop=True)
+        pat_to_idx_df.to_csv(all_index_patient_file_p, index=True, index_label='index')
+    return all_index_patient_file_p

@@ -1,0 +1,13 @@
+**/.ensime
+**/.ensime_cache
+**/.idea
+**/sing
+**/target
+**/test
+**/progress
+**/report
+**/spark-warehouse
+**/*.md
+*.crc
+data/output
+**/*~

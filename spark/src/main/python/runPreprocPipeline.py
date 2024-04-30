@@ -11,7 +11,7 @@ tf.close()
 
 tfname = tf.name
 
-subprocess.call(["dhall-to-yaml", "--file", config, "--output", tfname])
+# subprocess.call(["dhall-to-yaml", "--file", config, "--output", tfname])
 
 def submit(host_name, cls, *args, **kwargs):
     if host_name == "local":
@@ -47,7 +47,7 @@ def submit(host_name, cls, *args, **kwargs):
     if err:
         print("error:", err)
 
-submit(host_name, "datatrans.PreprocPipeline", "--config=" + tfname)
+submit(host_name, "datatrans.PreprocPipeline", "--config=" + config)
 
 os.unlink(tfname)
 
