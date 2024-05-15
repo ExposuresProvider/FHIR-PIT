@@ -1,6 +1,6 @@
 import pandas as pd
-import sys
 import os
+
 
 def load_file(filename):
     path = f"formatted/{filename}"
