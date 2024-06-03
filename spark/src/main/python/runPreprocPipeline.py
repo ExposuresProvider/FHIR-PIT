@@ -4,7 +4,7 @@ import subprocess
 import os
 import tempfile
 
-host_name, config = sys.argv[1:]
+host_name, driver_memory, executor_memory, config = sys.argv[1:]
 
 tf = tempfile.NamedTemporaryFile(delete=False)
 tf.close()
@@ -13,7 +13,7 @@ tfname = tf.name
 
 # subprocess.call(["dhall-to-yaml", "--file", config, "--output", tfname])
 
-def submit(host_name, cls, *args, **kwargs):
+def submit(host_name, cls, driver_mem, exec_mem, *args, **kwargs):
     if host_name == "local":
         submit_2_target_nodet = "local[*]"
     else:
@@ -23,9 +23,9 @@ def submit(host_name, cls, *args, **kwargs):
            "--master",
            submit_2_target_nodet,
            "--executor-memory",
-           "140g",
+           exec_mem,
            "--driver-memory",
-           "64g",
+           driver_mem,
            "--num-executors",
            "1",
            "--executor-cores",
@@ -47,7 +47,7 @@ def submit(host_name, cls, *args, **kwargs):
     if err:
         print("error:", err)
 
-submit(host_name, "datatrans.PreprocPipeline", "--config=" + config)
+submit(host_name, "datatrans.PreprocPipeline", driver_memory, executor_memory, "--config=" + config)
 
 os.unlink(tfname)
 
