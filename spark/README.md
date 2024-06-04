@@ -13,10 +13,16 @@ host machine to see the output data from FHIR PIT run.
 ```git clone --recursive https://github.com/ExposuresProvider/FHIR-PIT.git```
 - Run FHIR PIT in a docker container with `-v` option to mount a volume from the host into the docker 
 container where FHIR PIT will run. This will allow the output data to persist and be easily 
-accessible by users on the host. Note that ```--memory``` flag is added to run the FHIR-PIT docker container with the sample
-input data successfully since FHIR-PIT may be memory intensive depending on the size of input data.
+accessible by users on the host. Note that it is a good practice to add ```-m``` flag to run the 
+FHIR-PIT docker container to ensure enough memory is allocated to the container for running FHIR-PIT with 
+the sample input data successfully. If you run FHIR-PIT with your own data much larger than the sample data,
+you may need to increase spark driver memory and executor memory input parameters in the last line of 
+Dockerfile from the current 1g to a bigger value, e.g., 2g, and update the ```-m``` flag value in the 
+docker run command accordingly. It is best practice to make sure the ```-m``` flag value in the docker 
+run command is equal or a little greater than the sum of the allocated spark driver memory and executor memory 
+to avoid memory swapping for better performance.
 
-```docker run -v /home/user/FHIR-PIT/data/output:/FHIR-PIT/data/output --memory 25g -it renci/fhir-pit:1.0```
+```docker run -v /home/user/FHIR-PIT/data/output:/FHIR-PIT/data/output -m 4g -it renci/fhir-pit:1.0```
 
 Make sure `/home/user/FHIR-PIT/data/output` directory corresponds to the directory you want to 
 hold FHIR-PIT run output data in your operating system host environment. 

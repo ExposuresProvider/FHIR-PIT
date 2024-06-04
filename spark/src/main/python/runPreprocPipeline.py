@@ -1,5 +1,4 @@
 import sys
-from submit import submit
 import subprocess
 import os
 import tempfile
