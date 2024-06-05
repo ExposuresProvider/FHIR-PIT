@@ -12,7 +12,7 @@ FHIR PIT is implemented using Apache Spark, Python, and Singularity. Spark makes
 
 For details regarding how to build and run FHIR PIT with sample data, refer to https://github.com/ExposuresProvider/FHIR-PIT/tree/master/spark. FHIR PIT also has been dockerized to encapsulate the software and platform dependencies and facilitate execution and deployment (see https://github.com/ExposuresProvider/FHIR-PIT/blob/master/Dockerfile).
 
-One important note when running FHIR PIT is that the application may be memory-intensive, depending on the size of the input data. For example, for the sample data available in the GitHub repository, the application requires 25GB RAM to run through all of the data processing and integration steps, when running Docker natively. (Docker Desktop on Windows/Mac may incur additional memory overhead.)
+One important note when running FHIR PIT is that the application may be memory-intensive, depending on the size of the input data. For example, for the sample data available in the GitHub repository, the application requires 4GB RAM to run through all of the data processing and integration steps, when running Docker natively. (Docker Desktop on Windows/Mac may incur additional memory overhead.)
 
 For additional information on FHIR PIT, including an example use-case application, please see [Xu et al. 2020](https://bmcmedinformdecismak.biomedcentral.com/articles/10.1186/s12911-020-1056-9).
 
