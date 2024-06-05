@@ -89,10 +89,10 @@ Activate your python virtual environment (python 3.6.9 and above), cd into FHIR-
 python src/main/python/runPreprocPipeline.py <master url> <spark driver memory> <spark executor memory> <yaml config file>
 ```
 Where `<master_url>` is the [supported master URL](https://spark.apache.org/docs/latest/submitting-applications.html#master-urls)
-for the spark cluster, '<spark driver memory>' and '<spark executor memory>' are the memory size allocated to Spark 
+for the spark cluster, `<spark driver memory>` and `<spark executor memory>` are the memory size allocated to Spark 
 (see [Spark Memory documentation](https://spark.apache.org/docs/latest/hardware-provisioning.html#memory) for details), 
 and `<config file>` is the desired dhall or YAML config file for the run. 
-If FHIR-PIT is run via Spark with one worker thread, `local` can be passed as the '<master url>' to run FHIR-PIT 
+If FHIR-PIT is run via Spark with one worker thread, `local` can be passed as the `<master url>` to run FHIR-PIT 
 locally with no parallelism. 
 
 For example: `python src/main/python/runPreprocPipeline.py local 2g 2g ./config/example_demo.yaml`
