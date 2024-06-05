@@ -30,4 +30,4 @@ RUN pip install pyspark==2.4.5
 
 WORKDIR /FHIR-PIT/spark
 ENTRYPOINT ["python3", "src/main/python/runPreprocPipeline.py"]
-CMD ["local", "./config/example_demo.yaml"]
+CMD ["local", "2g", "2g", "./config/example_demo.yaml"]

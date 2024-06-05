@@ -13,10 +13,16 @@ host machine to see the output data from FHIR PIT run.
 ```git clone --recursive https://github.com/ExposuresProvider/FHIR-PIT.git```
 - Run FHIR PIT in a docker container with `-v` option to mount a volume from the host into the docker 
 container where FHIR PIT will run. This will allow the output data to persist and be easily 
-accessible by users on the host. Note that ```--memory``` flag is added to run the FHIR-PIT docker container with the sample
-input data successfully since FHIR-PIT may be memory intensive depending on the size of input data.
+accessible by users on the host. Note that it is a good practice to add ```-m``` flag to run the 
+FHIR-PIT docker container to ensure enough memory is allocated to the container for running FHIR-PIT with 
+the sample input data successfully. If you run FHIR-PIT with your own data much larger than the sample data,
+you may need to increase spark driver memory and executor memory input parameters in the last line of 
+Dockerfile from the current 2g to a bigger value, e.g., 4g, and update the ```-m``` flag value in the 
+docker run command accordingly. It is best practice to make sure the ```-m``` flag value in the docker 
+run command is equal to or a little greater than the sum of the allocated spark driver memory and executor memory 
+to avoid memory swapping for better performance.
 
-```docker run -v /home/user/FHIR-PIT/data/output:/FHIR-PIT/data/output --memory 25g -it renci/fhir-pit:1.0```
+```docker run -v /home/user/FHIR-PIT/data/output:/FHIR-PIT/data/output -m 4g -it renci/fhir-pit:1.0```
 
 Make sure `/home/user/FHIR-PIT/data/output` directory corresponds to the directory you want to 
 hold FHIR-PIT run output data in your operating system host environment. 
@@ -80,14 +86,16 @@ sbt test
 ## run
 Activate your python virtual environment (python 3.6.9 and above), cd into FHIR-PIT/spark folder and execute:
 ```
-python src/main/python/runPreprocPipeline.py <master url> <yaml config file>
+python src/main/python/runPreprocPipeline.py <master url> <spark driver memory> <spark executor memory> <yaml config file>
 ```
 Where `<master_url>` is the [supported master URL](https://spark.apache.org/docs/latest/submitting-applications.html#master-urls)
-for the spark cluster and `<config file>` is the desired dhall or YAML config file for the run. 
-If FHIR-PIT is run via Spark with one worker thread, `local` can be passed as the <master url> to run FHIR-PIT 
+for the spark cluster, `<spark driver memory>` and `<spark executor memory>` are the memory size allocated to Spark 
+(see [Spark Memory documentation](https://spark.apache.org/docs/latest/hardware-provisioning.html#memory) for details), 
+and `<config file>` is the desired dhall or YAML config file for the run. 
+If FHIR-PIT is run via Spark with one worker thread, `local` can be passed as the `<master url>` to run FHIR-PIT 
 locally with no parallelism. 
 
-For example: `python src/main/python/runPreprocPipeline.py local ./config/example_demo.yaml`
+For example: `python src/main/python/runPreprocPipeline.py local 2g 2g ./config/example_demo.yaml`
 
 ## config file format
 
