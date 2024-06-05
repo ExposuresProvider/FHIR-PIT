@@ -17,9 +17,9 @@ accessible by users on the host. Note that it is a good practice to add ```-m```
 FHIR-PIT docker container to ensure enough memory is allocated to the container for running FHIR-PIT with 
 the sample input data successfully. If you run FHIR-PIT with your own data much larger than the sample data,
 you may need to increase spark driver memory and executor memory input parameters in the last line of 
-Dockerfile from the current 1g to a bigger value, e.g., 2g, and update the ```-m``` flag value in the 
+Dockerfile from the current 2g to a bigger value, e.g., 4g, and update the ```-m``` flag value in the 
 docker run command accordingly. It is best practice to make sure the ```-m``` flag value in the docker 
-run command is equal or a little greater than the sum of the allocated spark driver memory and executor memory 
+run command is equal to or a little greater than the sum of the allocated spark driver memory and executor memory 
 to avoid memory swapping for better performance.
 
 ```docker run -v /home/user/FHIR-PIT/data/output:/FHIR-PIT/data/output -m 4g -it renci/fhir-pit:1.0```
