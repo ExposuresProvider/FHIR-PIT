@@ -103,7 +103,7 @@ echo "$WORK_DIR/data/output"
 Run FHIR PIT in a docker container with -v. This will allow the output data to persist and be easily accessible by users on the host.
 
 ```{bash}
-docker run -m="4g" -v "$WORK_DIR/data/output":"$WORK_DIR/data/output" renci/fhir-pit:1.0
+docker run -m=4g -v "$WORK_DIR/data/output":"/FHIR-PIT/data/output" renci/fhir-pit:1.0
 ```
 
 ### Step 2. Access and analyze results {#step-2}
