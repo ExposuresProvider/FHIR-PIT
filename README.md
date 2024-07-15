@@ -10,7 +10,7 @@ FHIR PIT consists of several transformation steps, which are building blocks tha
 
 FHIR PIT is implemented using Apache Spark, Python, and Singularity. Spark makes it easy to parallelize and distribute the data transformation. Python is used to simplify the application interface to the transformation steps. Singularity allows the application to run portably on different machines and platforms.
 
-For details regarding how to build and run FHIR PIT with sample data, refer to https://github.com/ExposuresProvider/FHIR-PIT/tree/master/spark. FHIR PIT also has been dockerized to encapsulate the software and platform dependencies and facilitate execution and deployment (see https://github.com/ExposuresProvider/FHIR-PIT/blob/master/Dockerfile).
+For details regarding how to build and run FHIR PIT with sample data, refer to https://github.com/ExposuresProvider/FHIR-PIT/tree/master/spark. FHIR PIT also has been dockerized to encapsulate the software and platform dependencies and facilitate execution and deployment (see https://github.com/ExposuresProvider/FHIR-PIT/blob/master/Dockerfile). A tutorial is available at https://github.com/ExposuresProvider/FHIR-PIT/tree/master/tutorial. An R-Bookdown version will soon be available.
 
 One important note when running FHIR PIT is that the application may be memory-intensive, depending on the size of the input data. For example, for the sample data available in the GitHub repository, the application requires 4GB RAM to run through all of the data processing and integration steps, when running Docker natively. (Docker Desktop on Windows/Mac may incur additional memory overhead.)
 
