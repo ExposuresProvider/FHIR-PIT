@@ -29,4 +29,10 @@ if __name__ == '__main__':
     if 'FIPS' in df2.columns and df2.FIPS.dtype == float:
         df2.FIPS = df2.FIPS.astype(int)
     df = pd.merge(df1, df2, on=['FIPS', 'Date', 'Longitude', 'Latitude'], how="outer")
+    # update column names as needed to match what FHIR PIT expects
+    df.rename(columns={'pm25_daily_average(ug/m3)': 'pm25_daily_average', 
+                       'pm25_daily_average_stderr(ug/m3)': 'pm25_daily_average_stderr',
+                       'ozone_daily_8hour_maximum(ppb)': 'ozone_daily_8hour_maximum',
+                       'ozone_daily_8hour_maximum_stderr(ppb)': 'ozone_daily_8hour_maximum_stderr'},
+              inplace=True)
     df.to_csv(output_file, index=False)
