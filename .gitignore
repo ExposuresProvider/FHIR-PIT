@@ -8,3 +8,4 @@ data/output/
 spark/progress
 spark/report
 spark/target
+.DS_Store

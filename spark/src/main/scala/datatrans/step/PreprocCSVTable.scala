@@ -239,6 +239,26 @@ object PreprocCSVTable extends StepImpl {
           df_all_visit = df_all_visit.withColumn(colname, when(df_all_visit.col(colname).isNull, 0).otherwise(df_all_visit.col(colname)))
         })
 
+        // Map HPMS road distance columns (1 per release year) to a single column
+        // using the latest past release's value for the study period
+        mapper.nearest_road_map_map.values.map{ x => 
+          val distance_feature_names = x.getDistanceFeatureNames()
+          val selectDistanceFeatureValue = udf((end_date: String, values: Seq[Double]): Double = {
+            val study_end_joda = DateTime.parse(end_date, ISODateTimeFormat.dateParser())
+            val feature_name = x.getDistanceFeatureNameForPeriod(study_end_joda)
+            val idx = distance_feature_names.indexOf(feature_name)
+            values[idx]
+          })
+          df_all_visit = df_all_visit.withColumn(
+            x.distance_feature_name,
+            selectDistanceFeatureValue(
+              $"end_date",
+              array(distance_feature_names.map(col): _*)
+            )
+          )
+        }
+          
+
         val deidentify = df_all_visit.columns.intersect(config.deidentify)
         df_all_visit = df_all_visit
           .drop(deidentify : _*)

@@ -25,7 +25,30 @@ object Mapper {
 
   case class Feature(feature_name: String, feature_type: String)
   case class GEOIDMapping(GEOID: String, columns: Map[String, String])
-  case class NearestMapping(distance_feature_name: String, attributes_to_features_map: Map[String, Feature])
+  case class NearestMapping(
+    release_years: Array[String],
+    distance_feature_name: String,
+    attributes_to_features_map: Map[String, Feature]
+  ) {
+    def getDistanceFeatureNames: Map[String, String] = {
+      release_years.map{ release_year =>
+        release_year -> distance_feature_name.format(release_year)
+      }.toMap
+    }
+    def getEarliestReleaseYear: String = {
+      release_years.map(_.toInt).min
+    }
+    def getDistanceFeatureNameForPeriod(end_date: DateTime): String = {
+      val featureNames = getDistanceFeatureNames()
+      val year = end_date.getYear().toString
+      if (!release_years.contains(year)) {
+        println(f"couldn't match end_date $end_date to HPMS release year, defaulting to earliest release.")
+        featureNames.get(getEarliestReleaseYear)
+      } else {
+        featureNames.get(year)
+      }
+    }
+  }
 
   case class FeatureMapping(FHIR: Option[Map[String, FHIRFeatureMapping]], GEOID: Option[Map[String, GEOIDMapping]], NearestRoad: Option[Map[String, NearestMapping]], NearestPoint: Option[Map[String, NearestMapping]], Visit: Option[Seq[String]])
 

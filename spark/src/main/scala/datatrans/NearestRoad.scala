@@ -35,14 +35,14 @@ class NearestRoad(roadShapefilePath : String, maximum_search_radius : Double) {
   var lastMatched : Option[SimpleFeature] = None
   index.addAll(features)
 
-  def getMinimumDistance(lat : Double, lon : Double) : Option[Double] = {
+  def getMinimumDistance(lat : Double, lon : Double) : Map[String, Option[Double]] = {
 
     val p = createPointLCC(lat, lon)
     findMinimumDistance(p)
 
   }
 
-  private def findMinimumDistance(p : Point) : Option[Double] = {
+  private def findMinimumDistance(p : Point) : Map[String, Option[Double]] = {
 
     val coordinate = p.getCoordinate
     val search = new ReferencedEnvelope(new Envelope(coordinate),
@@ -53,11 +53,16 @@ class NearestRoad(roadShapefilePath : String, maximum_search_radius : Double) {
 
     val candidates = index.subCollection(bbox)
 
-    var minDist: Option[Double] = None
+    var releaseYearMinDistances = Map[String, Option[Double]]()
     val itr = candidates.features()
 
     while (itr.hasNext) {
       val feature = itr.next()
+      val releaseYear = feature.getAttribute("RELEASE_YEAR").asInstanceOf[String]
+
+      if (!releaseYearMinDistances.contains(releaseYear)) {
+        releaseYearMinDistances = releaseYearMinDistances + (releaseYear -> None)
+      }
 
       // use following 2 lines to get road name
       //attribute = feature.getAttribute("FULLNAME").asInstanceOf[String]
@@ -68,14 +73,14 @@ class NearestRoad(roadShapefilePath : String, maximum_search_radius : Double) {
       val here = line.project(coordinate)
       val point = line.extractPoint(here)
       val dist = point.distance(coordinate)
-      if (dist <= maximum_search_radius && (minDist == None || dist < minDist.get)) {
-        minDist = Some(dist)
+      if (dist <= maximum_search_radius && (releaseYearMinDistances(releaseYear).isEmpty || dist < releaseYearMinDistances(releaseYear).get)) {
+        releaseYearMinDistances = releaseYearMinDistances.updated(releaseYear, Some(dist))
         lastMatched = Some(feature)
       }
     }
 
-    log.debug(s"p = $p, minDist = $minDist")
-    minDist
+    log.debug(s"p = $p, minDistances = $releaseYearMinDistances")
+    releaseYearMinDistances
   }
 
   def getLastMatched : Option[SimpleFeature] = lastMatched
@@ -114,6 +119,8 @@ class NearestRoad(roadShapefilePath : String, maximum_search_radius : Double) {
   def getMatchedSpeed : Option[String] = getMatchedAttribute("SPEED").map(_.toString)
 
   def getMatchedRoadType : Option[String] = getMatchedAttribute("ROADTYPE").map(_.asInstanceOf[String])
+
+  def getMatchedReleaseYear : Option[String] = getMatchedAttribute("RELEASE_YEAR").map(_.toString)
 
   def getMatchedAttribute(attributeName : String) : Option[Any] = lastMatched.map(_.getAttribute(attributeName))
 

@@ -1855,10 +1855,12 @@ GEOID:
       ur: ur
 NearestRoad:
   nearestRoadTL:
-    distance_feature_name: MajorRoadwayHighwayExposure
+    # release_years: ["2016", "2017"]
+    distance_feature_name: "MajorRoadwayHighwayExposure"
     attributes_to_features_map: {}
   nearestRoadHPMS:
-    distance_feature_name: RoadwayDistanceExposure
+    release_years: ["2016", "2017"]
+    distance_feature_name: "RoadwayDistanceExposure%s"
     attributes_to_features_map:
       ROADTYPE:
         feature_name: RoadwayType
@@ -1872,6 +1874,10 @@ NearestRoad:
       THROUGH_LA:
         feature_name: RoadwayLanes
         feature_type: number
+      RELEASE_YEAR:
+        feature_name: ReleaseYear
+        feature_type: number
+
 NearestPoint:
   cafo:
     distance_feature_name: CAFO_Exposure
