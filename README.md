@@ -1,6 +1,7 @@
 [![Build Status](https://travis-ci.com/NCATS-Tangerine/FHIR-PIT.svg?branch=master)](https://travis-ci.com/NCATS-Tangerine/FHIR-PIT)
 
-# FHIR PIT
+# FHIR &#174; PIT 
+Fast Healthcare Interoperability Resources (FHIR®) is the registered trademark of HL7 and is used with the permission of HL7.
 
 FHIR Patient data Integration Tool (FHIR PIT) is an open-source tool that uses geocodes and time stamps of varying spatiotemporal resolution to integrate clinical data (e.g., electronic health records [EHR]) with environmental exposures data from multiple public sources before stripping the data of Protected Health Information (PHI, including geocodes and time stamps) and binning feature variables to create integrated datasets, whereby rows represent individual patients or subjects and columns represent demographic variables, clinical measures, or exposure estimates. FHIR PIT is modular and extensible and can be adapted for virtually any type of data that requires geocodes and dates for integration with PHI or any Personally Identifiable Information.
 
