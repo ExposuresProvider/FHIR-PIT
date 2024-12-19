@@ -36,16 +36,18 @@ object Mapper {
       }.toMap
     }
     def getEarliestReleaseYear: String = {
-      release_years.map(_.toInt).min
+      release_years.map(_.toInt).min.toString
     }
-    def getDistanceFeatureNameForPeriod(end_date: DateTime): String = {
-      val featureNames = getDistanceFeatureNames()
+    // Return release year associated with period and the feature name associated with the release year.
+    def getDistanceFeatureForPeriod(end_date: DateTime): (String, String) = {
+      val featureNames = getDistanceFeatureNames
       val year = end_date.getYear().toString
       if (!release_years.contains(year)) {
-        println(f"couldn't match end_date $end_date to HPMS release year, defaulting to earliest release.")
-        featureNames.get(getEarliestReleaseYear)
+        val earliest_year = getEarliestReleaseYear
+        println(f"couldn't match end_date $end_date to HPMS release year, defaulting to earliest release year $earliest_year.")
+        (earliest_year, featureNames(earliest_year))
       } else {
-        featureNames.get(year)
+        (year, featureNames(year))
       }
     }
   }

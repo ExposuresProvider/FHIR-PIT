@@ -1855,8 +1855,8 @@ GEOID:
       ur: ur
 NearestRoad:
   nearestRoadTL:
-    # release_years: ["2016", "2017"]
-    distance_feature_name: "MajorRoadwayHighwayExposure"
+    release_years: ["2015"]
+    distance_feature_name: "MajorRoadwayHighwayExposure%s"
     attributes_to_features_map: {}
   nearestRoadHPMS:
     release_years: ["2016", "2017"]
@@ -1874,9 +1874,10 @@ NearestRoad:
       THROUGH_LA:
         feature_name: RoadwayLanes
         feature_type: number
-      RELEASE_YEAR:
-        feature_name: ReleaseYear
-        feature_type: number
+      # Pretty sure including this here is not required to access the attribute in NearestRoad.
+      # RELEASE_YE:
+      #   feature_name: RoadwayReleaseYear
+      #   feature_type: number
 
 NearestPoint:
   cafo:

@@ -58,7 +58,7 @@ class NearestRoad(roadShapefilePath : String, maximum_search_radius : Double) {
 
     while (itr.hasNext) {
       val feature = itr.next()
-      val releaseYear = feature.getAttribute("RELEASE_YEAR").asInstanceOf[String]
+      val releaseYear = feature.getAttribute("RELEASE_YE").asInstanceOf[String]
 
       if (!releaseYearMinDistances.contains(releaseYear)) {
         releaseYearMinDistances = releaseYearMinDistances + (releaseYear -> None)
@@ -120,7 +120,7 @@ class NearestRoad(roadShapefilePath : String, maximum_search_radius : Double) {
 
   def getMatchedRoadType : Option[String] = getMatchedAttribute("ROADTYPE").map(_.asInstanceOf[String])
 
-  def getMatchedReleaseYear : Option[String] = getMatchedAttribute("RELEASE_YEAR").map(_.toString)
+  def getMatchedReleaseYear : Option[String] = getMatchedAttribute("RELEASE_YE").map(_.toString)
 
   def getMatchedAttribute(attributeName : String) : Option[Any] = lastMatched.map(_.getAttribute(attributeName))
 

@@ -45,19 +45,20 @@ object PreprocPerPatSeriesNearestRoad extends StepImpl {
         val mapper = new Mapper(hc, config.feature_map)
         val nearestRoad = mapper.nearest_road_map_map(config.feature_name)
         val release_years = nearestRoad.release_years
-        val distance_feature_names_map = nearestRoad.getDistanceFeatureNames()
+        val distance_feature_names_map = nearestRoad.getDistanceFeatureNames
         val attributes_to_features_map = nearestRoad.attributes_to_features_map
         val (attributes, features) = attributes_to_features_map.unzip
 
-        val distance_fields = distance_feature_names.map{ case(release_year, distance_feature_name) =>
+        val distance_fields = distance_feature_names_map.map{ case(release_year, distance_feature_name) =>
           StructField(distance_feature_name, DoubleType, true)
         }
 
         val schema = StructType(
           StructField("patient_num", StringType) +:
-          distance_fields ++
+          (distance_fields) ++:
           features.toSeq.map(x => StructField(x.feature_name, feature_type_to_sql_type(x.feature_type), true))
         )
+        println("HEADERS:" + schema.fields.map(_.name).mkString(", "))
 
         val encoder : Encoder[Row] = RowEncoder(schema)
 
@@ -75,9 +76,10 @@ object PreprocPerPatSeriesNearestRoad extends StepImpl {
               val lon = lonstr.toDouble
               val nearestRoadsByYear = nearestRoad.getMinimumDistance(lat, lon)
               // Convert nearest roads by year to its distance values, ordered the same as the schema fields
-              distance_feature_names_map.keys.toSeq.map(year => nearestRoadsByYear.get(year).getOrElse(Double.PositiveInfinity))
-              +: attributes.map(attribute => nearestRoad.getMatchedAttribute(attribute).getOrElse(null)).toSeq
+              (distance_feature_names_map.keys.toSeq.map(year => nearestRoadsByYear.get(year).getOrElse(Double.PositiveInfinity))
+              ++ attributes.map(attribute => nearestRoad.getMatchedAttribute(attribute).getOrElse(null)).toSeq)
             }
+            println((pid +: distance_to_nearest_road).mkString(", "))
             Row.fromSeq(pid +: distance_to_nearest_road)
           })
         })(encoder)
